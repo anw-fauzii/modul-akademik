@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Admin\DataMaster\AnggotaKelas;
 use App\Models\Admin\DataMaster\Ekstrakurikuler;
 use App\Models\Admin\DataMaster\Jemputan;
 use App\Models\Admin\DataMaster\Karyawan;
@@ -15,6 +16,7 @@ use App\Models\Admin\DataPelengkap\Penghasilan;
 use App\Models\Admin\DataPelengkap\Transportasi;
 use App\Models\User;
 use App\Services\Admin\DataMaster\SiswaService;
+use Database\Seeders\SiswaSeeder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -137,7 +139,7 @@ class SiswaTest extends TestCase
                 'akademik_master_jemputan_id' => $jemputan->id,
                 'nama_lengkap' => "Siswa {$index}",
                 'jenis_kelamin' => $index % 2 === 0 ? 'P' : 'L',
-                'status' => 'Aktif',
+                'status' => $index === 5 ? 'Pindah' : 'Aktif',
             ]);
         }
 
@@ -147,23 +149,39 @@ class SiswaTest extends TestCase
             DB::enableQueryLog();
             DB::flushQueryLog();
 
-            $items = app(SiswaService::class)->getAll();
+            $items = app(SiswaService::class)->getFiltered(['status' => 'Aktif']);
             $queryCount = count(DB::getQueryLog());
 
             DB::disableQueryLog();
 
-            $this->assertCount(5, $items);
+            $this->assertCount(4, $items);
             $this->assertSame(6, $queryCount);
 
             $this->actingAs($user)
                 ->withSession(['access_token' => 'valid-token'])
                 ->get(route('siswa.index'))
                 ->assertOk()
+                ->assertSee('Pilih Filter untuk Menampilkan Daftar Siswa')
+                ->assertSee('Total Seluruh Siswa')
+                ->assertDontSee('Siswa 1');
+
+            $this->actingAs($user)
+                ->withSession(['access_token' => 'valid-token'])
+                ->get(route('siswa.index', ['status' => 'Aktif']))
+                ->assertOk()
                 ->assertSee('Siswa 1')
                 ->assertSee('1 Al-Fatihah')
                 ->assertSee('Budi Santoso, S.Pd')
                 ->assertSee('Panahan')
-                ->assertSee('Agus Supriyadi');
+                ->assertSee('Agus Supriyadi')
+                ->assertDontSee('Siswa 5');
+
+            $this->actingAs($user)
+                ->withSession(['access_token' => 'valid-token'])
+                ->get(route('siswa.index', ['show_all' => 1]))
+                ->assertOk()
+                ->assertSee('Siswa 1')
+                ->assertSee('Siswa 5');
 
             $this->actingAs($user)
                 ->withSession(['access_token' => 'valid-token'])
@@ -291,5 +309,42 @@ class SiswaTest extends TestCase
 
         $this->assertDatabaseMissing('akademik_master_siswa', ['nis' => '202601009']);
         Storage::disk('public')->assertMissing($currentAvatar);
+    }
+
+    public function test_siswa_seeder_populates_dummy_students_idempotently_and_syncs_anggota_kelas(): void
+    {
+        $ta = TahunAjaran::create([
+            'nama_tahun_ajaran' => '2026/2027',
+            'semester' => '1',
+            'is_active' => true,
+        ]);
+
+        Karyawan::create([
+            'nipy' => '19900101-1',
+            'nama_lengkap' => 'Budi Santoso',
+            'gelar' => 'S.Pd',
+        ]);
+
+        Kelas::create([
+            'akademik_master_tahun_ajaran_id' => $ta->id,
+            'karyawan_nipy' => '19900101-1',
+            'tingkatan_kelas' => '1',
+            'nama_kelas' => '1 Al-Fatihah',
+            'jenjang_kelas' => 'SD',
+            'romawi' => 'I',
+        ]);
+
+        $this->seed(SiswaSeeder::class);
+        $this->seed(SiswaSeeder::class);
+
+        $this->assertSame(20, Siswa::query()->count());
+        $this->assertDatabaseHas('akademik_master_siswa', [
+            'nis' => '20260001',
+            'nama_lengkap' => 'Ahmad Fauzi Pratama',
+            'status' => 'Aktif',
+        ]);
+
+        $activeCount = Siswa::query()->where('status', 'Aktif')->count();
+        $this->assertSame($activeCount, AnggotaKelas::query()->count());
     }
 }

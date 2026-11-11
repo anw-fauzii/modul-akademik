@@ -1,6 +1,7 @@
 
 <?php
 
+use App\Http\Controllers\Admin\DataMaster\AnggotaKelasController;
 use App\Http\Controllers\Admin\DataMaster\EkstrakurikulerController;
 use App\Http\Controllers\Admin\DataMaster\JemputanController;
 use App\Http\Controllers\Admin\DataMaster\KaryawanController;
@@ -33,6 +34,9 @@ Route::middleware(['auth', 'sso.check', 'nocache'])->group(function () {
     Route::resource('/data-master/kelas', KelasController::class)->parameters(
         ['kelas' => 'kelas']
     );
+    Route::resource('/data-master/anggota-kelas', AnggotaKelasController::class)
+        ->except(['show'])
+        ->parameters(['anggota-kelas' => 'anggota_kelas']);
     Route::resource('/data-master/ekstrakurikuler', EkstrakurikulerController::class)->except(['show']);
     Route::resource('/data-master/jemputan', JemputanController::class)->except(['show']);
     Route::resource('/data-master/siswa', SiswaController::class);

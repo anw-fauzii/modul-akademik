@@ -43,6 +43,7 @@
                                 <th class="text-center" style="width: 12%;">Jenjang</th>
                                 <th>Tahun Ajaran</th>
                                 <th>Wali Kelas & Pendamping</th>
+                                <th class="text-center" style="width: 13%;">Jumlah Siswa</th>
                                 <th style="width: 15%; text-align: center;">Aksi</th>
                             </tr>
                         </thead>
@@ -107,6 +108,28 @@
                                                 @endif
                                             </div>
                                         </div>
+                                    </td>
+                                    <td class="text-center">
+                                        @php
+                                            $jumlahSiswa = (int) ($item->anggota_kelas_count ?? 0);
+                                        @endphp
+                                        @if ($jumlahSiswa > 0)
+                                            <a href="{{ route('anggota-kelas.index', ['kelas_id' => $item->id]) }}"
+                                                class="badge badge-primary px-2 py-1 text-decoration-none"
+                                                style="font-size: 0.78rem;"
+                                                data-toggle="tooltip" data-placement="top"
+                                                title="Lihat {{ $jumlahSiswa }} siswa di kelas {{ $item->nama_kelas }}">
+                                                <i class="fa fa-users mr-1"></i> {{ $jumlahSiswa }} Siswa
+                                            </a>
+                                        @else
+                                            <a href="{{ route('anggota-kelas.create', ['kelas_id' => $item->id]) }}"
+                                                class="badge badge-secondary px-2 py-1 text-decoration-none"
+                                                style="font-size: 0.78rem;"
+                                                data-toggle="tooltip" data-placement="top"
+                                                title="Belum ada anggota, klik untuk tambah siswa ke kelas {{ $item->nama_kelas }}">
+                                                <i class="fa fa-user-plus mr-1"></i> 0 Siswa
+                                            </a>
+                                        @endif
                                     </td>
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center align-items-center">

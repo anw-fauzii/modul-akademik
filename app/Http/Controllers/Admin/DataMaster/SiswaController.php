@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\DataMaster\SiswaRequest;
 use App\Models\Admin\DataMaster\Siswa;
 use App\Services\Admin\DataMaster\SiswaService;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class SiswaController extends Controller
@@ -16,12 +18,19 @@ class SiswaController extends Controller
     ) {}
 
     /**
-     * Menampilkan daftar data siswa.
+     * Menampilkan statistik, filter, dan daftar data siswa (dimuat saat difilter agar ringan).
      */
-    public function index(): View
+    public function index(Request $request): View
     {
+        $filters = $this->service->normalizeIndexFilters($request->all());
+        $hasActiveFilter = $this->service->hasActiveFilters($filters);
+
         return view('admin.dataMaster.siswa.index', [
-            'siswa' => $this->service->getAll(),
+            'siswa' => $hasActiveFilter ? $this->service->getFiltered($filters) : new Collection,
+            'statistics' => $this->service->getStatistics(),
+            'filters' => $filters,
+            'hasActiveFilter' => $hasActiveFilter,
+            ...$this->service->getIndexFilterOptions(),
         ]);
     }
 

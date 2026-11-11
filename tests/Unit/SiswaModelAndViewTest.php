@@ -119,6 +119,62 @@ class SiswaModelAndViewTest extends TestCase
         $this->assertSame(['nipy', 'nama_lengkap', 'gelar'], $petugasQuery->getQuery()->columns);
     }
 
+    public function test_service_filter_normalization_and_filtered_query_builder(): void
+    {
+        $service = new SiswaService;
+
+        $emptyFilters = $service->normalizeIndexFilters([
+            'search' => '   ',
+            'kelas_id' => 'invalid-id',
+            'jenis_kelamin' => 'Z',
+        ]);
+
+        $this->assertFalse($service->hasActiveFilters($emptyFilters));
+        $this->assertCount(0, $service->getFiltered($emptyFilters));
+
+        $activeFilters = $service->normalizeIndexFilters([
+            'search' => ' ahmad ',
+            'status' => 'Aktif',
+            'kelas_id' => '5',
+            'jenjang' => 'sd',
+            'jenis_kelamin' => 'l',
+        ]);
+
+        $this->assertTrue($service->hasActiveFilters($activeFilters));
+
+        $builder = $service->buildIndexQuery($activeFilters);
+        $sql = $builder->toSql();
+
+        $this->assertStringContainsString('nama_lengkap', $sql);
+        $this->assertStringContainsString('nisn', $sql);
+        $this->assertStringContainsString('akademik_master_kelas', $sql);
+        $this->assertStringContainsString('jenjang_kelas', $sql);
+        $this->assertStringContainsString('jenis_kelamin', $sql);
+        $this->assertSame([
+            '%ahmad%',
+            '%ahmad%',
+            '%ahmad%',
+            'Aktif',
+            'aktif',
+            'AKTIF',
+            5,
+            'SD',
+            'sd',
+            'Sd',
+            'L',
+            'l',
+        ], $builder->getBindings());
+
+        $unassignedInactiveBuilder = $service->buildIndexQuery([
+            'status' => SiswaService::FILTER_STATUS_INACTIVE,
+            'kelas_id' => SiswaService::FILTER_KELAS_UNASSIGNED,
+        ]);
+        $unassignedSql = $unassignedInactiveBuilder->toSql();
+
+        $this->assertStringContainsString('is null', strtolower($unassignedSql));
+        $this->assertStringContainsString('not in', strtolower($unassignedSql));
+    }
+
     public function test_request_rules_cover_required_fields_parent_fks_and_exclude_tarif_spp(): void
     {
         $request = new SiswaRequest;
@@ -220,6 +276,27 @@ class SiswaModelAndViewTest extends TestCase
                 'siswa' => new Collection([$siswa]),
             ])->render();
 
+            $unfilteredHtml = view('admin.dataMaster.siswa.index', [
+                'siswa' => new Collection,
+                'hasActiveFilter' => false,
+                'statistics' => [
+                    'total' => 25,
+                    'aktif' => 20,
+                    'lulus' => 2,
+                    'pindah' => 1,
+                    'nonaktif_keluar' => 2,
+                    'laki_laki' => 13,
+                    'perempuan' => 12,
+                    'aktif_laki_laki' => 11,
+                    'aktif_perempuan' => 9,
+                    'punya_kelas' => 18,
+                    'belum_punya_kelas' => 7,
+                    'jenjang_aktif' => ['SD' => 14, 'SMP' => 6],
+                ],
+                'kelasOptions' => new Collection([$kelas]),
+                'jenjangOptions' => ['SD', 'SMP'],
+            ])->render();
+
             $showHtml = view('admin.dataMaster.siswa.show', [
                 'siswa' => $siswa,
             ])->render();
@@ -233,6 +310,13 @@ class SiswaModelAndViewTest extends TestCase
         $this->assertStringContainsString('Budi Santoso, S.Pd', $indexHtml);
         $this->assertStringContainsString('Panahan', $indexHtml);
         $this->assertStringContainsString('Agus Supriyadi', $indexHtml);
+        $this->assertStringContainsString('Total Seluruh Siswa', $indexHtml);
+
+        $this->assertStringContainsString('25', $unfilteredHtml);
+        $this->assertStringContainsString('20', $unfilteredHtml);
+        $this->assertStringContainsString('Pilih Filter untuk Menampilkan Daftar Siswa', $unfilteredHtml);
+        $this->assertStringContainsString('Siswa Aktif per Jenjang', $unfilteredHtml);
+        $this->assertStringNotContainsString('id="myTable3"', $unfilteredHtml);
 
         $this->assertStringContainsString('Ahmad Fauzi', $showHtml);
         $this->assertStringContainsString('Hendra Wijaya', $showHtml);

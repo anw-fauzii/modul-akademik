@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
 #[Fillable([
@@ -156,12 +157,17 @@ class Siswa extends Model
     ];
 
     /**
+     * Status keaktifan default siswa yang dianggap aktif.
+     */
+    public const STATUS_AKTIF = 'Aktif';
+
+    /**
      * Pilihan status keaktifan siswa.
      *
      * @var list<string>
      */
     public const STATUS_OPTIONS = [
-        'Aktif',
+        self::STATUS_AKTIF,
         'Nonaktif',
         'Lulus',
         'Pindah',
@@ -261,6 +267,29 @@ class Siswa extends Model
     protected function withDetailRelations(Builder $query): Builder
     {
         return $query->with(self::DETAIL_RELATIONS);
+    }
+
+    /**
+     * Filter hanya siswa yang berstatus Aktif.
+     */
+    #[Scope]
+    protected function active(Builder $query): Builder
+    {
+        return $query->whereIn($query->qualifyColumn('status'), [self::STATUS_AKTIF, 'aktif', 'AKTIF']);
+    }
+
+    /**
+     * Filter siswa dengan status selain Aktif (Nonaktif, Lulus, Pindah, Keluar, dll).
+     */
+    #[Scope]
+    protected function inactive(Builder $query): Builder
+    {
+        $statusColumn = $query->qualifyColumn('status');
+
+        return $query->where(static function (Builder $statusQuery) use ($statusColumn): void {
+            $statusQuery->whereNull($statusColumn)
+                ->orWhereNotIn($statusColumn, [self::STATUS_AKTIF, 'aktif', 'AKTIF']);
+        });
     }
 
     /**
@@ -485,5 +514,100 @@ class Siswa extends Model
     public function berkebutuhanKhususWali(): BelongsTo
     {
         return $this->belongsTo(BerkebutuhanKhusus::class, 'akademik_pelengkap_berkebutuhan_khusus_wali_id');
+    }
+
+    /**
+     * Relasi ke riwayat keanggotaan kelas per tahun ajaran / semester.
+     */
+    public function anggotaKelas(): HasMany
+    {
+        return $this->hasMany(AnggotaKelas::class, 'siswa_nis', 'nis');
+    }
+
+    /**
+     * Mengambil daftar ID tahun ajaran yang sudah pernah diikuti siswa dari relasi ter-load.
+     *
+     * @return list<int>
+     */
+    public function registeredTahunAjaranIds(?int $excludeAnggotaKelasId = null): array
+    {
+        if (! $this->relationLoaded('anggotaKelas')) {
+            return [];
+        }
+
+        return $this->anggotaKelas
+            ->filter(static fn (AnggotaKelas $anggota): bool => $excludeAnggotaKelasId === null || (int) $anggota->id !== $excludeAnggotaKelasId)
+            ->map(static function (AnggotaKelas $anggota): ?int {
+                if (! $anggota->relationLoaded('kelas') || $anggota->kelas === null) {
+                    return null;
+                }
+
+                return (int) $anggota->kelas->akademik_master_tahun_ajaran_id;
+            })
+            ->filter(static fn (?int $id): bool => $id !== null && $id > 0)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Mengambil ringkasan kelas terakhir / sebelumnya siswa tanpa memicu lazy loading.
+     *
+     * @return array{
+     *     nama_kelas: string,
+     *     jenjang_kelas: string,
+     *     tahun_ajaran: string|null,
+     *     semester: string|null,
+     *     tahun_ajaran_id: int|null
+     * }|null
+     */
+    public function resolvePreviousKelasSummary(?int $excludeAnggotaKelasId = null): ?array
+    {
+        $selectedKelas = null;
+
+        if ($this->relationLoaded('anggotaKelas')) {
+            $latestMembership = $this->anggotaKelas
+                ->filter(static function (AnggotaKelas $anggota) use ($excludeAnggotaKelasId): bool {
+                    if ($excludeAnggotaKelasId !== null && (int) $anggota->id === $excludeAnggotaKelasId) {
+                        return false;
+                    }
+
+                    return $anggota->relationLoaded('kelas') && $anggota->kelas !== null;
+                })
+                ->sortByDesc(static function (AnggotaKelas $anggota): string {
+                    $kelas = $anggota->kelas;
+                    $ta = $kelas->relationLoaded('tahunAjaran') ? $kelas->tahunAjaran : null;
+
+                    return sprintf(
+                        '%s-%s-%010d',
+                        $ta?->nama_tahun_ajaran ?? '0000/0000',
+                        $ta?->semester ?? '0',
+                        (int) ($anggota->id ?? 0)
+                    );
+                })
+                ->first();
+
+            $selectedKelas = $latestMembership?->kelas;
+        }
+
+        if ($selectedKelas === null && $this->relationLoaded('kelas')) {
+            $selectedKelas = $this->kelas;
+        }
+
+        if ($selectedKelas === null) {
+            return null;
+        }
+
+        $tahunAjaran = $selectedKelas->relationLoaded('tahunAjaran') ? $selectedKelas->tahunAjaran : null;
+
+        return [
+            'nama_kelas' => (string) $selectedKelas->nama_kelas,
+            'jenjang_kelas' => (string) $selectedKelas->jenjang_kelas,
+            'tahun_ajaran' => $tahunAjaran?->nama_tahun_ajaran,
+            'semester' => $tahunAjaran?->semester,
+            'tahun_ajaran_id' => $selectedKelas->akademik_master_tahun_ajaran_id
+                ? (int) $selectedKelas->akademik_master_tahun_ajaran_id
+                : null,
+        ];
     }
 }

@@ -11,7 +11,7 @@ use Tests\TestCase;
 class DataTablesEmptyStateViewTest extends TestCase
 {
     #[TestWith(['admin.dataMaster.ekstrakurikuler.index', 'ekstrakurikuler', 7])]
-    #[TestWith(['admin.dataMaster.kelas.index', 'kelas', 6])]
+    #[TestWith(['admin.dataMaster.kelas.index', 'kelas', 7])]
     #[TestWith(['admin.dataMaster.tahunAjaran.index', 'tahunAjaran', 5])]
     #[TestWith(['admin.dataMaster.karyawan.index', 'karyawan', 7])]
     #[TestWith(['admin.dataPelengkap.penghasilan.index', 'penghasilan', 3])]

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'akademik_master_tahun_ajaran_id',
@@ -52,5 +53,13 @@ class Kelas extends Model
     public function pendamping(): BelongsTo
     {
         return $this->belongsTo(Karyawan::class, 'pendamping_nipy', 'nipy');
+    }
+
+    /**
+     * Relasi ke daftar anggota kelas.
+     */
+    public function anggotaKelas(): HasMany
+    {
+        return $this->hasMany(AnggotaKelas::class, 'akademik_master_kelas_id');
     }
 }
