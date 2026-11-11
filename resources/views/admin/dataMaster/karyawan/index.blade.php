@@ -41,12 +41,9 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @php
-                                $no = 1;
-                            @endphp
-                            @forelse ($karyawan as $item)
+                            @foreach ($karyawan as $item)
                                 <tr>
-                                    <td>{{ $no++ }}</td>
+                                    <td>{{ $loop->iteration }}</td>
                                     <td>
                                         <strong>{{ $item->nama_gelar }}</strong>
                                         @if ($item->nipy)
@@ -99,13 +96,7 @@
                                         </a>
                                     </td>
                                 </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="7" class="text-center text-muted py-4">
-                                        <i class="fa fa-info-circle mr-1"></i> Belum ada data guru / karyawan tersimpan.
-                                    </td>
-                                </tr>
-                            @endforelse
+                            @endforeach
                         </tbody>
                     </table>
                 </div>

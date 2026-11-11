@@ -47,12 +47,9 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @php
-                                $no = 1;
-                            @endphp
-                            @forelse ($kelas as $item)
+                            @foreach ($kelas as $item)
                                 <tr>
-                                    <td>{{ $no++ }}</td>
+                                    <td>{{ $loop->iteration }}</td>
                                     <td>
                                         <div class="font-weight-bold text-slate-800" style="font-size: 0.95rem;">
                                             {{ $item->nama_kelas }}
@@ -136,13 +133,7 @@
                                         </div>
                                     </td>
                                 </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted py-4">
-                                        <i class="fa fa-info-circle mr-1"></i> Belum ada data kelas tersimpan. Silakan klik tombol <strong>Tambah Kelas</strong> untuk menambahkan.
-                                    </td>
-                                </tr>
-                            @endforelse
+                            @endforeach
                         </tbody>
                     </table>
                 </div>

@@ -44,12 +44,9 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @php
-                                $no = 1;
-                            @endphp
-                            @forelse ($berkebutuhanKhusus as $item)
+                            @foreach ($berkebutuhanKhusus as $item)
                                 <tr>
-                                    <td>{{ $no++ }}</td>
+                                    <td>{{ $loop->iteration }}</td>
                                     <td>{{ $item->nama_berkebutuhan_khusus }}</td>
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center align-items-center">
@@ -74,13 +71,7 @@
                                         </div>
                                     </td>
                                 </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="3" class="text-center text-muted py-4">
-                                        <i class="fa fa-info-circle mr-1"></i> Belum ada data kebutuhan khusus tersimpan.
-                                    </td>
-                                </tr>
-                            @endforelse
+                            @endforeach
                         </tbody>
                     </table>
                 </div>

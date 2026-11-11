@@ -46,12 +46,9 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @php
-                                $no = 1;
-                            @endphp
-                            @forelse ($tahunAjaran as $item)
+                            @foreach ($tahunAjaran as $item)
                                 <tr>
-                                    <td>{{ $no++ }}</td>
+                                    <td>{{ $loop->iteration }}</td>
                                     <td><strong>{{ $item->nama_tahun_ajaran }}</strong></td>
                                     <td>
                                         <span class="badge badge-info">
@@ -103,13 +100,7 @@
                                         </div>
                                     </td>
                                 </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" class="text-center text-muted py-4">
-                                        <i class="fa fa-info-circle mr-1"></i> Belum ada data tahun ajaran tersimpan.
-                                    </td>
-                                </tr>
-                            @endforelse
+                            @endforeach
                         </tbody>
                     </table>
                 </div>

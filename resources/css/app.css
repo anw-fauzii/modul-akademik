@@ -1358,6 +1358,12 @@ div.dataTables_wrapper table.dataTable tbody td {
     vertical-align: middle !important;
 }
 
+div.dataTables_wrapper table.dataTable tbody td.dataTables_empty {
+    text-align: center !important;
+    color: #64748b !important;
+    padding: 1.5rem 1rem !important;
+}
+
 div.dataTables_wrapper table.dataTable tbody tr:hover {
     background-color: #fff7ed !important;
     /* Tailwind orange-50 */

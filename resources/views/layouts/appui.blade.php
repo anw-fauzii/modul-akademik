@@ -103,6 +103,7 @@
                     lengthMenu: "Tampilkan _MENU_ data",
                     info: "Menampilkan _START_ s/d _END_ dari _TOTAL_ data",
                     infoEmpty: "Data tidak ditemukan",
+                    emptyTable: "Belum ada data tersedia",
                     infoFiltered: "(disaring dari _MAX_ total data)",
                     zeroRecords: "Tidak ada data yang sesuai",
                     paginate: {
@@ -114,21 +115,53 @@
                 }
             };
 
-            $('.datatable-default, #myTable, #myTable2, #myTable4').DataTable($.extend({}, dtDefaultConfig, {
+            function initDataTables(selector, options) {
+                $(selector).each(function() {
+                    const $table = $(this);
+                    if ($.fn.DataTable.isDataTable($table)) {
+                        return;
+                    }
+
+                    const config = $.extend(true, {}, dtDefaultConfig, options);
+                    const emptyMessage = $table.attr('data-empty-table');
+                    const $tbodyRows = $table.children('tbody').children('tr');
+
+                    // DataTables rejects colspan inside tbody (tn/18); remove legacy empty placeholder rows.
+                    if ($tbodyRows.length === 1) {
+                        const $cells = $tbodyRows.children('td');
+                        if ($cells.length === 1 && $cells.is('[colspan]')) {
+                            const fallbackHtml = $.trim($cells.html());
+                            if (!emptyMessage && fallbackHtml) {
+                                config.language.emptyTable = fallbackHtml;
+                            }
+                            $tbodyRows.remove();
+                        }
+                    }
+
+                    if (emptyMessage) {
+                        const safeText = $('<div>').text(emptyMessage).html();
+                        config.language.emptyTable = '<i class="fa fa-info-circle mr-1"></i> ' + safeText;
+                    }
+
+                    $table.DataTable(config);
+                });
+            }
+
+            initDataTables('.datatable-default, #myTable, #myTable2, #myTable4', {
                 ordering: false,
                 lengthMenu: [[25, 50, 100, -1], ['25', '50', '100', 'Semua']]
-            }));
+            });
 
-            $('.datatable-ordered, #myTable3, #myTable5').DataTable($.extend({}, dtDefaultConfig, {
+            initDataTables('.datatable-ordered, #myTable3, #myTable5', {
                 ordering: true,
                 lengthMenu: [[25, 50, 100, -1], ['25', '50', '100', 'Semua']]
-            }));
+            });
 
-            $('.datatable-custom, #myTable6').DataTable($.extend({}, dtDefaultConfig, {
+            initDataTables('.datatable-custom, #myTable6', {
                 ordering: false,
                 searching: false,
                 lengthMenu: [[25, 50, 100, -1], ['25', '50', '100', 'Semua']]
-            }));
+            });
 
             // Flash Notification Messages
             const $body = $('body');

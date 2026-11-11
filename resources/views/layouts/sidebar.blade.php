@@ -85,6 +85,18 @@
                             class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('data-master/kelas*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
                             Kelas
                         </a>
+                        <a href="{{ route('ekstrakurikuler.index') }}"
+                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('data-master/ekstrakurikuler*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                            Ekstrakurikuler
+                        </a>
+                        <a href="{{ route('jemputan.index') }}"
+                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('data-master/jemputan*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                            Jemputan
+                        </a>
+                        <a href="{{ route('siswa.index') }}"
+                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('data-master/siswa*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                            Siswa
+                        </a>
                         <a href="{{ route('karyawan.index') }}"
                             class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('data-master/karyawan*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
                             Guru & Karyawan
