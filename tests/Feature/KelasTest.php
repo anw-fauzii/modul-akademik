@@ -129,5 +129,192 @@ class KelasTest extends TestCase
             Model::preventLazyLoading(false);
         }
     }
-}
 
+    public function test_show_displays_members_and_directly_adds_and_deletes_member_without_filters(): void
+    {
+        $user = $this->authenticateUser();
+
+        $ta = TahunAjaran::create([
+            'nama_tahun_ajaran' => '2026/2027',
+            'semester' => '1',
+            'is_active' => true,
+        ]);
+
+        $wali = Karyawan::create([
+            'nipy' => '19900101-1',
+            'nama_lengkap' => 'Budi Santoso',
+            'gelar' => 'S.Pd',
+        ]);
+
+        $kelas = Kelas::create([
+            'akademik_master_tahun_ajaran_id' => $ta->id,
+            'karyawan_nipy' => $wali->nipy,
+            'tingkatan_kelas' => '1',
+            'nama_kelas' => '1 Al-Fatihah',
+            'jenjang_kelas' => 'SD',
+            'romawi' => 'I',
+        ]);
+
+        $kelasLain = Kelas::create([
+            'akademik_master_tahun_ajaran_id' => $ta->id,
+            'karyawan_nipy' => $wali->nipy,
+            'tingkatan_kelas' => '1',
+            'nama_kelas' => '1 Abu Bakar',
+            'jenjang_kelas' => 'SD',
+            'romawi' => 'I',
+        ]);
+
+        $siswaTerdaftar = Siswa::factory()->create([
+            'nis' => '2026901',
+            'nama_lengkap' => 'Sudah Masuk Kelas Lain',
+            'status' => 'Aktif',
+        ]);
+        AnggotaKelas::create([
+            'siswa_nis' => $siswaTerdaftar->nis,
+            'akademik_master_kelas_id' => $kelasLain->id,
+            'pendaftaran' => 'Siswa Baru',
+        ]);
+
+        $siswaKandidat = Siswa::factory()->create([
+            'nis' => '2026902',
+            'nama_lengkap' => 'Calon Anggota Baru',
+            'status' => 'Aktif',
+        ]);
+
+        Siswa::factory()->create([
+            'nis' => '2026903',
+            'nama_lengkap' => 'Siswa Nonaktif Tersembunyi',
+            'status' => 'Nonaktif',
+        ]);
+
+        Model::preventLazyLoading(true);
+
+        try {
+            $this->actingAs($user)
+                ->withSession(['access_token' => 'valid-token'])
+                ->get(route('kelas.show', $kelas->id))
+                ->assertOk()
+                ->assertSee('1 Al-Fatihah')
+                ->assertSee('Calon Anggota Baru')
+                ->assertDontSee('Sudah Masuk Kelas Lain')
+                ->assertDontSee('Siswa Nonaktif Tersembunyi');
+        } finally {
+            Model::preventLazyLoading(false);
+        }
+
+        $this->actingAs($user)
+            ->withSession(['access_token' => 'valid-token'])
+            ->post(route('anggota-kelas.store'), [
+                'akademik_master_kelas_id' => $kelas->id,
+                'redirect_to_kelas' => $kelas->id,
+                'pendaftaran' => 'Siswa Baru',
+                'siswa_nis' => [$siswaKandidat->nis],
+            ])
+            ->assertRedirect(route('kelas.show', $kelas->id));
+
+        $createdMember = AnggotaKelas::query()
+            ->where('siswa_nis', $siswaKandidat->nis)
+            ->where('akademik_master_kelas_id', $kelas->id)
+            ->firstOrFail();
+
+        $this->actingAs($user)
+            ->withSession(['access_token' => 'valid-token'])
+            ->delete(route('anggota-kelas.destroy', $createdMember->id), [
+                'redirect_to_kelas' => $kelas->id,
+            ])
+            ->assertRedirect(route('kelas.show', $kelas->id));
+
+        $this->assertDatabaseMissing('akademik_master_anggota_kelas', [
+            'id' => $createdMember->id,
+        ]);
+    }
+
+    public function test_index_defaults_to_active_tahun_ajaran_and_filters_by_jenjang_with_counts(): void
+    {
+        $user = $this->authenticateUser();
+
+        $taLama = TahunAjaran::create([
+            'nama_tahun_ajaran' => '2025/2026',
+            'semester' => '2',
+            'is_active' => false,
+        ]);
+
+        $taAktif = TahunAjaran::create([
+            'nama_tahun_ajaran' => '2026/2027',
+            'semester' => '1',
+            'is_active' => true,
+        ]);
+
+        $wali = Karyawan::create([
+            'nipy' => '19900101-2',
+            'nama_lengkap' => 'Siti Aminah',
+            'gelar' => 'M.Pd',
+        ]);
+
+        $kelasTk = Kelas::create([
+            'akademik_master_tahun_ajaran_id' => $taAktif->id,
+            'karyawan_nipy' => $wali->nipy,
+            'tingkatan_kelas' => 'TK-A',
+            'nama_kelas' => 'TK A Makkah',
+            'jenjang_kelas' => 'TK',
+            'romawi' => 'A',
+        ]);
+
+        $kelasSd = Kelas::create([
+            'akademik_master_tahun_ajaran_id' => $taAktif->id,
+            'karyawan_nipy' => $wali->nipy,
+            'tingkatan_kelas' => '1',
+            'nama_kelas' => '1 Madinah',
+            'jenjang_kelas' => 'SD',
+            'romawi' => 'I',
+        ]);
+
+        Kelas::create([
+            'akademik_master_tahun_ajaran_id' => $taLama->id,
+            'karyawan_nipy' => $wali->nipy,
+            'tingkatan_kelas' => '6',
+            'nama_kelas' => '6 Andalusia (Lama)',
+            'jenjang_kelas' => 'SD',
+            'romawi' => 'VI',
+        ]);
+
+        foreach (range(1, 2) as $i) {
+            $siswa = Siswa::factory()->create(['nis' => "202699{$i}", 'status' => 'Aktif']);
+            AnggotaKelas::create([
+                'siswa_nis' => $siswa->nis,
+                'akademik_master_kelas_id' => $kelasSd->id,
+                'pendaftaran' => 'Siswa Baru',
+            ]);
+        }
+
+        // Default index hanya menampilkan TA aktif + statistik per jenjang (TK & SD)
+        $this->actingAs($user)
+            ->withSession(['access_token' => 'valid-token'])
+            ->get(route('kelas.index'))
+            ->assertOk()
+            ->assertSee($kelasTk->nama_kelas)
+            ->assertSee($kelasSd->nama_kelas)
+            ->assertDontSee('6 Andalusia (Lama)')
+            ->assertSee('Jenjang TK')
+            ->assertSee('Jenjang SD')
+            ->assertSee('2 Siswa');
+
+        // Filter jenjang=SD pada TA aktif menyaring tabel ke SD namun kartu statistik TK & SD tetap terlihat
+        $this->actingAs($user)
+            ->withSession(['access_token' => 'valid-token'])
+            ->get(route('kelas.index', ['tahun_ajaran_id' => $taAktif->id, 'jenjang' => 'SD']))
+            ->assertOk()
+            ->assertSee($kelasSd->nama_kelas)
+            ->assertDontSee($kelasTk->nama_kelas)
+            ->assertSee('Jenjang TK');
+
+        // Menggunakan tahun_ajaran_id=all menampilkan kelas dari semua tahun ajaran
+        $this->actingAs($user)
+            ->withSession(['access_token' => 'valid-token'])
+            ->get(route('kelas.index', ['tahun_ajaran_id' => 'all']))
+            ->assertOk()
+            ->assertSee($kelasTk->nama_kelas)
+            ->assertSee($kelasSd->nama_kelas)
+            ->assertSee('6 Andalusia (Lama)');
+    }
+}

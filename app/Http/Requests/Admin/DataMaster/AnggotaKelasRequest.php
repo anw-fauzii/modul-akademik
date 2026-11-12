@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin\DataMaster;
 
+use App\Http\Requests\Admin\DataMaster\Concerns\ValidatesBatchMembershipRequest;
 use App\Models\Admin\DataMaster\AnggotaKelas;
 use App\Models\Admin\DataMaster\Kelas;
 use App\Services\Admin\DataMaster\AnggotaKelasService;
@@ -12,6 +13,8 @@ use Illuminate\Validation\Validator;
 
 class AnggotaKelasRequest extends FormRequest
 {
+    use ValidatesBatchMembershipRequest;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -43,23 +46,17 @@ class AnggotaKelasRequest extends FormRequest
             ],
         ];
 
-        if ($isBatchStore) {
-            $rules['siswa_nis'] = ['required', 'array', 'min:1'];
-            $rules['siswa_nis.*'] = [
-                'required',
-                'string',
-                'max:50',
-                'distinct',
-                'exists:akademik_master_siswa,nis',
-            ];
-        } else {
-            $rules['siswa_nis'] = [
+        $this->applyBatchMemberRules(
+            $rules,
+            'siswa_nis',
+            [
                 'required',
                 'string',
                 'max:50',
                 'exists:akademik_master_siswa,nis',
-            ];
-        }
+            ],
+            $isBatchStore
+        );
 
         return $rules;
     }
@@ -85,10 +82,7 @@ class AnggotaKelasRequest extends FormRequest
                     return;
                 }
 
-                $rawNis = $this->input('siswa_nis');
-                $nisList = is_array($rawNis)
-                    ? array_values(array_map('strval', $rawNis))
-                    : [(string) $rawNis];
+                $nisList = $this->extractMemberIdentifierList('siswa_nis');
 
                 /** @var AnggotaKelas|null $anggotaKelas */
                 $anggotaKelas = $this->route('anggota_kelas');

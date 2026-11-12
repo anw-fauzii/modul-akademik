@@ -2,19 +2,26 @@
 
 namespace App\Services\Admin\DataMaster;
 
+use App\Models\Admin\DataMaster\AnggotaEkstrakurikuler;
+use App\Models\Admin\DataMaster\AnggotaKelas;
 use App\Models\Admin\DataMaster\Ekstrakurikuler;
 use App\Models\Admin\DataMaster\Karyawan;
+use App\Models\Admin\DataMaster\Siswa;
 use App\Models\Admin\DataMaster\TahunAjaran;
+use App\Services\Admin\DataMaster\Concerns\ManagesTahunAjaranMembership;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
 class EkstrakurikulerService
 {
+    use ManagesTahunAjaranMembership;
+
     /**
-     * Mengambil semua data ekstrakurikuler beserta relasi tanpa N+1.
+     * Membangun query daftar ekstrakurikuler beserta relasi dan jumlah anggota tanpa N+1.
      *
-     * @return Collection<int, Ekstrakurikuler>
+     * @return Builder<Ekstrakurikuler>
      */
-    public function getAll(): Collection
+    public function buildIndexQuery(): Builder
     {
         return Ekstrakurikuler::query()
             ->select([
@@ -26,10 +33,83 @@ class EkstrakurikulerService
                 'unit',
             ])
             ->withMasterRelations()
+            ->withCount('anggotaEkstrakurikuler')
             ->orderBy('unit')
             ->orderBy('nama_ekstrakurikuler')
+            ->orderBy('id');
+    }
+
+    /**
+     * Mengambil semua data ekstrakurikuler beserta relasi tanpa N+1.
+     *
+     * @return Collection<int, Ekstrakurikuler>
+     */
+    public function getAll(): Collection
+    {
+        return $this->buildIndexQuery()->get();
+    }
+
+    /**
+     * Mengambil detail ekstrakurikuler, daftar anggota, statistik gender, dan kandidat anggota kelas aktif.
+     *
+     * @return array{
+     *     ekstrakurikuler: Ekstrakurikuler,
+     *     anggotaEkstrakurikuler: Collection<int, AnggotaEkstrakurikuler>,
+     *     stats: array{total: int, laki_laki: int, perempuan: int},
+     *     kandidatAnggotaKelas: Collection<int, AnggotaKelas>,
+     *     excludedTahunAjaranIds: list<int>,
+     *     hiddenRegisteredCount: int,
+     *     hiddenInactiveCount: int,
+     *     hiddenWithoutKelasCount: int
+     * }
+     */
+    public function getShowData(Ekstrakurikuler $ekstrakurikuler): array
+    {
+        $ekstrakurikuler->loadMissing([
+            'tahunAjaran:id,nama_tahun_ajaran,semester,is_active',
+            'pembina:nipy,nama_lengkap,gelar',
+        ]);
+
+        $anggotaEkstrakurikuler = $ekstrakurikuler->anggotaEkstrakurikuler()
+            ->select([
+                'id',
+                'anggota_kelas_id',
+                'akademik_master_ekstrakuler_id',
+                'pendaftaran',
+                'keterangan',
+            ])
+            ->with([
+                'anggotaKelas:id,siswa_nis,akademik_master_kelas_id,pendaftaran',
+                'anggotaKelas.siswa:nis,nama_lengkap,nisn,jenis_kelamin,status',
+                'anggotaKelas.kelas:id,akademik_master_tahun_ajaran_id,nama_kelas,jenjang_kelas,tingkatan_kelas',
+            ])
+            ->orderBy('anggota_kelas_id')
             ->orderBy('id')
             ->get();
+
+        $candidatePayload = $this->anggotaService()->getCandidateAnggotaKelasForEkstrakurikuler($ekstrakurikuler);
+
+        return [
+            'ekstrakurikuler' => $ekstrakurikuler,
+            'anggotaEkstrakurikuler' => $anggotaEkstrakurikuler,
+            'stats' => $this->computeMemberGenderStatsFrom(
+                $anggotaEkstrakurikuler,
+                static fn ($item): ?Siswa => $item instanceof AnggotaEkstrakurikuler ? $item->anggotaKelas?->siswa : null
+            ),
+            'kandidatAnggotaKelas' => $candidatePayload['anggotaKelas'],
+            'excludedTahunAjaranIds' => $candidatePayload['excludedTahunAjaranIds'],
+            'hiddenRegisteredCount' => $candidatePayload['hiddenRegisteredCount'],
+            'hiddenInactiveCount' => $candidatePayload['hiddenInactiveCount'],
+            'hiddenWithoutKelasCount' => $candidatePayload['hiddenWithoutKelasCount'],
+        ];
+    }
+
+    /**
+     * Mengambil instance service anggota ekstrakurikuler.
+     */
+    private function anggotaService(): AnggotaEkstrakurikulerService
+    {
+        return app(AnggotaEkstrakurikulerService::class);
     }
 
     /**

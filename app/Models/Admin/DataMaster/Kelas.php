@@ -4,6 +4,7 @@ namespace App\Models\Admin\DataMaster;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,6 +23,51 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Kelas extends Model
 {
     use HasFactory;
+
+    /**
+     * Urutan standar jenjang pendidikan untuk pengurutan tampilan & statistik.
+     *
+     * @var list<string>
+     */
+    public const array JENJANG_ORDER = ['PAUD', 'TK', 'SD', 'SMP', 'SMA', 'SMK'];
+
+    /**
+     * Membandingkan dua kode jenjang sesuai urutan tingkat pendidikan sekolah.
+     */
+    public static function compareJenjangOrder(string $a, string $b): int
+    {
+        $normA = strtoupper(trim($a));
+        $normB = strtoupper(trim($b));
+
+        $posA = array_search($normA, self::JENJANG_ORDER, true);
+        $posB = array_search($normB, self::JENJANG_ORDER, true);
+
+        if ($posA !== false && $posB !== false) {
+            return $posA <=> $posB;
+        }
+        if ($posA !== false) {
+            return -1;
+        }
+        if ($posB !== false) {
+            return 1;
+        }
+
+        return $normA <=> $normB;
+    }
+
+    /**
+     * Kelas badge Bootstrap untuk jenjang kelas.
+     */
+    protected function jenjangBadgeClass(): Attribute
+    {
+        return Attribute::get(fn (): string => match (strtoupper(trim((string) $this->jenjang_kelas))) {
+            'SD' => 'badge-success',
+            'SMP' => 'badge-primary',
+            'TK', 'PAUD' => 'badge-warning text-dark',
+            'SMA', 'SMK' => 'badge-info',
+            default => 'badge-secondary',
+        });
+    }
 
     /**
      * Relasi ke Tahun Ajaran.

@@ -9,6 +9,7 @@ use App\Models\Admin\DataMaster\Kelas;
 use App\Models\Admin\DataMaster\TahunAjaran;
 use App\Services\Admin\DataMaster\KelasService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class KelasController extends Controller
@@ -18,13 +19,11 @@ class KelasController extends Controller
     ) {}
 
     /**
-     * Menampilkan daftar data kelas.
+     * Menampilkan daftar data kelas (default tahun ajaran aktif) beserta filter dan ringkasan tiap jenjang.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
-        return view('admin.dataMaster.kelas.index', [
-            'kelas' => $this->service->getAll(),
-        ]);
+        return view('admin.dataMaster.kelas.index', $this->service->getIndexData($request->query()));
     }
 
     /**
@@ -34,8 +33,16 @@ class KelasController extends Controller
     {
         return view('admin.dataMaster.kelas.create', [
             'tahunAjaran' => TahunAjaran::orderByDesc('nama_tahun_ajaran')->get(),
-            'karyawan'    => Karyawan::orderBy('nama_lengkap')->get(),
+            'karyawan' => Karyawan::orderBy('nama_lengkap')->get(),
         ]);
+    }
+
+    /**
+     * Menampilkan detail kelas, daftar anggota, dan form tambah anggota kelas langsung.
+     */
+    public function show(Kelas $kelas): View
+    {
+        return view('admin.dataMaster.kelas.show', $this->service->getShowData($kelas));
     }
 
     /**
@@ -55,9 +62,9 @@ class KelasController extends Controller
     public function edit(Kelas $kelas): View
     {
         return view('admin.dataMaster.kelas.edit', [
-            'kelas'       => $kelas,
+            'kelas' => $kelas,
             'tahunAjaran' => TahunAjaran::orderByDesc('nama_tahun_ajaran')->get(),
-            'karyawan'    => Karyawan::orderBy('nama_lengkap')->get(),
+            'karyawan' => Karyawan::orderBy('nama_lengkap')->get(),
         ]);
     }
 

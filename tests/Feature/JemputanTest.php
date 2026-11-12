@@ -2,8 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\Admin\DataMaster\AnggotaJemputan;
+use App\Models\Admin\DataMaster\AnggotaKelas;
 use App\Models\Admin\DataMaster\Jemputan;
 use App\Models\Admin\DataMaster\Karyawan;
+use App\Models\Admin\DataMaster\Kelas;
+use App\Models\Admin\DataMaster\Siswa;
 use App\Models\Admin\DataMaster\TahunAjaran;
 use App\Models\User;
 use App\Services\Admin\DataMaster\JemputanService;
@@ -342,5 +346,75 @@ class JemputanTest extends TestCase
 
         $this->assertSame('Rp 250.000', $paidItem->harga_pp_formatted);
         $this->assertSame('Rp 140.000', $paidItem->harga_setengah_formatted);
+    }
+
+    public function test_show_displays_jemputan_detail_with_members_and_active_candidates(): void
+    {
+        $user = $this->authenticateUser();
+        $tahunAjaran = $this->createTahunAjaran();
+        $petugas = $this->createKaryawan([
+            'nipy' => 'DRV-101',
+            'nama_lengkap' => 'Slamet Riyadi',
+            'gelar' => null,
+        ]);
+
+        $jemputan = Jemputan::create([
+            'akademik_master_tahun_ajaran_id' => $tahunAjaran->id,
+            'karyawan_nipy' => $petugas->nipy,
+            'harga_pp' => 250000,
+            'harga_setengah' => 150000,
+        ]);
+
+        $kelas = Kelas::create([
+            'akademik_master_tahun_ajaran_id' => $tahunAjaran->id,
+            'karyawan_nipy' => $petugas->nipy,
+            'pendamping_nipy' => null,
+            'nama_kelas' => '4 Umar',
+            'jenjang_kelas' => 'SD',
+            'tingkatan_kelas' => '4',
+            'romawi' => 'IV',
+        ]);
+
+        $memberSiswa = Siswa::create([
+            'nis' => '20260001',
+            'nama_lengkap' => 'Aisyah Putri',
+            'jenis_kelamin' => 'P',
+            'status' => 'Aktif',
+        ]);
+        $candidateSiswa = Siswa::create([
+            'nis' => '20260002',
+            'nama_lengkap' => 'Bagas Pratama',
+            'jenis_kelamin' => 'L',
+            'status' => 'Aktif',
+        ]);
+
+        $akMember = AnggotaKelas::create([
+            'siswa_nis' => $memberSiswa->nis,
+            'akademik_master_kelas_id' => $kelas->id,
+            'pendaftaran' => 'Siswa Baru',
+        ]);
+        AnggotaKelas::create([
+            'siswa_nis' => $candidateSiswa->nis,
+            'akademik_master_kelas_id' => $kelas->id,
+            'pendaftaran' => 'Siswa Baru',
+        ]);
+
+        AnggotaJemputan::create([
+            'anggota_kelas_id' => $akMember->id,
+            'akademik_master_jemputan_id' => $jemputan->id,
+            'pendaftaran' => 'Baru',
+            'keterangan' => 'Antar Jemput PP',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->withSession(['access_token' => 'valid-token'])
+            ->get(route('jemputan.show', $jemputan));
+
+        $response->assertOk()
+            ->assertSee('Slamet Riyadi')
+            ->assertSee('Aisyah Putri')
+            ->assertSee('4 Umar')
+            ->assertSee('Antar Jemput PP')
+            ->assertSee('Bagas Pratama');
     }
 }

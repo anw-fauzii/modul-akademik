@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'siswa_nis',
@@ -119,5 +120,21 @@ class AnggotaKelas extends Model
     public function kelas(): BelongsTo
     {
         return $this->belongsTo(Kelas::class, 'akademik_master_kelas_id');
+    }
+
+    /**
+     * Relasi ke keanggotaan ekstrakurikuler pada periode kelas ini.
+     */
+    public function anggotaEkstrakurikuler(): HasMany
+    {
+        return $this->hasMany(AnggotaEkstrakurikuler::class, 'anggota_kelas_id');
+    }
+
+    /**
+     * Relasi ke keanggotaan jemputan pada periode kelas ini.
+     */
+    public function anggotaJemputan(): HasMany
+    {
+        return $this->hasMany(AnggotaJemputan::class, 'anggota_kelas_id');
     }
 }

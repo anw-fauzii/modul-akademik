@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Facades\Storage;
 
 #[Fillable([
@@ -525,29 +526,71 @@ class Siswa extends Model
     }
 
     /**
+     * Relasi ke riwayat keanggotaan ekstrakurikuler siswa melalui tabel anggota kelas.
+     */
+    public function anggotaEkstrakurikuler(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            AnggotaEkstrakurikuler::class,
+            AnggotaKelas::class,
+            'siswa_nis',
+            'anggota_kelas_id',
+            'nis',
+            'id'
+        );
+    }
+
+    /**
+     * Relasi ke riwayat keanggotaan jemputan siswa melalui tabel anggota kelas.
+     */
+    public function anggotaJemputan(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            AnggotaJemputan::class,
+            AnggotaKelas::class,
+            'siswa_nis',
+            'anggota_kelas_id',
+            'nis',
+            'id'
+        );
+    }
+
+    /**
      * Mengambil daftar ID tahun ajaran yang sudah pernah diikuti siswa dari relasi ter-load.
      *
      * @return list<int>
      */
     public function registeredTahunAjaranIds(?int $excludeAnggotaKelasId = null): array
     {
-        if (! $this->relationLoaded('anggotaKelas')) {
-            return [];
-        }
+        return $this->collectRegisteredTahunAjaranIdsFrom('anggotaKelas', 'kelas', $excludeAnggotaKelasId);
+    }
 
-        return $this->anggotaKelas
-            ->filter(static fn (AnggotaKelas $anggota): bool => $excludeAnggotaKelasId === null || (int) $anggota->id !== $excludeAnggotaKelasId)
-            ->map(static function (AnggotaKelas $anggota): ?int {
-                if (! $anggota->relationLoaded('kelas') || $anggota->kelas === null) {
-                    return null;
-                }
+    /**
+     * Mengambil daftar ID tahun ajaran ketika siswa sudah terdaftar pada Anggota Ekstrakurikuler.
+     *
+     * @return list<int>
+     */
+    public function registeredEkstrakurikulerTahunAjaranIds(?int $excludeAnggotaEkstrakurikulerId = null): array
+    {
+        return $this->collectRegisteredTahunAjaranIdsFrom(
+            'anggotaEkstrakurikuler',
+            'ekstrakurikuler',
+            $excludeAnggotaEkstrakurikulerId
+        );
+    }
 
-                return (int) $anggota->kelas->akademik_master_tahun_ajaran_id;
-            })
-            ->filter(static fn (?int $id): bool => $id !== null && $id > 0)
-            ->unique()
-            ->values()
-            ->all();
+    /**
+     * Mengambil daftar ID tahun ajaran ketika siswa sudah terdaftar pada Anggota Jemputan.
+     *
+     * @return list<int>
+     */
+    public function registeredJemputanTahunAjaranIds(?int $excludeAnggotaJemputanId = null): array
+    {
+        return $this->collectRegisteredTahunAjaranIdsFrom(
+            'anggotaJemputan',
+            'jemputan',
+            $excludeAnggotaJemputanId
+        );
     }
 
     /**
@@ -563,36 +606,8 @@ class Siswa extends Model
      */
     public function resolvePreviousKelasSummary(?int $excludeAnggotaKelasId = null): ?array
     {
-        $selectedKelas = null;
-
-        if ($this->relationLoaded('anggotaKelas')) {
-            $latestMembership = $this->anggotaKelas
-                ->filter(static function (AnggotaKelas $anggota) use ($excludeAnggotaKelasId): bool {
-                    if ($excludeAnggotaKelasId !== null && (int) $anggota->id === $excludeAnggotaKelasId) {
-                        return false;
-                    }
-
-                    return $anggota->relationLoaded('kelas') && $anggota->kelas !== null;
-                })
-                ->sortByDesc(static function (AnggotaKelas $anggota): string {
-                    $kelas = $anggota->kelas;
-                    $ta = $kelas->relationLoaded('tahunAjaran') ? $kelas->tahunAjaran : null;
-
-                    return sprintf(
-                        '%s-%s-%010d',
-                        $ta?->nama_tahun_ajaran ?? '0000/0000',
-                        $ta?->semester ?? '0',
-                        (int) ($anggota->id ?? 0)
-                    );
-                })
-                ->first();
-
-            $selectedKelas = $latestMembership?->kelas;
-        }
-
-        if ($selectedKelas === null && $this->relationLoaded('kelas')) {
-            $selectedKelas = $this->kelas;
-        }
+        /** @var Kelas|null $selectedKelas */
+        $selectedKelas = $this->resolveLatestGroupFromHistory('anggotaKelas', 'kelas', 'kelas', $excludeAnggotaKelasId);
 
         if ($selectedKelas === null) {
             return null;
@@ -609,5 +624,165 @@ class Siswa extends Model
                 ? (int) $selectedKelas->akademik_master_tahun_ajaran_id
                 : null,
         ];
+    }
+
+    /**
+     * Mengambil ringkasan ekstrakurikuler terakhir / sebelumnya siswa tanpa memicu lazy loading.
+     *
+     * @return array{
+     *     nama_ekstrakurikuler: string,
+     *     unit: string,
+     *     tahun_ajaran: string|null,
+     *     semester: string|null,
+     *     tahun_ajaran_id: int|null
+     * }|null
+     */
+    public function resolvePreviousEkstrakurikulerSummary(?int $excludeAnggotaEkstrakurikulerId = null): ?array
+    {
+        /** @var Ekstrakurikuler|null $selectedEkstrakurikuler */
+        $selectedEkstrakurikuler = $this->resolveLatestGroupFromHistory(
+            'anggotaEkstrakurikuler',
+            'ekstrakurikuler',
+            'ekstrakurikuler',
+            $excludeAnggotaEkstrakurikulerId
+        );
+
+        if ($selectedEkstrakurikuler === null) {
+            return null;
+        }
+
+        $tahunAjaran = $selectedEkstrakurikuler->relationLoaded('tahunAjaran')
+            ? $selectedEkstrakurikuler->tahunAjaran
+            : null;
+
+        return [
+            'nama_ekstrakurikuler' => (string) $selectedEkstrakurikuler->nama_ekstrakurikuler,
+            'unit' => (string) $selectedEkstrakurikuler->unit,
+            'tahun_ajaran' => $tahunAjaran?->nama_tahun_ajaran,
+            'semester' => $tahunAjaran?->semester,
+            'tahun_ajaran_id' => $selectedEkstrakurikuler->akademik_master_tahun_ajaran_id
+                ? (int) $selectedEkstrakurikuler->akademik_master_tahun_ajaran_id
+                : null,
+        ];
+    }
+
+    /**
+     * Mengambil ringkasan jemputan terakhir / sebelumnya siswa tanpa memicu lazy loading.
+     *
+     * @return array{
+     *     petugas: string,
+     *     tarif_label: string,
+     *     tahun_ajaran: string|null,
+     *     semester: string|null,
+     *     tahun_ajaran_id: int|null
+     * }|null
+     */
+    public function resolvePreviousJemputanSummary(?int $excludeAnggotaJemputanId = null): ?array
+    {
+        /** @var Jemputan|null $selectedJemputan */
+        $selectedJemputan = $this->resolveLatestGroupFromHistory(
+            'anggotaJemputan',
+            'jemputan',
+            'jemputan',
+            $excludeAnggotaJemputanId
+        );
+
+        if ($selectedJemputan === null) {
+            return null;
+        }
+
+        $tahunAjaran = $selectedJemputan->relationLoaded('tahunAjaran')
+            ? $selectedJemputan->tahunAjaran
+            : null;
+        $petugasModel = $selectedJemputan->relationLoaded('petugas')
+            ? $selectedJemputan->petugas
+            : null;
+
+        return [
+            'petugas' => $petugasModel?->nama_gelar ?? 'Petugas #'.$selectedJemputan->karyawan_nipy,
+            'tarif_label' => 'PP: '.$selectedJemputan->harga_pp_formatted.' • 1/2: '.$selectedJemputan->harga_setengah_formatted,
+            'tahun_ajaran' => $tahunAjaran?->nama_tahun_ajaran,
+            'semester' => $tahunAjaran?->semester,
+            'tahun_ajaran_id' => $selectedJemputan->akademik_master_tahun_ajaran_id
+                ? (int) $selectedJemputan->akademik_master_tahun_ajaran_id
+                : null,
+        ];
+    }
+
+    /**
+     * Mengumpulkan ID tahun ajaran dari relasi keanggotaan yang sudah di-load tanpa memicu query tambahan.
+     *
+     * @return list<int>
+     */
+    private function collectRegisteredTahunAjaranIdsFrom(
+        string $membershipRelation,
+        string $groupRelation,
+        ?int $excludeId = null
+    ): array {
+        if (! $this->relationLoaded($membershipRelation)) {
+            return [];
+        }
+
+        return $this->getRelation($membershipRelation)
+            ->filter(static fn (Model $anggota): bool => $excludeId === null || (int) $anggota->getKey() !== $excludeId)
+            ->map(static function (Model $anggota) use ($groupRelation): ?int {
+                if (! $anggota->relationLoaded($groupRelation)) {
+                    return null;
+                }
+
+                $group = $anggota->getRelation($groupRelation);
+                if ($group === null) {
+                    return null;
+                }
+
+                return (int) $group->getAttribute('akademik_master_tahun_ajaran_id');
+            })
+            ->filter(static fn (?int $id): bool => $id !== null && $id > 0)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Mengambil entitas grup (kelas/ekstrakurikuler) terbaru dari riwayat ter-load atau fallback relasi langsung.
+     */
+    private function resolveLatestGroupFromHistory(
+        string $membershipRelation,
+        string $groupRelation,
+        string $fallbackRelation,
+        ?int $excludeId = null
+    ): ?Model {
+        $selectedGroup = null;
+
+        if ($this->relationLoaded($membershipRelation)) {
+            $latestMembership = $this->getRelation($membershipRelation)
+                ->filter(static function (Model $anggota) use ($excludeId, $groupRelation): bool {
+                    if ($excludeId !== null && (int) $anggota->getKey() === $excludeId) {
+                        return false;
+                    }
+
+                    return $anggota->relationLoaded($groupRelation) && $anggota->getRelation($groupRelation) !== null;
+                })
+                ->sortByDesc(static function (Model $anggota) use ($groupRelation): string {
+                    $group = $anggota->getRelation($groupRelation);
+                    $ta = $group->relationLoaded('tahunAjaran') ? $group->getRelation('tahunAjaran') : null;
+
+                    return sprintf(
+                        '%s-%s-%010d',
+                        $ta?->nama_tahun_ajaran ?? '0000/0000',
+                        $ta?->semester ?? '0',
+                        (int) ($anggota->getKey() ?? 0)
+                    );
+                })
+                ->first();
+
+            $selectedGroup = $latestMembership?->getRelation($groupRelation);
+        }
+
+        if ($selectedGroup === null && $this->relationLoaded($fallbackRelation)) {
+            $selectedGroup = $this->getRelation($fallbackRelation);
+        }
+
+        return $selectedGroup;
     }
 }

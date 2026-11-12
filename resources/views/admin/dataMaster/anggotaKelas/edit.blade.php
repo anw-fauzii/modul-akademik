@@ -21,8 +21,17 @@
                     </div>
                 </div>
 
+@php
+    $redirectKelasId = old('redirect_to_kelas', $fromKelasId ?? null);
+    $backUrl = is_numeric($redirectKelasId) && (int) $redirectKelasId > 0
+        ? route('kelas.show', (int) $redirectKelasId)
+        : ($anggotaKelas->akademik_master_kelas_id
+            ? route('kelas.show', $anggotaKelas->akademik_master_kelas_id)
+            : route('kelas.index'));
+@endphp
+
                 <div class="page-title-actions">
-                    <a href="{{ route('anggota-kelas.index') }}" class="btn text-white shadow-sm"
+                    <a href="{{ $backUrl }}" class="btn text-white shadow-sm"
                         style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 8px;">
                         <i class="fa fa-reply mr-1"></i> Kembali
                     </a>
@@ -35,6 +44,9 @@
                 <form method="post" action="{{ route('anggota-kelas.update', $anggotaKelas->id) }}" id="editForm">
                     @csrf
                     @method('PUT')
+                    @if (is_numeric($redirectKelasId) && (int) $redirectKelasId > 0)
+                        <input type="hidden" name="redirect_to_kelas" value="{{ (int) $redirectKelasId }}">
+                    @endif
                     @include('admin.dataMaster.anggotaKelas._form')
                 </form>
             </div>

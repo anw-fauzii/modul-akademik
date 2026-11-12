@@ -322,6 +322,12 @@ class SiswaModelAndViewTest extends TestCase
         $this->assertStringContainsString('Hendra Wijaya', $showHtml);
         $this->assertStringContainsString('Siti Rahma', $showHtml);
         $this->assertStringContainsString('Antar Jemput Sekolah', $showHtml);
+        $this->assertStringContainsString('data-siswa-tab="akademik"', $showHtml);
+        $this->assertStringContainsString('data-siswa-tab="kontak"', $showHtml);
+        $this->assertStringContainsString('data-siswa-tab="keluarga"', $showHtml);
+        $this->assertStringContainsString('panel-akademik', $showHtml);
+        $this->assertStringContainsString('panel-kontak', $showHtml);
+        $this->assertStringContainsString('panel-keluarga', $showHtml);
         $this->assertStringContainsString(route('siswa.index'), view('layouts.sidebar')->render());
     }
 

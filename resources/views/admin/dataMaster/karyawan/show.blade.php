@@ -93,11 +93,20 @@
     <div class="profile-hero mb-4">
         <div class="row align-items-center">
             <div class="col-md-auto text-center mb-3 mb-md-0">
-                @if ($karyawan->user && $karyawan->foto)
-                    <img src="{{ $karyawan->foto_url }}" alt="{{ $karyawan->nama_lengkap }}" class="profile-avatar d-block mx-auto">
+                @php
+                    $fotoProxyUrl = $karyawan->foto_url ? route('karyawan.foto', $karyawan) : null;
+                    $inisialKaryawan = strtoupper(mb_substr(trim((string) ($karyawan->nama_lengkap ?? 'K')), 0, 1)) ?: 'K';
+                @endphp
+                @if ($fotoProxyUrl)
+                    <img src="{{ $fotoProxyUrl }}" alt="{{ $karyawan->nama_lengkap }}"
+                        class="profile-avatar d-block mx-auto"
+                        onerror="this.classList.remove('d-block'); this.classList.add('d-none'); this.nextElementSibling?.classList.remove('d-none');">
+                    <div class="profile-avatar-fallback mx-auto d-none">
+                        {{ $inisialKaryawan }}
+                    </div>
                 @else
-                    <div class="profile-avatar-fallback mx-auto">   
-                        {{ strtoupper(substr($karyawan->nama_lengkap, 0, 1)) }}
+                    <div class="profile-avatar-fallback mx-auto">
+                        {{ $inisialKaryawan }}
                     </div>
                 @endif
             </div>

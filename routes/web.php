@@ -1,6 +1,8 @@
 
 <?php
 
+use App\Http\Controllers\Admin\DataMaster\AnggotaEkstrakurikulerController;
+use App\Http\Controllers\Admin\DataMaster\AnggotaJemputanController;
 use App\Http\Controllers\Admin\DataMaster\AnggotaKelasController;
 use App\Http\Controllers\Admin\DataMaster\EkstrakurikulerController;
 use App\Http\Controllers\Admin\DataMaster\JemputanController;
@@ -37,11 +39,18 @@ Route::middleware(['auth', 'sso.check', 'nocache'])->group(function () {
     Route::resource('/data-master/anggota-kelas', AnggotaKelasController::class)
         ->except(['show'])
         ->parameters(['anggota-kelas' => 'anggota_kelas']);
-    Route::resource('/data-master/ekstrakurikuler', EkstrakurikulerController::class)->except(['show']);
-    Route::resource('/data-master/jemputan', JemputanController::class)->except(['show']);
+    Route::resource('/data-master/anggota-ekstrakurikuler', AnggotaEkstrakurikulerController::class)
+        ->except(['show'])
+        ->parameters(['anggota-ekstrakurikuler' => 'anggota_ekstrakurikuler']);
+    Route::resource('/data-master/ekstrakurikuler', EkstrakurikulerController::class);
+    Route::resource('/data-master/jemputan', JemputanController::class);
+    Route::resource('/data-master/anggota-jemputan', AnggotaJemputanController::class)
+        ->except(['show'])
+        ->parameters(['anggota-jemputan' => 'anggota_jemputan']);
     Route::resource('/data-master/siswa', SiswaController::class);
     Route::get('/data-master/karyawan', [KaryawanController::class, 'index'])->name('karyawan.index');
     Route::get('/data-master/karyawan/{karyawan}', [KaryawanController::class, 'show'])->name('karyawan.show');
+    Route::get('/data-master/karyawan/{karyawan}/foto', [KaryawanController::class, 'foto'])->name('karyawan.foto');
 
     // Data Pelengkap
     Route::resource('/data-pelengkap/berkebutuhan-khusus', BerkebutuhanKhususController::class);

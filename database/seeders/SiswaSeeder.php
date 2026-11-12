@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Admin\DataMaster\AnggotaEkstrakurikuler;
+use App\Models\Admin\DataMaster\AnggotaJemputan;
 use App\Models\Admin\DataMaster\AnggotaKelas;
 use App\Models\Admin\DataMaster\Ekstrakurikuler;
 use App\Models\Admin\DataMaster\Jemputan;
@@ -397,6 +399,8 @@ class SiswaSeeder extends Seeder
 
         DB::transaction(function () use ($profiles, $pools): void {
             $activeStudentsForKelas = [];
+            $activeStudentsForEkstrakurikuler = [];
+            $activeStudentsForJemputan = [];
 
             foreach ($profiles as $index => $profile) {
                 $attributes = $this->buildSiswaAttributes($profile, $index, $pools);
@@ -412,9 +416,27 @@ class SiswaSeeder extends Seeder
                         'pendaftaran' => $this->mapJenisPendaftaranToAnggotaKelas($profile['jenis_pendaftaran']),
                     ];
                 }
+
+                $membershipPendaftaran = $profile['jenis_pendaftaran'] === 'Siswa Baru' ? 'Baru' : 'Lanjutan';
+
+                if ($profile['status'] === 'Aktif' && $attributes['akademik_master_ekstrakuler_id'] !== null) {
+                    $activeStudentsForEkstrakurikuler[$profile['nis']] = [
+                        'ekstrakurikuler_id' => (int) $attributes['akademik_master_ekstrakuler_id'],
+                        'pendaftaran' => $membershipPendaftaran,
+                    ];
+                }
+
+                if ($profile['status'] === 'Aktif' && $attributes['akademik_master_jemputan_id'] !== null) {
+                    $activeStudentsForJemputan[$profile['nis']] = [
+                        'jemputan_id' => (int) $attributes['akademik_master_jemputan_id'],
+                        'pendaftaran' => $membershipPendaftaran,
+                    ];
+                }
             }
 
             $this->syncAnggotaKelasForSeededSiswa($activeStudentsForKelas, $pools['kelas']);
+            $this->syncAnggotaEkstrakurikulerForSeededSiswa($activeStudentsForEkstrakurikuler);
+            $this->syncAnggotaJemputanForSeededSiswa($activeStudentsForJemputan);
         });
     }
 
@@ -460,19 +482,51 @@ class SiswaSeeder extends Seeder
                 ->all();
         }
 
+        $ekstrakurikulerIds = $this->pluckActiveYearIdsIfTableExists('akademik_master_ekstrakuler', Ekstrakurikuler::class);
+        $jemputanIds = $this->pluckActiveYearIdsIfTableExists('akademik_master_jemputan', Jemputan::class);
+
         return [
             'kelas' => $kelasRows,
             'karyawan' => Schema::hasTable('kepegawaian_master_karyawan')
                 ? Karyawan::query()->orderBy('nipy')->pluck('nipy')->map(static fn (mixed $v): string => (string) $v)->all()
                 : [],
-            'ekstrakurikuler' => $this->pluckIntColumnIfTableExists('akademik_master_ekstrakuler', Ekstrakurikuler::class),
-            'jemputan' => $this->pluckIntColumnIfTableExists('akademik_master_jemputan', Jemputan::class),
+            'ekstrakurikuler' => $ekstrakurikulerIds,
+            'jemputan' => $jemputanIds,
             'berkebutuhan_khusus' => $this->pluckIntColumnIfTableExists('akademik_pelengkap_berkebutuhan_khusus', BerkebutuhanKhusus::class),
             'transportasi' => $this->pluckIntColumnIfTableExists('akademik_pelengkap_transportasi', Transportasi::class),
             'jenjang_pendidikan' => $this->pluckIntColumnIfTableExists('akademik_pelengkap_jenjang_pendidikan', JenjangPendidikan::class),
             'pekerjaan' => $this->pluckIntColumnIfTableExists('akademik_pelengkap_pekerjaan', Pekerjaan::class),
             'penghasilan' => $this->pluckIntColumnIfTableExists('akademik_pelengkap_penghasilan', Penghasilan::class),
         ];
+    }
+
+    /**
+     * Mengambil daftar ID master pada tahun ajaran aktif (atau seluruh data bila belum ada TA aktif).
+     *
+     * @param  class-string<Model>  $modelClass
+     * @return list<int>
+     */
+    private function pluckActiveYearIdsIfTableExists(string $table, string $modelClass): array
+    {
+        if (! Schema::hasTable($table)) {
+            return [];
+        }
+
+        if (Schema::hasTable('akademik_master_tahun_ajaran')) {
+            $activeIds = $modelClass::query()
+                ->whereHas('tahunAjaran', fn ($query) => $query->where('is_active', true))
+                ->orderBy('id')
+                ->pluck('id');
+
+            return ($activeIds->isNotEmpty()
+                ? $activeIds
+                : $modelClass::query()->orderBy('id')->pluck('id'))
+                ->map(static fn (mixed $id): int => (int) $id)
+                ->values()
+                ->all();
+        }
+
+        return $this->pluckIntColumnIfTableExists($table, $modelClass);
     }
 
     /**
@@ -644,6 +698,140 @@ class SiswaSeeder extends Seeder
             AnggotaKelas::create([
                 'siswa_nis' => $nisString,
                 'akademik_master_kelas_id' => $target['kelas_id'],
+                'pendaftaran' => $target['pendaftaran'],
+            ]);
+
+            $existingByStudentYear[$key] = true;
+        }
+    }
+
+    /**
+     * Menyinkronkan keanggotaan ekstrakurikuler berbasis anggota_kelas_id tanpa duplikasi tahun ajaran & tanpa query N+1.
+     *
+     * @param  array<string, array{ekstrakurikuler_id: int, pendaftaran: string}>  $activeStudentsForEkstrakurikuler
+     */
+    private function syncAnggotaEkstrakurikulerForSeededSiswa(array $activeStudentsForEkstrakurikuler): void
+    {
+        $normalized = array_map(
+            static fn (array $target): array => [
+                'group_id' => $target['ekstrakurikuler_id'],
+                'pendaftaran' => $target['pendaftaran'],
+            ],
+            $activeStudentsForEkstrakurikuler
+        );
+
+        $this->syncAnggotaGroupMembershipForSeededSiswa(
+            $normalized,
+            'akademik_master_anggota_ekstrakuler',
+            'akademik_master_ekstrakuler',
+            AnggotaEkstrakurikuler::class,
+            Ekstrakurikuler::class,
+            'ekstrakurikuler',
+            'akademik_master_ekstrakuler_id'
+        );
+    }
+
+    /**
+     * Menyinkronkan keanggotaan jemputan berbasis anggota_kelas_id tanpa duplikasi tahun ajaran & tanpa query N+1.
+     *
+     * @param  array<string, array{jemputan_id: int, pendaftaran: string}>  $activeStudentsForJemputan
+     */
+    private function syncAnggotaJemputanForSeededSiswa(array $activeStudentsForJemputan): void
+    {
+        $normalized = array_map(
+            static fn (array $target): array => [
+                'group_id' => $target['jemputan_id'],
+                'pendaftaran' => $target['pendaftaran'],
+            ],
+            $activeStudentsForJemputan
+        );
+
+        $this->syncAnggotaGroupMembershipForSeededSiswa(
+            $normalized,
+            'akademik_master_anggota_jemputan',
+            'akademik_master_jemputan',
+            AnggotaJemputan::class,
+            Jemputan::class,
+            'jemputan',
+            'akademik_master_jemputan_id'
+        );
+    }
+
+    /**
+     * Helper terpadu untuk menyinkronkan keanggotaan berbasis anggota_kelas_id saat seeding siswa.
+     *
+     * @param  array<string, array{group_id: int, pendaftaran: string}>  $activeStudents
+     * @param  class-string<Model>  $membershipModelClass
+     * @param  class-string<Model>  $groupModelClass
+     */
+    private function syncAnggotaGroupMembershipForSeededSiswa(
+        array $activeStudents,
+        string $membershipTable,
+        string $groupTable,
+        string $membershipModelClass,
+        string $groupModelClass,
+        string $groupRelation,
+        string $groupForeignKey
+    ): void {
+        if (
+            $activeStudents === []
+            || ! Schema::hasTable($membershipTable)
+            || ! Schema::hasTable('akademik_master_anggota_kelas')
+            || ! Schema::hasTable($groupTable)
+        ) {
+            return;
+        }
+
+        $groupIds = array_values(array_unique(array_map(
+            static fn (array $target): int => $target['group_id'],
+            $activeStudents
+        )));
+
+        $groupYearMap = $groupModelClass::query()
+            ->whereIn('id', $groupIds)
+            ->pluck('akademik_master_tahun_ajaran_id', 'id')
+            ->map(static fn (mixed $tahunAjaranId): int => (int) $tahunAjaranId)
+            ->all();
+
+        $nisKeys = array_map('strval', array_keys($activeStudents));
+
+        $anggotaKelasByStudentYear = AnggotaKelas::query()
+            ->select(['id', 'siswa_nis', 'akademik_master_kelas_id'])
+            ->whereIn('siswa_nis', $nisKeys)
+            ->with(['kelas:id,akademik_master_tahun_ajaran_id'])
+            ->orderByDesc('id')
+            ->get()
+            ->mapWithKeys(static fn (AnggotaKelas $anggota): array => [
+                $anggota->siswa_nis.':'.($anggota->kelas?->akademik_master_tahun_ajaran_id ?? 0) => (int) $anggota->id,
+            ])
+            ->all();
+
+        $existingByStudentYear = $membershipModelClass::query()
+            ->select(['id', 'anggota_kelas_id', $groupForeignKey])
+            ->whereHas('anggotaKelas', fn ($query) => $query->whereIn('siswa_nis', $nisKeys))
+            ->with([
+                'anggotaKelas:id,siswa_nis',
+                "{$groupRelation}:id,akademik_master_tahun_ajaran_id",
+            ])
+            ->get()
+            ->mapWithKeys(static fn (Model $anggota): array => [
+                ($anggota->getRelationValue('anggotaKelas')?->siswa_nis ?? '').':'.($anggota->getRelationValue($groupRelation)?->akademik_master_tahun_ajaran_id ?? 0) => true,
+            ])
+            ->all();
+
+        foreach ($activeStudents as $nis => $target) {
+            $nisString = (string) $nis;
+            $tahunAjaranId = $groupYearMap[$target['group_id']] ?? 0;
+            $key = $nisString.':'.$tahunAjaranId;
+            $anggotaKelasId = $anggotaKelasByStudentYear[$key] ?? null;
+
+            if ($tahunAjaranId <= 0 || $anggotaKelasId === null || isset($existingByStudentYear[$key])) {
+                continue;
+            }
+
+            $membershipModelClass::create([
+                'anggota_kelas_id' => $anggotaKelasId,
+                $groupForeignKey => $target['group_id'],
                 'pendaftaran' => $target['pendaftaran'],
             ]);
 

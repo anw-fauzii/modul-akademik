@@ -43,7 +43,8 @@
                                 <th class="text-center" style="width: 12%;">Unit</th>
                                 <th>Tahun Ajaran</th>
                                 <th>Pembina / Pelatih</th>
-                                <th class="text-right" style="width: 15%;">Biaya</th>
+                                <th class="text-right" style="width: 14%;">Biaya</th>
+                                <th class="text-center" style="width: 13%;">Jumlah Siswa</th>
                                 <th style="width: 15%; text-align: center;">Aksi</th>
                             </tr>
                         </thead>
@@ -52,9 +53,12 @@
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
                                     <td>
-                                        <div class="font-weight-bold text-slate-800" style="font-size: 0.95rem;">
+                                        <a href="{{ route('ekstrakurikuler.show', $item->id) }}"
+                                            class="font-weight-bold text-slate-800 text-decoration-none"
+                                            style="font-size: 0.95rem;"
+                                            title="Detail &amp; Anggota Ekstrakurikuler {{ $item->nama_ekstrakurikuler }}">
                                             {{ $item->nama_ekstrakurikuler }}
-                                        </div>
+                                        </a>
                                     </td>
                                     <td class="text-center">
                                         <span class="badge {{ $item->unit_badge_class }} px-2 py-1" style="font-size: 0.75rem;">
@@ -98,7 +102,28 @@
                                         @endif
                                     </td>
                                     <td class="text-center">
+                                        @php
+                                            $jumlahSiswa = (int) ($item->anggota_ekstrakurikuler_count ?? 0);
+                                        @endphp
+                                        <a href="{{ route('ekstrakurikuler.show', $item->id) }}"
+                                            class="badge {{ $jumlahSiswa > 0 ? 'badge-primary' : 'badge-secondary' }} px-2 py-1 text-decoration-none"
+                                            style="font-size: 0.78rem;"
+                                            data-toggle="tooltip" data-placement="top"
+                                            title="{{ $jumlahSiswa > 0 ? "Lihat {$jumlahSiswa} siswa & tambah anggota ekskul {$item->nama_ekstrakurikuler}" : "Belum ada anggota, klik untuk tambah siswa ke ekskul {$item->nama_ekstrakurikuler}" }}">
+                                            <i class="fa {{ $jumlahSiswa > 0 ? 'fa-users' : 'fa-user-plus' }} mr-1"></i>
+                                            {{ $jumlahSiswa }} Siswa
+                                        </a>
+                                    </td>
+                                    <td class="text-center">
                                         <div class="d-flex justify-content-center align-items-center">
+                                            <!-- Show / Anggota Ekskul Button -->
+                                            <a href="{{ route('ekstrakurikuler.show', $item->id) }}"
+                                                class="btn btn-sm btn-info text-white shadow-sm mx-1"
+                                                style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
+                                                data-toggle="tooltip" data-placement="top" title="Detail & Anggota Ekskul">
+                                                <i class="fa fa-eye" style="font-size: 0.75rem;"></i>
+                                            </a>
+
                                             <!-- Edit Button -->
                                             <a href="{{ route('ekstrakurikuler.edit', $item->id) }}"
                                                 class="btn btn-sm btn-primary shadow-sm mx-1"

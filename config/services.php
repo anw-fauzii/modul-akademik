@@ -35,7 +35,8 @@ return [
         ],
     ],
     'kepegawaian' => [
-        'url'     => env('PEGAWAI_API_URL'),
+        'url' => env('URL_APP_KARYAWAN') ?: env('PEGAWAI_API_URL'),
+        'app_url' => env('URL_APP_KARYAWAN'),
         'api_key' => env('PEGAWAI_API_KEY'),
     ],
 

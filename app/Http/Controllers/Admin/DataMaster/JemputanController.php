@@ -26,6 +26,14 @@ class JemputanController extends Controller
     }
 
     /**
+     * Menampilkan detail layanan jemputan, daftar anggota, dan modal tambah anggota aktif.
+     */
+    public function show(Jemputan $jemputan): View
+    {
+        return view('admin.dataMaster.jemputan.show', $this->service->getShowData($jemputan));
+    }
+
+    /**
      * Menampilkan form tambah jemputan baru.
      */
     public function create(): View

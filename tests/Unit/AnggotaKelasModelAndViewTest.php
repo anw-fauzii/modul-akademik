@@ -235,7 +235,9 @@ class AnggotaKelasModelAndViewTest extends TestCase
         $this->assertStringContainsString('badge-success', $rendered);
         $this->assertStringContainsString(route('anggota-kelas.edit', 30), $rendered);
         $this->assertStringContainsString(route('anggota-kelas.destroy', 30), $rendered);
-        $this->assertStringContainsString(route('anggota-kelas.index'), view('layouts.sidebar')->render());
+        $sidebarHtml = view('layouts.sidebar')->render();
+        $this->assertStringNotContainsString(route('anggota-kelas.index'), $sidebarHtml);
+        $this->assertStringContainsString(route('kelas.index'), $sidebarHtml);
     }
 
     public function test_index_view_does_not_render_colspan_row_when_empty_for_datatables_compatibility(): void

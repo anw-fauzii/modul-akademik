@@ -26,6 +26,14 @@ class EkstrakurikulerController extends Controller
     }
 
     /**
+     * Menampilkan detail ekstrakurikuler, daftar anggota, dan modal tambah anggota aktif.
+     */
+    public function show(Ekstrakurikuler $ekstrakurikuler): View
+    {
+        return view('admin.dataMaster.ekstrakurikuler.show', $this->service->getShowData($ekstrakurikuler));
+    }
+
+    /**
      * Menampilkan form tambah ekstrakurikuler baru.
      */
     public function create(): View

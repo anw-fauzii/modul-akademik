@@ -2,8 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\Admin\DataMaster\AnggotaEkstrakurikuler;
+use App\Models\Admin\DataMaster\AnggotaKelas;
 use App\Models\Admin\DataMaster\Ekstrakurikuler;
 use App\Models\Admin\DataMaster\Karyawan;
+use App\Models\Admin\DataMaster\Kelas;
+use App\Models\Admin\DataMaster\Siswa;
 use App\Models\Admin\DataMaster\TahunAjaran;
 use App\Models\User;
 use App\Services\Admin\DataMaster\EkstrakurikulerService;
@@ -401,5 +405,71 @@ class EkstrakurikulerTest extends TestCase
 
         $this->assertSame('Rp 125.000', $paidItem->biaya_formatted);
         $this->assertSame('badge-primary', $paidItem->unit_badge_class);
+    }
+
+    public function test_show_displays_members_and_modal_candidate_anggota_kelas(): void
+    {
+        $user = $this->authenticateUser();
+        $tahunAjaran = $this->createTahunAjaran();
+        $karyawan = $this->createKaryawan();
+
+        $kelas = Kelas::create([
+            'akademik_master_tahun_ajaran_id' => $tahunAjaran->id,
+            'karyawan_nipy' => $karyawan->nipy,
+            'nama_kelas' => '4 Umar',
+            'jenjang_kelas' => 'SD',
+            'tingkatan_kelas' => '4',
+            'romawi' => 'IV',
+        ]);
+
+        $ekstrakurikuler = Ekstrakurikuler::create([
+            'akademik_master_tahun_ajaran_id' => $tahunAjaran->id,
+            'karyawan_nipy' => $karyawan->nipy,
+            'nama_ekstrakurikuler' => 'Panahan',
+            'biaya' => 50000,
+            'unit' => 'SD',
+        ]);
+
+        $memberSiswa = Siswa::create([
+            'nis' => '20269001',
+            'nama_lengkap' => 'Rafi Ahmad',
+            'jenis_kelamin' => 'L',
+            'status' => 'Aktif',
+        ]);
+        $candidateSiswa = Siswa::create([
+            'nis' => '20269002',
+            'nama_lengkap' => 'Dina Marlina',
+            'jenis_kelamin' => 'P',
+            'status' => 'Aktif',
+        ]);
+
+        $memberAk = AnggotaKelas::create([
+            'siswa_nis' => $memberSiswa->nis,
+            'akademik_master_kelas_id' => $kelas->id,
+            'pendaftaran' => 'Siswa Baru',
+        ]);
+        AnggotaKelas::create([
+            'siswa_nis' => $candidateSiswa->nis,
+            'akademik_master_kelas_id' => $kelas->id,
+            'pendaftaran' => 'Siswa Baru',
+        ]);
+
+        AnggotaEkstrakurikuler::create([
+            'anggota_kelas_id' => $memberAk->id,
+            'akademik_master_ekstrakuler_id' => $ekstrakurikuler->id,
+            'pendaftaran' => 'Baru',
+            'keterangan' => 'Inti',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->withSession(['access_token' => 'valid-token'])
+            ->get(route('ekstrakurikuler.show', $ekstrakurikuler));
+
+        $response->assertOk()
+            ->assertSee('Panahan')
+            ->assertSee('Rafi Ahmad')
+            ->assertSee('4 Umar')
+            ->assertSee('Inti')
+            ->assertSee('Dina Marlina');
     }
 }

@@ -41,8 +41,9 @@
                                 <th style="width: 5%;">No</th>
                                 <th>Petugas / Driver</th>
                                 <th>Tahun Ajaran</th>
-                                <th class="text-right" style="width: 16%;">Harga PP</th>
-                                <th class="text-right" style="width: 16%;">Harga Setengah</th>
+                                <th class="text-right" style="width: 15%;">Harga PP</th>
+                                <th class="text-right" style="width: 15%;">Harga Setengah</th>
+                                <th class="text-center" style="width: 13%;">Jumlah Siswa</th>
                                 <th style="width: 15%; text-align: center;">Aksi</th>
                             </tr>
                         </thead>
@@ -54,12 +55,20 @@
                                         <div class="small">
                                             <i class="fa fa-user-tie text-primary mr-1" title="Petugas / Driver Jemputan"></i>
                                             @if ($item->petugas)
-                                                <strong>{{ $item->petugas->nama_gelar }}</strong>
+                                                <a href="{{ route('jemputan.show', $item->id) }}"
+                                                    class="font-weight-bold text-slate-800 text-decoration-none"
+                                                    title="Detail &amp; Anggota Jemputan {{ $item->petugas->nama_gelar }}">
+                                                    {{ $item->petugas->nama_gelar }}
+                                                </a>
                                                 <div class="text-muted" style="font-size: 11px;">
                                                     NIPY: {{ $item->karyawan_nipy }}
                                                 </div>
                                             @else
-                                                <span class="text-muted font-italic">NIPY: {{ $item->karyawan_nipy }}</span>
+                                                <a href="{{ route('jemputan.show', $item->id) }}"
+                                                    class="text-muted font-italic text-decoration-none"
+                                                    title="Detail &amp; Anggota Jemputan">
+                                                    NIPY: {{ $item->karyawan_nipy }}
+                                                </a>
                                             @endif
                                         </div>
                                     </td>
@@ -92,7 +101,29 @@
                                         </td>
                                     @endforeach
                                     <td class="text-center">
+                                        @php
+                                            $jumlahSiswa = (int) ($item->anggota_jemputan_count ?? 0);
+                                            $petugasTitle = $item->petugas?->nama_gelar ?? ('NIPY: ' . $item->karyawan_nipy);
+                                        @endphp
+                                        <a href="{{ route('jemputan.show', $item->id) }}"
+                                            class="badge {{ $jumlahSiswa > 0 ? 'badge-primary' : 'badge-secondary' }} px-2 py-1 text-decoration-none"
+                                            style="font-size: 0.78rem;"
+                                            data-toggle="tooltip" data-placement="top"
+                                            title="{{ $jumlahSiswa > 0 ? "Lihat {$jumlahSiswa} siswa & tambah anggota jemputan {$petugasTitle}" : "Belum ada anggota, klik untuk tambah siswa ke jemputan {$petugasTitle}" }}">
+                                            <i class="fa {{ $jumlahSiswa > 0 ? 'fa-users' : 'fa-user-plus' }} mr-1"></i>
+                                            {{ $jumlahSiswa }} Siswa
+                                        </a>
+                                    </td>
+                                    <td class="text-center">
                                         <div class="d-flex justify-content-center align-items-center">
+                                            <!-- Show / Anggota Jemputan Button -->
+                                            <a href="{{ route('jemputan.show', $item->id) }}"
+                                                class="btn btn-sm btn-info text-white shadow-sm mx-1"
+                                                style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
+                                                data-toggle="tooltip" data-placement="top" title="Detail & Anggota Jemputan">
+                                                <i class="fa fa-eye" style="font-size: 0.75rem;"></i>
+                                            </a>
+
                                             <!-- Edit Button -->
                                             <a href="{{ route('jemputan.edit', $item->id) }}"
                                                 class="btn btn-sm btn-primary shadow-sm mx-1"

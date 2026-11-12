@@ -6,6 +6,7 @@ use App\Models\Admin\DataMaster\AnggotaKelas;
 use App\Models\Admin\DataMaster\Kelas;
 use App\Models\Admin\DataMaster\Siswa;
 use App\Models\Admin\DataMaster\TahunAjaran;
+use App\Services\Admin\DataMaster\Concerns\ManagesTahunAjaranMembership;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,8 @@ use Illuminate\Validation\ValidationException;
 
 class AnggotaKelasService
 {
+    use ManagesTahunAjaranMembership;
+
     /**
      * Membangun query daftar anggota kelas beserta relasi utama tanpa N+1.
      *
@@ -98,6 +101,45 @@ class AnggotaKelasService
         $kelas = $this->getKelasOptions();
         $excludedTahunAjaranIds = $this->resolveExcludedTahunAjaranIds($kelas, $targetKelasId);
 
+        return [
+            'kelas' => $kelas,
+            ...$this->buildCandidateSiswaPayload($excludedTahunAjaranIds),
+        ];
+    }
+
+    /**
+     * Mengambil kandidat siswa aktif beserta ringkasan siswa yang disembunyikan
+     * (sudah terdaftar di tahun ajaran pada kelas tujuan) untuk halaman detail kelas.
+     *
+     * @return array{
+     *     siswa: Collection<int, Siswa>,
+     *     excludedTahunAjaranIds: list<int>,
+     *     hiddenRegisteredCount: int,
+     *     hiddenInactiveCount: int
+     * }
+     */
+    public function getCandidateSiswaForKelas(Kelas $kelas): array
+    {
+        $excludedTahunAjaranIds = $kelas->akademik_master_tahun_ajaran_id !== null
+            ? [(int) $kelas->akademik_master_tahun_ajaran_id]
+            : [];
+
+        return $this->buildCandidateSiswaPayload($excludedTahunAjaranIds);
+    }
+
+    /**
+     * Membangun payload kandidat siswa aktif dan jumlah siswa yang disembunyikan.
+     *
+     * @param  list<int>  $excludedTahunAjaranIds
+     * @return array{
+     *     siswa: Collection<int, Siswa>,
+     *     excludedTahunAjaranIds: list<int>,
+     *     hiddenRegisteredCount: int,
+     *     hiddenInactiveCount: int
+     * }
+     */
+    private function buildCandidateSiswaPayload(array $excludedTahunAjaranIds): array
+    {
         $siswa = $this->buildCreateSiswaQuery($excludedTahunAjaranIds)->get();
 
         $hiddenRegisteredCount = $excludedTahunAjaranIds === []
@@ -115,7 +157,6 @@ class AnggotaKelasService
             ->count();
 
         return [
-            'kelas' => $kelas,
             'siswa' => $siswa,
             'excludedTahunAjaranIds' => $excludedTahunAjaranIds,
             'hiddenRegisteredCount' => $hiddenRegisteredCount,
@@ -171,42 +212,6 @@ class AnggotaKelasService
     }
 
     /**
-     * Menentukan ID tahun ajaran yang anggotanya harus disembunyikan pada form create.
-     *
-     * @param  Collection<int, Kelas>  $kelas
-     * @return list<int>
-     */
-    private function resolveExcludedTahunAjaranIds(Collection $kelas, ?int $targetKelasId = null): array
-    {
-        if ($targetKelasId !== null) {
-            $selectedKelas = $kelas->firstWhere('id', $targetKelasId);
-            if ($selectedKelas !== null && $selectedKelas->akademik_master_tahun_ajaran_id !== null) {
-                return [(int) $selectedKelas->akademik_master_tahun_ajaran_id];
-            }
-        }
-
-        $activeIds = $kelas
-            ->filter(static fn (Kelas $item): bool => (bool) $item->tahunAjaran?->is_active)
-            ->pluck('akademik_master_tahun_ajaran_id')
-            ->filter(static fn (mixed $id): bool => $id !== null)
-            ->map(static fn (mixed $id): int => (int) $id)
-            ->unique()
-            ->values()
-            ->all();
-
-        if ($activeIds !== []) {
-            return $activeIds;
-        }
-
-        $latestKelas = $kelas->first();
-        if ($latestKelas !== null && $latestKelas->akademik_master_tahun_ajaran_id !== null) {
-            return [(int) $latestKelas->akademik_master_tahun_ajaran_id];
-        }
-
-        return [];
-    }
-
-    /**
      * Mencari daftar NIS yang sudah terdaftar di kelas lain pada tahun ajaran/semester yang sama.
      *
      * @param  list<string>  $nisList
@@ -243,10 +248,7 @@ class AnggotaKelasService
      */
     public function store(array $data): Collection
     {
-        $rawNis = $data['siswa_nis'];
-        $nisList = is_array($rawNis)
-            ? array_values(array_unique(array_map('strval', $rawNis)))
-            : [(string) $rawNis];
+        $nisList = $this->normalizeBatchIdentifiers($data['siswa_nis']);
         $kelasId = (int) $data['akademik_master_kelas_id'];
         $pendaftaran = (string) $data['pendaftaran'];
 
