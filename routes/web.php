@@ -16,6 +16,8 @@ use App\Http\Controllers\Admin\DataPelengkap\JenjangPendidikanController;
 use App\Http\Controllers\Admin\DataPelengkap\PekerjaanController;
 use App\Http\Controllers\Admin\DataPelengkap\PenghasilanController;
 use App\Http\Controllers\Admin\DataPelengkap\TransportasiController;
+use App\Http\Controllers\Admin\Informasi\AgendaSekolahController;
+use App\Http\Controllers\Admin\Informasi\PengumumanController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SSOController;
 use Illuminate\Support\Facades\Route;
@@ -62,5 +64,13 @@ Route::middleware(['auth', 'sso.check', 'nocache'])->group(function () {
     Route::resource('/data-pelengkap/pekerjaan', PekerjaanController::class);
     Route::resource('/data-pelengkap/penghasilan', PenghasilanController::class);
     Route::resource('/data-pelengkap/transportasi', TransportasiController::class);
+
+    // Informasi
+    Route::resource('/informasi/agenda-sekolah', AgendaSekolahController::class)
+        ->except(['show'])
+        ->parameters(['agenda-sekolah' => 'agenda_sekolah']);
+    Route::resource('/informasi/pengumuman', PengumumanController::class)
+        ->except(['show'])
+        ->parameters(['pengumuman' => 'pengumuman']);
 
 });

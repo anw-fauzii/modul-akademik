@@ -38,6 +38,8 @@ class SidebarViewTest extends TestCase
     #[TestWith(['/data-master/anggota-jemputan', 'data-master'])]
     #[TestWith(['/data-master/anggota-t2q', 'data-master'])]
     #[TestWith(['/data-pelengkap/pekerjaan', 'data-pelengkap'])]
+    #[TestWith(['/informasi/agenda-sekolah', 'informasi'])]
+    #[TestWith(['/informasi/pengumuman', 'informasi'])]
     public function test_parent_dropdown_menus_match_dashboard_active_colors_when_child_route_is_active(
         string $uri,
         string $expectedActiveMenu
@@ -56,10 +58,15 @@ class SidebarViewTest extends TestCase
             $xpath,
             '//nav//button[@data-sidebar-toggle="submenu-data-pelengkap"]'
         );
+        $informasiButton = $this->querySingleElement(
+            $xpath,
+            '//nav//button[@data-sidebar-toggle="submenu-informasi"]'
+        );
 
         $this->assertMenuState($xpath, $dashboardLink, $expectedActiveMenu === 'dashboard', false);
         $this->assertMenuState($xpath, $dataMasterButton, $expectedActiveMenu === 'data-master', true);
         $this->assertMenuState($xpath, $dataPelengkapButton, $expectedActiveMenu === 'data-pelengkap', true);
+        $this->assertMenuState($xpath, $informasiButton, $expectedActiveMenu === 'informasi', true);
     }
 
     /**

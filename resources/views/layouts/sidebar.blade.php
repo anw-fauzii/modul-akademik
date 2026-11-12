@@ -37,6 +37,7 @@
                 $isDashboardActive = request()->routeIs('home');
                 $isDataMasterActive = request()->is('data-master*');
                 $isDataPelengkapActive = request()->is('data-pelengkap*');
+                $isInformasiActive = request()->is('informasi*');
                 $menuActiveClass = 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md shadow-orange-600/30';
                 $menuInactiveClass = 'text-slate-300 hover:text-white hover:bg-slate-800/80';
                 $menuIconActiveClass = 'text-white';
@@ -157,6 +158,40 @@
                         <a href="{{ route('transportasi.index') }}"
                             class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('data-pelengkap/transportasi*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
                             Transportasi
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Informasi Dropdown -->
+                <div class="has-submenu relative group/submenu">
+                    <button type="button" data-sidebar-toggle="submenu-informasi"
+                        aria-expanded="{{ $isInformasiActive ? 'true' : 'false' }}"
+                        class="w-full group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all {{ $isInformasiActive ? $menuActiveClass : $menuInactiveClass }}">
+                        <div class="flex items-center gap-3">
+                            <svg class="h-4 w-4 shrink-0 {{ $isInformasiActive ? $menuIconActiveClass : $menuIconInactiveClass }}" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span class="menu-text">Informasi</span>
+                        </div>
+                        <svg class="menu-chevron h-3.5 w-3.5 transition-transform duration-200 {{ $isInformasiActive ? 'text-white rotate-180' : 'text-slate-400 group-hover:text-white' }}"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div id="submenu-informasi"
+                        class="{{ $isInformasiActive ? '' : 'hidden' }} submenu-flyout mt-1 space-y-1 pl-4 border-l border-slate-800 ml-5 py-1">
+                        <div class="flyout-header hidden">
+                            <span>Informasi</span>
+                        </div>
+                        <a href="{{ route('agenda-sekolah.index') }}"
+                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('informasi/agenda-sekolah*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                            Agenda Sekolah
+                        </a>
+                        <a href="{{ route('pengumuman.index') }}"
+                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('informasi/pengumuman*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                            Pengumuman
                         </a>
                     </div>
                 </div>
