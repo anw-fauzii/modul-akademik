@@ -76,9 +76,32 @@ trait ValidatesBatchMembershipRequest
             $this->extractMemberIdentifierList('anggota_kelas_id')
         )));
 
+        $this->validateAnggotaKelasConflictsInTahunAjaran(
+            $validator,
+            $anggotaKelasIds,
+            (int) $tahunAjaranId,
+            $membershipService,
+            $routeParamName,
+            $entityLabel
+        );
+    }
+
+    /**
+     * Memvalidasi kecocokan tahun ajaran dan konflik siswa untuk satu target tahun ajaran.
+     *
+     * @param  list<int>  $anggotaKelasIds
+     */
+    protected function validateAnggotaKelasConflictsInTahunAjaran(
+        Validator $validator,
+        array $anggotaKelasIds,
+        int $tahunAjaranId,
+        object $membershipService,
+        string $routeParamName,
+        string $entityLabel
+    ): bool {
         $mismatchedIds = $membershipService->findMismatchedTahunAjaranAnggotaKelas(
             $anggotaKelasIds,
-            (int) $tahunAjaranId
+            $tahunAjaranId
         );
 
         if ($mismatchedIds !== []) {
@@ -87,7 +110,7 @@ trait ValidatesBatchMembershipRequest
                 "Anggota kelas yang dipilih tidak berada pada tahun ajaran dan semester yang sama dengan {$entityLabel} tujuan."
             );
 
-            return;
+            return false;
         }
 
         $currentRecord = $this->route($routeParamName);
@@ -97,7 +120,7 @@ trait ValidatesBatchMembershipRequest
 
         $conflicts = $membershipService->findConflictingAnggotaKelasInTahunAjaran(
             $anggotaKelasIds,
-            (int) $tahunAjaranId,
+            $tahunAjaranId,
             $ignoreId
         );
 
@@ -106,6 +129,10 @@ trait ValidatesBatchMembershipRequest
                 'anggota_kelas_id',
                 'Siswa dengan NIS '.implode(', ', $conflicts)." sudah terdaftar di {$entityLabel} pada tahun ajaran dan semester yang dipilih."
             );
+
+            return false;
         }
+
+        return true;
     }
 }

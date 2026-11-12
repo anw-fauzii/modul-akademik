@@ -4,6 +4,7 @@
 use App\Http\Controllers\Admin\DataMaster\AnggotaEkstrakurikulerController;
 use App\Http\Controllers\Admin\DataMaster\AnggotaJemputanController;
 use App\Http\Controllers\Admin\DataMaster\AnggotaKelasController;
+use App\Http\Controllers\Admin\DataMaster\AnggotaT2qController;
 use App\Http\Controllers\Admin\DataMaster\EkstrakurikulerController;
 use App\Http\Controllers\Admin\DataMaster\JemputanController;
 use App\Http\Controllers\Admin\DataMaster\KaryawanController;
@@ -47,6 +48,9 @@ Route::middleware(['auth', 'sso.check', 'nocache'])->group(function () {
     Route::resource('/data-master/anggota-jemputan', AnggotaJemputanController::class)
         ->except(['show'])
         ->parameters(['anggota-jemputan' => 'anggota_jemputan']);
+    Route::resource('/data-master/anggota-t2q', AnggotaT2qController::class)
+        ->except(['show'])
+        ->parameters(['anggota-t2q' => 'anggota_t2q']);
     Route::resource('/data-master/siswa', SiswaController::class);
     Route::get('/data-master/karyawan', [KaryawanController::class, 'index'])->name('karyawan.index');
     Route::get('/data-master/karyawan/{karyawan}', [KaryawanController::class, 'show'])->name('karyawan.show');

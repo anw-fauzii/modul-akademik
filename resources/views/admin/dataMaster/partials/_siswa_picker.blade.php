@@ -358,22 +358,25 @@
 @endPushOnce
 
 @php
-    $pickerMode = in_array($pickerMode ?? 'kelas', ['kelas', 'ekstrakurikuler', 'jemputan'], true)
+    $pickerMode = in_array($pickerMode ?? 'kelas', ['kelas', 'ekstrakurikuler', 'jemputan', 't2q'], true)
         ? $pickerMode
         : 'kelas';
     $isEkstrakurikulerMode = $pickerMode === 'ekstrakurikuler';
     $isJemputanMode = $pickerMode === 'jemputan';
-    $usesAnggotaKelas = $isEkstrakurikulerMode || $isJemputanMode;
+    $isT2qMode = $pickerMode === 't2q';
+    $usesAnggotaKelas = $isEkstrakurikulerMode || $isJemputanMode || $isT2qMode;
     $items = $usesAnggotaKelas ? ($anggotaKelas ?? collect()) : ($siswa ?? collect());
     $inputName = $usesAnggotaKelas ? 'anggota_kelas_id' : 'siswa_nis';
     $groupControlId = match ($pickerMode) {
         'ekstrakurikuler' => 'akademik_master_ekstrakuler_id',
         'jemputan' => 'akademik_master_jemputan_id',
+        't2q' => 'filter_tahun_ajaran_id',
         default => 'akademik_master_kelas_id',
     };
     $redirectQueryParam = match ($pickerMode) {
         'ekstrakurikuler' => 'ekstrakurikuler_id',
         'jemputan' => 'jemputan_id',
+        't2q' => 'tahun_ajaran_id',
         default => 'kelas_id',
     };
     $showHistoryFilter = $showHistoryFilter ?? true;
@@ -384,26 +387,31 @@
     $defaultCreateUrl = match ($pickerMode) {
         'ekstrakurikuler' => route('anggota-ekstrakurikuler.create'),
         'jemputan' => route('anggota-jemputan.create'),
+        't2q' => route('anggota-t2q.create'),
         default => route('anggota-kelas.create'),
     };
     $searchPlaceholder = match ($pickerMode) {
         'ekstrakurikuler' => 'Cari nama lengkap, NIS, NISN, kelas, atau ekskul sebelumnya...',
         'jemputan' => 'Cari nama lengkap, NIS, NISN, kelas, atau jemputan sebelumnya...',
+        't2q' => 'Cari nama lengkap, NIS, NISN, kelas, tingkat, atau guru T2Q sebelumnya...',
         default => 'Cari nama lengkap, NIS, NISN, atau kelas sebelumnya...',
     };
     $historyFilterAriaLabel = match ($pickerMode) {
         'ekstrakurikuler' => 'Filter riwayat ekstrakurikuler siswa',
         'jemputan' => 'Filter riwayat jemputan siswa',
+        't2q' => 'Filter riwayat T2Q siswa',
         default => 'Filter riwayat kelas siswa',
     };
     $withoutPrevOptionLabel = match ($pickerMode) {
         'ekstrakurikuler' => 'Belum Ada Ekskul Sebelumnya',
         'jemputan' => 'Belum Ada Jemputan Sebelumnya',
+        't2q' => 'Belum Ada T2Q Sebelumnya',
         default => 'Belum Ada Kelas Sebelumnya',
     };
     $withPrevOptionLabel = match ($pickerMode) {
         'ekstrakurikuler' => 'Sudah Punya Ekskul Sebelumnya',
         'jemputan' => 'Sudah Punya Jemputan Sebelumnya',
+        't2q' => 'Sudah Punya T2Q Sebelumnya',
         default => 'Sudah Punya Kelas Sebelumnya',
     };
     $oldValues = old($inputName);
@@ -469,6 +477,15 @@
                         $historyPrimary = $prevSummary['petugas'] ?? null;
                         $historySecondary = null;
                         $historyExtraYear = $prevSummary['tarif_label'] ?? null;
+                    } elseif ($isT2qMode) {
+                        $prevSummary = $student?->resolvePreviousT2qSummary();
+                        $registeredTahunAjaran = $student?->registeredT2qTahunAjaranIds() ?? [];
+                        $historyTitle = 'T2Q Sebelumnya';
+                        $historyIcon = 'fa-book-open';
+                        $historyEmptyText = 'Belum ada T2Q sebelumnya';
+                        $historyPrimary = $prevSummary['guru'] ?? null;
+                        $historySecondary = null;
+                        $historyExtraYear = $prevSummary ? ('Tingkat ' . $prevSummary['tingkat']) : null;
                     } else {
                         $prevSummary = $student?->resolvePreviousEkstrakurikulerSummary();
                         $registeredTahunAjaran = $student?->registeredEkstrakurikulerTahunAjaranIds() ?? [];
@@ -489,6 +506,7 @@
                         $student?->status,
                         $kelasModel?->nama_kelas,
                         $kelasModel?->jenjang_kelas,
+                        $kelasModel?->tingkatan_kelas,
                         $historyPrimary,
                         $historySecondary,
                         $historyExtraYear,
@@ -559,6 +577,11 @@
                                     <i class="fa fa-school text-warning mr-1" aria-hidden="true"></i>{{ $kelasBadgeLabel }}
                                 </span>
                             @endif
+                            @if ($isT2qMode && $kelasModel?->tingkatan_kelas)
+                                <span class="badge badge-warning text-dark">
+                                    Tingkat {{ $kelasModel->tingkatan_kelas }}
+                                </span>
+                            @endif
                         </div>
                         <div class="ak-student-meta">
                             <span class="ak-nis-chip">
@@ -609,7 +632,11 @@
             <div class="text-muted small p-4 text-center">
                 @if ($usesAnggotaKelas)
                     @php
-                        $groupNoun = $isJemputanMode ? 'layanan jemputan' : 'ekstrakurikuler';
+                        $groupNoun = match ($pickerMode) {
+                            'jemputan' => 'layanan jemputan',
+                            't2q' => 'anggota T2Q',
+                            default => 'ekstrakurikuler',
+                        };
                     @endphp
                     @if ($hiddenCount > 0)
                         <i class="fa fa-check-circle text-success mb-2" style="font-size: 1.5rem;"></i>
@@ -661,6 +688,8 @@
                 <i class="fa fa-info-circle text-primary mr-1"></i>
                 @if ($isJemputanMode)
                     Menampilkan hanya siswa berstatus <strong>Aktif</strong> yang sudah punya anggota kelas &amp; belum terdaftar layanan jemputan pada tahun ajaran ini.
+                @elseif ($isT2qMode)
+                    Menampilkan hanya siswa berstatus <strong>Aktif</strong> yang sudah punya anggota kelas &amp; belum terdaftar anggota T2Q pada tahun ajaran ini.
                 @elseif ($isEkstrakurikulerMode)
                     Menampilkan hanya siswa berstatus <strong>Aktif</strong> yang sudah punya anggota kelas &amp; belum terdaftar ekstrakurikuler pada tahun ajaran ini.
                 @else
@@ -672,6 +701,8 @@
                     <i class="fa fa-user-check"></i>
                     @if ($isJemputanMode)
                         {{ $hiddenCount }} sudah punya jemputan (disembunyikan)
+                    @elseif ($isT2qMode)
+                        {{ $hiddenCount }} sudah terdaftar T2Q (disembunyikan)
                     @elseif ($isEkstrakurikulerMode)
                         {{ $hiddenCount }} sudah punya ekskul (disembunyikan)
                     @else
@@ -716,6 +747,8 @@
             const groupControlId = container?.dataset.groupControlId || 'akademik_master_kelas_id';
             const redirectParam = container?.dataset.redirectParam || 'kelas_id';
             const groupControl = document.getElementById(groupControlId);
+            const karyawanSelect = document.getElementById('karyawan_nipy');
+            const tingkatSelect = document.getElementById('tingkat');
             const pendaftaranSelect = document.getElementById('pendaftaran');
             const keteranganInput = document.getElementById('keterangan');
             const searchInput = document.getElementById('filterSiswaInput');
@@ -836,6 +869,12 @@
                     if (createUrl && selectedYear !== '' && filteredYears.length > 0 && !filteredYears.includes(selectedYear)) {
                         const url = new URL(createUrl, window.location.origin);
                         url.searchParams.set(redirectParam, groupControl.value);
+                        if (karyawanSelect?.value) {
+                            url.searchParams.set('karyawan_nipy', karyawanSelect.value);
+                        }
+                        if (tingkatSelect?.value && tingkatSelect.value !== '__custom__') {
+                            url.searchParams.set('tingkat', tingkatSelect.value);
+                        }
                         if (pendaftaranSelect?.value) {
                             url.searchParams.set('pendaftaran', pendaftaranSelect.value);
                         }

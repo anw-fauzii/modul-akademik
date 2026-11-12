@@ -137,4 +137,12 @@ class AnggotaKelas extends Model
     {
         return $this->hasMany(AnggotaJemputan::class, 'anggota_kelas_id');
     }
+
+    /**
+     * Relasi ke keanggotaan T2Q pada periode kelas ini.
+     */
+    public function anggotaT2q(): HasMany
+    {
+        return $this->hasMany(AnggotaT2q::class, 'anggota_kelas_id');
+    }
 }

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'nipy',
@@ -124,6 +125,14 @@ class Karyawan extends Model
     public function jenjangPendidikan(): BelongsTo
     {
         return $this->belongsTo(JenjangPendidikan::class, 'akademik_pelengkap_jenjang_pendidikan_id');
+    }
+
+    /**
+     * Relasi ke daftar anggota T2Q yang dibimbing karyawan ini.
+     */
+    public function anggotaT2q(): HasMany
+    {
+        return $this->hasMany(AnggotaT2q::class, 'karyawan_nipy', 'nipy');
     }
 
     /**

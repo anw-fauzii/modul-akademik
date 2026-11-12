@@ -141,7 +141,10 @@ trait ManagesTahunAjaranMembership
                 ->whereHas('kelas', fn (Builder $kelasQuery) => $kelasQuery->whereIn('akademik_master_tahun_ajaran_id', $targetTahunAjaranIds))
                 ->whereHas(
                     "siswa.{$siswaMembershipNestedRelation}",
-                    fn (Builder $groupQuery) => $groupQuery->whereIn('akademik_master_tahun_ajaran_id', $targetTahunAjaranIds)
+                    fn (Builder $groupQuery) => $groupQuery->whereIn(
+                        $groupQuery->qualifyColumn('akademik_master_tahun_ajaran_id'),
+                        $targetTahunAjaranIds
+                    )
                 )
                 ->count();
 
@@ -199,7 +202,10 @@ trait ManagesTahunAjaranMembership
                     )
                     ->whereDoesntHave(
                         "siswa.{$siswaMembershipNestedRelation}",
-                        fn (Builder $groupQuery) => $groupQuery->whereIn('akademik_master_tahun_ajaran_id', $targetTahunAjaranIds)
+                        fn (Builder $groupQuery) => $groupQuery->whereIn(
+                            $groupQuery->qualifyColumn('akademik_master_tahun_ajaran_id'),
+                            $targetTahunAjaranIds
+                        )
                     )
             );
     }

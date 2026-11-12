@@ -33,13 +33,22 @@
             <p class="px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2 menu-heading">
                 Menu Utama
             </p>
+            @php
+                $isDashboardActive = request()->routeIs('home');
+                $isDataMasterActive = request()->is('data-master*');
+                $isDataPelengkapActive = request()->is('data-pelengkap*');
+                $menuActiveClass = 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md shadow-orange-600/30';
+                $menuInactiveClass = 'text-slate-300 hover:text-white hover:bg-slate-800/80';
+                $menuIconActiveClass = 'text-white';
+                $menuIconInactiveClass = 'text-slate-400 group-hover:text-orange-400';
+            @endphp
             <nav class="space-y-1">
                 <!-- Dashboard -->
                 <div class="relative group/tooltip">
                     <a href="{{ route('home') }}"
-                        class="group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all {{ request()->routeIs('home') ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md shadow-orange-600/30' : 'text-slate-300 hover:text-white hover:bg-slate-800/80' }}">
+                        class="group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all {{ $isDashboardActive ? $menuActiveClass : $menuInactiveClass }}">
                         <div class="flex items-center gap-3">
-                            <svg class="h-4 w-4 shrink-0 {{ request()->routeIs('home') ? 'text-white' : 'text-slate-400 group-hover:text-orange-400' }}"
+                            <svg class="h-4 w-4 shrink-0 {{ $isDashboardActive ? $menuIconActiveClass : $menuIconInactiveClass }}"
                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -51,22 +60,19 @@
                 </div>
 
                 <!-- Data Master Dropdown -->
-                @php
-                    $isDataMasterActive = request()->is('data-master*');
-                @endphp
                 <div class="has-submenu relative group/submenu">
                     <button type="button" data-sidebar-toggle="submenu-data-master"
                         aria-expanded="{{ $isDataMasterActive ? 'true' : 'false' }}"
-                        class="w-full group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all {{ $isDataMasterActive ? 'text-white bg-slate-800' : 'text-slate-300 hover:text-white hover:bg-slate-800/80' }}">
+                        class="w-full group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all {{ $isDataMasterActive ? $menuActiveClass : $menuInactiveClass }}">
                         <div class="flex items-center gap-3">
-                            <svg class="h-4 w-4 shrink-0 text-slate-400 group-hover:text-orange-400" fill="none"
+                            <svg class="h-4 w-4 shrink-0 {{ $isDataMasterActive ? $menuIconActiveClass : $menuIconInactiveClass }}" fill="none"
                                 stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7C5 4 4 5 4 7zm0 4h16M10 4v16" />
                             </svg>
                             <span class="menu-text">Data Master</span>
                         </div>
-                        <svg class="menu-chevron h-3.5 w-3.5 text-slate-400 transition-transform duration-200 {{ $isDataMasterActive ? 'rotate-180' : '' }}"
+                        <svg class="menu-chevron h-3.5 w-3.5 transition-transform duration-200 {{ $isDataMasterActive ? 'text-white rotate-180' : 'text-slate-400 group-hover:text-white' }}"
                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
@@ -93,6 +99,10 @@
                             class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('data-master/jemputan*') || request()->is('data-master/anggota-jemputan*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
                             Jemputan
                         </a>
+                        <a href="{{ route('anggota-t2q.index') }}"
+                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('data-master/anggota-t2q*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                            Anggota T2Q
+                        </a>
                         <a href="{{ route('siswa.index') }}"
                             class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('data-master/siswa*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
                             Siswa
@@ -105,22 +115,19 @@
                 </div>
 
                 <!-- Data Pelengkap Dropdown -->
-                @php
-                    $isDataPelengkapActive = request()->is('data-pelengkap*');
-                @endphp
                 <div class="has-submenu relative group/submenu">
                     <button type="button" data-sidebar-toggle="submenu-data-pelengkap"
                         aria-expanded="{{ $isDataPelengkapActive ? 'true' : 'false' }}"
-                        class="w-full group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all {{ $isDataPelengkapActive ? 'text-white bg-slate-800' : 'text-slate-300 hover:text-white hover:bg-slate-800/80' }}">
+                        class="w-full group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all {{ $isDataPelengkapActive ? $menuActiveClass : $menuInactiveClass }}">
                         <div class="flex items-center gap-3">
-                            <svg class="h-4 w-4 shrink-0 text-slate-400 group-hover:text-orange-400" fill="none"
+                            <svg class="h-4 w-4 shrink-0 {{ $isDataPelengkapActive ? $menuIconActiveClass : $menuIconInactiveClass }}" fill="none"
                                 stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                             </svg>
                             <span class="menu-text">Data Pelengkap</span>
                         </div>
-                        <svg class="menu-chevron h-3.5 w-3.5 text-slate-400 transition-transform duration-200 {{ $isDataPelengkapActive ? 'rotate-180' : '' }}"
+                        <svg class="menu-chevron h-3.5 w-3.5 transition-transform duration-200 {{ $isDataPelengkapActive ? 'text-white rotate-180' : 'text-slate-400 group-hover:text-white' }}"
                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>

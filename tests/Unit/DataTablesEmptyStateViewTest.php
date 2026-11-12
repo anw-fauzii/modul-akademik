@@ -12,6 +12,7 @@ class DataTablesEmptyStateViewTest extends TestCase
 {
     #[TestWith(['admin.dataMaster.ekstrakurikuler.index', 'ekstrakurikuler', 8])]
     #[TestWith(['admin.dataMaster.jemputan.index', 'jemputan', 7])]
+    #[TestWith(['admin.dataMaster.anggotaT2q.index', 'anggotaT2q', 8])]
     #[TestWith(['admin.dataMaster.kelas.index', 'kelas', 7])]
     #[TestWith(['admin.dataMaster.tahunAjaran.index', 'tahunAjaran', 5])]
     #[TestWith(['admin.dataMaster.karyawan.index', 'karyawan', 7])]

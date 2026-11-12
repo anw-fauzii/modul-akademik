@@ -556,6 +556,21 @@ class Siswa extends Model
     }
 
     /**
+     * Relasi ke riwayat keanggotaan T2Q siswa melalui tabel anggota kelas.
+     */
+    public function anggotaT2q(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            AnggotaT2q::class,
+            AnggotaKelas::class,
+            'siswa_nis',
+            'anggota_kelas_id',
+            'nis',
+            'id'
+        );
+    }
+
+    /**
      * Mengambil daftar ID tahun ajaran yang sudah pernah diikuti siswa dari relasi ter-load.
      *
      * @return list<int>
@@ -590,6 +605,20 @@ class Siswa extends Model
             'anggotaJemputan',
             'jemputan',
             $excludeAnggotaJemputanId
+        );
+    }
+
+    /**
+     * Mengambil daftar ID tahun ajaran ketika siswa sudah terdaftar pada Anggota T2Q.
+     *
+     * @return list<int>
+     */
+    public function registeredT2qTahunAjaranIds(?int $excludeAnggotaT2qId = null): array
+    {
+        return $this->collectRegisteredTahunAjaranIdsFrom(
+            'anggotaT2q',
+            'anggotaKelas.kelas',
+            $excludeAnggotaT2qId
         );
     }
 
@@ -710,6 +739,49 @@ class Siswa extends Model
     }
 
     /**
+     * Mengambil ringkasan keanggotaan T2Q terakhir / sebelumnya siswa tanpa memicu lazy loading.
+     *
+     * @return array{
+     *     guru: string,
+     *     tingkat: string,
+     *     tahun_ajaran: string|null,
+     *     semester: string|null,
+     *     tahun_ajaran_id: int|null
+     * }|null
+     */
+    public function resolvePreviousT2qSummary(?int $excludeAnggotaT2qId = null): ?array
+    {
+        /** @var AnggotaT2q|null $selectedT2q */
+        $selectedT2q = $this->resolveLatestMembershipFromHistory(
+            'anggotaT2q',
+            'anggotaKelas.kelas',
+            $excludeAnggotaT2qId
+        );
+
+        if ($selectedT2q === null) {
+            return null;
+        }
+
+        $kelasModel = $this->resolveLoadedRelationPath($selectedT2q, 'anggotaKelas.kelas');
+        $tahunAjaran = $kelasModel?->relationLoaded('tahunAjaran')
+            ? $kelasModel->getRelation('tahunAjaran')
+            : null;
+        $guruModel = $selectedT2q->relationLoaded('guruT2q')
+            ? $selectedT2q->guruT2q
+            : null;
+
+        return [
+            'guru' => $guruModel?->nama_gelar ?? ('Guru #'.$selectedT2q->karyawan_nipy),
+            'tingkat' => (string) $selectedT2q->tingkat,
+            'tahun_ajaran' => $tahunAjaran?->nama_tahun_ajaran,
+            'semester' => $tahunAjaran?->semester,
+            'tahun_ajaran_id' => $kelasModel?->getAttribute('akademik_master_tahun_ajaran_id')
+                ? (int) $kelasModel->getAttribute('akademik_master_tahun_ajaran_id')
+                : null,
+        ];
+    }
+
+    /**
      * Mengumpulkan ID tahun ajaran dari relasi keanggotaan yang sudah di-load tanpa memicu query tambahan.
      *
      * @return list<int>
@@ -725,12 +797,8 @@ class Siswa extends Model
 
         return $this->getRelation($membershipRelation)
             ->filter(static fn (Model $anggota): bool => $excludeId === null || (int) $anggota->getKey() !== $excludeId)
-            ->map(static function (Model $anggota) use ($groupRelation): ?int {
-                if (! $anggota->relationLoaded($groupRelation)) {
-                    return null;
-                }
-
-                $group = $anggota->getRelation($groupRelation);
+            ->map(function (Model $anggota) use ($groupRelation): ?int {
+                $group = $this->resolveLoadedRelationPath($anggota, $groupRelation);
                 if ($group === null) {
                     return null;
                 }
@@ -744,7 +812,7 @@ class Siswa extends Model
     }
 
     /**
-     * Mengambil entitas grup (kelas/ekstrakurikuler) terbaru dari riwayat ter-load atau fallback relasi langsung.
+     * Mengambil entitas grup (kelas/ekstrakurikuler/jemputan) terbaru dari riwayat ter-load atau fallback relasi langsung.
      */
     private function resolveLatestGroupFromHistory(
         string $membershipRelation,
@@ -752,37 +820,76 @@ class Siswa extends Model
         string $fallbackRelation,
         ?int $excludeId = null
     ): ?Model {
-        $selectedGroup = null;
+        $latestMembership = $this->resolveLatestMembershipFromHistory(
+            $membershipRelation,
+            $groupRelation,
+            $excludeId
+        );
 
-        if ($this->relationLoaded($membershipRelation)) {
-            $latestMembership = $this->getRelation($membershipRelation)
-                ->filter(static function (Model $anggota) use ($excludeId, $groupRelation): bool {
-                    if ($excludeId !== null && (int) $anggota->getKey() === $excludeId) {
-                        return false;
-                    }
-
-                    return $anggota->relationLoaded($groupRelation) && $anggota->getRelation($groupRelation) !== null;
-                })
-                ->sortByDesc(static function (Model $anggota) use ($groupRelation): string {
-                    $group = $anggota->getRelation($groupRelation);
-                    $ta = $group->relationLoaded('tahunAjaran') ? $group->getRelation('tahunAjaran') : null;
-
-                    return sprintf(
-                        '%s-%s-%010d',
-                        $ta?->nama_tahun_ajaran ?? '0000/0000',
-                        $ta?->semester ?? '0',
-                        (int) ($anggota->getKey() ?? 0)
-                    );
-                })
-                ->first();
-
-            $selectedGroup = $latestMembership?->getRelation($groupRelation);
-        }
+        $selectedGroup = $latestMembership !== null
+            ? $this->resolveLoadedRelationPath($latestMembership, $groupRelation)
+            : null;
 
         if ($selectedGroup === null && $this->relationLoaded($fallbackRelation)) {
             $selectedGroup = $this->getRelation($fallbackRelation);
         }
 
         return $selectedGroup;
+    }
+
+    /**
+     * Mengambil model keanggotaan terbaru dari relasi ter-load berdasarkan tahun ajaran, semester, dan ID.
+     */
+    private function resolveLatestMembershipFromHistory(
+        string $membershipRelation,
+        string $tahunAjaranHolderPath,
+        ?int $excludeId = null
+    ): ?Model {
+        if (! $this->relationLoaded($membershipRelation)) {
+            return null;
+        }
+
+        return $this->getRelation($membershipRelation)
+            ->filter(function (Model $anggota) use ($excludeId, $tahunAjaranHolderPath): bool {
+                if ($excludeId !== null && (int) $anggota->getKey() === $excludeId) {
+                    return false;
+                }
+
+                return $this->resolveLoadedRelationPath($anggota, $tahunAjaranHolderPath) !== null;
+            })
+            ->sortByDesc(function (Model $anggota) use ($tahunAjaranHolderPath): string {
+                $holder = $this->resolveLoadedRelationPath($anggota, $tahunAjaranHolderPath);
+                $ta = $holder?->relationLoaded('tahunAjaran') ? $holder->getRelation('tahunAjaran') : null;
+
+                return sprintf(
+                    '%s-%s-%010d',
+                    $ta?->nama_tahun_ajaran ?? '0000/0000',
+                    $ta?->semester ?? '0',
+                    (int) ($anggota->getKey() ?? 0)
+                );
+            })
+            ->first();
+    }
+
+    /**
+     * Menelusuri rantai relasi yang sudah di-eager-load secara aman tanpa memicu lazy loading.
+     */
+    private function resolveLoadedRelationPath(Model $model, string $relationPath): ?Model
+    {
+        $current = $model;
+
+        foreach (explode('.', $relationPath) as $segment) {
+            if (! $current->relationLoaded($segment)) {
+                return null;
+            }
+
+            $current = $current->getRelation($segment);
+
+            if (! $current instanceof Model) {
+                return null;
+            }
+        }
+
+        return $current;
     }
 }

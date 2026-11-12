@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Admin\DataMaster\AnggotaEkstrakurikuler;
 use App\Models\Admin\DataMaster\AnggotaJemputan;
 use App\Models\Admin\DataMaster\AnggotaKelas;
+use App\Models\Admin\DataMaster\AnggotaT2q;
 use App\Models\Admin\DataMaster\Ekstrakurikuler;
 use App\Models\Admin\DataMaster\Jemputan;
 use App\Models\Admin\DataMaster\Karyawan;
@@ -401,6 +402,7 @@ class SiswaSeeder extends Seeder
             $activeStudentsForKelas = [];
             $activeStudentsForEkstrakurikuler = [];
             $activeStudentsForJemputan = [];
+            $activeStudentsForT2q = [];
 
             foreach ($profiles as $index => $profile) {
                 $attributes = $this->buildSiswaAttributes($profile, $index, $pools);
@@ -432,11 +434,25 @@ class SiswaSeeder extends Seeder
                         'pendaftaran' => $membershipPendaftaran,
                     ];
                 }
+
+                if (
+                    $profile['status'] === 'Aktif'
+                    && $attributes['akademik_master_kelas_id'] !== null
+                    && $attributes['karyawan_nipy'] !== null
+                    && ($index % 2 === 0)
+                ) {
+                    $activeStudentsForT2q[$profile['nis']] = [
+                        'kelas_id' => (int) $attributes['akademik_master_kelas_id'],
+                        'karyawan_nipy' => (string) $attributes['karyawan_nipy'],
+                        'pendaftaran' => $membershipPendaftaran,
+                    ];
+                }
             }
 
             $this->syncAnggotaKelasForSeededSiswa($activeStudentsForKelas, $pools['kelas']);
             $this->syncAnggotaEkstrakurikulerForSeededSiswa($activeStudentsForEkstrakurikuler);
             $this->syncAnggotaJemputanForSeededSiswa($activeStudentsForJemputan);
+            $this->syncAnggotaT2qForSeededSiswa($activeStudentsForT2q, $pools['kelas']);
         });
     }
 
@@ -832,6 +848,78 @@ class SiswaSeeder extends Seeder
             $membershipModelClass::create([
                 'anggota_kelas_id' => $anggotaKelasId,
                 $groupForeignKey => $target['group_id'],
+                'pendaftaran' => $target['pendaftaran'],
+            ]);
+
+            $existingByStudentYear[$key] = true;
+        }
+    }
+
+    /**
+     * Menyinkronkan keanggotaan T2Q berbasis anggota_kelas_id tanpa duplikasi tahun ajaran & tanpa query N+1.
+     *
+     * @param  array<string, array{kelas_id: int, karyawan_nipy: string, pendaftaran: string}>  $activeStudentsForT2q
+     * @param  list<array{id: int, tahun_ajaran_id: int}>  $kelasPool
+     */
+    private function syncAnggotaT2qForSeededSiswa(array $activeStudentsForT2q, array $kelasPool): void
+    {
+        if (
+            $activeStudentsForT2q === []
+            || $kelasPool === []
+            || ! Schema::hasTable('akademik_master_anggota_t2q')
+            || ! Schema::hasTable('akademik_master_anggota_kelas')
+        ) {
+            return;
+        }
+
+        $kelasYearMap = [];
+        foreach ($kelasPool as $kelas) {
+            $kelasYearMap[$kelas['id']] = $kelas['tahun_ajaran_id'];
+        }
+
+        $nisKeys = array_map('strval', array_keys($activeStudentsForT2q));
+
+        $anggotaKelasByStudentYear = AnggotaKelas::query()
+            ->select(['id', 'siswa_nis', 'akademik_master_kelas_id'])
+            ->whereIn('siswa_nis', $nisKeys)
+            ->with(['kelas:id,akademik_master_tahun_ajaran_id,tingkatan_kelas'])
+            ->orderByDesc('id')
+            ->get()
+            ->mapWithKeys(static fn (AnggotaKelas $anggota): array => [
+                $anggota->siswa_nis.':'.($anggota->kelas?->akademik_master_tahun_ajaran_id ?? 0) => $anggota,
+            ])
+            ->all();
+
+        $existingByStudentYear = AnggotaT2q::query()
+            ->select(['id', 'anggota_kelas_id'])
+            ->whereHas('anggotaKelas', fn ($query) => $query->whereIn('siswa_nis', $nisKeys))
+            ->with(['anggotaKelas:id,siswa_nis,akademik_master_kelas_id', 'anggotaKelas.kelas:id,akademik_master_tahun_ajaran_id'])
+            ->get()
+            ->mapWithKeys(static fn (AnggotaT2q $anggota): array => [
+                ($anggota->anggotaKelas?->siswa_nis ?? '').':'.($anggota->anggotaKelas?->kelas?->akademik_master_tahun_ajaran_id ?? 0) => true,
+            ])
+            ->all();
+
+        foreach ($activeStudentsForT2q as $nis => $target) {
+            $nisString = (string) $nis;
+            $tahunAjaranId = $kelasYearMap[$target['kelas_id']] ?? 0;
+            $key = $nisString.':'.$tahunAjaranId;
+            /** @var AnggotaKelas|null $anggotaKelasRow */
+            $anggotaKelasRow = $anggotaKelasByStudentYear[$key] ?? null;
+
+            if ($tahunAjaranId <= 0 || $anggotaKelasRow === null || isset($existingByStudentYear[$key])) {
+                continue;
+            }
+
+            $tingkat = trim((string) ($anggotaKelasRow->kelas?->tingkatan_kelas ?? ''));
+            if ($tingkat === '') {
+                $tingkat = AnggotaT2q::DEFAULT_TINGKAT_OPTIONS[0];
+            }
+
+            AnggotaT2q::create([
+                'anggota_kelas_id' => $anggotaKelasRow->id,
+                'karyawan_nipy' => $target['karyawan_nipy'],
+                'tingkat' => $tingkat,
                 'pendaftaran' => $target['pendaftaran'],
             ]);
 
