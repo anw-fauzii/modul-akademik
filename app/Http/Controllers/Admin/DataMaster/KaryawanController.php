@@ -8,6 +8,7 @@ use Illuminate\Http\Client\Response as HttpClientResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Throwable;
 
@@ -63,6 +64,11 @@ class KaryawanController extends Controller
 
         $contentType = $this->resolveSafeImageContentType($remoteResponse);
         if ($contentType === null) {
+            Log::warning('Proxy foto karyawan menerima Content-Type non-gambar.', [
+                'nipy' => $karyawan->nipy,
+                'url' => $fotoUrl,
+                'content_type' => $remoteResponse->header('Content-Type'),
+            ]);
             abort(404);
         }
 
@@ -80,11 +86,16 @@ class KaryawanController extends Controller
         }
 
         $currentUrl = $initialUrl;
+        $foreignCookieHeader = $this->buildForeignCookieHeader($request);
 
         for ($attempt = 0; $attempt <= self::MAX_PHOTO_REDIRECTS; $attempt++) {
             $headers = [
                 'Accept' => 'image/avif,image/webp,image/png,image/jpeg,*/*;q=0.8',
             ];
+
+            if ($foreignCookieHeader !== null) {
+                $headers['Cookie'] = $foreignCookieHeader;
+            }
 
             if ($attempt === 0) {
                 $apiKey = trim((string) config('services.kepegawaian.api_key', ''));
@@ -104,17 +115,28 @@ class KaryawanController extends Controller
                     ->timeout(5)
                     ->withHeaders($headers)
                     ->get($currentUrl);
-            } catch (Throwable) {
+            } catch (Throwable $e) {
+                Log::warning('Proxy foto karyawan gagal menghubungi server kepegawaian.', [
+                    'url' => $currentUrl,
+                    'error' => $e->getMessage(),
+                ]);
+
                 return null;
             }
 
             if ($response->redirect()) {
+                $location = (string) $response->header('Location');
                 $nextUrl = $this->resolveSafeSameOriginRedirect(
-                    (string) $response->header('Location'),
+                    $location,
                     $baseOrigin
                 );
 
                 if ($nextUrl === null) {
+                    Log::warning('Proxy foto karyawan ditolak karena redirect ke auth atau origin berbeda.', [
+                        'url' => $currentUrl,
+                        'location' => $location,
+                    ]);
+
                     return null;
                 }
 
@@ -124,6 +146,11 @@ class KaryawanController extends Controller
             }
 
             if (! $response->successful() || $response->body() === '') {
+                Log::warning('Proxy foto karyawan menerima respons gagal dari kepegawaian.', [
+                    'url' => $currentUrl,
+                    'status' => $response->status(),
+                ]);
+
                 return null;
             }
 
@@ -131,6 +158,43 @@ class KaryawanController extends Controller
         }
 
         return null;
+    }
+
+    private function buildForeignCookieHeader(Request $request): ?string
+    {
+        $excluded = array_filter([
+            strtolower((string) config('session.cookie', '')),
+            'xsrf-token',
+        ]);
+
+        $pairs = [];
+        $rawHeader = (string) $request->headers->get('cookie', '');
+
+        if ($rawHeader !== '') {
+            foreach (explode(';', $rawHeader) as $segment) {
+                $segment = trim($segment);
+                if ($segment === '' || ! str_contains($segment, '=')) {
+                    continue;
+                }
+
+                [$name] = explode('=', $segment, 2);
+                if (in_array(strtolower(trim($name)), $excluded, true)) {
+                    continue;
+                }
+
+                $pairs[] = $segment;
+            }
+        } elseif ($request->cookies->count() > 0) {
+            foreach ($request->cookies->all() as $name => $value) {
+                if (! is_string($value) || in_array(strtolower((string) $name), $excluded, true)) {
+                    continue;
+                }
+
+                $pairs[] = $name.'='.$value;
+            }
+        }
+
+        return $pairs !== [] ? implode('; ', $pairs) : null;
     }
 
     private function resolveSafeSameOriginRedirect(string $location, string $baseOrigin): ?string

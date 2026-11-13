@@ -36,7 +36,7 @@
             <select name="jenjang_kelas" id="jenjang_kelas"
                 class="form-control @error('jenjang_kelas') is-invalid @enderror" required>
                 <option value="">-- Pilih Jenjang --</option>
-                @foreach (['TK', 'SD', 'SMP', 'SMA'] as $jenjang)
+                @foreach (['PG', 'TK', 'SD'] as $jenjang)
                     <option value="{{ $jenjang }}" @selected($val('jenjang_kelas') === $jenjang)>
                         {{ $jenjang }}
                     </option>

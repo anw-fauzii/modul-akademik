@@ -94,11 +94,11 @@
         <div class="row align-items-center">
             <div class="col-md-auto text-center mb-3 mb-md-0">
                 @php
-                    $fotoProxyUrl = $karyawan->foto_url ? route('karyawan.foto', $karyawan) : null;
+                    $fotoUrl = $karyawan->foto_url;
                     $inisialKaryawan = strtoupper(mb_substr(trim((string) ($karyawan->nama_lengkap ?? 'K')), 0, 1)) ?: 'K';
                 @endphp
-                @if ($fotoProxyUrl)
-                    <img src="{{ $fotoProxyUrl }}" alt="{{ $karyawan->nama_lengkap }}"
+                @if ($fotoUrl)
+                    <img src="{{ $fotoUrl }}" alt="{{ $karyawan->nama_lengkap }}"
                         class="profile-avatar d-block mx-auto"
                         onerror="this.classList.remove('d-block'); this.classList.add('d-none'); this.nextElementSibling?.classList.remove('d-none');">
                     <div class="profile-avatar-fallback mx-auto d-none">

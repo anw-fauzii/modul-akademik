@@ -68,7 +68,7 @@ class AgendaSekolahTest extends TestCase
             'nama_agenda' => 'Agenda Tahun Lalu',
             'tanggal' => '2026-02-10',
             'jam' => '09:00',
-            'unit' => 'SMP',
+            'unit' => 'PG',
         ]);
 
         AgendaSekolah::factory()->create([

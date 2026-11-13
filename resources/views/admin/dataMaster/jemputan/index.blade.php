@@ -44,7 +44,7 @@
                                 <th class="text-right" style="width: 15%;">Harga PP</th>
                                 <th class="text-right" style="width: 15%;">Harga Setengah</th>
                                 <th class="text-center" style="width: 13%;">Jumlah Siswa</th>
-                                <th style="width: 15%; text-align: center;">Aksi</th>
+                                <th style="width: 72px; text-align: center;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -115,36 +115,25 @@
                                         </a>
                                     </td>
                                     <td class="text-center">
-                                        <div class="d-flex justify-content-center align-items-center">
-                                            <!-- Show / Anggota Jemputan Button -->
-                                            <a href="{{ route('jemputan.show', $item->id) }}"
-                                                class="btn btn-sm btn-info text-white shadow-sm mx-1"
-                                                style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
-                                                data-toggle="tooltip" data-placement="top" title="Detail & Anggota Jemputan">
-                                                <i class="fa fa-eye" style="font-size: 0.75rem;"></i>
+                                        <x-action-dropdown>
+                                            <a href="{{ route('jemputan.show', $item->id) }}" class="action-dropdown-item" role="menuitem">
+                                                <i class="fa fa-eye text-info action-item-icon"></i>
+                                                <span>Detail &amp; Anggota Jemputan</span>
                                             </a>
-
-                                            <!-- Edit Button -->
-                                            <a href="{{ route('jemputan.edit', $item->id) }}"
-                                                class="btn btn-sm btn-primary shadow-sm mx-1"
-                                                style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
-                                                data-toggle="tooltip" data-placement="top" title="Edit Data">
-                                                <i class="fa fa-edit" style="font-size: 0.75rem;"></i>
+                                            <a href="{{ route('jemputan.edit', $item->id) }}" class="action-dropdown-item" role="menuitem">
+                                                <i class="fa fa-edit text-primary action-item-icon"></i>
+                                                <span>Edit Data</span>
                                             </a>
-
-                                            <!-- Delete Button -->
-                                            <form action="{{ route('jemputan.destroy', $item->id) }}" method="POST"
-                                                class="delete-form d-inline">
+                                            <div class="action-dropdown-divider"></div>
+                                            <form action="{{ route('jemputan.destroy', $item->id) }}" method="POST" class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="button"
-                                                    class="btn btn-sm btn-warning shadow-sm delete-button mx-1 p-0 text-white"
-                                                    style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
-                                                    data-toggle="tooltip" data-placement="top" title="Hapus Data">
-                                                    <i class="fa fa-trash" style="font-size: 0.75rem;"></i>
+                                                <button type="button" class="action-dropdown-item action-dropdown-item--danger delete-button" role="menuitem">
+                                                    <i class="fa fa-trash action-item-icon"></i>
+                                                    <span>Hapus Data</span>
                                                 </button>
                                             </form>
-                                        </div>
+                                        </x-action-dropdown>
                                     </td>
                                 </tr>
                             @endforeach

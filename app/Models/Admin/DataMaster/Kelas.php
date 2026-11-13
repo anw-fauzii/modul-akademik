@@ -29,7 +29,7 @@ class Kelas extends Model
      *
      * @var list<string>
      */
-    public const array JENJANG_ORDER = ['PAUD', 'TK', 'SD', 'SMP', 'SMA', 'SMK'];
+    public const array JENJANG_ORDER = ['PG', 'PAUD', 'TK', 'SD', 'SMP', 'SMA', 'SMK'];
 
     /**
      * Membandingkan dua kode jenjang sesuai urutan tingkat pendidikan sekolah.
@@ -61,6 +61,7 @@ class Kelas extends Model
     protected function jenjangBadgeClass(): Attribute
     {
         return Attribute::get(fn (): string => match (strtoupper(trim((string) $this->jenjang_kelas))) {
+            'PG' => 'badge-info',
             'SD' => 'badge-success',
             'SMP' => 'badge-primary',
             'TK', 'PAUD' => 'badge-warning text-dark',

@@ -42,7 +42,7 @@
                                 <th>Tahun Ajaran</th>
                                 <th>Semester</th>
                                 <th class="text-center">Status</th>
-                                <th style="width: 20%; text-align: center;">Aksi</th>
+                                <th style="width: 72px; text-align: center;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -63,41 +63,28 @@
                                         @endif
                                     </td>
                                     <td class="text-center">
-                                        <div class="d-flex justify-content-center align-items-center">
-                                            <!-- Toggle Active Status Form -->
-                                            <form action="{{ route('tahun-ajaran.toggle-active', $item->id) }}" method="POST" class="d-inline">
+                                        <x-action-dropdown>
+                                            <form action="{{ route('tahun-ajaran.toggle-active', $item->id) }}" method="POST">
                                                 @csrf
-                                                <button type="submit"
-                                                    class="btn btn-sm {{ $item->is_active ? 'btn-success' : 'btn-outline-secondary' }} shadow-sm mx-1"
-                                                    style="border-radius: 6px; height: 32px; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center;"
-                                                    data-toggle="tooltip" data-placement="top"
-                                                    title="{{ $item->is_active ? 'Nonaktifkan Tahun Ajaran' : 'Jadikan Tahun Ajaran Aktif' }}">
-                                                    <i class="fa {{ $item->is_active ? 'fa-check-circle' : 'fa-power-off' }} mr-1"></i>
-                                                    <span style="font-size: 0.72rem;">{{ $item->is_active ? 'Aktif' : 'Aktifkan' }}</span>
+                                                <button type="submit" class="action-dropdown-item" role="menuitem">
+                                                    <i class="fa {{ $item->is_active ? 'fa-check-circle text-success' : 'fa-power-off text-secondary' }} action-item-icon"></i>
+                                                    <span>{{ $item->is_active ? 'Nonaktifkan Tahun Ajaran' : 'Jadikan Tahun Ajaran Aktif' }}</span>
                                                 </button>
                                             </form>
-
-                                            <!-- Edit Button -->
-                                            <a href="{{ route('tahun-ajaran.edit', $item->id) }}"
-                                                class="btn btn-sm btn-primary shadow-sm mx-1"
-                                                style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
-                                                data-toggle="tooltip" data-placement="top" title="Edit Data">
-                                                <i class="fa fa-edit" style="font-size: 0.5rem;"></i>
+                                            <a href="{{ route('tahun-ajaran.edit', $item->id) }}" class="action-dropdown-item" role="menuitem">
+                                                <i class="fa fa-edit text-primary action-item-icon"></i>
+                                                <span>Edit Data</span>
                                             </a>
-
-                                            <!-- Delete Button -->
-                                            <form action="{{ route('tahun-ajaran.destroy', $item->id) }}" method="POST"
-                                                class="delete-form d-inline">
+                                            <div class="action-dropdown-divider"></div>
+                                            <form action="{{ route('tahun-ajaran.destroy', $item->id) }}" method="POST" class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="button"
-                                                    class="btn btn-sm btn-warning shadow-sm delete-button mx-1 p-0 text-white"
-                                                    style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
-                                                    data-toggle="tooltip" data-placement="top" title="Hapus Data">
-                                                    <i class="fa fa-trash" style="font-size: 0.5rem;"></i>
+                                                <button type="button" class="action-dropdown-item action-dropdown-item--danger delete-button" role="menuitem">
+                                                    <i class="fa fa-trash action-item-icon"></i>
+                                                    <span>Hapus Data</span>
                                                 </button>
                                             </form>
-                                        </div>
+                                        </x-action-dropdown>
                                     </td>
                                 </tr>
                             @endforeach

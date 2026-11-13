@@ -33,7 +33,7 @@ class Ekstrakurikuler extends Model
      *
      * @var list<string>
      */
-    public const UNIT_OPTIONS = ['TK', 'SD', 'SMP', 'SMA'];
+    public const UNIT_OPTIONS = ['PG', 'TK', 'SD'];
 
     /**
      * Atribut yang di-cast secara otomatis.
@@ -79,6 +79,7 @@ class Ekstrakurikuler extends Model
     protected function unitBadgeClass(): Attribute
     {
         return Attribute::get(fn (): string => match (strtoupper((string) $this->unit)) {
+            'PG' => 'badge-info',
             'SD' => 'badge-success',
             'SMP' => 'badge-primary',
             'TK', 'PAUD' => 'badge-warning text-dark',

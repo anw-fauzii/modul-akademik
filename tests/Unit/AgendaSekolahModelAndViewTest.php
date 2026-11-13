@@ -53,6 +53,7 @@ class AgendaSekolahModelAndViewTest extends TestCase
     }
 
     #[TestWith(['Semua Unit', 'badge-dark'])]
+    #[TestWith(['PG', 'badge-info'])]
     #[TestWith(['SD', 'badge-success'])]
     #[TestWith(['smp', 'badge-primary'])]
     #[TestWith(['TK', 'badge-warning text-dark'])]

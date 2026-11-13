@@ -3,6 +3,7 @@
 namespace App\Models\Admin\Informasi;
 
 use App\Models\Admin\Informasi\Concerns\HasInformasiTahunAjaranAndJenis;
+use App\Models\Concerns\HasUnitMetadata;
 use Database\Factories\Admin\Informasi\AgendaSekolahFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -29,40 +30,14 @@ class AgendaSekolah extends Model
     use HasFactory;
 
     use HasInformasiTahunAjaranAndJenis;
+    use HasUnitMetadata;
 
     /**
      * Daftar unit sekolah yang tersedia untuk agenda sekolah.
      *
      * @var list<string>
      */
-    public const array UNIT_OPTIONS = ['Semua Unit', 'TK', 'SD', 'SMP', 'SMA'];
-
-    /**
-     * Membandingkan urutan unit sesuai prioritas tampilan sekolah.
-     */
-    public static function compareUnitOrder(string $a, string $b): int
-    {
-        $order = array_map('strtoupper', self::UNIT_OPTIONS);
-        $normA = strtoupper(trim($a));
-        $normB = strtoupper(trim($b));
-
-        $posA = array_search($normA, $order, true);
-        $posB = array_search($normB, $order, true);
-
-        if ($posA !== false && $posB !== false) {
-            return $posA <=> $posB;
-        }
-
-        if ($posA !== false) {
-            return -1;
-        }
-
-        if ($posB !== false) {
-            return 1;
-        }
-
-        return $normA <=> $normB;
-    }
+    public const array UNIT_OPTIONS = ['Semua Unit', 'PG', 'TK', 'SD'];
 
     /**
      * Atribut yang di-cast secara otomatis.
@@ -122,20 +97,5 @@ class AgendaSekolah extends Model
     protected function hariFormatted(): Attribute
     {
         return Attribute::get(fn (): string => $this->tanggal?->locale('id')->translatedFormat('l') ?? '-');
-    }
-
-    /**
-     * Kelas badge Bootstrap untuk label unit agenda sekolah.
-     */
-    protected function unitBadgeClass(): Attribute
-    {
-        return Attribute::get(fn (): string => match (strtoupper(trim((string) $this->unit))) {
-            'SEMUA UNIT', 'UMUM' => 'badge-dark',
-            'SD' => 'badge-success',
-            'SMP' => 'badge-primary',
-            'TK', 'PAUD' => 'badge-warning text-dark',
-            'SMA', 'SMK' => 'badge-info',
-            default => 'badge-secondary',
-        });
     }
 }

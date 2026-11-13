@@ -37,7 +37,7 @@
                                 <th class="text-center" style="width: 10%;">JK</th>
                                 <th class="text-center" style="width: 12%;">Unit</th>
                                 <th class="text-center" style="width: 15%;">Sertifikasi</th>
-                                <th class="text-center" style="width: 10%;">Aksi</th>
+                                <th class="text-center" style="width: 72px;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -87,13 +87,12 @@
                                         @endif
                                     </td>
                                     <td class="text-center">
-                                        <a href="{{ route('karyawan.show', $item->nipy) }}"
-                                            class="btn btn-sm btn-primary shadow-sm"
-                                            style="border-radius: 6px; padding: 4px 10px; display: inline-flex; align-items: center; justify-content: center;"
-                                            data-toggle="tooltip" data-placement="top" title="Lihat Detail Profil Guru">
-                                            <i class="fa fa-eye mr-1" style="font-size: 0.75rem;"></i>
-                                            <span style="font-size: 0.75rem;">Detail</span>
-                                        </a>
+                                        <x-action-dropdown>
+                                            <a href="{{ route('karyawan.show', $item->nipy) }}" class="action-dropdown-item" role="menuitem">
+                                                <i class="fa fa-eye text-info action-item-icon"></i>
+                                                <span>Detail Profil Guru</span>
+                                            </a>
+                                        </x-action-dropdown>
                                     </td>
                                 </tr>
                             @endforeach

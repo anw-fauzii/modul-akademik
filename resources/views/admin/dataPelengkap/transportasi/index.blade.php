@@ -40,7 +40,7 @@
                             <tr>
                                 <th style="width: 5%;">No</th>
                                 <th>Moda Transportasi</th>
-                                <th style="width: 15%; text-align: center;">Aksi</th>
+                                <th style="width: 72px; text-align: center;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -49,26 +49,21 @@
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $item->nama_transportasi }}</td>
                                     <td class="text-center">
-                                        <div class="d-flex justify-content-center align-items-center">
-                                            <a href="{{ route('transportasi.edit', $item->id) }}"
-                                                class="btn btn-sm btn-primary shadow-sm mx-1"
-                                                style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
-                                                data-toggle="tooltip" data-placement="top" title="Edit Data">
-                                                <i class="fa fa-edit" style="font-size: 0.5rem;"></i>
+                                        <x-action-dropdown>
+                                            <a href="{{ route('transportasi.edit', $item->id) }}" class="action-dropdown-item" role="menuitem">
+                                                <i class="fa fa-edit text-primary action-item-icon"></i>
+                                                <span>Edit Data</span>
                                             </a>
-
-                                            <form action="{{ route('transportasi.destroy', $item->id) }}" method="POST"
-                                                class="delete-form d-inline">
+                                            <div class="action-dropdown-divider"></div>
+                                            <form action="{{ route('transportasi.destroy', $item->id) }}" method="POST" class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="button"
-                                                    class="btn btn-sm btn-warning shadow-sm delete-button mx-1 p-0 text-white"
-                                                    style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
-                                                    data-toggle="tooltip" data-placement="top" title="Hapus Data">
-                                                    <i class="fa fa-trash" style="font-size: 0.5rem;"></i>
+                                                <button type="button" class="action-dropdown-item action-dropdown-item--danger delete-button" role="menuitem">
+                                                    <i class="fa fa-trash action-item-icon"></i>
+                                                    <span>Hapus Data</span>
                                                 </button>
                                             </form>
-                                        </div>
+                                        </x-action-dropdown>
                                     </td>
                                 </tr>
                             @endforeach

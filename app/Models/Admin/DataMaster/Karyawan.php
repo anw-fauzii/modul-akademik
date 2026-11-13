@@ -148,7 +148,9 @@ class Karyawan extends Model
                 return null;
             }
 
-            return $baseUrl.'/data-master/karyawan/'.rawurlencode($nipy).'/foto';
+            $path = (string) (config('services.kepegawaian.foto_path') ?: '/data-master/karyawan/{nipy}/foto');
+
+            return $baseUrl.'/'.ltrim(str_replace('{nipy}', rawurlencode($nipy), $path), '/');
         });
     }
 }

@@ -158,4 +158,91 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setupSubmitButtonSpinner('createForm', 'submitBtn', 'Menyimpan...');
     setupSubmitButtonSpinner('editForm', 'submitBtn', 'Memperbarui...');
+
+    // 6. Global Table Row Action Dropdown (three-dot menu with viewport-safe positioning)
+    const closeAllActionDropdowns = (exceptMenu = null) => {
+        document.querySelectorAll('.action-dropdown-menu.is-open').forEach((menu) => {
+            if (menu === exceptMenu) {
+                return;
+            }
+            menu.classList.remove('is-open');
+            const toggle = menu.closest('.action-dropdown')?.querySelector('.action-dropdown-toggle');
+            if (toggle) {
+                toggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+    };
+
+    const positionActionMenu = (toggle, menu) => {
+        const margin = 8;
+        const gap = 6;
+        const rect = toggle.getBoundingClientRect();
+
+        menu.style.visibility = 'hidden';
+        menu.classList.add('is-open');
+
+        const menuWidth = menu.offsetWidth || 184;
+        const menuHeight = menu.offsetHeight || 120;
+
+        let left = rect.right - menuWidth;
+        if (left < margin) {
+            left = margin;
+        }
+        if (left + menuWidth > window.innerWidth - margin) {
+            left = Math.max(margin, window.innerWidth - menuWidth - margin);
+        }
+
+        const spaceBelow = window.innerHeight - rect.bottom - margin;
+        const spaceAbove = rect.top - margin;
+        let top = rect.bottom + gap;
+        if (spaceBelow < menuHeight && spaceAbove > spaceBelow) {
+            top = Math.max(margin, rect.top - menuHeight - gap);
+        } else if (top + menuHeight > window.innerHeight - margin) {
+            top = Math.max(margin, window.innerHeight - menuHeight - margin);
+        }
+
+        menu.style.left = `${left}px`;
+        menu.style.top = `${top}px`;
+        menu.style.visibility = '';
+    };
+
+    document.addEventListener('click', (e) => {
+        const toggle = e.target.closest('.action-dropdown-toggle');
+        if (toggle) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const wrapper = toggle.closest('.action-dropdown');
+            const menu = wrapper?.querySelector('.action-dropdown-menu');
+            if (!menu) {
+                return;
+            }
+
+            const willOpen = !menu.classList.contains('is-open');
+            closeAllActionDropdowns(willOpen ? menu : null);
+
+            if (willOpen) {
+                positionActionMenu(toggle, menu);
+                toggle.setAttribute('aria-expanded', 'true');
+            } else {
+                menu.classList.remove('is-open');
+                toggle.setAttribute('aria-expanded', 'false');
+            }
+            return;
+        }
+
+        const clickedInsideMenu = e.target.closest('.action-dropdown-menu');
+        if (!clickedInsideMenu || e.target.closest('.delete-button')) {
+            closeAllActionDropdowns();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeAllActionDropdowns();
+        }
+    });
+
+    window.addEventListener('resize', () => closeAllActionDropdowns());
+    window.addEventListener('scroll', () => closeAllActionDropdowns(), { capture: true, passive: true });
 });

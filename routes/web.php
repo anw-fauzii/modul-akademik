@@ -18,6 +18,8 @@ use App\Http\Controllers\Admin\DataPelengkap\PenghasilanController;
 use App\Http\Controllers\Admin\DataPelengkap\TransportasiController;
 use App\Http\Controllers\Admin\Informasi\AgendaSekolahController;
 use App\Http\Controllers\Admin\Informasi\PengumumanController;
+use App\Http\Controllers\Admin\Pelajaran\KelompokPelajaranController;
+use App\Http\Controllers\Admin\Pelajaran\MataPelajaranController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SSOController;
 use Illuminate\Support\Facades\Route;
@@ -72,5 +74,15 @@ Route::middleware(['auth', 'sso.check', 'nocache'])->group(function () {
     Route::resource('/informasi/pengumuman', PengumumanController::class)
         ->except(['show'])
         ->parameters(['pengumuman' => 'pengumuman']);
+
+    // Pelajaran
+    Route::resource('/pelajaran/kelompok-pelajaran', KelompokPelajaranController::class)
+        ->except(['show'])
+        ->parameters(['kelompok-pelajaran' => 'kelompok_pelajaran']);
+    Route::post('/pelajaran/mata-pelajaran/{mata_pelajaran}/toggle-status', [MataPelajaranController::class, 'toggleStatus'])
+        ->name('mata-pelajaran.toggle-status');
+    Route::resource('/pelajaran/mata-pelajaran', MataPelajaranController::class)
+        ->except(['show'])
+        ->parameters(['mata-pelajaran' => 'mata_pelajaran']);
 
 });

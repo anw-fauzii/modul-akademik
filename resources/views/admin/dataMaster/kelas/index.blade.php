@@ -170,6 +170,7 @@
             @foreach ($jenjangStats['per_jenjang'] as $jenjangKey => $jenjangRow)
                 @php
                     [$iconBg, $iconClass] = match ($jenjangKey) {
+                        'PG' => ['linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)', 'fa-child'],
                         'PAUD', 'TK' => ['linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', 'fa-shapes'],
                         'SD' => ['linear-gradient(135deg, #10b981 0%, #047857 100%)', 'fa-book-open'],
                         'SMP' => ['linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', 'fa-graduation-cap'],
@@ -199,15 +200,28 @@
         </div>
 
         <!-- FILTER CARD -->
-        <div class="main-card card mb-3 shadow-sm border-0">
-            <div class="card-body">
+        <div class="filter-card">
+            <div class="filter-card-header">
+                <div class="filter-card-title">
+                    <span class="filter-card-icon"><i class="fa fa-sliders-h"></i></span>
+                    <span>Filter Daftar Kelas</span>
+                    @if (! $isDefaultState)
+                        <span class="badge badge-primary">Filter Aktif</span>
+                    @endif
+                </div>
+                <span class="filter-count-pill">
+                    <i class="fa fa-chalkboard text-primary"></i>
+                    {{ number_format($kelas->count()) }} Kelas • {{ number_format($kelas->sum(static fn ($k): int => (int) ($k->anggota_kelas_count ?? 0))) }} Siswa
+                </span>
+            </div>
+            <div class="filter-card-body">
                 <form method="GET" action="{{ route('kelas.index') }}" id="kelasFilterForm">
-                    <div class="row align-items-end">
-                        <div class="col-md-5 mb-2 mb-md-0">
-                            <label for="filter_tahun_ajaran_id" class="font-weight-bold small text-uppercase text-muted mb-1">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
+                        <div class="lg:col-span-5">
+                            <label for="filter_tahun_ajaran_id" class="filter-label">
                                 Tahun Ajaran / Semester
                             </label>
-                            <select name="tahun_ajaran_id" id="filter_tahun_ajaran_id" class="form-control">
+                            <select name="tahun_ajaran_id" id="filter_tahun_ajaran_id" class="filter-control">
                                 <option value="{{ $allTaKey }}" @selected($activeFilters['tahun_ajaran_id'] === $allTaKey)>
                                     -- Semua Tahun Ajaran --
                                 </option>
@@ -219,11 +233,11 @@
                             </select>
                         </div>
 
-                        <div class="col-md-4 mb-2 mb-md-0">
-                            <label for="filter_jenjang" class="font-weight-bold small text-uppercase text-muted mb-1">
+                        <div class="lg:col-span-4">
+                            <label for="filter_jenjang" class="filter-label">
                                 Filter Jenjang (Jumlah Kelas &amp; Siswa)
                             </label>
-                            <select name="jenjang" id="filter_jenjang" class="form-control">
+                            <select name="jenjang" id="filter_jenjang" class="filter-control">
                                 <option value="">-- Semua Jenjang ({{ number_format($jenjangStats['total_kelas']) }} Kelas) --</option>
                                 @foreach ($jenjangFilterOptions as $jenjangOpt)
                                     @php
@@ -236,29 +250,26 @@
                             </select>
                         </div>
 
-                        <div class="col-md-3 d-flex flex-wrap align-items-center" style="gap: 0.45rem;">
-                            <button type="submit" class="btn btn-primary font-weight-bold shadow-sm flex-fill"
-                                style="border-radius: 8px;">
-                                <i class="fa fa-filter mr-1"></i> Filter
+                        <div class="sm:col-span-2 lg:col-span-3 flex flex-wrap lg:justify-end gap-2">
+                            <button type="submit" class="filter-btn filter-btn-primary flex-1 sm:flex-initial">
+                                <i class="fa fa-filter"></i> Filter
                             </button>
                             @if ($activeFilters['tahun_ajaran_id'] !== $allTaKey)
                                 <a href="{{ route('kelas.index', array_filter(['tahun_ajaran_id' => $allTaKey, 'jenjang' => $activeFilters['jenjang'] !== '' ? $activeFilters['jenjang'] : null])) }}"
-                                    class="btn btn-light border font-weight-bold shadow-sm"
-                                    style="border-radius: 8px;" title="Tampilkan Semua Tahun Ajaran">
+                                    class="filter-btn filter-btn-secondary" title="Tampilkan Semua Tahun Ajaran">
                                     Semua TA
                                 </a>
                             @endif
                             @if (! $isDefaultState)
-                                <a href="{{ route('kelas.index') }}" class="btn btn-light border shadow-sm"
-                                    style="border-radius: 8px;" title="Kembali ke Tahun Ajaran Aktif">
+                                <a href="{{ route('kelas.index') }}" class="filter-btn filter-btn-secondary filter-btn-icon"
+                                    title="Kembali ke Tahun Ajaran Aktif">
                                     <i class="fa fa-undo"></i>
                                 </a>
                             @endif
                         </div>
                     </div>
 
-                    <div class="d-flex flex-wrap align-items-center justify-content-between mt-2 pt-2 border-top small text-muted"
-                        style="border-color: #f1f5f9 !important;">
+                    <div class="filter-footer small text-muted">
                         <span>
                             <i class="fa fa-info-circle text-primary mr-1"></i>
                             @if ($selectedTaModel?->is_active)
@@ -266,9 +277,6 @@
                             @else
                                 Menampilkan data kelas untuk <strong>{{ $scopeLabel }}</strong>{{ $activeFilters['jenjang'] !== '' ? ' pada jenjang ' . $activeFilters['jenjang'] : '' }}.
                             @endif
-                        </span>
-                        <span class="badge badge-info px-2 py-1" style="font-size: 0.76rem;">
-                            {{ number_format($kelas->count()) }} Kelas • {{ number_format($kelas->sum(static fn ($k): int => (int) ($k->anggota_kelas_count ?? 0))) }} Siswa
                         </span>
                     </div>
                 </form>
@@ -288,7 +296,7 @@
                                 <th>Tahun Ajaran</th>
                                 <th>Wali Kelas &amp; Pendamping</th>
                                 <th class="text-center" style="width: 13%;">Jumlah Siswa</th>
-                                <th style="width: 15%; text-align: center;">Aksi</th>
+                                <th style="width: 72px; text-align: center;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -361,36 +369,25 @@
                                         </a>
                                     </td>
                                     <td class="text-center">
-                                        <div class="d-flex justify-content-center align-items-center">
-                                            <!-- Show / Anggota Kelas Button -->
-                                            <a href="{{ route('kelas.show', $item->id) }}"
-                                                class="btn btn-sm btn-info text-white shadow-sm mx-1"
-                                                style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
-                                                data-toggle="tooltip" data-placement="top" title="Detail & Anggota Kelas">
-                                                <i class="fa fa-eye" style="font-size: 0.75rem;"></i>
+                                        <x-action-dropdown>
+                                            <a href="{{ route('kelas.show', $item->id) }}" class="action-dropdown-item" role="menuitem">
+                                                <i class="fa fa-eye text-info action-item-icon"></i>
+                                                <span>Detail &amp; Anggota Kelas</span>
                                             </a>
-
-                                            <!-- Edit Button -->
-                                            <a href="{{ route('kelas.edit', $item->id) }}"
-                                                class="btn btn-sm btn-primary shadow-sm mx-1"
-                                                style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
-                                                data-toggle="tooltip" data-placement="top" title="Edit Data">
-                                                <i class="fa fa-edit" style="font-size: 0.75rem;"></i>
+                                            <a href="{{ route('kelas.edit', $item->id) }}" class="action-dropdown-item" role="menuitem">
+                                                <i class="fa fa-edit text-primary action-item-icon"></i>
+                                                <span>Edit Data</span>
                                             </a>
-
-                                            <!-- Delete Button -->
-                                            <form action="{{ route('kelas.destroy', $item->id) }}" method="POST"
-                                                class="delete-form d-inline">
+                                            <div class="action-dropdown-divider"></div>
+                                            <form action="{{ route('kelas.destroy', $item->id) }}" method="POST" class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="button"
-                                                    class="btn btn-sm btn-warning shadow-sm delete-button mx-1 p-0 text-white"
-                                                    style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
-                                                    data-toggle="tooltip" data-placement="top" title="Hapus Data">
-                                                    <i class="fa fa-trash" style="font-size: 0.75rem;"></i>
+                                                <button type="button" class="action-dropdown-item action-dropdown-item--danger delete-button" role="menuitem">
+                                                    <i class="fa fa-trash action-item-icon"></i>
+                                                    <span>Hapus Data</span>
                                                 </button>
                                             </form>
-                                        </div>
+                                        </x-action-dropdown>
                                     </td>
                                 </tr>
                             @endforeach

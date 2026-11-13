@@ -41,7 +41,7 @@ class KaryawanModelAndViewTest extends TestCase
         $this->assertNull($karyawan->foto_url);
     }
 
-    public function test_show_view_renders_same_origin_foto_proxy_route_without_direct_cross_port_img(): void
+    public function test_show_view_renders_kepegawaian_foto_url_with_fallback(): void
     {
         config()->set('services.kepegawaian.app_url', 'http://192.168.0.111:8090');
 
@@ -70,14 +70,8 @@ class KaryawanModelAndViewTest extends TestCase
             Model::preventLazyLoading(false);
         }
 
-        $expectedProxyUrl = route('karyawan.foto', $karyawan);
-
         $this->assertStringContainsString(
-            '<img src="'.$expectedProxyUrl.'"',
-            $html
-        );
-        $this->assertStringNotContainsString(
-            '<img src="http://192.168.0.111:8090/',
+            '<img src="http://192.168.0.111:8090/data-master/karyawan/22990184-1/foto"',
             $html
         );
         $this->assertStringContainsString(
@@ -208,5 +202,47 @@ class KaryawanModelAndViewTest extends TestCase
         } finally {
             Http::assertNothingSent();
         }
+    }
+
+    public function test_foto_proxy_forwards_non_akademik_cookies_without_leaking_local_session_cookie(): void
+    {
+        config()->set('app.url', 'http://192.168.0.111:8080');
+        config()->set('services.kepegawaian.app_url', 'http://192.168.0.111:8090');
+        config()->set('session.cookie', 'modul-akademik-session');
+
+        $karyawan = Karyawan::make(['nipy' => '22990184-1']);
+
+        Http::fake([
+            'http://192.168.0.111:8090/data-master/karyawan/22990184-1/foto' => Http::response(
+                'FAKE-IMG-BYTES',
+                200,
+                [
+                    'Content-Type' => 'image/jpeg',
+                    'Set-Cookie' => 'sipit-kepegawaian-session=remote-new; Path=/',
+                ]
+            ),
+        ]);
+
+        $request = Request::create(
+            'http://192.168.0.111:8080/data-master/karyawan/22990184-1/foto',
+            'GET',
+            [],
+            [],
+            [],
+            ['HTTP_COOKIE' => 'modul-akademik-session=local-secret; XSRF-TOKEN=csrf123; sipit-kepegawaian-session=remote-123']
+        );
+
+        $response = app(KaryawanController::class)->foto($request, $karyawan);
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame([], $response->headers->getCookies());
+
+        Http::assertSent(function (ClientRequest $sent): bool {
+            $cookieHeader = $sent->header('Cookie')[0] ?? '';
+
+            return str_contains($cookieHeader, 'sipit-kepegawaian-session=remote-123')
+                && ! str_contains($cookieHeader, 'modul-akademik-session')
+                && ! str_contains($cookieHeader, 'XSRF-TOKEN');
+        });
     }
 }

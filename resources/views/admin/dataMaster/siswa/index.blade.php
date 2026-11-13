@@ -165,8 +165,8 @@
         </div>
 
         <!-- STATISTIK SISWA -->
-        <div class="row mb-3">
-            <div class="col-md-6 col-xl-3 mb-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-3">
+            <div>
                 <a href="{{ route('siswa.index', ['show_all' => 1]) }}"
                     class="siswa-stat-card {{ !empty($activeFilters['show_all']) && $activeFilters['status'] === '' && $activeFilters['kelas_id'] === '' ? 'is-active-filter' : '' }}">
                     <div class="d-flex align-items-center justify-content-between">
@@ -187,7 +187,7 @@
                 </a>
             </div>
 
-            <div class="col-md-6 col-xl-3 mb-3">
+            <div>
                 <a href="{{ route('siswa.index', ['status' => \App\Models\Admin\DataMaster\Siswa::STATUS_AKTIF]) }}"
                     class="siswa-stat-card {{ strcasecmp($activeFilters['status'], 'Aktif') === 0 && $activeFilters['jenjang'] === '' && $activeFilters['kelas_id'] === '' ? 'is-active-filter' : '' }}">
                     <div class="d-flex align-items-center justify-content-between">
@@ -208,7 +208,7 @@
                 </a>
             </div>
 
-            <div class="col-md-6 col-xl-3 mb-3">
+            <div>
                 <a href="{{ route('siswa.index', ['status' => $inactiveFilterKey]) }}"
                     class="siswa-stat-card {{ $activeFilters['status'] === $inactiveFilterKey ? 'is-active-filter' : '' }}">
                     <div class="d-flex align-items-center justify-content-between">
@@ -228,7 +228,7 @@
                 </a>
             </div>
 
-            <div class="col-md-6 col-xl-3 mb-3">
+            <div>
                 <a href="{{ route('siswa.index', ['kelas_id' => $unassignedFilterKey]) }}"
                     class="siswa-stat-card {{ $activeFilters['kelas_id'] === $unassignedFilterKey ? 'is-active-filter' : '' }}">
                     <div class="d-flex align-items-center justify-content-between">
@@ -273,23 +273,38 @@
         @endif
 
         <!-- FILTER CARD -->
-        <div class="main-card card mb-3 shadow-sm border-0">
-            <div class="card-body">
+        <div class="filter-card">
+            <div class="filter-card-header">
+                <div class="filter-card-title">
+                    <span class="filter-card-icon"><i class="fa fa-sliders-h"></i></span>
+                    <span>Filter &amp; Pencarian Siswa</span>
+                    @if ($hasFilter)
+                        <span class="badge badge-primary">Filter Aktif</span>
+                    @endif
+                </div>
+                @if ($hasFilter)
+                    <span class="filter-count-pill">
+                        <i class="fa fa-check-circle text-success"></i>
+                        Menampilkan {{ number_format($siswa->count()) }} siswa sesuai filter
+                    </span>
+                @endif
+            </div>
+            <div class="filter-card-body">
                 <form method="GET" action="{{ route('siswa.index') }}">
-                    <div class="row align-items-end">
-                        <div class="col-md-6 col-lg-3 mb-2">
-                            <label for="filter_search" class="font-weight-bold small text-uppercase text-muted mb-1">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
+                        <div class="sm:col-span-2 lg:col-span-3">
+                            <label for="filter_search" class="filter-label">
                                 Cari Nama / NIS / NISN
                             </label>
-                            <input type="text" name="search" id="filter_search" class="form-control"
+                            <input type="text" name="search" id="filter_search" class="filter-control"
                                 value="{{ $activeFilters['search'] }}" placeholder="Ketik nama, NIS, atau NISN...">
                         </div>
 
-                        <div class="col-md-6 col-lg-2 mb-2">
-                            <label for="filter_status" class="font-weight-bold small text-uppercase text-muted mb-1">
+                        <div class="lg:col-span-2">
+                            <label for="filter_status" class="filter-label">
                                 Status
                             </label>
-                            <select name="status" id="filter_status" class="form-control">
+                            <select name="status" id="filter_status" class="filter-control">
                                 <option value="">-- Semua Status --</option>
                                 @foreach (\App\Models\Admin\DataMaster\Siswa::STATUS_OPTIONS as $statusOption)
                                     <option value="{{ $statusOption }}" @selected($activeFilters['status'] === $statusOption)>
@@ -302,11 +317,11 @@
                             </select>
                         </div>
 
-                        <div class="col-md-4 col-lg-2 mb-2">
-                            <label for="filter_jenjang" class="font-weight-bold small text-uppercase text-muted mb-1">
+                        <div class="lg:col-span-2">
+                            <label for="filter_jenjang" class="filter-label">
                                 Jenjang
                             </label>
-                            <select name="jenjang" id="filter_jenjang" class="form-control">
+                            <select name="jenjang" id="filter_jenjang" class="filter-control">
                                 <option value="">-- Semua Jenjang --</option>
                                 @foreach ($jenjangFilterOptions as $jenjangOption)
                                     <option value="{{ $jenjangOption }}" @selected($activeFilters['jenjang'] === $jenjangOption)>
@@ -316,11 +331,11 @@
                             </select>
                         </div>
 
-                        <div class="col-md-8 col-lg-3 mb-2">
-                            <label for="filter_kelas_id" class="font-weight-bold small text-uppercase text-muted mb-1">
+                        <div class="lg:col-span-3">
+                            <label for="filter_kelas_id" class="filter-label">
                                 Kelas
                             </label>
-                            <select name="kelas_id" id="filter_kelas_id" class="form-control">
+                            <select name="kelas_id" id="filter_kelas_id" class="filter-control">
                                 <option value="">-- Semua Kelas --</option>
                                 <option value="{{ $unassignedFilterKey }}" @selected($activeFilters['kelas_id'] === $unassignedFilterKey)>
                                     Belum Ditempatkan di Kelas
@@ -336,11 +351,11 @@
                             </select>
                         </div>
 
-                        <div class="col-md-4 col-lg-2 mb-2">
-                            <label for="filter_jenis_kelamin" class="font-weight-bold small text-uppercase text-muted mb-1">
+                        <div class="lg:col-span-2">
+                            <label for="filter_jenis_kelamin" class="filter-label">
                                 Jenis Kelamin
                             </label>
-                            <select name="jenis_kelamin" id="filter_jenis_kelamin" class="form-control">
+                            <select name="jenis_kelamin" id="filter_jenis_kelamin" class="filter-control">
                                 <option value="">-- Semua --</option>
                                 @foreach (\App\Models\Admin\DataMaster\Siswa::JENIS_KELAMIN_OPTIONS as $jkKey => $jkLabel)
                                     <option value="{{ $jkKey }}" @selected($activeFilters['jenis_kelamin'] === $jkKey)>
@@ -351,31 +366,25 @@
                         </div>
                     </div>
 
-                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-2 pt-2 border-top"
-                        style="border-color: #f1f5f9 !important;">
-                        <div class="d-flex flex-wrap align-items-center gap-2">
-                            <button type="submit" class="btn btn-primary font-weight-bold shadow-sm"
-                                style="border-radius: 8px;">
-                                <i class="fa fa-filter mr-1"></i> Terapkan Filter
+                    <div class="filter-footer">
+                        <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                            <button type="submit" class="filter-btn filter-btn-primary flex-1 sm:flex-initial">
+                                <i class="fa fa-filter"></i> Terapkan Filter
                             </button>
-                            <a href="{{ route('siswa.index', ['show_all' => 1]) }}" class="btn btn-light border font-weight-bold shadow-sm"
-                                style="border-radius: 8px;">
-                                <i class="fa fa-list mr-1"></i> Tampilkan Semua
+                            <a href="{{ route('siswa.index', ['show_all' => 1]) }}" class="filter-btn filter-btn-secondary flex-1 sm:flex-initial">
+                                <i class="fa fa-list"></i> Tampilkan Semua
                             </a>
                             @if ($hasFilter)
-                                <a href="{{ route('siswa.index') }}" class="btn btn-light border shadow-sm"
-                                    style="border-radius: 8px;" title="Reset Filter">
-                                    <i class="fa fa-undo mr-1"></i> Reset
+                                <a href="{{ route('siswa.index') }}" class="filter-btn filter-btn-secondary" title="Reset Filter">
+                                    <i class="fa fa-undo"></i> Reset
                                 </a>
                             @endif
                         </div>
 
-                        @if ($hasFilter)
-                            <span class="badge badge-info px-3 py-2" style="font-size: 0.8rem;">
-                                <i class="fa fa-check-circle mr-1"></i>
-                                Menampilkan {{ number_format($siswa->count()) }} siswa sesuai filter
-                            </span>
-                        @endif
+                        <span class="small text-muted">
+                            <i class="fa fa-info-circle text-primary mr-1"></i>
+                            Gunakan filter di atas atau klik kartu statistik untuk pencarian cepat.
+                        </span>
                     </div>
                 </form>
             </div>
@@ -417,7 +426,7 @@
                                     <th>Kelas</th>
                                     <th>Pembimbing & Layanan</th>
                                     <th class="text-center" style="width: 11%;">Status</th>
-                                    <th style="width: 16%; text-align: center;">Aksi</th>
+                                    <th style="width: 72px; text-align: center;">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -473,36 +482,25 @@
                                             </span>
                                         </td>
                                         <td class="text-center">
-                                            <div class="d-flex justify-content-center align-items-center">
-                                                <!-- Detail Button -->
-                                                <a href="{{ route('siswa.show', $item->nis) }}"
-                                                    class="btn btn-sm btn-info shadow-sm mx-1 text-white"
-                                                    style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
-                                                    data-toggle="tooltip" data-placement="top" title="Detail Data">
-                                                    <i class="fa fa-eye" style="font-size: 0.75rem;"></i>
+                                            <x-action-dropdown>
+                                                <a href="{{ route('siswa.show', $item->nis) }}" class="action-dropdown-item" role="menuitem">
+                                                    <i class="fa fa-eye text-info action-item-icon"></i>
+                                                    <span>Detail Data</span>
                                                 </a>
-
-                                                <!-- Edit Button -->
-                                                <a href="{{ route('siswa.edit', $item->nis) }}"
-                                                    class="btn btn-sm btn-primary shadow-sm mx-1"
-                                                    style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
-                                                    data-toggle="tooltip" data-placement="top" title="Edit Data">
-                                                    <i class="fa fa-edit" style="font-size: 0.75rem;"></i>
+                                                <a href="{{ route('siswa.edit', $item->nis) }}" class="action-dropdown-item" role="menuitem">
+                                                    <i class="fa fa-edit text-primary action-item-icon"></i>
+                                                    <span>Edit Data</span>
                                                 </a>
-
-                                                <!-- Delete Button -->
-                                                <form action="{{ route('siswa.destroy', $item->nis) }}" method="POST"
-                                                    class="delete-form d-inline">
+                                                <div class="action-dropdown-divider"></div>
+                                                <form action="{{ route('siswa.destroy', $item->nis) }}" method="POST" class="delete-form">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="button"
-                                                        class="btn btn-sm btn-warning shadow-sm delete-button mx-1 p-0 text-white"
-                                                        style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
-                                                        data-toggle="tooltip" data-placement="top" title="Hapus Data">
-                                                        <i class="fa fa-trash" style="font-size: 0.75rem;"></i>
+                                                    <button type="button" class="action-dropdown-item action-dropdown-item--danger delete-button" role="menuitem">
+                                                        <i class="fa fa-trash action-item-icon"></i>
+                                                        <span>Hapus Data</span>
                                                     </button>
                                                 </form>
-                                            </div>
+                                            </x-action-dropdown>
                                         </td>
                                     </tr>
                                 @endforeach

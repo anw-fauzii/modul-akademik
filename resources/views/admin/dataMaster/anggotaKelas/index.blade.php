@@ -32,14 +32,27 @@
         </div>
 
         <!-- FILTER CARD -->
-        <div class="main-card card mb-3 shadow-sm border-0">
-            <div class="card-body">
-                <form method="GET" action="{{ route('anggota-kelas.index') }}" class="row align-items-end">
-                    <div class="col-md-5 mb-2 mb-md-0">
-                        <label for="filter_tahun_ajaran_id" class="font-weight-bold small text-uppercase text-muted mb-1">
+        <div class="filter-card">
+            <div class="filter-card-header">
+                <div class="filter-card-title">
+                    <span class="filter-card-icon"><i class="fa fa-sliders-h"></i></span>
+                    <span>Filter Anggota Kelas</span>
+                    @if ($selectedTahunAjaranId || $selectedKelasId)
+                        <span class="badge badge-primary">Filter Aktif</span>
+                    @endif
+                </div>
+                <span class="filter-count-pill">
+                    <i class="fa fa-users text-primary"></i>
+                    Total: <strong>{{ number_format($anggotaKelas->count()) }}</strong> Anggota
+                </span>
+            </div>
+            <div class="filter-card-body">
+                <form method="GET" action="{{ route('anggota-kelas.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
+                    <div class="lg:col-span-5">
+                        <label for="filter_tahun_ajaran_id" class="filter-label">
                             Filter Tahun Ajaran / Semester
                         </label>
-                        <select name="tahun_ajaran_id" id="filter_tahun_ajaran_id" class="form-control">
+                        <select name="tahun_ajaran_id" id="filter_tahun_ajaran_id" class="filter-control">
                             <option value="">-- Semua Tahun Ajaran / Semester --</option>
                             @foreach ($tahunAjaran as $ta)
                                 <option value="{{ $ta->id }}" @selected((string) $selectedTahunAjaranId === (string) $ta->id)>
@@ -49,11 +62,11 @@
                         </select>
                     </div>
 
-                    <div class="col-md-5 mb-2 mb-md-0">
-                        <label for="filter_kelas_id" class="font-weight-bold small text-uppercase text-muted mb-1">
+                    <div class="lg:col-span-4">
+                        <label for="filter_kelas_id" class="filter-label">
                             Filter Kelas
                         </label>
-                        <select name="kelas_id" id="filter_kelas_id" class="form-control">
+                        <select name="kelas_id" id="filter_kelas_id" class="filter-control">
                             <option value="">-- Semua Kelas --</option>
                             @foreach ($kelas as $k)
                                 <option value="{{ $k->id }}" @selected((string) $selectedKelasId === (string) $k->id)>
@@ -66,15 +79,14 @@
                         </select>
                     </div>
 
-                    <div class="col-md-2 d-flex align-items-center">
-                        <button type="submit" class="btn btn-primary font-weight-bold shadow-sm mr-2 flex-fill"
-                            style="border-radius: 8px;">
-                            <i class="fa fa-filter mr-1"></i> Filter
+                    <div class="sm:col-span-2 lg:col-span-3 flex flex-wrap lg:justify-end gap-2">
+                        <button type="submit" class="filter-btn filter-btn-primary flex-1 sm:flex-initial">
+                            <i class="fa fa-filter"></i> Filter
                         </button>
                         @if ($selectedTahunAjaranId || $selectedKelasId)
-                            <a href="{{ route('anggota-kelas.index') }}" class="btn btn-light border shadow-sm"
-                                style="border-radius: 8px;" title="Reset Filter">
-                                <i class="fa fa-undo"></i>
+                            <a href="{{ route('anggota-kelas.index') }}" class="filter-btn filter-btn-secondary"
+                                title="Reset Filter">
+                                <i class="fa fa-undo"></i> Reset
                             </a>
                         @endif
                     </div>
@@ -95,7 +107,7 @@
                                 <th>Tahun Ajaran / Semester</th>
                                 <th>Wali Kelas</th>
                                 <th class="text-center" style="width: 13%;">Pendaftaran</th>
-                                <th style="width: 14%; text-align: center;">Aksi</th>
+                                <th style="width: 72px; text-align: center;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -160,28 +172,21 @@
                                         </span>
                                     </td>
                                     <td class="text-center">
-                                        <div class="d-flex justify-content-center align-items-center">
-                                            <!-- Edit Button -->
-                                            <a href="{{ route('anggota-kelas.edit', $item->id) }}"
-                                                class="btn btn-sm btn-primary shadow-sm mx-1"
-                                                style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
-                                                data-toggle="tooltip" data-placement="top" title="Edit Data">
-                                                <i class="fa fa-edit" style="font-size: 0.75rem;"></i>
+                                        <x-action-dropdown>
+                                            <a href="{{ route('anggota-kelas.edit', $item->id) }}" class="action-dropdown-item" role="menuitem">
+                                                <i class="fa fa-edit text-primary action-item-icon"></i>
+                                                <span>Edit Data</span>
                                             </a>
-
-                                            <!-- Delete Button -->
-                                            <form action="{{ route('anggota-kelas.destroy', $item->id) }}" method="POST"
-                                                class="delete-form d-inline">
+                                            <div class="action-dropdown-divider"></div>
+                                            <form action="{{ route('anggota-kelas.destroy', $item->id) }}" method="POST" class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="button"
-                                                    class="btn btn-sm btn-warning shadow-sm delete-button mx-1 p-0 text-white"
-                                                    style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
-                                                    data-toggle="tooltip" data-placement="top" title="Hapus Data">
-                                                    <i class="fa fa-trash" style="font-size: 0.75rem;"></i>
+                                                <button type="button" class="action-dropdown-item action-dropdown-item--danger delete-button" role="menuitem">
+                                                    <i class="fa fa-trash action-item-icon"></i>
+                                                    <span>Hapus Data</span>
                                                 </button>
                                             </form>
-                                        </div>
+                                        </x-action-dropdown>
                                     </td>
                                 </tr>
                             @endforeach

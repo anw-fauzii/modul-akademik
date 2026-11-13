@@ -24,7 +24,7 @@ class SiswaService
 
     public const FILTER_KELAS_UNASSIGNED = '__unassigned__';
 
-    private const JENJANG_ORDER = ['PAUD', 'TK', 'SD', 'SMP', 'SMA', 'SMK'];
+    private const JENJANG_ORDER = ['PG', 'PAUD', 'TK', 'SD', 'SMP', 'SMA', 'SMK'];
 
     /**
      * Menormalisasi input filter indeks siswa dari query string.
