@@ -2,6 +2,7 @@
 
 namespace App\Models\Admin\DataMaster;
 
+use App\Models\Admin\Presensi\PresensiSiswa;
 use Database\Factories\Admin\DataMaster\AnggotaKelasFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -93,6 +94,18 @@ class AnggotaKelas extends Model
     }
 
     /**
+     * Filter anggota kelas berdasarkan nama tahun ajaran dan semester opsional.
+     */
+    #[Scope]
+    protected function forNamaTahunAjaran(Builder $query, string $namaTahunAjaran, ?string $semester = null): Builder
+    {
+        return $query->whereHas('kelas.tahunAjaran', function (Builder $taQuery) use ($namaTahunAjaran, $semester): void {
+            $taQuery->where('nama_tahun_ajaran', $namaTahunAjaran)
+                ->when($semester !== null && $semester !== '', fn (Builder $q) => $q->where('semester', $semester));
+        });
+    }
+
+    /**
      * Kelas badge Bootstrap untuk jenis pendaftaran di kelas.
      */
     protected function pendaftaranBadgeClass(): Attribute
@@ -144,5 +157,13 @@ class AnggotaKelas extends Model
     public function anggotaT2q(): HasMany
     {
         return $this->hasMany(AnggotaT2q::class, 'anggota_kelas_id');
+    }
+
+    /**
+     * Relasi ke catatan presensi siswa pada keanggotaan kelas ini.
+     */
+    public function presensiSiswa(): HasMany
+    {
+        return $this->hasMany(PresensiSiswa::class, 'anggota_kelas_id');
     }
 }

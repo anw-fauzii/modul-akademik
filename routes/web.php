@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\Informasi\AgendaSekolahController;
 use App\Http\Controllers\Admin\Informasi\PengumumanController;
 use App\Http\Controllers\Admin\Pelajaran\KelompokPelajaranController;
 use App\Http\Controllers\Admin\Pelajaran\MataPelajaranController;
+use App\Http\Controllers\Admin\Presensi\PresensiSiswaController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SSOController;
 use Illuminate\Support\Facades\Route;
@@ -84,5 +85,20 @@ Route::middleware(['auth', 'sso.check', 'nocache'])->group(function () {
     Route::resource('/pelajaran/mata-pelajaran', MataPelajaranController::class)
         ->except(['show'])
         ->parameters(['mata-pelajaran' => 'mata_pelajaran']);
+
+    // Presensi
+    Route::get('/presensi/presensi-siswa/tahunan', [PresensiSiswaController::class, 'tahunan'])
+        ->name('presensi-siswa.tahunan');
+    Route::get('/presensi/presensi-siswa/rekap', [PresensiSiswaController::class, 'rekap'])
+        ->name('presensi-siswa.rekap');
+    Route::get('/presensi/presensi-siswa/bulk', [PresensiSiswaController::class, 'bulk'])
+        ->name('presensi-siswa.bulk');
+    Route::post('/presensi/presensi-siswa/bulk', [PresensiSiswaController::class, 'bulkStore'])
+        ->name('presensi-siswa.bulk.store');
+    Route::delete('/presensi/presensi-siswa/bulk', [PresensiSiswaController::class, 'bulkDestroy'])
+        ->name('presensi-siswa.bulk.destroy');
+    Route::resource('/presensi/presensi-siswa', PresensiSiswaController::class)
+        ->except(['show', 'create', 'store'])
+        ->parameters(['presensi-siswa' => 'presensi_siswa']);
 
 });

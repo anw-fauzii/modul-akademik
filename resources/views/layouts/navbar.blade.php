@@ -38,12 +38,19 @@
                 class="flex items-center gap-3 rounded-xl p-1.5 text-left hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500/30"
                 aria-expanded="false" aria-haspopup="true">
                 <div class="relative">
-                    @if (Auth::user() && Auth::user()->foto)
+                    @php
+                        $authUser = Auth::user();
+                        $navbarFotoUrl = $authUser?->karyawan?->foto_url
+                            ?? ($authUser?->foto ? asset('storage/' . $authUser->foto) : null);
+                        $fallbackFotoUrl = asset('storage/logo/user.png');
+                    @endphp
+                    @if ($navbarFotoUrl)
                         <img class="h-9 w-9 rounded-full object-cover ring-2 ring-orange-500/20"
-                            src="{{ asset('storage/' . Auth::user()->foto) }}" alt="Foto {{ Auth::user()->name }}">
+                            src="{{ $navbarFotoUrl }}" alt="Foto {{ $authUser->name }}"
+                            onerror="this.onerror=null; this.src='{{ $fallbackFotoUrl }}';">
                     @else
                         <img class="h-9 w-9 rounded-full object-cover ring-2 ring-orange-500/20"
-                            src="{{ asset('storage/logo/user.png') }}" alt="Foto User">
+                            src="{{ $fallbackFotoUrl }}" alt="Foto User">
                     @endif
                     <span class="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white"></span>
                 </div>

@@ -39,6 +39,7 @@
                 $isDataPelengkapActive = request()->is('data-pelengkap*');
                 $isInformasiActive = request()->is('informasi*');
                 $isPelajaranActive = request()->is('pelajaran*');
+                $isPresensiActive = request()->is('presensi*');
                 $menuActiveClass = 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md shadow-orange-600/30';
                 $menuInactiveClass = 'text-slate-300 hover:text-white hover:bg-slate-800/80';
                 $menuIconActiveClass = 'text-white';
@@ -227,6 +228,48 @@
                         <a href="{{ route('mata-pelajaran.index') }}"
                             class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('pelajaran/mata-pelajaran*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
                             Mata Pelajaran
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Presensi Dropdown -->
+                <div class="has-submenu relative group/submenu">
+                    <button type="button" data-sidebar-toggle="submenu-presensi"
+                        aria-expanded="{{ $isPresensiActive ? 'true' : 'false' }}"
+                        class="w-full group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all {{ $isPresensiActive ? $menuActiveClass : $menuInactiveClass }}">
+                        <div class="flex items-center gap-3">
+                            <svg class="h-4 w-4 shrink-0 {{ $isPresensiActive ? $menuIconActiveClass : $menuIconInactiveClass }}"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                            </svg>
+                            <span class="menu-text">Presensi Siswa</span>
+                        </div>
+                        <svg class="menu-chevron h-3.5 w-3.5 transition-transform duration-200 {{ $isPresensiActive ? 'text-white rotate-180' : 'text-slate-400 group-hover:text-white' }}"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div id="submenu-presensi"
+                        class="{{ $isPresensiActive ? '' : 'hidden' }} submenu-flyout mt-1 space-y-1 pl-4 border-l border-slate-800 ml-5 py-1">
+                        <div class="flyout-header hidden">
+                            <span>Presensi Siswa</span>
+                        </div>
+                        <a href="{{ route('presensi-siswa.index') }}"
+                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->routeIs('presensi-siswa.index', 'presensi-siswa.edit') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                            Matriks &amp; Log Presensi
+                        </a>
+                        <a href="{{ route('presensi-siswa.bulk') }}"
+                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->routeIs('presensi-siswa.bulk*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                            Input Presensi Massal
+                        </a>
+                        <a href="{{ route('presensi-siswa.rekap') }}"
+                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->routeIs('presensi-siswa.rekap') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                            Rekap &amp; Persentase
+                        </a>
+                        <a href="{{ route('presensi-siswa.tahunan') }}"
+                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->routeIs('presensi-siswa.tahunan') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                            Statistik Tahunan
                         </a>
                     </div>
                 </div>

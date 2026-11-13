@@ -2,13 +2,17 @@
 
 namespace App\Models\Admin\DataMaster;
 
+use App\Models\Admin\Presensi\PresensiSiswa;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 #[Fillable([
     'akademik_master_tahun_ajaran_id',
@@ -108,5 +112,39 @@ class Kelas extends Model
     public function anggotaKelas(): HasMany
     {
         return $this->hasMany(AnggotaKelas::class, 'akademik_master_kelas_id');
+    }
+
+    /**
+     * Relasi ke data presensi siswa pada kelas ini melalui anggota kelas.
+     */
+    public function presensiSiswa(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            PresensiSiswa::class,
+            AnggotaKelas::class,
+            'akademik_master_kelas_id',
+            'anggota_kelas_id'
+        );
+    }
+
+    /**
+     * Filter kelas berdasarkan ID tahun ajaran (semester) tertentu.
+     */
+    #[Scope]
+    protected function forTahunAjaran(Builder $query, int $tahunAjaranId): Builder
+    {
+        return $query->where('akademik_master_tahun_ajaran_id', $tahunAjaranId);
+    }
+
+    /**
+     * Filter kelas berdasarkan nama tahun ajaran dan semester opsional.
+     */
+    #[Scope]
+    protected function forNamaTahunAjaran(Builder $query, string $namaTahunAjaran, ?string $semester = null): Builder
+    {
+        return $query->whereHas('tahunAjaran', function (Builder $taQuery) use ($namaTahunAjaran, $semester): void {
+            $taQuery->where('nama_tahun_ajaran', $namaTahunAjaran)
+                ->when($semester !== null && $semester !== '', fn (Builder $q) => $q->where('semester', $semester));
+        });
     }
 }
