@@ -229,6 +229,14 @@
                             class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('pelajaran/mata-pelajaran*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
                             Mata Pelajaran
                         </a>
+                        <a href="{{ route('jam-pelajaran.index') }}"
+                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('pelajaran/jam-pelajaran*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                            Jam Pelajaran
+                        </a>
+                        <a href="{{ route('jadwal-pelajaran.index') }}"
+                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('pelajaran/jadwal-pelajaran*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                            Jadwal Pelajaran
+                        </a>
                     </div>
                 </div>
 

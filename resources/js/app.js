@@ -245,4 +245,328 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('resize', () => closeAllActionDropdowns());
     window.addEventListener('scroll', () => closeAllActionDropdowns(), { capture: true, passive: true });
+
+    // 7. 24-Hour Time Input Masking & Popover Picker (HH:MM, 00:00 - 23:59)
+    const time24Regex = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+    const normalizeTime24Value = (rawValue) => {
+        const trimmed = String(rawValue || '').trim();
+        if (!trimmed) {
+            return '';
+        }
+
+        const colonMatch = trimmed.match(/^(\d{1,2}):(\d{1,2})(?::\d{2})?$/);
+        if (colonMatch) {
+            const hh = Number(colonMatch[1]);
+            const mm = Number(colonMatch[2]);
+            if (hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59) {
+                return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+            }
+
+            return null;
+        }
+
+        const digitsOnly = trimmed.replace(/\D/g, '');
+        if (digitsOnly.length === 4) {
+            const hh = Number(digitsOnly.slice(0, 2));
+            const mm = Number(digitsOnly.slice(2, 4));
+            if (hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59) {
+                return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+            }
+
+            return null;
+        }
+
+        if (digitsOnly.length === 3) {
+            const hh = Number(digitsOnly.slice(0, 1));
+            const mm = Number(digitsOnly.slice(1, 3));
+            if (hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59) {
+                return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+            }
+
+            return null;
+        }
+
+        if (digitsOnly.length === 1 || digitsOnly.length === 2) {
+            const hh = Number(digitsOnly);
+            if (hh >= 0 && hh <= 23) {
+                return `${String(hh).padStart(2, '0')}:00`;
+            }
+
+            return null;
+        }
+
+        return null;
+    };
+
+    const syncTime24Validity = (input) => {
+        const val = input.value.trim();
+        if (val === '' || time24Regex.test(val)) {
+            input.setCustomValidity('');
+        } else {
+            input.setCustomValidity('Gunakan format 24 jam yang valid (00:00 - 23:59).');
+        }
+    };
+
+    let activeTimeInput = null;
+    let timePopover = null;
+
+    const ensureTimePopover = () => {
+        if (timePopover) {
+            return timePopover;
+        }
+
+        const pop = document.createElement('div');
+        pop.className = 'time24-popover';
+        pop.setAttribute('role', 'dialog');
+        pop.setAttribute('aria-label', 'Pemilih Waktu 24 Jam');
+
+        const hourButtons = Array.from({ length: 24 }, (_, h) => {
+            const val = String(h).padStart(2, '0');
+            return `<button type="button" class="time24-option" data-hour="${val}">${val}</button>`;
+        }).join('');
+
+        const minuteButtons = Array.from({ length: 60 }, (_, m) => {
+            const val = String(m).padStart(2, '0');
+            return `<button type="button" class="time24-option" data-minute="${val}">${val}</button>`;
+        }).join('');
+
+        pop.innerHTML = `
+            <div class="time24-popover-header">
+                <span>Format 24 Jam</span>
+                <span class="time24-popover-preview" data-time24-preview>07:00</span>
+            </div>
+            <div class="time24-popover-grid">
+                <div class="time24-col">
+                    <div class="time24-col-label">Jam</div>
+                    <div class="time24-col-list" data-time24-hours>${hourButtons}</div>
+                </div>
+                <div class="time24-col">
+                    <div class="time24-col-label">Menit</div>
+                    <div class="time24-col-list" data-time24-minutes>${minuteButtons}</div>
+                </div>
+            </div>
+            <div class="time24-popover-footer">
+                <button type="button" class="time24-done-btn" data-time24-done>Selesai</button>
+            </div>
+        `;
+
+        pop.addEventListener('click', (e) => {
+            if (!activeTimeInput) {
+                return;
+            }
+
+            const hourBtn = e.target.closest('[data-hour]');
+            const minuteBtn = e.target.closest('[data-minute]');
+            const doneBtn = e.target.closest('[data-time24-done]');
+
+            if (doneBtn) {
+                closeTimePopover();
+                return;
+            }
+
+            if (!hourBtn && !minuteBtn) {
+                return;
+            }
+
+            const normalized = normalizeTime24Value(activeTimeInput.value) || '07:00';
+            let [currentHour, currentMinute] = normalized.split(':');
+
+            if (hourBtn) {
+                currentHour = hourBtn.dataset.hour;
+            }
+            if (minuteBtn) {
+                currentMinute = minuteBtn.dataset.minute;
+            }
+
+            activeTimeInput.value = `${currentHour}:${currentMinute}`;
+            syncTime24Validity(activeTimeInput);
+            updatePopoverSelection(currentHour, currentMinute);
+
+            activeTimeInput.dispatchEvent(new Event('input', { bubbles: true }));
+            activeTimeInput.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+
+        document.body.appendChild(pop);
+        timePopover = pop;
+        return pop;
+    };
+
+    const updatePopoverSelection = (hour, minute) => {
+        if (!timePopover) {
+            return;
+        }
+
+        const preview = timePopover.querySelector('[data-time24-preview]');
+        if (preview) {
+            preview.textContent = `${hour}:${minute}`;
+        }
+
+        timePopover.querySelectorAll('[data-hour]').forEach((btn) => {
+            const selected = btn.dataset.hour === hour;
+            btn.classList.toggle('is-selected', selected);
+            if (selected) {
+                const list = btn.parentElement;
+                if (list) {
+                    list.scrollTop = Math.max(0, btn.offsetTop - (list.clientHeight / 2) + (btn.offsetHeight / 2));
+                }
+            }
+        });
+
+        timePopover.querySelectorAll('[data-minute]').forEach((btn) => {
+            const selected = btn.dataset.minute === minute;
+            btn.classList.toggle('is-selected', selected);
+            if (selected) {
+                const list = btn.parentElement;
+                if (list) {
+                    list.scrollTop = Math.max(0, btn.offsetTop - (list.clientHeight / 2) + (btn.offsetHeight / 2));
+                }
+            }
+        });
+    };
+
+    const positionTimePopover = (fieldWrapper, pop) => {
+        const rect = fieldWrapper.getBoundingClientRect();
+        pop.style.visibility = 'hidden';
+        pop.classList.add('is-open');
+
+        const popWidth = pop.offsetWidth || 224;
+        const popHeight = pop.offsetHeight || 280;
+        const margin = 8;
+
+        let left = rect.left;
+        if (left + popWidth > window.innerWidth - margin) {
+            left = Math.max(margin, window.innerWidth - popWidth - margin);
+        }
+
+        let top = rect.bottom + 4;
+        if (top + popHeight > window.innerHeight - margin && rect.top - popHeight - 4 > margin) {
+            top = rect.top - popHeight - 4;
+        } else if (top + popHeight > window.innerHeight - margin) {
+            top = Math.max(margin, window.innerHeight - popHeight - margin);
+        }
+
+        pop.style.left = `${left}px`;
+        pop.style.top = `${top}px`;
+        pop.style.visibility = '';
+    };
+
+    const closeTimePopover = () => {
+        if (timePopover) {
+            timePopover.classList.remove('is-open');
+        }
+        activeTimeInput = null;
+    };
+
+    const openTimePopover = (input) => {
+        if (input.readOnly || input.disabled) {
+            return;
+        }
+
+        const fieldWrapper = input.closest('.time24-field') || input;
+        const pop = ensureTimePopover();
+
+        if (activeTimeInput === input && pop.classList.contains('is-open')) {
+            closeTimePopover();
+            return;
+        }
+
+        activeTimeInput = input;
+        positionTimePopover(fieldWrapper, pop);
+
+        const normalized = normalizeTime24Value(input.value) || '07:00';
+        const [hour, minute] = normalized.split(':');
+        updatePopoverSelection(hour, minute);
+    };
+
+    document.addEventListener('input', (e) => {
+        const input = e.target.closest('input[data-time24="true"]');
+        if (!input || !e.isTrusted) {
+            return;
+        }
+
+        if (e.inputType && e.inputType.startsWith('delete')) {
+            syncTime24Validity(input);
+            return;
+        }
+
+        let cleaned = input.value.replace(/[^\d:]/g, '');
+        const firstColon = cleaned.indexOf(':');
+        if (firstColon !== -1) {
+            const hPart = cleaned.slice(0, firstColon).slice(0, 2);
+            const mPart = cleaned.slice(firstColon + 1).replace(/:/g, '').slice(0, 2);
+            cleaned = `${hPart}:${mPart}`;
+        } else {
+            const digits = cleaned.replace(/\D/g, '').slice(0, 4);
+            if (digits.length === 2 && e.inputType === 'insertText') {
+                cleaned = `${digits}:`;
+            } else if (digits.length > 2) {
+                cleaned = `${digits.slice(0, 2)}:${digits.slice(2, 4)}`;
+            } else {
+                cleaned = digits;
+            }
+        }
+
+        if (input.value !== cleaned) {
+            input.value = cleaned;
+        }
+
+        syncTime24Validity(input);
+    });
+
+    document.addEventListener('blur', (e) => {
+        const input = e.target.closest('input[data-time24="true"]');
+        if (!input) {
+            return;
+        }
+
+        const raw = input.value.trim();
+        if (raw === '') {
+            input.setCustomValidity('');
+            return;
+        }
+
+        const normalized = normalizeTime24Value(raw);
+        if (normalized !== null) {
+            if (input.value !== normalized) {
+                input.value = normalized;
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            input.setCustomValidity('');
+        } else {
+            input.setCustomValidity('Gunakan format 24 jam yang valid (00:00 - 23:59).');
+        }
+    }, true);
+
+    document.addEventListener('click', (e) => {
+        const trigger = e.target.closest('.time24-trigger');
+        if (trigger) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const wrapper = trigger.closest('.time24-field');
+            const input = wrapper?.querySelector('input[data-time24="true"]');
+            if (input) {
+                openTimePopover(input);
+            }
+            return;
+        }
+
+        if (!e.target.closest('.time24-popover') && !e.target.closest('.time24-field')) {
+            closeTimePopover();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeTimePopover();
+        }
+    });
+
+    window.addEventListener('resize', () => closeTimePopover());
+    window.addEventListener('scroll', (e) => {
+        if (timePopover && !timePopover.contains(e.target)) {
+            closeTimePopover();
+        }
+    }, { capture: true, passive: true });
 });

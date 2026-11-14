@@ -18,6 +18,8 @@ use App\Http\Controllers\Admin\DataPelengkap\PenghasilanController;
 use App\Http\Controllers\Admin\DataPelengkap\TransportasiController;
 use App\Http\Controllers\Admin\Informasi\AgendaSekolahController;
 use App\Http\Controllers\Admin\Informasi\PengumumanController;
+use App\Http\Controllers\Admin\Pelajaran\JadwalPelajaranController;
+use App\Http\Controllers\Admin\Pelajaran\JamPelajaranController;
 use App\Http\Controllers\Admin\Pelajaran\KelompokPelajaranController;
 use App\Http\Controllers\Admin\Pelajaran\MataPelajaranController;
 use App\Http\Controllers\Admin\Presensi\PresensiSiswaController;
@@ -85,6 +87,14 @@ Route::middleware(['auth', 'sso.check', 'nocache'])->group(function () {
     Route::resource('/pelajaran/mata-pelajaran', MataPelajaranController::class)
         ->except(['show'])
         ->parameters(['mata-pelajaran' => 'mata_pelajaran']);
+    Route::resource('/pelajaran/jam-pelajaran', JamPelajaranController::class)
+        ->except(['show'])
+        ->parameters(['jam-pelajaran' => 'jam_pelajaran']);
+    Route::post('/pelajaran/jadwal-pelajaran/{jadwal_pelajaran}/toggle-status', [JadwalPelajaranController::class, 'toggleStatus'])
+        ->name('jadwal-pelajaran.toggle-status');
+    Route::resource('/pelajaran/jadwal-pelajaran', JadwalPelajaranController::class)
+        ->except(['show'])
+        ->parameters(['jadwal-pelajaran' => 'jadwal_pelajaran']);
 
     // Presensi
     Route::get('/presensi/presensi-siswa/tahunan', [PresensiSiswaController::class, 'tahunan'])

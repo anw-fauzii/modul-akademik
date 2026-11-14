@@ -115,14 +115,19 @@
             <label for="jam" class="font-weight-bold">
                 Jam <span class="text-danger">*</span>
             </label>
-            <input name="jam" id="jam" type="time"
-                class="form-control @error('jam') is-invalid @enderror"
-                value="{{ $formattedJam }}" required>
+            <x-time24-input
+                name="jam"
+                id="jam"
+                placeholder="07:30"
+                @class(['form-control', 'is-invalid' => $errors->has('jam')])
+                :value="$formattedJam"
+                required
+            />
             <small class="form-text text-muted" style="font-size: 0.75rem;">
                 Gunakan format 24 jam (contoh: 07:30 atau 13:00 WIB).
             </small>
             @error('jam')
-                <div class="invalid-feedback" style="font-style: italic; font-size: 0.75rem;">
+                <div class="invalid-feedback d-block" style="font-style: italic; font-size: 0.75rem;">
                     {{ $message }}
                 </div>
             @enderror

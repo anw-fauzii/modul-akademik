@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'akademik_pelajaran_kelompok_pelajaran_id',
@@ -147,5 +148,13 @@ class MataPelajaran extends Model
     public function kelompokPelajaran(): BelongsTo
     {
         return $this->belongsTo(KelompokPelajaran::class, 'akademik_pelajaran_kelompok_pelajaran_id');
+    }
+
+    /**
+     * Relasi ke daftar Jadwal Pelajaran yang menggunakan mata pelajaran ini.
+     */
+    public function jadwalPelajaran(): HasMany
+    {
+        return $this->hasMany(JadwalPelajaran::class, 'akademik_pelajaran_mata_pelajaran_id');
     }
 }

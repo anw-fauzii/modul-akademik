@@ -91,8 +91,13 @@
             <label for="jam_masuk" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
                 Jam Masuk
             </label>
-            <input type="time" name="jam_masuk" id="jam_masuk" value="{{ $selectedJamMasuk }}"
-                class="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20">
+            <x-time24-input
+                name="jam_masuk"
+                id="jam_masuk"
+                placeholder="07:00"
+                :value="$selectedJamMasuk"
+                class="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+            />
             <p class="mt-1 text-[11px] text-slate-500">
                 Maksimal tepat waktu pukul <strong>{{ $batasJamMasuk }}</strong>.
             </p>

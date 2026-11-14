@@ -42,6 +42,8 @@ class SidebarViewTest extends TestCase
     #[TestWith(['/informasi/pengumuman', 'informasi'])]
     #[TestWith(['/pelajaran/kelompok-pelajaran', 'pelajaran'])]
     #[TestWith(['/pelajaran/mata-pelajaran', 'pelajaran'])]
+    #[TestWith(['/pelajaran/jam-pelajaran', 'pelajaran'])]
+    #[TestWith(['/pelajaran/jadwal-pelajaran', 'pelajaran'])]
     public function test_parent_dropdown_menus_match_dashboard_active_colors_when_child_route_is_active(
         string $uri,
         string $expectedActiveMenu

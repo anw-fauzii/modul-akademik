@@ -565,7 +565,14 @@
                                 <span class="bulk-jam-label">
                                     <i class="fa fa-clock text-orange-500"></i> Jam Masuk
                                 </span>
-                                <input type="time" id="massJamMasukInput" value="07:00" class="bulk-jam-input">
+                                <x-time24-input
+                                    compact
+                                    wrapper-class="time24-field--toolbar"
+                                    id="massJamMasukInput"
+                                    value="07:00"
+                                    placeholder="07:00"
+                                    class="bulk-jam-input w-full"
+                                />
                                 <button type="button" id="applyMassJamBtn" class="bulk-jam-apply">
                                     <i class="fa fa-magic text-amber-400"></i> Terapkan ke Semua
                                 </button>
@@ -675,11 +682,19 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <input type="time"
+                                                <x-time24-input
+                                                    compact
                                                     name="items[{{ $index }}][jam_masuk]"
-                                                    value="{{ $allowsTime ? $currentJam : '' }}"
-                                                    class="form-control form-control-sm js-bulk-jam-input {{ $allowsTime ? '' : 'bulk-row-muted-input' }}"
-                                                    @readonly(! $allowsTime)>
+                                                    :value="$allowsTime ? $currentJam : ''"
+                                                    placeholder="07:00"
+                                                    @class([
+                                                        'form-control',
+                                                        'form-control-sm',
+                                                        'js-bulk-jam-input',
+                                                        'bulk-row-muted-input' => ! $allowsTime,
+                                                    ])
+                                                    :readonly="! $allowsTime"
+                                                />
                                             </td>
                                             <td>
                                                 <input type="number"
