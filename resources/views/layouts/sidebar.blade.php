@@ -39,6 +39,8 @@
                 $isDataPelengkapActive = request()->is('data-pelengkap*');
                 $isInformasiActive = request()->is('informasi*');
                 $isPelajaranActive = request()->is('pelajaran*');
+                $isTujuanPembelajaranActive = request()->is('tujuan-pembelajaran*');
+                $isPenilaianActive = request()->is('penilaian*');
                 $isPresensiActive = request()->is('presensi*');
                 $menuActiveClass = 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md shadow-orange-600/30';
                 $menuInactiveClass = 'text-slate-300 hover:text-white hover:bg-slate-800/80';
@@ -236,6 +238,74 @@
                         <a href="{{ route('jadwal-pelajaran.index') }}"
                             class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('pelajaran/jadwal-pelajaran*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
                             Jadwal Pelajaran
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Tujuan Pembelajaran Dropdown -->
+                <div class="has-submenu relative group/submenu">
+                    <button type="button" data-sidebar-toggle="submenu-tujuan-pembelajaran"
+                        aria-expanded="{{ $isTujuanPembelajaranActive ? 'true' : 'false' }}"
+                        class="w-full group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all {{ $isTujuanPembelajaranActive ? $menuActiveClass : $menuInactiveClass }}">
+                        <div class="flex items-center gap-3">
+                            <svg class="h-4 w-4 shrink-0 {{ $isTujuanPembelajaranActive ? $menuIconActiveClass : $menuIconInactiveClass }}"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span class="menu-text">Tujuan Pembelajaran</span>
+                        </div>
+                        <svg class="menu-chevron h-3.5 w-3.5 transition-transform duration-200 {{ $isTujuanPembelajaranActive ? 'text-white rotate-180' : 'text-slate-400 group-hover:text-white' }}"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div id="submenu-tujuan-pembelajaran"
+                        class="{{ $isTujuanPembelajaranActive ? '' : 'hidden' }} submenu-flyout mt-1 space-y-1 pl-4 border-l border-slate-800 ml-5 py-1">
+                        <div class="flyout-header hidden">
+                            <span>Tujuan Pembelajaran</span>
+                        </div>
+                        <a href="{{ route('tujuan-pembelajaran.index') }}"
+                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('tujuan-pembelajaran/tp*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                            Daftar TP
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Penilaian TP (SD) Dropdown -->
+                <div class="has-submenu relative group/submenu">
+                    <button type="button" data-sidebar-toggle="submenu-penilaian"
+                        aria-expanded="{{ $isPenilaianActive ? 'true' : 'false' }}"
+                        class="w-full group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all {{ $isPenilaianActive ? $menuActiveClass : $menuInactiveClass }}">
+                        <div class="flex items-center gap-3">
+                            <svg class="h-4 w-4 shrink-0 {{ $isPenilaianActive ? $menuIconActiveClass : $menuIconInactiveClass }}"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                            </svg>
+                            <span class="menu-text">Penilaian (SD)</span>
+                        </div>
+                        <svg class="menu-chevron h-3.5 w-3.5 transition-transform duration-200 {{ $isPenilaianActive ? 'text-white rotate-180' : 'text-slate-400 group-hover:text-white' }}"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div id="submenu-penilaian"
+                        class="{{ $isPenilaianActive ? '' : 'hidden' }} submenu-flyout mt-1 space-y-1 pl-4 border-l border-slate-800 ml-5 py-1">
+                        <div class="flyout-header hidden">
+                            <span>Penilaian (SD)</span>
+                        </div>
+                        <a href="{{ route('penilaian-kkm.index') }}"
+                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('penilaian/kkm*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                            KKM &amp; Predikat
+                        </a>
+                        <a href="{{ route('penilaian-tp.index') }}"
+                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('penilaian/nilai-tp*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                            Input Nilai TP
+                        </a>
+                        <a href="{{ route('penilaian-rekap.index') }}"
+                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('penilaian/rekap*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                            Rekap &amp; Deskripsi
                         </a>
                     </div>
                 </div>

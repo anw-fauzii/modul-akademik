@@ -2,6 +2,7 @@
 
 namespace App\Models\Admin\Pelajaran;
 
+use App\Models\Admin\TujuanPembelajaran\TujuanPembelajaran;
 use App\Models\Concerns\HasUnitMetadata;
 use Database\Factories\Admin\Pelajaran\MataPelajaranFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -156,5 +157,13 @@ class MataPelajaran extends Model
     public function jadwalPelajaran(): HasMany
     {
         return $this->hasMany(JadwalPelajaran::class, 'akademik_pelajaran_mata_pelajaran_id');
+    }
+
+    /**
+     * Relasi ke daftar Tujuan Pembelajaran (TP) milik mata pelajaran ini.
+     */
+    public function tujuanPembelajaran(): HasMany
+    {
+        return $this->hasMany(TujuanPembelajaran::class, 'akademik_pelajaran_mata_pelajaran_id');
     }
 }

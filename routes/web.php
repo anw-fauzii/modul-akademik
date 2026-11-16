@@ -22,7 +22,10 @@ use App\Http\Controllers\Admin\Pelajaran\JadwalPelajaranController;
 use App\Http\Controllers\Admin\Pelajaran\JamPelajaranController;
 use App\Http\Controllers\Admin\Pelajaran\KelompokPelajaranController;
 use App\Http\Controllers\Admin\Pelajaran\MataPelajaranController;
+use App\Http\Controllers\Admin\Penilaian\KkmController;
+use App\Http\Controllers\Admin\Penilaian\PenilaianTpController;
 use App\Http\Controllers\Admin\Presensi\PresensiSiswaController;
+use App\Http\Controllers\Admin\TujuanPembelajaran\TujuanPembelajaranController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SSOController;
 use Illuminate\Support\Facades\Route;
@@ -95,6 +98,50 @@ Route::middleware(['auth', 'sso.check', 'nocache'])->group(function () {
     Route::resource('/pelajaran/jadwal-pelajaran', JadwalPelajaranController::class)
         ->except(['show'])
         ->parameters(['jadwal-pelajaran' => 'jadwal_pelajaran']);
+
+    // Tujuan Pembelajaran
+    Route::get('/tujuan-pembelajaran/tp/export', [TujuanPembelajaranController::class, 'export'])
+        ->name('tujuan-pembelajaran.export');
+    Route::get('/tujuan-pembelajaran/tp/import/template', [TujuanPembelajaranController::class, 'template'])
+        ->name('tujuan-pembelajaran.template');
+    Route::post('/tujuan-pembelajaran/tp/import', [TujuanPembelajaranController::class, 'import'])
+        ->name('tujuan-pembelajaran.import');
+    Route::post('/tujuan-pembelajaran/tp/{tujuan_pembelajaran}/toggle-status', [TujuanPembelajaranController::class, 'toggleStatus'])
+        ->name('tujuan-pembelajaran.toggle-status');
+    Route::resource('/tujuan-pembelajaran/tp', TujuanPembelajaranController::class)
+        ->except(['show'])
+        ->names('tujuan-pembelajaran')
+        ->parameters(['tp' => 'tujuan_pembelajaran']);
+
+    // Penilaian TP (SD)
+    Route::resource('/penilaian/kkm', KkmController::class)
+        ->except(['show'])
+        ->names('penilaian-kkm')
+        ->parameters(['kkm' => 'kkm']);
+    Route::get('/penilaian/nilai-tp', [PenilaianTpController::class, 'index'])
+        ->name('penilaian-tp.index');
+    Route::post('/penilaian/nilai-tp', [PenilaianTpController::class, 'store'])
+        ->name('penilaian-tp.store');
+    Route::post('/penilaian/nilai-tp/bobot', [PenilaianTpController::class, 'updateBobot'])
+        ->name('penilaian-tp.bobot.update');
+    Route::post('/penilaian/nilai-tp/tp/{tujuan_pembelajaran}/toggle-masuk-rapor', [PenilaianTpController::class, 'toggleMasukRapor'])
+        ->name('penilaian-tp.toggle-masuk-rapor');
+    Route::post('/penilaian/nilai-tp/aspek', [PenilaianTpController::class, 'storeAspek'])
+        ->name('penilaian-tp.aspek.store');
+    Route::put('/penilaian/nilai-tp/aspek/{aspek_tp}', [PenilaianTpController::class, 'updateAspek'])
+        ->name('penilaian-tp.aspek.update');
+    Route::delete('/penilaian/nilai-tp/aspek/{aspek_tp}', [PenilaianTpController::class, 'destroyAspek'])
+        ->name('penilaian-tp.aspek.destroy');
+    Route::get('/penilaian/nilai-tp/export', [PenilaianTpController::class, 'export'])
+        ->name('penilaian-tp.export');
+    Route::post('/penilaian/nilai-tp/import', [PenilaianTpController::class, 'import'])
+        ->name('penilaian-tp.import');
+    Route::get('/penilaian/rekap', [PenilaianTpController::class, 'rekap'])
+        ->name('penilaian-rekap.index');
+    Route::put('/penilaian/rekap/{rekap_mapel}/deskripsi', [PenilaianTpController::class, 'updateDeskripsi'])
+        ->name('penilaian-rekap.deskripsi.update');
+    Route::post('/penilaian/rekap/regenerate-deskripsi', [PenilaianTpController::class, 'regenerateDeskripsi'])
+        ->name('penilaian-rekap.deskripsi.regenerate');
 
     // Presensi
     Route::get('/presensi/presensi-siswa/tahunan', [PresensiSiswaController::class, 'tahunan'])
