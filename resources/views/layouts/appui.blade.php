@@ -8,11 +8,11 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- Dynamic Title -->
-    @yield('title', '<title>SIPIT Kepegawaian - Yayasan Prima Insani</title>')
+    @yield('title', '<title>PION Kepegawaian - Yayasan Prima Insani</title>')
 
     <!-- Meta SEO & Open Graph -->
     <meta name="description" content="Sistem Informasi Kepegawaian Yayasan Prima Insani — Presensi, Pegawai, Kinerja, dan Kegiatan.">
-    <meta property="og:title" content="SIPIT Kepegawaian Yayasan Prima Insani">
+    <meta property="og:title" content="PION Kepegawaian Yayasan Prima Insani">
     <meta property="og:description" content="Kelola absensi, data pegawai, kegiatan, dan kinerja yayasan secara modern dan terpadu.">
     <meta property="og:type" content="website">
     <link rel="icon" href="{{ asset('logo.png') }}" type="image/png">

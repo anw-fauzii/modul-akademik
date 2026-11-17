@@ -132,6 +132,12 @@ Route::middleware(['auth', 'sso.check', 'nocache'])->group(function () {
         ->name('penilaian-tp.aspek.update');
     Route::delete('/penilaian/nilai-tp/aspek/{aspek_tp}', [PenilaianTpController::class, 'destroyAspek'])
         ->name('penilaian-tp.aspek.destroy');
+    Route::post('/penilaian/nilai-tp/sumatif-bab', [PenilaianTpController::class, 'storeSumatifBab'])
+        ->name('penilaian-tp.sumatif-bab.store');
+    Route::put('/penilaian/nilai-tp/sumatif-bab/{sumatif_bab}', [PenilaianTpController::class, 'updateSumatifBab'])
+        ->name('penilaian-tp.sumatif-bab.update');
+    Route::delete('/penilaian/nilai-tp/sumatif-bab/{sumatif_bab}', [PenilaianTpController::class, 'destroySumatifBab'])
+        ->name('penilaian-tp.sumatif-bab.destroy');
     Route::get('/penilaian/nilai-tp/export', [PenilaianTpController::class, 'export'])
         ->name('penilaian-tp.export');
     Route::post('/penilaian/nilai-tp/import', [PenilaianTpController::class, 'import'])

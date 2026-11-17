@@ -38,6 +38,23 @@ class PenilaianTpExport implements Export, FromArray, ShouldAutoSize, WithStyles
     protected array $naTpCols = [];
 
     /**
+     * @var array{start_col: int, end_col: int}|null
+     */
+    protected ?array $sumatifSpan = null;
+
+    /**
+     * @var list<int>
+     */
+    protected array $sumatifCols = [];
+
+    /**
+     * @var list<int>
+     */
+    protected array $sumatifMidCols = [];
+
+    protected ?int $rataSumatifCol = null;
+
+    /**
      * @var list<int>
      */
     protected array $ujianCols = [];
@@ -67,10 +84,18 @@ class PenilaianTpExport implements Export, FromArray, ShouldAutoSize, WithStyles
         $rekapTpLookup = $matrix['rekapTpLookup'];
         $rekapMapelLookup = $matrix['rekapMapelLookup'];
         $periode = $matrix['periode'];
+        $carriedMidSumatif = $matrix['carriedMidSumatifBabs'] ?? collect();
+        $activeSumatif = $matrix['activeSumatifBabs'] ?? collect();
+        $sumatifNilaiLookup = $matrix['sumatifNilaiLookup'] ?? [];
+        $hasSumatif = $carriedMidSumatif->isNotEmpty() || $activeSumatif->isNotEmpty();
 
         $this->tpSpans = [];
         $this->aspekCols = [];
         $this->naTpCols = [];
+        $this->sumatifSpan = null;
+        $this->sumatifCols = [];
+        $this->sumatifMidCols = [];
+        $this->rataSumatifCol = null;
         $this->ujianCols = [];
         $this->summaryCols = [];
 
@@ -102,7 +127,37 @@ class PenilaianTpExport implements Export, FromArray, ShouldAutoSize, WithStyles
             ];
         }
 
-        $row1[] = PeriodeTp::ujianLabel($periode);
+        if ($hasSumatif) {
+            $sumatifStartCol = $colCursor;
+            $isFirstSumatifCol = true;
+
+            foreach ($carriedMidSumatif as $midBab) {
+                $row1[] = $isFirstSumatifCol ? 'SUMATIF BAB' : '';
+                $row2[] = "{$midBab->nama_bab} (Mid)";
+                $this->sumatifMidCols[] = $colCursor;
+                $colCursor++;
+                $isFirstSumatifCol = false;
+            }
+
+            foreach ($activeSumatif as $bab) {
+                $row1[] = $isFirstSumatifCol ? 'SUMATIF BAB' : '';
+                $row2[] = $bab->nama_bab;
+                $this->sumatifCols[] = $colCursor;
+                $colCursor++;
+                $isFirstSumatifCol = false;
+            }
+
+            $row1[] = '';
+            $row2[] = 'Rata Sumatif';
+            $this->rataSumatifCol = $colCursor;
+            $this->sumatifSpan = [
+                'start_col' => $sumatifStartCol,
+                'end_col' => $colCursor,
+            ];
+            $colCursor++;
+        }
+
+        $row1[] = $matrix['ujianLabel'] ?? PeriodeTp::ujianLabel($periode, $matrix['selectedTahunAjaran']?->semester ?? null);
         $row2[] = 'Ujian';
         $this->ujianCols[] = $colCursor++;
 
@@ -139,6 +194,21 @@ class PenilaianTpExport implements Export, FromArray, ShouldAutoSize, WithStyles
             }
 
             $rekapMapel = $rekapMapelLookup["{$student->id}:{$periode}"] ?? null;
+
+            if ($hasSumatif) {
+                foreach ($carriedMidSumatif as $midBab) {
+                    $nilaiObj = $sumatifNilaiLookup["{$student->id}:{$midBab->id}"] ?? null;
+                    $dataRow[] = $nilaiObj?->nilai !== null ? (float) $nilaiObj->nilai : null;
+                }
+                foreach ($activeSumatif as $bab) {
+                    $nilaiObj = $sumatifNilaiLookup["{$student->id}:{$bab->id}"] ?? null;
+                    $dataRow[] = $nilaiObj?->nilai !== null ? (float) $nilaiObj->nilai : null;
+                }
+                $dataRow[] = $rekapMapel?->rata_rata_sumatif !== null
+                    ? (int) round((float) $rekapMapel->rata_rata_sumatif)
+                    : null;
+            }
+
             $dataRow[] = $rekapMapel?->nilai_ujian !== null ? (float) $rekapMapel->nilai_ujian : null;
             $dataRow[] = $rekapMapel?->nilai_akhir_rapor !== null ? (int) round((float) $rekapMapel->nilai_akhir_rapor) : null;
             $dataRow[] = $rekapMapel?->predikat_rapor ?? '';
@@ -251,7 +321,90 @@ class PenilaianTpExport implements Export, FromArray, ShouldAutoSize, WithStyles
             }
         }
 
-        // Kolom Nilai Ujian (STS / SAS) dengan aksen indigo lembut
+        // Grup kolom Sumatif Bab (aksen teal lembut)
+        if ($this->sumatifSpan !== null) {
+            $startLetter = Coordinate::stringFromColumnIndex($this->sumatifSpan['start_col']);
+            $endLetter = Coordinate::stringFromColumnIndex($this->sumatifSpan['end_col']);
+            if ($this->sumatifSpan['end_col'] > $this->sumatifSpan['start_col']) {
+                $sheet->mergeCells("{$startLetter}1:{$endLetter}1");
+            }
+            $sheet->getStyle("{$startLetter}1:{$endLetter}1")->applyFromArray([
+                'font' => ['bold' => true, 'color' => ['rgb' => '134E4A']],
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => '99F6E4'],
+                ],
+                'alignment' => [
+                    'horizontal' => Alignment::HORIZONTAL_CENTER,
+                    'vertical' => Alignment::VERTICAL_CENTER,
+                ],
+            ]);
+        }
+
+        foreach ($this->sumatifMidCols as $colIdx) {
+            $colLetter = Coordinate::stringFromColumnIndex($colIdx);
+            $sheet->getStyle("{$colLetter}2")->applyFromArray([
+                'font' => ['bold' => true, 'color' => ['rgb' => '475569']],
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => 'E2E8F0'],
+                ],
+                'alignment' => [
+                    'horizontal' => Alignment::HORIZONTAL_CENTER,
+                    'vertical' => Alignment::VERTICAL_CENTER,
+                ],
+            ]);
+            if ($highestRow >= 3) {
+                $sheet->getStyle("{$colLetter}3:{$colLetter}{$highestRow}")->applyFromArray([
+                    'font' => ['color' => ['rgb' => '475569']],
+                    'fill' => [
+                        'fillType' => Fill::FILL_SOLID,
+                        'startColor' => ['rgb' => 'F8FAFC'],
+                    ],
+                ]);
+            }
+        }
+
+        foreach ($this->sumatifCols as $colIdx) {
+            $colLetter = Coordinate::stringFromColumnIndex($colIdx);
+            $sheet->getStyle("{$colLetter}2")->applyFromArray([
+                'font' => ['bold' => true, 'color' => ['rgb' => '0F172A']],
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => 'CCFBF1'],
+                ],
+                'alignment' => [
+                    'horizontal' => Alignment::HORIZONTAL_CENTER,
+                    'vertical' => Alignment::VERTICAL_CENTER,
+                ],
+            ]);
+        }
+
+        if ($this->rataSumatifCol !== null) {
+            $colLetter = Coordinate::stringFromColumnIndex($this->rataSumatifCol);
+            $sheet->getStyle("{$colLetter}2")->applyFromArray([
+                'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => '0F766E'],
+                ],
+                'alignment' => [
+                    'horizontal' => Alignment::HORIZONTAL_CENTER,
+                    'vertical' => Alignment::VERTICAL_CENTER,
+                ],
+            ]);
+            if ($highestRow >= 3) {
+                $sheet->getStyle("{$colLetter}3:{$colLetter}{$highestRow}")->applyFromArray([
+                    'font' => ['bold' => true, 'color' => ['rgb' => '115E59']],
+                    'fill' => [
+                        'fillType' => Fill::FILL_SOLID,
+                        'startColor' => ['rgb' => 'F0FDFA'],
+                    ],
+                ]);
+            }
+        }
+
+        // Kolom Nilai Ujian (PSTS / PSAS / PSAT) dengan aksen indigo lembut
         foreach ($this->ujianCols as $colIdx) {
             $colLetter = Coordinate::stringFromColumnIndex($colIdx);
             $sheet->getStyle("{$colLetter}1:{$colLetter}2")->applyFromArray([

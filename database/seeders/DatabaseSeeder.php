@@ -15,16 +15,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::query()->firstOrCreate(
-            ['email' => 'test@example.com'],
-            [
-                'name' => 'Test User',
-                'password' => 'password',
-            ]
-        );
 
         $this->call([
-            SiswaSeeder::class,
+            //SiswaSeeder::class,
+            JamPelajaranSdSeeder::class,
         ]);
     }
 }

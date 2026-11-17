@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Penilaian\AspekTpRequest;
 use App\Http\Requests\Admin\Penilaian\ImportNilaiTpRequest;
 use App\Http\Requests\Admin\Penilaian\SimpanNilaiTpRequest;
+use App\Http\Requests\Admin\Penilaian\SumatifBabRequest;
 use App\Http\Requests\Admin\Penilaian\UpdateBobotRaporRequest;
 use App\Imports\Admin\Penilaian\PenilaianTpImport;
 use App\Models\Admin\DataMaster\Kelas;
@@ -14,6 +15,7 @@ use App\Models\Admin\Pelajaran\MataPelajaran;
 use App\Models\Admin\Penilaian\AspekTp;
 use App\Models\Admin\Penilaian\PeriodeTp;
 use App\Models\Admin\Penilaian\RekapMapel;
+use App\Models\Admin\Penilaian\SumatifBab;
 use App\Models\Admin\TujuanPembelajaran\TujuanPembelajaran;
 use App\Services\Admin\Penilaian\PenilaianTpService;
 use Illuminate\Http\RedirectResponse;
@@ -60,7 +62,8 @@ class PenilaianTpController extends Controller
             $periode,
             $validated['nilai'] ?? [],
             $request->user()?->no_induk,
-            $validated['ujian'] ?? []
+            $validated['ujian'] ?? [],
+            $validated['sumatif'] ?? []
         );
 
         return redirect()
@@ -77,7 +80,7 @@ class PenilaianTpController extends Controller
     }
 
     /**
-     * Memperbarui bobot persentase Rapor (NA TP vs Nilai Ujian STS/SAS) seragam per jenjang SD.
+     * Memperbarui bobot persentase Rapor (NA TP, Sumatif Bab, dan Nilai Ujian PSTS/PSAS/PSAT) seragam per jenjang SD.
      */
     public function updateBobot(UpdateBobotRaporRequest $request): RedirectResponse
     {
@@ -86,9 +89,10 @@ class PenilaianTpController extends Controller
         $mapel = MataPelajaran::query()->findOrFail((int) $validated['mata_pelajaran_id']);
         $periode = (string) $validated['periode'];
         $bobotTp = (int) $validated['bobot_tp'];
+        $bobotSumatif = (int) ($validated['bobot_sumatif'] ?? 0);
         $bobotUjian = (int) $validated['bobot_ujian'];
 
-        $this->service->updateBobotRapor($kelas, $mapel, $bobotTp, $bobotUjian);
+        $this->service->updateBobotRapor($kelas, $mapel, $bobotTp, $bobotUjian, $bobotSumatif);
 
         return redirect()
             ->route('penilaian-tp.index', $this->contextQueryParams(
@@ -99,8 +103,66 @@ class PenilaianTpController extends Controller
             ))
             ->with(
                 'success',
-                "Bobot Rapor jenjang Kelas {$kelas->tingkatan_kelas} SD diperbarui menjadi {$bobotTp}% NA TP + {$bobotUjian}% Nilai Ujian."
+                "Bobot Rapor jenjang Kelas {$kelas->tingkatan_kelas} SD diperbarui menjadi {$bobotTp}% NA TP + {$bobotSumatif}% Sumatif Bab + {$bobotUjian}% Nilai Ujian."
             );
+    }
+
+    /**
+     * Menambahkan kolom Sumatif Bab baru per mapel & tingkatan kelas (seragam per jenjang).
+     */
+    public function storeSumatifBab(SumatifBabRequest $request): RedirectResponse
+    {
+        $validated = $request->validated();
+        $sumatifBab = $this->service->saveSumatifBab($validated);
+
+        return redirect()
+            ->route('penilaian-tp.index', $this->contextQueryParams(
+                $sumatifBab->akademik_master_tahun_ajaran_id,
+                $validated['kelas_id'] ?? null,
+                $sumatifBab->akademik_pelajaran_mata_pelajaran_id,
+                $sumatifBab->periode
+            ))
+            ->with('success', "Kolom Sumatif Bab \"{$sumatifBab->nama_bab}\" berhasil ditambahkan (seragam jenjang Kelas {$sumatifBab->tingkatan_kelas}).");
+    }
+
+    /**
+     * Memperbarui nama, keterangan, atau urutan kolom Sumatif Bab.
+     */
+    public function updateSumatifBab(SumatifBabRequest $request, SumatifBab $sumatifBab): RedirectResponse
+    {
+        $validated = $request->validated();
+        $updated = $this->service->saveSumatifBab($validated, $sumatifBab);
+
+        return redirect()
+            ->route('penilaian-tp.index', $this->contextQueryParams(
+                $updated->akademik_master_tahun_ajaran_id,
+                $validated['kelas_id'] ?? null,
+                $updated->akademik_pelajaran_mata_pelajaran_id,
+                $updated->periode
+            ))
+            ->with('success', "Kolom Sumatif Bab \"{$updated->nama_bab}\" berhasil diperbarui.");
+    }
+
+    /**
+     * Menghapus kolom Sumatif Bab beserta nilainya dan menyinkronkan ulang NA Rapor.
+     */
+    public function destroySumatifBab(Request $request, SumatifBab $sumatifBab): RedirectResponse
+    {
+        $tahunAjaranId = $sumatifBab->akademik_master_tahun_ajaran_id;
+        $mapelId = $sumatifBab->akademik_pelajaran_mata_pelajaran_id;
+        $periode = $sumatifBab->periode;
+        $namaBab = $sumatifBab->nama_bab;
+
+        $this->service->deleteSumatifBab($sumatifBab);
+
+        return redirect()
+            ->route('penilaian-tp.index', $this->contextQueryParams(
+                $tahunAjaranId,
+                $request->input('kelas_id'),
+                $mapelId,
+                $periode
+            ))
+            ->with('success', "Kolom Sumatif Bab \"{$namaBab}\" berhasil dihapus dan NA Rapor disinkronkan ulang.");
     }
 
     /**

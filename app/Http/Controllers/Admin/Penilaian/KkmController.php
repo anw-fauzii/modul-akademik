@@ -49,10 +49,24 @@ class KkmController extends Controller
      */
     public function store(KkmRequest $request): RedirectResponse
     {
-        $this->service->saveWithPredikats($request->validated());
+        $validated = $request->validated();
+        $this->service->saveWithPredikats($validated);
+
+        $mapelIds = $validated['mata_pelajaran_ids'] ?? array_filter([$validated['akademik_pelajaran_mata_pelajaran_id'] ?? null]);
+        $mapelCount = count(is_array($mapelIds) ? $mapelIds : []);
+        $primaryTingkat = $validated['tingkatan_kelas'] ?? null;
+        $extraTingkat = array_diff(
+            $validated['copy_to_tingkatan'] ?? [],
+            $primaryTingkat !== null ? [$primaryTingkat] : []
+        );
+        $tingkatCount = 1 + count(array_unique($extraTingkat));
+
+        $message = $mapelCount > 1 || $tingkatCount > 1
+            ? "Pengaturan KKM & rentang predikat berhasil disimpan untuk {$mapelCount} mata pelajaran ({$tingkatCount} tingkatan kelas)."
+            : 'Pengaturan KKM & rentang predikat berhasil disimpan.';
 
         return redirect()->route('penilaian-kkm.index')
-            ->with('success', 'Pengaturan KKM & rentang predikat berhasil disimpan.');
+            ->with('success', $message);
     }
 
     /**

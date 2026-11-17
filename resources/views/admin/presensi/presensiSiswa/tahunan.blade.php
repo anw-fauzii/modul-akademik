@@ -1,7 +1,7 @@
 @extends('layouts.appui')
 
 @section('title')
-    <title>Statistik Presensi Tahunan - SIPIT Akademik</title>
+    <title>Statistik Presensi Tahunan - PION Akademik</title>
 @endsection
 
 @push('css')

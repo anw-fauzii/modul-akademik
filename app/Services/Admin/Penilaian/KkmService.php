@@ -42,6 +42,7 @@ class KkmService
                 'tingkatan_kelas',
                 'nilai_kkm',
                 'bobot_tp',
+                'bobot_sumatif',
                 'bobot_ujian',
                 'status',
                 'updated_at',
@@ -269,18 +270,37 @@ class KkmService
     public function saveWithPredikats(array $data, ?Kkm $existing = null): Kkm
     {
         $tahunAjaranId = (int) $data['akademik_master_tahun_ajaran_id'];
-        $mapelId = (int) $data['akademik_pelajaran_mata_pelajaran_id'];
+        $primaryMapelId = (int) $data['akademik_pelajaran_mata_pelajaran_id'];
         $primaryTingkatan = trim((string) $data['tingkatan_kelas']);
         $nilaiKkm = round((float) $data['nilai_kkm'], 2);
         $bobotTp = (int) ($data['bobot_tp'] ?? Kkm::DEFAULT_BOBOT_TP);
+        $bobotSumatif = (int) ($data['bobot_sumatif'] ?? Kkm::DEFAULT_BOBOT_SUMATIF);
         $bobotUjian = (int) ($data['bobot_ujian'] ?? Kkm::DEFAULT_BOBOT_UJIAN);
         $status = (bool) ($data['status'] ?? true);
 
-        if (($bobotError = Kkm::validateBobotPair($bobotTp, $bobotUjian)) !== null) {
+        if (($bobotError = Kkm::validateBobotPair($bobotTp, $bobotUjian, $bobotSumatif)) !== null) {
             throw ValidationException::withMessages(['bobot_ujian' => $bobotError]);
         }
 
         $predikats = $this->validateAndNormalizePredikats($data['predikats'] ?? []);
+
+        $targetMapelIds = [];
+        if ($existing !== null) {
+            $targetMapelIds = [$primaryMapelId];
+        } else {
+            $rawMapelIds = $data['mata_pelajaran_ids'] ?? [$primaryMapelId];
+            if (is_array($rawMapelIds)) {
+                foreach ($rawMapelIds as $rawMpId) {
+                    $parsedMpId = (int) $rawMpId;
+                    if ($parsedMpId > 0 && ! in_array($parsedMpId, $targetMapelIds, true)) {
+                        $targetMapelIds[] = $parsedMpId;
+                    }
+                }
+            }
+            if ($targetMapelIds === [] && $primaryMapelId > 0) {
+                $targetMapelIds = [$primaryMapelId];
+            }
+        }
 
         $targetTingkatans = [$primaryTingkatan];
         $copyTingkatans = $data['copy_to_tingkatan'] ?? [];
@@ -295,83 +315,95 @@ class KkmService
 
         return DB::transaction(function () use (
             $tahunAjaranId,
-            $mapelId,
+            $primaryMapelId,
+            $targetMapelIds,
             $primaryTingkatan,
             $targetTingkatans,
             $nilaiKkm,
             $bobotTp,
+            $bobotSumatif,
             $bobotUjian,
             $status,
             $predikats,
             $existing
         ): Kkm {
             $primaryKkm = null;
+            $now = now();
 
-            foreach ($targetTingkatans as $tingkatan) {
-                $kkmModel = $existing !== null && $tingkatan === $primaryTingkatan
-                    ? $existing
-                    : Kkm::query()
-                        ->where('akademik_master_tahun_ajaran_id', $tahunAjaranId)
-                        ->where('akademik_pelajaran_mata_pelajaran_id', $mapelId)
-                        ->where('tingkatan_kelas', $tingkatan)
-                        ->first();
+            foreach ($targetMapelIds as $mapelId) {
+                $latestPredikats = null;
 
-                if ($kkmModel === null) {
-                    $kkmModel = Kkm::create([
-                        'akademik_master_tahun_ajaran_id' => $tahunAjaranId,
-                        'akademik_pelajaran_mata_pelajaran_id' => $mapelId,
-                        'tingkatan_kelas' => $tingkatan,
-                        'nilai_kkm' => $nilaiKkm,
-                        'bobot_tp' => $bobotTp,
-                        'bobot_ujian' => $bobotUjian,
-                        'status' => $status,
-                    ]);
-                } else {
-                    $kkmModel->update([
-                        'akademik_master_tahun_ajaran_id' => $tahunAjaranId,
-                        'akademik_pelajaran_mata_pelajaran_id' => $mapelId,
-                        'tingkatan_kelas' => $tingkatan,
-                        'nilai_kkm' => $nilaiKkm,
-                        'bobot_tp' => $bobotTp,
-                        'bobot_ujian' => $bobotUjian,
-                        'status' => $status,
-                    ]);
-                    $kkmModel->predikats()->delete();
+                foreach ($targetTingkatans as $tingkatan) {
+                    $kkmModel = $existing !== null && $mapelId === $primaryMapelId && $tingkatan === $primaryTingkatan
+                        ? $existing
+                        : Kkm::query()
+                            ->where('akademik_master_tahun_ajaran_id', $tahunAjaranId)
+                            ->where('akademik_pelajaran_mata_pelajaran_id', $mapelId)
+                            ->where('tingkatan_kelas', $tingkatan)
+                            ->first();
+
+                    if ($kkmModel === null) {
+                        $kkmModel = Kkm::create([
+                            'akademik_master_tahun_ajaran_id' => $tahunAjaranId,
+                            'akademik_pelajaran_mata_pelajaran_id' => $mapelId,
+                            'tingkatan_kelas' => $tingkatan,
+                            'nilai_kkm' => $nilaiKkm,
+                            'bobot_tp' => $bobotTp,
+                            'bobot_sumatif' => $bobotSumatif,
+                            'bobot_ujian' => $bobotUjian,
+                            'status' => $status,
+                        ]);
+                    } else {
+                        $kkmModel->update([
+                            'akademik_master_tahun_ajaran_id' => $tahunAjaranId,
+                            'akademik_pelajaran_mata_pelajaran_id' => $mapelId,
+                            'tingkatan_kelas' => $tingkatan,
+                            'nilai_kkm' => $nilaiKkm,
+                            'bobot_tp' => $bobotTp,
+                            'bobot_sumatif' => $bobotSumatif,
+                            'bobot_ujian' => $bobotUjian,
+                            'status' => $status,
+                        ]);
+                        $kkmModel->predikats()->delete();
+                    }
+
+                    $rows = array_map(
+                        static fn (array $item): array => [
+                            'kkm_id' => $kkmModel->id,
+                            'predikat' => $item['predikat'],
+                            'keterangan' => $item['keterangan'],
+                            'nilai_min' => $item['nilai_min'],
+                            'nilai_max' => $item['nilai_max'],
+                            'is_tuntas' => $item['is_tuntas'],
+                            'urutan' => $item['urutan'],
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ],
+                        $predikats
+                    );
+
+                    KkmPredikat::query()->insert($rows);
+                    $kkmModel->load('predikats');
+                    $latestPredikats = $kkmModel->predikats;
+
+                    if ($primaryKkm === null || ($mapelId === $primaryMapelId && $tingkatan === $primaryTingkatan)) {
+                        $primaryKkm = $kkmModel;
+                    }
                 }
 
-                $now = now();
-                $rows = array_map(
-                    static fn (array $item): array => [
-                        'kkm_id' => $kkmModel->id,
-                        'predikat' => $item['predikat'],
-                        'keterangan' => $item['keterangan'],
-                        'nilai_min' => $item['nilai_min'],
-                        'nilai_max' => $item['nilai_max'],
-                        'is_tuntas' => $item['is_tuntas'],
-                        'urutan' => $item['urutan'],
-                        'created_at' => $now,
-                        'updated_at' => $now,
-                    ],
-                    $predikats
-                );
-
-                KkmPredikat::query()->insert($rows);
-                $kkmModel->load('predikats');
-
-                if ($tingkatan === $primaryTingkatan) {
-                    $primaryKkm = $kkmModel;
+                if ($latestPredikats !== null) {
+                    $this->refreshExistingRekapPredicates(
+                        $tahunAjaranId,
+                        $mapelId,
+                        $targetTingkatans,
+                        $nilaiKkm,
+                        $bobotTp,
+                        $bobotSumatif,
+                        $bobotUjian,
+                        $latestPredikats
+                    );
                 }
             }
-
-            $this->refreshExistingRekapPredicates(
-                $tahunAjaranId,
-                $mapelId,
-                $targetTingkatans,
-                $nilaiKkm,
-                $bobotTp,
-                $bobotUjian,
-                $primaryKkm->predikats
-            );
 
             return $primaryKkm;
         });
@@ -397,6 +429,7 @@ class KkmService
         array $tingkatans,
         float $nilaiKkm,
         int $bobotTp,
+        int $bobotSumatif,
         int $bobotUjian,
         Collection $predikats
     ): void {
@@ -467,7 +500,9 @@ class KkmService
             ->where('akademik_pelajaran_mata_pelajaran_id', $mapelId)
             ->whereIn('anggota_kelas_id', $anggotaIds)
             ->where(static function (Builder $query): void {
-                $query->whereNotNull('rata_rata_tp')->orWhereNotNull('nilai_ujian');
+                $query->whereNotNull('rata_rata_tp')
+                    ->orWhereNotNull('rata_rata_sumatif')
+                    ->orWhereNotNull('nilai_ujian');
             })
             ->get();
 
@@ -478,7 +513,9 @@ class KkmService
                     $rekapMapel->rata_rata_tp,
                     $rekapMapel->nilai_ujian,
                     $bobotTp,
-                    $bobotUjian
+                    $bobotUjian,
+                    $rekapMapel->rata_rata_sumatif,
+                    $bobotSumatif
                 );
                 $matched = $nilai !== null ? Kkm::resolvePredikatForNilai($nilai, $predikats) : null;
                 $mapelRows[] = [
@@ -487,11 +524,13 @@ class KkmService
                     'anggota_kelas_id' => $rekapMapel->anggota_kelas_id,
                     'periode' => $rekapMapel->periode,
                     'rata_rata_tp' => $rekapMapel->rata_rata_tp,
+                    'rata_rata_sumatif' => $rekapMapel->rata_rata_sumatif,
                     'nilai_ujian' => $rekapMapel->nilai_ujian,
                     'nilai_akhir_rapor' => $nilai,
                     'jumlah_tp_dinilai' => $rekapMapel->jumlah_tp_dinilai,
                     'nilai_kkm_snapshot' => $nilaiKkm,
                     'bobot_tp_snapshot' => $bobotTp,
+                    'bobot_sumatif_snapshot' => $bobotSumatif,
                     'bobot_ujian_snapshot' => $bobotUjian,
                     'predikat_rapor' => $matched?->predikat,
                     'keterangan_predikat' => $matched?->keterangan,
@@ -509,6 +548,7 @@ class KkmService
                     'nilai_akhir_rapor',
                     'nilai_kkm_snapshot',
                     'bobot_tp_snapshot',
+                    'bobot_sumatif_snapshot',
                     'bobot_ujian_snapshot',
                     'predikat_rapor',
                     'keterangan_predikat',

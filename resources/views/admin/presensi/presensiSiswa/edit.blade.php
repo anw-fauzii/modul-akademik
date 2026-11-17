@@ -1,7 +1,7 @@
 @extends('layouts.appui')
 
 @section('title')
-    <title>Edit Presensi Siswa - SIPIT Akademik</title>
+    <title>Edit Presensi Siswa - PION Akademik</title>
 @endsection
 
 @section('content')

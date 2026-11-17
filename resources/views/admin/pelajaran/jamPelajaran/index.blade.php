@@ -80,6 +80,7 @@
                 background: #f8fafc;
                 border: 1px solid #e2e8f0;
                 color: #0f172a;
+                white-space: nowrap;
             }
         </style>
     @endpush
@@ -282,8 +283,8 @@
                                 <th style="width: 6%;">No</th>
                                 <th class="text-center" style="width: 12%;">Jam Ke</th>
                                 <th class="text-center" style="width: 10%;">Unit</th>
-                                <th class="text-center" style="width: 15%;">Jam Mulai</th>
-                                <th class="text-center" style="width: 18%;">Jam Selesai</th>
+                                <th class="text-center" style="width: 21%;">Waktu (Mulai - Selesai)</th>
+                                <th class="text-center" style="width: 12%;">Durasi</th>
                                 <th>Keterangan</th>
                                 <th style="width: 72px; text-align: center;">Aksi</th>
                             </tr>
@@ -305,17 +306,18 @@
                                     </td>
                                     <td class="text-center">
                                         <span class="jp-time-pill">
-                                            <i class="fa fa-play-circle text-success" style="font-size: 0.72rem;"></i>
-                                            {{ $item->jam_mulai_formatted }}
+                                            <i class="fa fa-clock text-warning" style="font-size: 0.72rem;"></i>
+                                            {{ $item->rentang_waktu }}
                                         </span>
                                     </td>
                                     <td class="text-center">
-                                        <span class="jp-time-pill">
-                                            <i class="fa fa-stop-circle text-danger" style="font-size: 0.72rem;"></i>
-                                            {{ $item->jam_selesai_formatted }}
-                                        </span>
                                         @if ($item->durasi_label !== '-')
-                                            <div class="small text-muted mt-1">{{ $item->durasi_label }}</div>
+                                            <span class="badge badge-light px-2 py-1"
+                                                style="font-size: 0.76rem; font-weight: 600; color: #475569; border: 1px solid #e2e8f0; white-space: nowrap;">
+                                                {{ $item->durasi_label }}
+                                            </span>
+                                        @else
+                                            <span class="text-muted">-</span>
                                         @endif
                                     </td>
                                     <td>

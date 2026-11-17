@@ -1,6 +1,13 @@
-// Modern Antigravity Tailwind UI Controller for Kepegawaian SIPIT
+// Modern Antigravity Tailwind UI Controller for Kepegawaian PION
+import { initSearchableSelects, refreshSearchableSelect } from './components/searchableSelect';
+
+window.PIONSelect = {
+    init: initSearchableSelects,
+    refresh: refreshSearchableSelect,
+};
 
 document.addEventListener('DOMContentLoaded', () => {
+    initSearchableSelects(document);
     // 1. Mobile Sidebar Toggle & Overlay
     const mobileToggleBtn = document.getElementById('mobileSidebarToggle');
     const closeMobileSidebarBtn = document.getElementById('closeMobileSidebarBtn');
@@ -53,10 +60,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (document.body.classList.contains('sidebar-collapsed')) {
             document.body.classList.remove('sidebar-collapsed');
-            localStorage.setItem('sipit_sidebar_state', 'expanded');
+            localStorage.setItem('PION_sidebar_state', 'expanded');
         } else {
             document.body.classList.add('sidebar-collapsed');
-            localStorage.setItem('sipit_sidebar_state', 'collapsed');
+            localStorage.setItem('PION_sidebar_state', 'collapsed');
         }
     };
 
@@ -65,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Restore desktop sidebar preference
-    if (localStorage.getItem('sipit_sidebar_state') === 'collapsed' && window.innerWidth >= 1024) {
+    if (localStorage.getItem('PION_sidebar_state') === 'collapsed' && window.innerWidth >= 1024) {
         document.body.classList.add('sidebar-collapsed');
     }
 

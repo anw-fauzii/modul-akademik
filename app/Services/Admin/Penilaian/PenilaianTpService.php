@@ -10,9 +10,11 @@ use App\Models\Admin\Penilaian\AspekTp;
 use App\Models\Admin\Penilaian\Kkm;
 use App\Models\Admin\Penilaian\KkmPredikat;
 use App\Models\Admin\Penilaian\NilaiAspek;
+use App\Models\Admin\Penilaian\NilaiSumatifBab;
 use App\Models\Admin\Penilaian\PeriodeTp;
 use App\Models\Admin\Penilaian\RekapMapel;
 use App\Models\Admin\Penilaian\RekapTp;
+use App\Models\Admin\Penilaian\SumatifBab;
 use App\Models\Admin\TujuanPembelajaran\TujuanPembelajaran;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
@@ -59,30 +61,51 @@ class PenilaianTpService
     }
 
     /**
-     * Menghitung NA Rapor akhir mapel dari rata-rata NA TP dan Nilai Ujian (STS/SAS) sesuai bobot.
-     * Jika bobot ujian = 0 atau nilai ujian kosong/belum diisi, otomatis menggunakan 100% rata-rata NA TP.
+     * Menghitung rata-rata nilai Sumatif Bab (mengabaikan sel NULL/kosong dan membulatkan bulat terdekat).
+     *
+     * @param  array<int|string, float|int|string|null>  $nilaiByBab
+     */
+    public static function computeRataSumatif(array $nilaiByBab): ?float
+    {
+        return self::computeNaTp($nilaiByBab);
+    }
+
+    /**
+     * Menghitung NA Rapor akhir mapel dari komponen aktif yang berbobot > 0 & bernilai
+     * (Rata-rata NA TP, Rata-rata Sumatif Bab, dan Nilai Ujian PSTS/PSAS/PSAT).
+     * Komponen yang berbobot 0% atau nilainya belum diisi otomatis dinormalisasi dari komponen aktif lainnya.
      */
     public static function computeNaRapor(
         ?float $rataRataTp,
         ?float $nilaiUjian,
         int $bobotTp = Kkm::DEFAULT_BOBOT_TP,
-        int $bobotUjian = Kkm::DEFAULT_BOBOT_UJIAN
+        int $bobotUjian = Kkm::DEFAULT_BOBOT_UJIAN,
+        ?float $rataRataSumatif = null,
+        int $bobotSumatif = Kkm::DEFAULT_BOBOT_SUMATIF
     ): ?float {
-        if ($rataRataTp === null && $nilaiUjian === null) {
+        $components = [
+            ['value' => $rataRataTp, 'weight' => $bobotTp],
+            ['value' => $rataRataSumatif, 'weight' => $bobotSumatif],
+            ['value' => $nilaiUjian, 'weight' => $bobotUjian],
+        ];
+
+        $weightedSum = 0.0;
+        $totalWeight = 0;
+
+        foreach ($components as $component) {
+            if ($component['value'] === null || $component['weight'] <= 0) {
+                continue;
+            }
+
+            $weightedSum += $component['value'] * $component['weight'];
+            $totalWeight += $component['weight'];
+        }
+
+        if ($totalWeight <= 0) {
             return null;
         }
 
-        if ($bobotUjian <= 0 || $nilaiUjian === null) {
-            return $rataRataTp !== null ? (float) round($rataRataTp, 0) : null;
-        }
-
-        if ($bobotTp <= 0 || $rataRataTp === null) {
-            return (float) round($nilaiUjian, 0);
-        }
-
-        $totalBobot = $bobotTp + $bobotUjian;
-
-        return (float) round((($rataRataTp * $bobotTp) + ($nilaiUjian * $bobotUjian)) / $totalBobot, 0);
+        return (float) round($weightedSum / $totalWeight, 0);
     }
 
     /**
@@ -145,15 +168,14 @@ class PenilaianTpService
             ));
 
         $formatTopic = static function (array $entry): string {
-            $lingkup = trim((string) ($entry['lingkup_materi'] ?? ''));
-            if ($lingkup !== '') {
-                return rtrim($lingkup, '.');
+            $tpText = trim(preg_replace('/\s+/', ' ', (string) ($entry['tujuan_pembelajaran'] ?? '')) ?? '');
+            if ($tpText !== '') {
+                return rtrim($tpText, '.');
             }
 
-            $tpText = trim(preg_replace('/\s+/', ' ', (string) ($entry['tujuan_pembelajaran'] ?? '')) ?? '');
-            $tpText = rtrim($tpText, '.');
+            $lingkup = trim((string) ($entry['lingkup_materi'] ?? ''));
 
-            return mb_strlen($tpText) > 120 ? mb_substr($tpText, 0, 117).'...' : $tpText;
+            return rtrim($lingkup, '.');
         };
 
         $groups = [];
@@ -237,8 +259,11 @@ class PenilaianTpService
         $tahunAjaranOptions = $this->getTahunAjaranOptions();
         $defaultTa = $this->resolveDefaultTahunAjaran($tahunAjaranOptions);
         $tahunAjaranId = $this->resolvePositiveInt($input['tahun_ajaran_id'] ?? null) ?? $defaultTa?->id;
+        $selectedTahunAjaran = $tahunAjaranId !== null ? $tahunAjaranOptions->firstWhere('id', $tahunAjaranId) : null;
 
         $periode = $this->normalizePeriode($input['periode'] ?? PeriodeTp::PERIODE_MID);
+        $ujianLabel = PeriodeTp::ujianLabel($periode, $selectedTahunAjaran?->semester);
+        $ujianFullLabel = PeriodeTp::ujianFullLabel($periode, $selectedTahunAjaran?->semester);
 
         $kelasOptions = $tahunAjaranId !== null
             ? $this->getSdKelasOptions($tahunAjaranId)
@@ -261,6 +286,7 @@ class PenilaianTpService
             'kelasOptions' => $kelasOptions,
             'mataPelajaranOptions' => $mataPelajaranOptions,
             'selectedTahunAjaranId' => $tahunAjaranId,
+            'selectedTahunAjaran' => $selectedTahunAjaran,
             'selectedKelas' => $selectedKelas,
             'selectedMapel' => $selectedMapel,
             'periode' => $periode,
@@ -269,6 +295,10 @@ class PenilaianTpService
             'tpList' => new EloquentCollection,
             'periodeSettingsByTp' => collect(),
             'aspeksByTp' => collect(),
+            'midSumatifBabs' => new EloquentCollection,
+            'carriedMidSumatifBabs' => new EloquentCollection,
+            'activeSumatifBabs' => new EloquentCollection,
+            'sumatifNilaiLookup' => [],
             'students' => new EloquentCollection,
             'nilaiLookup' => [],
             'rekapTpLookup' => [],
@@ -276,8 +306,10 @@ class PenilaianTpService
             'kkmNilai' => Kkm::DEFAULT_KKM,
             'kkmPredikats' => $this->buildVirtualDefaultPredikats(),
             'bobotTp' => Kkm::DEFAULT_BOBOT_TP,
+            'bobotSumatif' => Kkm::DEFAULT_BOBOT_SUMATIF,
             'bobotUjian' => Kkm::DEFAULT_BOBOT_UJIAN,
-            'ujianLabel' => PeriodeTp::ujianLabel($periode),
+            'ujianLabel' => $ujianLabel,
+            'ujianFullLabel' => $ujianFullLabel,
             'hasKkmConfig' => false,
             'kkmModel' => null,
             'includedTpCount' => 0,
@@ -308,26 +340,60 @@ class PenilaianTpService
             ->ordered()
             ->get();
 
+        $allSumatifBabs = SumatifBab::query()
+            ->select([
+                'id',
+                'akademik_master_tahun_ajaran_id',
+                'akademik_pelajaran_mata_pelajaran_id',
+                'tingkatan_kelas',
+                'periode',
+                'nama_bab',
+                'keterangan',
+                'urutan',
+            ])
+            ->where('akademik_master_tahun_ajaran_id', $tahunAjaranId)
+            ->where('akademik_pelajaran_mata_pelajaran_id', $selectedMapel->id)
+            ->where('tingkatan_kelas', (string) $selectedKelas->tingkatan_kelas)
+            ->orderBy('urutan')
+            ->orderBy('id')
+            ->get();
+
+        $midSumatifBabs = new EloquentCollection($allSumatifBabs->where('periode', PeriodeTp::PERIODE_MID)->values()->all());
+        $semesterSumatifBabs = new EloquentCollection($allSumatifBabs->where('periode', PeriodeTp::PERIODE_SEMESTER)->values()->all());
+        $activeSumatifBabs = $periode === PeriodeTp::PERIODE_SEMESTER ? $semesterSumatifBabs : $midSumatifBabs;
+        $carriedMidSumatifBabs = $periode === PeriodeTp::PERIODE_SEMESTER ? $midSumatifBabs : new EloquentCollection;
+
         $kkmBundle = $this->resolveKkmBundle($tahunAjaranId, $selectedMapel->id, (string) $selectedKelas->tingkatan_kelas);
         $students = $this->getSortedStudentsInKelas($selectedKelas->id);
 
-        if ($tpList->isEmpty()) {
+        if ($tpList->isEmpty() && $allSumatifBabs->isEmpty()) {
             return array_merge($emptyState, [
                 'students' => $students,
                 'kkmNilai' => $kkmBundle['nilai_kkm'],
                 'kkmPredikats' => $kkmBundle['predikats'],
                 'bobotTp' => $kkmBundle['bobot_tp'],
+                'bobotSumatif' => $kkmBundle['bobot_sumatif'],
                 'bobotUjian' => $kkmBundle['bobot_ujian'],
                 'hasKkmConfig' => $kkmBundle['has_config'],
                 'kkmModel' => $kkmBundle['model'],
             ]);
         }
 
-        [$periodeSettingsByTp, $aspeksByTp] = $this->ensureAndLoadTpConfigurations($tpList, $periode);
+        if ($tpList->isNotEmpty()) {
+            [$periodeSettingsByTp, $aspeksByTp] = $this->ensureAndLoadTpConfigurations($tpList, $periode);
+        } else {
+            $periodeSettingsByTp = collect();
+            $aspeksByTp = collect();
+        }
 
         $tpIds = $tpList->pluck('id')->all();
         $aspekIds = $aspeksByTp->flatten(1)->pluck('id')->all();
         $anggotaIds = $students->pluck('id')->all();
+        $displayedSumatifIds = $carriedMidSumatifBabs->pluck('id')
+            ->merge($activeSumatifBabs->pluck('id'))
+            ->unique()
+            ->values()
+            ->all();
 
         $nilaiLookup = [];
         if ($aspekIds !== [] && $anggotaIds !== []) {
@@ -342,8 +408,21 @@ class PenilaianTpService
             }
         }
 
+        $sumatifNilaiLookup = [];
+        if ($displayedSumatifIds !== [] && $anggotaIds !== []) {
+            $sumatifRows = NilaiSumatifBab::query()
+                ->select(['id', 'sumatif_bab_id', 'anggota_kelas_id', 'nilai'])
+                ->whereIn('sumatif_bab_id', $displayedSumatifIds)
+                ->whereIn('anggota_kelas_id', $anggotaIds)
+                ->get();
+
+            foreach ($sumatifRows as $sumatifRow) {
+                $sumatifNilaiLookup["{$sumatifRow->anggota_kelas_id}:{$sumatifRow->sumatif_bab_id}"] = $sumatifRow;
+            }
+        }
+
         $rekapTpLookup = [];
-        if ($anggotaIds !== []) {
+        if ($tpIds !== [] && $anggotaIds !== []) {
             $rekapTps = RekapTp::query()
                 ->select(['id', 'tujuan_pembelajaran_id', 'anggota_kelas_id', 'periode', 'nilai_akhir_tp', 'predikat', 'tuntas_kkm', 'is_manual_override'])
                 ->whereIn('tujuan_pembelajaran_id', $tpIds)
@@ -383,6 +462,7 @@ class PenilaianTpService
             'kelasOptions' => $kelasOptions,
             'mataPelajaranOptions' => $mataPelajaranOptions,
             'selectedTahunAjaranId' => $tahunAjaranId,
+            'selectedTahunAjaran' => $selectedTahunAjaran,
             'selectedKelas' => $selectedKelas,
             'selectedMapel' => $selectedMapel,
             'periode' => $periode,
@@ -391,6 +471,10 @@ class PenilaianTpService
             'tpList' => $tpList,
             'periodeSettingsByTp' => $periodeSettingsByTp,
             'aspeksByTp' => $aspeksByTp,
+            'midSumatifBabs' => $midSumatifBabs,
+            'carriedMidSumatifBabs' => $carriedMidSumatifBabs,
+            'activeSumatifBabs' => $activeSumatifBabs,
+            'sumatifNilaiLookup' => $sumatifNilaiLookup,
             'students' => $students,
             'nilaiLookup' => $nilaiLookup,
             'rekapTpLookup' => $rekapTpLookup,
@@ -398,8 +482,10 @@ class PenilaianTpService
             'kkmNilai' => $kkmBundle['nilai_kkm'],
             'kkmPredikats' => $kkmBundle['predikats'],
             'bobotTp' => $kkmBundle['bobot_tp'],
+            'bobotSumatif' => $kkmBundle['bobot_sumatif'],
             'bobotUjian' => $kkmBundle['bobot_ujian'],
-            'ujianLabel' => PeriodeTp::ujianLabel($periode),
+            'ujianLabel' => $ujianLabel,
+            'ujianFullLabel' => $ujianFullLabel,
             'hasKkmConfig' => $kkmBundle['has_config'],
             'kkmModel' => $kkmBundle['model'],
             'includedTpCount' => $includedCount,
@@ -415,20 +501,29 @@ class PenilaianTpService
     public function getRekapData(array $input = []): array
     {
         $matrix = $this->getMatrixData($input);
+        $periode = $matrix['periode'];
+        $carriedMidSumatif = $matrix['carriedMidSumatifBabs'] ?? collect();
+        $activeSumatif = $matrix['activeSumatifBabs'] ?? collect();
+        $rekapSumatifCols = $periode === PeriodeTp::PERIODE_SEMESTER
+            ? $carriedMidSumatif->merge($activeSumatif)->values()
+            : $activeSumatif->values();
+        $matrix['rekapSumatifCols'] = $rekapSumatifCols;
 
-        if ($matrix['tpList']->isEmpty() || $matrix['students']->isEmpty()) {
+        if (($matrix['tpList']->isEmpty() && $rekapSumatifCols->isEmpty()) || $matrix['students']->isEmpty()) {
             $matrix['combinedTpSummaries'] = [];
+            $matrix['combinedSumatifSummaries'] = [];
 
             return $matrix;
         }
 
-        $periode = $matrix['periode'];
         $tpList = $matrix['tpList'];
         $periodeSettingsByTp = $matrix['periodeSettingsByTp'];
         $rekapTpLookup = $matrix['rekapTpLookup'];
+        $sumatifNilaiLookup = $matrix['sumatifNilaiLookup'] ?? [];
 
-        // Untuk periode semester, gabungkan nilai dari periode semester (utama) atau fallback dari mid
+        // Untuk periode semester, gabungkan nilai TP & Sumatif Bab dari periode mid + semester
         $combinedTpSummaries = [];
+        $combinedSumatifSummaries = [];
         foreach ($matrix['students'] as $student) {
             $perTp = [];
             foreach ($tpList as $tp) {
@@ -461,10 +556,21 @@ class PenilaianTpService
                 ];
             }
 
+            $perSumatif = [];
+            foreach ($rekapSumatifCols as $bab) {
+                $nilaiObj = $sumatifNilaiLookup["{$student->id}:{$bab->id}"] ?? null;
+                $perSumatif[$bab->id] = [
+                    'nilai' => $nilaiObj?->nilai,
+                    'source' => $bab->periode === PeriodeTp::PERIODE_MID ? 'Mid' : 'Semester',
+                ];
+            }
+
             $combinedTpSummaries[$student->id] = $perTp;
+            $combinedSumatifSummaries[$student->id] = $perSumatif;
         }
 
         $matrix['combinedTpSummaries'] = $combinedTpSummaries;
+        $matrix['combinedSumatifSummaries'] = $combinedSumatifSummaries;
 
         return $matrix;
     }
@@ -578,13 +684,101 @@ class PenilaianTpService
     }
 
     /**
-     * Memperbarui bobot persentase Rapor (NA TP vs Nilai Ujian STS/SAS) seragam per jenjang & menghitung ulang NA Rapor.
+     * Menambah atau memperbarui kolom Sumatif Bab per TA, Mapel, Tingkatan Kelas, & Periode (seragam per jenjang).
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function saveSumatifBab(array $data, ?SumatifBab $existing = null): SumatifBab
+    {
+        $tahunAjaranId = (int) $data['tahun_ajaran_id'];
+        $mapelId = (int) $data['mata_pelajaran_id'];
+        $tingkatanKelas = trim((string) $data['tingkatan_kelas']);
+        $periode = $this->normalizePeriode($data['periode'] ?? PeriodeTp::PERIODE_MID);
+        $namaBab = trim((string) $data['nama_bab']);
+        $keterangan = filled($data['keterangan'] ?? null) ? trim((string) $data['keterangan']) : null;
+
+        $duplicate = SumatifBab::query()
+            ->where('akademik_master_tahun_ajaran_id', $tahunAjaranId)
+            ->where('akademik_pelajaran_mata_pelajaran_id', $mapelId)
+            ->where('tingkatan_kelas', $tingkatanKelas)
+            ->where('periode', $periode)
+            ->whereRaw('LOWER(nama_bab) = ?', [mb_strtolower($namaBab)])
+            ->when($existing !== null, static fn ($q) => $q->where('id', '!=', $existing->id))
+            ->exists();
+
+        if ($duplicate) {
+            throw ValidationException::withMessages([
+                'nama_bab' => "Sumatif Bab \"{$namaBab}\" sudah ada pada mapel & periode ini.",
+            ]);
+        }
+
+        return DB::transaction(function () use (
+            $tahunAjaranId,
+            $mapelId,
+            $tingkatanKelas,
+            $periode,
+            $namaBab,
+            $keterangan,
+            $data,
+            $existing
+        ): SumatifBab {
+            $nextOrder = $existing?->urutan ?? (
+                (int) SumatifBab::query()
+                    ->where('akademik_master_tahun_ajaran_id', $tahunAjaranId)
+                    ->where('akademik_pelajaran_mata_pelajaran_id', $mapelId)
+                    ->where('tingkatan_kelas', $tingkatanKelas)
+                    ->where('periode', $periode)
+                    ->max('urutan') + 1
+            );
+
+            $attributes = [
+                'akademik_master_tahun_ajaran_id' => $tahunAjaranId,
+                'akademik_pelajaran_mata_pelajaran_id' => $mapelId,
+                'tingkatan_kelas' => $tingkatanKelas,
+                'periode' => $periode,
+                'nama_bab' => $namaBab,
+                'keterangan' => $keterangan,
+                'urutan' => (int) ($data['urutan'] ?? max(1, $nextOrder)),
+            ];
+
+            if ($existing !== null) {
+                $existing->update($attributes);
+                $sumatifBab = $existing->refresh();
+            } else {
+                $sumatifBab = SumatifBab::create($attributes);
+            }
+
+            $this->recalculateScope($tahunAjaranId, $mapelId, $tingkatanKelas);
+
+            return $sumatifBab;
+        });
+    }
+
+    /**
+     * Menghapus kolom Sumatif Bab beserta seluruh nilai siswanya dan menghitung ulang NA Rapor jenjang.
+     */
+    public function deleteSumatifBab(SumatifBab $sumatifBab): void
+    {
+        $tahunAjaranId = $sumatifBab->akademik_master_tahun_ajaran_id;
+        $mapelId = $sumatifBab->akademik_pelajaran_mata_pelajaran_id;
+        $tingkatanKelas = (string) $sumatifBab->tingkatan_kelas;
+
+        DB::transaction(function () use ($sumatifBab, $tahunAjaranId, $mapelId, $tingkatanKelas): void {
+            $sumatifBab->delete();
+
+            $this->recalculateScope($tahunAjaranId, $mapelId, $tingkatanKelas);
+        });
+    }
+
+    /**
+     * Memperbarui bobot persentase Rapor (NA TP, Sumatif Bab, dan Nilai Ujian PSTS/PSAS/PSAT) seragam per jenjang & menghitung ulang NA Rapor.
      */
     public function updateBobotRapor(
         Kelas $kelas,
         MataPelajaran $mapel,
         int $bobotTp,
-        int $bobotUjian
+        int $bobotUjian,
+        int $bobotSumatif = Kkm::DEFAULT_BOBOT_SUMATIF
     ): Kkm {
         if (strtoupper(trim((string) $kelas->jenjang_kelas)) !== Kkm::TARGET_UNIT || strtoupper(trim((string) $mapel->unit)) !== Kkm::TARGET_UNIT) {
             throw ValidationException::withMessages([
@@ -592,11 +786,11 @@ class PenilaianTpService
             ]);
         }
 
-        if (($error = Kkm::validateBobotPair($bobotTp, $bobotUjian)) !== null) {
+        if (($error = Kkm::validateBobotPair($bobotTp, $bobotUjian, $bobotSumatif)) !== null) {
             throw ValidationException::withMessages(['bobot_ujian' => $error]);
         }
 
-        return DB::transaction(function () use ($kelas, $mapel, $bobotTp, $bobotUjian): Kkm {
+        return DB::transaction(function () use ($kelas, $mapel, $bobotTp, $bobotSumatif, $bobotUjian): Kkm {
             $kkm = Kkm::query()
                 ->where('akademik_master_tahun_ajaran_id', $kelas->akademik_master_tahun_ajaran_id)
                 ->where('akademik_pelajaran_mata_pelajaran_id', $mapel->id)
@@ -610,12 +804,14 @@ class PenilaianTpService
                     'tingkatan_kelas' => (string) $kelas->tingkatan_kelas,
                     'nilai_kkm' => Kkm::DEFAULT_KKM,
                     'bobot_tp' => $bobotTp,
+                    'bobot_sumatif' => $bobotSumatif,
                     'bobot_ujian' => $bobotUjian,
                     'status' => true,
                 ]);
             } else {
                 $kkm->update([
                     'bobot_tp' => $bobotTp,
+                    'bobot_sumatif' => $bobotSumatif,
                     'bobot_ujian' => $bobotUjian,
                     'status' => true,
                 ]);
@@ -651,10 +847,11 @@ class PenilaianTpService
     }
 
     /**
-     * Menyimpan seluruh nilai grid & nilai ujian periode (STS/SAS) secara batch anti-N+1, lalu memperbarui NA TP & Rapor.
+     * Menyimpan seluruh nilai grid aspek TP, Sumatif Bab, dan nilai ujian periode (PSTS/PSAS/PSAT) secara batch anti-N+1.
      *
      * @param  array<int|string, array<int|string, mixed>>  $nilaiMatrix  [anggota_kelas_id => [aspek_tp_id => nilai|null]]
      * @param  array<int|string, mixed>  $ujianScores  [anggota_kelas_id => nilai|null]
+     * @param  array<int|string, array<int|string, mixed>>  $sumatifMatrix  [anggota_kelas_id => [sumatif_bab_id => nilai|null]]
      * @return array{saved_cells: int, updated_students: int}
      */
     public function saveNilaiGrid(
@@ -663,7 +860,8 @@ class PenilaianTpService
         string $periode,
         array $nilaiMatrix,
         ?string $dinilaiOlehNipy = null,
-        array $ujianScores = []
+        array $ujianScores = [],
+        array $sumatifMatrix = []
     ): array {
         $periode = $this->normalizePeriode($periode);
 
@@ -696,8 +894,18 @@ class PenilaianTpService
             : [];
         $validAspekLookup = array_flip($validAspekIds);
 
+        $validSumatifIds = SumatifBab::query()
+            ->where('akademik_master_tahun_ajaran_id', $kelas->akademik_master_tahun_ajaran_id)
+            ->where('akademik_pelajaran_mata_pelajaran_id', $mapel->id)
+            ->where('tingkatan_kelas', (string) $kelas->tingkatan_kelas)
+            ->where('periode', $periode)
+            ->pluck('id')
+            ->all();
+        $validSumatifLookup = array_flip($validSumatifIds);
+
         $now = now();
         $upsertRows = [];
+        $sumatifUpsertRows = [];
         $touchedAnggotaIds = [];
 
         foreach ($nilaiMatrix as $rawAnggotaId => $aspekValues) {
@@ -712,18 +920,36 @@ class PenilaianTpService
                     continue;
                 }
 
-                $normalizedNilai = null;
-                if ($rawNilai !== null && $rawNilai !== '') {
-                    $numeric = (float) str_replace(',', '.', (string) $rawNilai);
-                    $normalizedNilai = round(max(0.0, min(100.0, $numeric)), 2);
-                }
-
                 $upsertRows[] = [
                     'aspek_tp_id' => $aspekId,
                     'anggota_kelas_id' => $anggotaId,
-                    'nilai' => $normalizedNilai,
+                    'nilai' => $this->normalizeScoreValue($rawNilai),
                     'is_remedial' => false,
                     'catatan' => null,
+                    'dinilai_oleh_nipy' => $dinilaiOlehNipy,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+                $touchedAnggotaIds[$anggotaId] = true;
+            }
+        }
+
+        foreach ($sumatifMatrix as $rawAnggotaId => $babValues) {
+            $anggotaId = (int) $rawAnggotaId;
+            if (! isset($validAnggotaLookup[$anggotaId]) || ! is_array($babValues)) {
+                continue;
+            }
+
+            foreach ($babValues as $rawBabId => $rawNilai) {
+                $babId = (int) $rawBabId;
+                if (! isset($validSumatifLookup[$babId])) {
+                    continue;
+                }
+
+                $sumatifUpsertRows[] = [
+                    'sumatif_bab_id' => $babId,
+                    'anggota_kelas_id' => $anggotaId,
+                    'nilai' => $this->normalizeScoreValue($rawNilai),
                     'dinilai_oleh_nipy' => $dinilaiOlehNipy,
                     'created_at' => $now,
                     'updated_at' => $now,
@@ -740,28 +966,34 @@ class PenilaianTpService
                 continue;
             }
 
-            if ($rawUjian === null || $rawUjian === '') {
-                $normalizedUjianByAnggota[$anggotaId] = null;
-
-                continue;
+            $normalized = $this->normalizeScoreValue($rawUjian);
+            $normalizedUjianByAnggota[$anggotaId] = $normalized;
+            if ($normalized !== null) {
+                $savedUjianCells++;
+                $touchedAnggotaIds[$anggotaId] = true;
             }
-
-            $numeric = (float) str_replace(',', '.', (string) $rawUjian);
-            $normalizedUjianByAnggota[$anggotaId] = round(max(0.0, min(100.0, $numeric)), 2);
-            $savedUjianCells++;
-            $touchedAnggotaIds[$anggotaId] = true;
         }
 
-        if ($upsertRows === [] && $normalizedUjianByAnggota === []) {
+        if ($upsertRows === [] && $sumatifUpsertRows === [] && $normalizedUjianByAnggota === []) {
             return ['saved_cells' => 0, 'updated_students' => 0];
         }
 
-        DB::transaction(function () use ($upsertRows, $kelas, $mapel, $periode, $normalizedUjianByAnggota): void {
+        DB::transaction(function () use ($upsertRows, $sumatifUpsertRows, $kelas, $mapel, $periode, $normalizedUjianByAnggota): void {
             if ($upsertRows !== []) {
                 foreach (array_chunk($upsertRows, 500) as $chunk) {
                     NilaiAspek::query()->upsert(
                         $chunk,
                         ['aspek_tp_id', 'anggota_kelas_id'],
+                        ['nilai', 'dinilai_oleh_nipy', 'updated_at']
+                    );
+                }
+            }
+
+            if ($sumatifUpsertRows !== []) {
+                foreach (array_chunk($sumatifUpsertRows, 500) as $chunk) {
+                    NilaiSumatifBab::query()->upsert(
+                        $chunk,
+                        ['sumatif_bab_id', 'anggota_kelas_id'],
                         ['nilai', 'dinilai_oleh_nipy', 'updated_at']
                     );
                 }
@@ -779,7 +1011,7 @@ class PenilaianTpService
         });
 
         return [
-            'saved_cells' => count($upsertRows) + $savedUjianCells,
+            'saved_cells' => count($upsertRows) + count($sumatifUpsertRows) + $savedUjianCells,
             'updated_students' => count($touchedAnggotaIds),
         ];
     }
@@ -816,7 +1048,7 @@ class PenilaianTpService
     }
 
     /**
-     * Menghitung ulang NA TP, NA Rapor Mid, NA Rapor Semester (gabungan Mid+Semester + SAS bila ada), dan predikat KKM secara batch.
+     * Menghitung ulang NA TP, NA Rapor Mid, NA Rapor Semester (gabungan Mid+Semester + PSAS/PSAT bila ada), dan predikat KKM secara batch.
      *
      * @param  list<int>|null  $onlyKelasIds
      * @param  array<int, float|null>  $ujianOverrides
@@ -860,27 +1092,43 @@ class PenilaianTpService
             ->ordered()
             ->get();
 
-        if ($tpList->isEmpty()) {
+        $allSumatifBabs = SumatifBab::query()
+            ->select(['id', 'periode', 'urutan'])
+            ->where('akademik_master_tahun_ajaran_id', $tahunAjaranId)
+            ->where('akademik_pelajaran_mata_pelajaran_id', $mapelId)
+            ->where('tingkatan_kelas', $tingkatanKelas)
+            ->orderBy('urutan')
+            ->orderBy('id')
+            ->get();
+
+        if ($tpList->isEmpty() && $allSumatifBabs->isEmpty()) {
             return 0;
         }
 
         $tpIds = $tpList->pluck('id')->all();
+        $sumatifBabIds = $allSumatifBabs->pluck('id')->all();
+        $midSumatifBabs = $allSumatifBabs->where('periode', PeriodeTp::PERIODE_MID)->values();
         $kkmBundle = $this->resolveKkmBundle($tahunAjaranId, $mapelId, $tingkatanKelas);
         $nilaiKkm = $kkmBundle['nilai_kkm'];
         $bobotTp = $kkmBundle['bobot_tp'];
+        $bobotSumatif = $kkmBundle['bobot_sumatif'];
         $bobotUjian = $kkmBundle['bobot_ujian'];
         $predikats = $kkmBundle['predikats'];
 
-        $periodeSettings = PeriodeTp::query()
-            ->whereIn('tujuan_pembelajaran_id', $tpIds)
-            ->get()
-            ->keyBy(static fn (PeriodeTp $item): string => "{$item->tujuan_pembelajaran_id}:{$item->periode}");
+        $periodeSettings = $tpIds !== []
+            ? PeriodeTp::query()
+                ->whereIn('tujuan_pembelajaran_id', $tpIds)
+                ->get()
+                ->keyBy(static fn (PeriodeTp $item): string => "{$item->tujuan_pembelajaran_id}:{$item->periode}")
+            : collect();
 
-        $aspekList = AspekTp::query()
-            ->whereIn('tujuan_pembelajaran_id', $tpIds)
-            ->orderBy('urutan')
-            ->orderBy('id')
-            ->get();
+        $aspekList = $tpIds !== []
+            ? AspekTp::query()
+                ->whereIn('tujuan_pembelajaran_id', $tpIds)
+                ->orderBy('urutan')
+                ->orderBy('id')
+                ->get()
+            : collect();
 
         $aspekByTpPeriode = [];
         foreach ($aspekList as $aspek) {
@@ -904,11 +1152,26 @@ class PenilaianTpService
             }
         }
 
-        $existingRekapTp = RekapTp::query()
-            ->whereIn('tujuan_pembelajaran_id', $tpIds)
-            ->whereIn('anggota_kelas_id', $anggotaIds)
-            ->get()
-            ->keyBy(static fn (RekapTp $item): string => "{$item->anggota_kelas_id}:{$item->tujuan_pembelajaran_id}:{$item->periode}");
+        $sumatifByAnggotaBab = [];
+        if ($sumatifBabIds !== []) {
+            $sumatifRows = NilaiSumatifBab::query()
+                ->select(['sumatif_bab_id', 'anggota_kelas_id', 'nilai'])
+                ->whereIn('sumatif_bab_id', $sumatifBabIds)
+                ->whereIn('anggota_kelas_id', $anggotaIds)
+                ->get();
+
+            foreach ($sumatifRows as $row) {
+                $sumatifByAnggotaBab["{$row->anggota_kelas_id}:{$row->sumatif_bab_id}"] = $row->nilai;
+            }
+        }
+
+        $existingRekapTp = $tpIds !== []
+            ? RekapTp::query()
+                ->whereIn('tujuan_pembelajaran_id', $tpIds)
+                ->whereIn('anggota_kelas_id', $anggotaIds)
+                ->get()
+                ->keyBy(static fn (RekapTp $item): string => "{$item->anggota_kelas_id}:{$item->tujuan_pembelajaran_id}:{$item->periode}")
+            : collect();
 
         $existingRekapMapel = RekapMapel::query()
             ->where('akademik_master_tahun_ajaran_id', $tahunAjaranId)
@@ -1019,6 +1282,21 @@ class PenilaianTpService
                 }
             }
 
+            $midSumatifValues = [];
+            foreach ($midSumatifBabs as $midBab) {
+                $midSumatifValues[$midBab->id] = $sumatifByAnggotaBab["{$anggotaId}:{$midBab->id}"] ?? null;
+            }
+
+            $semSumatifValues = [];
+            foreach ($allSumatifBabs as $anyBab) {
+                $semSumatifValues[$anyBab->id] = $sumatifByAnggotaBab["{$anggotaId}:{$anyBab->id}"] ?? null;
+            }
+
+            $rataSumatifByPeriode = [
+                PeriodeTp::PERIODE_MID => self::computeRataSumatif($midSumatifValues),
+                PeriodeTp::PERIODE_SEMESTER => self::computeRataSumatif($semSumatifValues),
+            ];
+
             foreach ([PeriodeTp::PERIODE_MID => $midTpEntries, PeriodeTp::PERIODE_SEMESTER => $semesterTpEntries] as $periode => $entries) {
                 /** @var RekapMapel|null $prevMapel */
                 $prevMapel = $existingRekapMapel->get("{$anggotaId}:{$periode}");
@@ -1027,8 +1305,9 @@ class PenilaianTpService
                 $nilaiUjian = $hasUjianOverride
                     ? $ujianOverrides[$anggotaId]
                     : $prevMapel?->nilai_ujian;
+                $rataRataSumatif = $rataSumatifByPeriode[$periode];
 
-                if ($entries === [] && $prevMapel === null && $nilaiUjian === null) {
+                if ($entries === [] && $rataRataSumatif === null && $prevMapel === null && $nilaiUjian === null) {
                     continue;
                 }
 
@@ -1041,7 +1320,9 @@ class PenilaianTpService
                     $rataRataTp,
                     $nilaiUjian !== null ? (float) $nilaiUjian : null,
                     $bobotTp,
-                    $bobotUjian
+                    $bobotUjian,
+                    $rataRataSumatif,
+                    $bobotSumatif
                 );
                 $matched = $nilaiRapor !== null ? Kkm::resolvePredikatForNilai($nilaiRapor, $predikats) : null;
                 $tuntas = $nilaiRapor !== null
@@ -1061,11 +1342,13 @@ class PenilaianTpService
                     'anggota_kelas_id' => $anggotaId,
                     'periode' => $periode,
                     'rata_rata_tp' => $rataRataTp,
+                    'rata_rata_sumatif' => $rataRataSumatif,
                     'nilai_ujian' => $nilaiUjian,
                     'nilai_akhir_rapor' => $nilaiRapor,
                     'jumlah_tp_dinilai' => $countTp,
                     'nilai_kkm_snapshot' => $nilaiRapor !== null ? $nilaiKkm : null,
                     'bobot_tp_snapshot' => $bobotTp,
+                    'bobot_sumatif_snapshot' => $bobotSumatif,
                     'bobot_ujian_snapshot' => $bobotUjian,
                     'predikat_rapor' => $matched?->predikat,
                     'keterangan_predikat' => $matched?->keterangan,
@@ -1087,11 +1370,13 @@ class PenilaianTpService
                     ['akademik_pelajaran_mata_pelajaran_id', 'anggota_kelas_id', 'periode'],
                     [
                         'rata_rata_tp',
+                        'rata_rata_sumatif',
                         'nilai_ujian',
                         'nilai_akhir_rapor',
                         'jumlah_tp_dinilai',
                         'nilai_kkm_snapshot',
                         'bobot_tp_snapshot',
+                        'bobot_sumatif_snapshot',
                         'bobot_ujian_snapshot',
                         'predikat_rapor',
                         'keterangan_predikat',
@@ -1190,6 +1475,7 @@ class PenilaianTpService
      *     has_config: bool,
      *     nilai_kkm: float,
      *     bobot_tp: int,
+     *     bobot_sumatif: int,
      *     bobot_ujian: int,
      *     predikats: EloquentCollection<int, KkmPredikat>
      * }
@@ -1205,6 +1491,7 @@ class PenilaianTpService
             ->first();
 
         $bobotTp = $kkm !== null ? (int) $kkm->bobot_tp : Kkm::DEFAULT_BOBOT_TP;
+        $bobotSumatif = $kkm !== null ? (int) ($kkm->bobot_sumatif ?? Kkm::DEFAULT_BOBOT_SUMATIF) : Kkm::DEFAULT_BOBOT_SUMATIF;
         $bobotUjian = $kkm !== null ? (int) $kkm->bobot_ujian : Kkm::DEFAULT_BOBOT_UJIAN;
 
         if ($kkm !== null && $kkm->predikats->isNotEmpty()) {
@@ -1213,6 +1500,7 @@ class PenilaianTpService
                 'has_config' => true,
                 'nilai_kkm' => (float) $kkm->nilai_kkm,
                 'bobot_tp' => $bobotTp,
+                'bobot_sumatif' => $bobotSumatif,
                 'bobot_ujian' => $bobotUjian,
                 'predikats' => $kkm->predikats,
             ];
@@ -1223,9 +1511,21 @@ class PenilaianTpService
             'has_config' => false,
             'nilai_kkm' => $kkm !== null ? (float) $kkm->nilai_kkm : Kkm::DEFAULT_KKM,
             'bobot_tp' => $bobotTp,
+            'bobot_sumatif' => $bobotSumatif,
             'bobot_ujian' => $bobotUjian,
             'predikats' => $this->buildVirtualDefaultPredikats($kkm !== null ? (float) $kkm->nilai_kkm : Kkm::DEFAULT_KKM),
         ];
+    }
+
+    protected function normalizeScoreValue(mixed $rawValue): ?float
+    {
+        if ($rawValue === null || $rawValue === '') {
+            return null;
+        }
+
+        $numeric = (float) str_replace(',', '.', (string) $rawValue);
+
+        return round(max(0.0, min(100.0, $numeric)), 2);
     }
 
     /**

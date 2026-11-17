@@ -34,9 +34,18 @@
     $currentKkm = $val('nilai_kkm', \App\Models\Admin\Penilaian\Kkm::DEFAULT_KKM);
     $currentKkmFormatted = rtrim(rtrim(number_format((float) $currentKkm, 2, '.', ''), '0'), '.');
     $currentBobotTp = (int) $val('bobot_tp', \App\Models\Admin\Penilaian\Kkm::DEFAULT_BOBOT_TP);
+    $currentBobotSumatif = (int) $val('bobot_sumatif', \App\Models\Admin\Penilaian\Kkm::DEFAULT_BOBOT_SUMATIF);
     $currentBobotUjian = (int) $val('bobot_ujian', \App\Models\Admin\Penilaian\Kkm::DEFAULT_BOBOT_UJIAN);
     $currentStatus = filter_var($val('status', true), FILTER_VALIDATE_BOOLEAN);
     $selectedTingkat = (string) $val('tingkatan_kelas', $defaults['tingkatan_kelas']);
+
+    $rawOldMapelIds = old('mata_pelajaran_ids');
+    if (is_array($rawOldMapelIds)) {
+        $preselectedMapelIds = array_values(array_unique(array_map('strval', $rawOldMapelIds)));
+    } else {
+        $fallbackMapelId = old('akademik_pelajaran_mata_pelajaran_id', $defaults['mata_pelajaran_id'] ?? '');
+        $preselectedMapelIds = filled($fallbackMapelId) ? [(string) $fallbackMapelId] : [];
+    }
 @endphp
 
 @push('css')
@@ -167,6 +176,185 @@
             cursor: pointer;
         }
 
+        /* Multi-Select Searchable Dropdown untuk Mata Pelajaran */
+        .kkm-ms {
+            position: relative;
+            width: 100%;
+        }
+
+        .kkm-ms-trigger {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            width: 100%;
+            min-height: 42px;
+            padding: 0.35rem 0.75rem;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            text-align: left;
+            cursor: pointer;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .kkm-ms-trigger:hover {
+            border-color: #94a3b8;
+        }
+
+        .kkm-ms.is-open .kkm-ms-trigger {
+            border-color: #ea580c;
+            box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.15);
+        }
+
+        .kkm-ms-trigger.is-invalid {
+            border-color: #ef4444 !important;
+            background: #fef2f2 !important;
+        }
+
+        .kkm-ms-tags {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.3rem;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .kkm-ms-placeholder {
+            font-size: 0.86rem;
+            color: #94a3b8;
+        }
+
+        .kkm-ms-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.14rem 0.5rem;
+            border-radius: 7px;
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            color: #9a3412;
+            font-size: 0.74rem;
+            font-weight: 700;
+            max-width: 210px;
+        }
+
+        .kkm-ms-tag-label {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .kkm-ms-tag-remove {
+            border: 0;
+            background: transparent;
+            color: #c2410c;
+            font-size: 0.85rem;
+            line-height: 1;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        .kkm-ms-tag-more {
+            padding: 0.14rem 0.5rem;
+            border-radius: 7px;
+            background: #f1f5f9;
+            color: #334155;
+            font-size: 0.74rem;
+            font-weight: 700;
+        }
+
+        .kkm-ms-panel {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
+            z-index: 80;
+            display: none;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            box-shadow: 0 18px 36px -12px rgba(15, 23, 42, 0.22);
+            overflow: hidden;
+        }
+
+        .kkm-ms.is-open .kkm-ms-panel {
+            display: block;
+        }
+
+        .kkm-ms-search-wrap {
+            padding: 0.6rem 0.7rem;
+            border-bottom: 1px solid #f1f5f9;
+            background: #f8fafc;
+        }
+
+        .kkm-ms-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            padding: 0.42rem 0.75rem;
+            background: #ffffff;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.73rem;
+        }
+
+        .kkm-ms-link-btn {
+            border: 0;
+            background: transparent;
+            padding: 0;
+            font-weight: 700;
+            color: #ea580c;
+            cursor: pointer;
+        }
+
+        .kkm-ms-link-btn:hover {
+            text-decoration: underline;
+        }
+
+        .kkm-ms-list {
+            max-height: 230px;
+            overflow-y: auto;
+            padding: 0.35rem;
+        }
+
+        .kkm-ms-option {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            padding: 0.45rem 0.55rem;
+            margin: 0 0 2px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.81rem;
+            color: #1e293b;
+            transition: background-color 0.12s ease;
+        }
+
+        .kkm-ms-option:hover {
+            background: #f8fafc;
+        }
+
+        .kkm-ms-option.is-checked {
+            background: #fff7ed;
+        }
+
+        .kkm-ms-opt-badge {
+            padding: 0.08rem 0.42rem;
+            border-radius: 6px;
+            background: #f1f5f9;
+            color: #475569;
+            font-size: 0.7rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .kkm-ms-option.is-checked .kkm-ms-opt-badge {
+            background: #ffedd5;
+            color: #9a3412;
+        }
+
         .tp-form-footer {
             display: flex;
             flex-wrap: wrap;
@@ -213,20 +401,85 @@
         </div>
 
         <div class="tp-field tp-col-6">
-            <label for="akademik_pelajaran_mata_pelajaran_id" class="tp-label">
-                <span>Mata Pelajaran (SD) <span class="text-danger">*</span></span>
-            </label>
-            <select name="akademik_pelajaran_mata_pelajaran_id" id="akademik_pelajaran_mata_pelajaran_id"
-                class="form-control tp-control @error('akademik_pelajaran_mata_pelajaran_id') is-invalid @enderror" required>
-                <option value="">-- Pilih Mata Pelajaran SD --</option>
-                @foreach ($mataPelajaranOptions as $mp)
-                    <option value="{{ $mp->id }}"
-                        @selected((string) $val('akademik_pelajaran_mata_pelajaran_id', $defaults['mata_pelajaran_id']) === (string) $mp->id)>
-                        [{{ $mp->singkatan }}] {{ $mp->nama_mata_pelajaran }}
-                    </option>
-                @endforeach
-            </select>
+            @if ($isEdit)
+                <label for="akademik_pelajaran_mata_pelajaran_id" class="tp-label">
+                    <span>Mata Pelajaran (SD) <span class="text-danger">*</span></span>
+                </label>
+                <select name="akademik_pelajaran_mata_pelajaran_id" id="akademik_pelajaran_mata_pelajaran_id"
+                    class="form-control tp-control @error('akademik_pelajaran_mata_pelajaran_id') is-invalid @enderror" required>
+                    <option value="">-- Pilih Mata Pelajaran SD --</option>
+                    @foreach ($mataPelajaranOptions as $mp)
+                        <option value="{{ $mp->id }}"
+                            @selected((string) $val('akademik_pelajaran_mata_pelajaran_id', $defaults['mata_pelajaran_id']) === (string) $mp->id)>
+                            [{{ $mp->singkatan }}] {{ $mp->nama_mata_pelajaran }}
+                        </option>
+                    @endforeach
+                </select>
+            @else
+                <label for="kkmMapelTrigger" class="tp-label">
+                    <span>Mata Pelajaran (SD) <span class="text-danger">*</span></span>
+                    <span class="text-muted small font-weight-normal">Bisa pilih banyak sekaligus</span>
+                </label>
+                <div class="kkm-ms" id="kkmMapelMultiselect">
+                    <button type="button" id="kkmMapelTrigger"
+                        class="kkm-ms-trigger @if($errors->has('akademik_pelajaran_mata_pelajaran_id') || $errors->has('mata_pelajaran_ids') || $errors->has('mata_pelajaran_ids.*')) is-invalid @endif"
+                        aria-haspopup="listbox" aria-expanded="false">
+                        <span class="kkm-ms-tags" id="kkmMapelTags">
+                            <span class="kkm-ms-placeholder">-- Pilih satu atau banyak Mata Pelajaran SD --</span>
+                        </span>
+                        <i class="fa fa-chevron-down text-muted" style="font-size: 0.72rem; flex-shrink: 0;"></i>
+                    </button>
+
+                    <div class="kkm-ms-panel" id="kkmMapelPanel">
+                        <div class="kkm-ms-search-wrap">
+                            <input type="search" id="kkmMapelSearchInput" class="form-control form-control-sm"
+                                placeholder="Cari singkatan atau nama mapel..." autocomplete="off">
+                        </div>
+                        <div class="kkm-ms-actions">
+                            <div class="d-flex align-items-center gap-3">
+                                <button type="button" id="kkmMapelSelectAll" class="kkm-ms-link-btn">Pilih Semua</button>
+                                <button type="button" id="kkmMapelClearAll" class="kkm-ms-link-btn text-secondary">Kosongkan</button>
+                            </div>
+                            <span id="kkmMapelCountBadge" class="badge badge-light" style="border: 1px solid #e2e8f0;">
+                                0 dipilih
+                            </span>
+                        </div>
+                        <div class="kkm-ms-list" role="listbox" aria-multiselectable="true">
+                            @forelse ($mataPelajaranOptions as $mp)
+                                @php
+                                    $mpLabel = filled($mp->singkatan) ? "[{$mp->singkatan}] {$mp->nama_mata_pelajaran}" : $mp->nama_mata_pelajaran;
+                                    $isChecked = in_array((string) $mp->id, $preselectedMapelIds, true);
+                                @endphp
+                                <label class="kkm-ms-option {{ $isChecked ? 'is-checked' : '' }}"
+                                    data-search="{{ mb_strtolower(($mp->singkatan ?? '').' '.$mp->nama_mata_pelajaran) }}"
+                                    data-label="{{ $mpLabel }}">
+                                    <input type="checkbox"
+                                        class="kkm-ms-checkbox"
+                                        name="mata_pelajaran_ids[]"
+                                        value="{{ $mp->id }}"
+                                        @checked($isChecked)>
+                                    @if (filled($mp->singkatan))
+                                        <span class="kkm-ms-opt-badge">{{ $mp->singkatan }}</span>
+                                    @endif
+                                    <span class="font-weight-medium">{{ $mp->nama_mata_pelajaran }}</span>
+                                </label>
+                            @empty
+                                <div class="text-center text-muted small py-3">Belum ada mata pelajaran SD.</div>
+                            @endforelse
+                            <div id="kkmMapelNoResult" class="text-center text-muted small py-3" style="display: none;">
+                                Tidak ada mata pelajaran yang cocok.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
             @error('akademik_pelajaran_mata_pelajaran_id')
+                <div class="tp-error-msg">{{ $message }}</div>
+            @enderror
+            @error('mata_pelajaran_ids')
+                <div class="tp-error-msg">{{ $message }}</div>
+            @enderror
+            @error('mata_pelajaran_ids.*')
                 <div class="tp-error-msg">{{ $message }}</div>
             @enderror
         </div>
@@ -283,8 +536,20 @@
         </div>
 
         <div class="tp-field tp-col-4">
+            <label for="bobot_sumatif" class="tp-label">
+                <span>Bobot Sumatif Bab (%) <span class="text-danger">*</span></span>
+            </label>
+            <input type="number" min="0" max="100" step="1" name="bobot_sumatif" id="bobot_sumatif"
+                class="form-control tp-control @error('bobot_sumatif') is-invalid @enderror"
+                value="{{ $currentBobotSumatif }}" required>
+            @error('bobot_sumatif')
+                <div class="tp-error-msg">{{ $message }}</div>
+            @enderror
+        </div>
+
+        <div class="tp-field tp-col-4">
             <label for="bobot_ujian" class="tp-label">
-                <span>Bobot Nilai Ujian STS/SAS (%) <span class="text-danger">*</span></span>
+                <span>Bobot Nilai Ujian PSTS/PSAS/PSAT (%) <span class="text-danger">*</span></span>
             </label>
             <input type="number" min="0" max="100" step="1" name="bobot_ujian" id="bobot_ujian"
                 class="form-control tp-control @error('bobot_ujian') is-invalid @enderror"
@@ -294,23 +559,30 @@
             @enderror
         </div>
 
-        <div class="tp-field tp-col-4">
-            <span class="tp-label">
-                <span>Preset Cepat Bobot Rapor</span>
-            </span>
-            <div class="d-flex flex-wrap gap-1 pt-1">
-                <button type="button" class="btn btn-sm btn-light js-kkm-bobot-preset" data-tp="100" data-ujian="0"
-                    style="border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.74rem; font-weight: 600;">
-                    100% TP
-                </button>
-                <button type="button" class="btn btn-sm btn-light js-kkm-bobot-preset" data-tp="70" data-ujian="30"
-                    style="border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.74rem; font-weight: 600;">
-                    70% TP / 30% Ujian
-                </button>
-                <button type="button" class="btn btn-sm btn-light js-kkm-bobot-preset" data-tp="60" data-ujian="40"
-                    style="border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.74rem; font-weight: 600;">
-                    60% / 40%
-                </button>
+        <div class="tp-field tp-col-12">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <div class="d-flex flex-wrap align-items-center gap-1">
+                    <span class="small font-weight-semibold text-muted mr-1">Preset Bobot Rapor:</span>
+                    <button type="button" class="btn btn-sm btn-light js-kkm-bobot-preset" data-tp="100" data-sumatif="0" data-ujian="0"
+                        style="border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.74rem; font-weight: 600;">
+                        100% TP
+                    </button>
+                    <button type="button" class="btn btn-sm btn-light js-kkm-bobot-preset" data-tp="40" data-sumatif="40" data-ujian="20"
+                        style="border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.74rem; font-weight: 600;">
+                        40% TP / 40% Sumatif / 20% Ujian
+                    </button>
+                    <button type="button" class="btn btn-sm btn-light js-kkm-bobot-preset" data-tp="50" data-sumatif="30" data-ujian="20"
+                        style="border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.74rem; font-weight: 600;">
+                        50% TP / 30% Sumatif / 20% Ujian
+                    </button>
+                    <button type="button" class="btn btn-sm btn-light js-kkm-bobot-preset" data-tp="50" data-sumatif="25" data-ujian="25"
+                        style="border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.74rem; font-weight: 600;">
+                        50% TP / 25% Sumatif / 25% Ujian
+                    </button>
+                </div>
+                <span id="kkmBobotTotalBadge" class="badge badge-success" style="font-size: 0.74rem; padding: 0.35rem 0.65rem;">
+                    Total: {{ $currentBobotTp + $currentBobotSumatif + $currentBobotUjian }}%
+                </span>
             </div>
         </div>
 
@@ -423,28 +695,193 @@
 @push('js')
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            const msRoot = document.getElementById('kkmMapelMultiselect');
+            const msTrigger = document.getElementById('kkmMapelTrigger');
+            const msTags = document.getElementById('kkmMapelTags');
+            const msSearch = document.getElementById('kkmMapelSearchInput');
+            const msSelectAll = document.getElementById('kkmMapelSelectAll');
+            const msClearAll = document.getElementById('kkmMapelClearAll');
+            const msCountBadge = document.getElementById('kkmMapelCountBadge');
+            const msNoResult = document.getElementById('kkmMapelNoResult');
+
+            if (msRoot && msTrigger && msTags) {
+                const optionEls = Array.from(msRoot.querySelectorAll('.kkm-ms-option'));
+                const checkboxes = Array.from(msRoot.querySelectorAll('.kkm-ms-checkbox'));
+
+                const syncMultiselectUi = function () {
+                    const checkedBoxes = [];
+                    checkboxes.forEach(function (cb) {
+                        const row = cb.closest('.kkm-ms-option');
+                        if (row) row.classList.toggle('is-checked', cb.checked);
+                        if (cb.checked) checkedBoxes.push(cb);
+                    });
+
+                    if (msCountBadge) {
+                        msCountBadge.textContent = checkedBoxes.length + ' dipilih';
+                    }
+
+                    if (checkedBoxes.length > 0) {
+                        msTrigger.classList.remove('is-invalid');
+                    }
+
+                    msTags.innerHTML = '';
+                    if (checkedBoxes.length === 0) {
+                        const ph = document.createElement('span');
+                        ph.className = 'kkm-ms-placeholder';
+                        ph.textContent = '-- Pilih satu atau banyak Mata Pelajaran SD --';
+                        msTags.appendChild(ph);
+                        return;
+                    }
+
+                    const maxTags = 4;
+                    checkedBoxes.slice(0, maxTags).forEach(function (cb) {
+                        const row = cb.closest('.kkm-ms-option');
+                        const labelText = row ? (row.dataset.label || cb.value) : cb.value;
+
+                        const chip = document.createElement('span');
+                        chip.className = 'kkm-ms-tag';
+
+                        const spanLabel = document.createElement('span');
+                        spanLabel.className = 'kkm-ms-tag-label';
+                        spanLabel.textContent = labelText;
+
+                        const btnRemove = document.createElement('button');
+                        btnRemove.type = 'button';
+                        btnRemove.className = 'kkm-ms-tag-remove';
+                        btnRemove.setAttribute('aria-label', 'Hapus ' + labelText);
+                        btnRemove.textContent = '×';
+                        btnRemove.addEventListener('click', function (ev) {
+                            ev.stopPropagation();
+                            cb.checked = false;
+                            syncMultiselectUi();
+                        });
+
+                        chip.appendChild(spanLabel);
+                        chip.appendChild(btnRemove);
+                        msTags.appendChild(chip);
+                    });
+
+                    if (checkedBoxes.length > maxTags) {
+                        const moreBadge = document.createElement('span');
+                        moreBadge.className = 'kkm-ms-tag-more';
+                        moreBadge.textContent = '+' + (checkedBoxes.length - maxTags) + ' lainnya';
+                        msTags.appendChild(moreBadge);
+                    }
+                };
+
+                const setOpenState = function (isOpen) {
+                    msRoot.classList.toggle('is-open', isOpen);
+                    msTrigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                    if (isOpen && msSearch) {
+                        setTimeout(function () { msSearch.focus(); }, 30);
+                    }
+                };
+
+                msTrigger.addEventListener('click', function () {
+                    setOpenState(!msRoot.classList.contains('is-open'));
+                });
+
+                checkboxes.forEach(function (cb) {
+                    cb.addEventListener('change', syncMultiselectUi);
+                });
+
+                if (msSearch) {
+                    msSearch.addEventListener('input', function () {
+                        const q = msSearch.value.trim().toLowerCase();
+                        let visibleCount = 0;
+                        optionEls.forEach(function (opt) {
+                            const hay = opt.dataset.search || '';
+                            const match = q === '' || hay.indexOf(q) !== -1;
+                            opt.style.display = match ? 'flex' : 'none';
+                            if (match) visibleCount++;
+                        });
+                        if (msNoResult) {
+                            msNoResult.style.display = visibleCount === 0 ? 'block' : 'none';
+                        }
+                    });
+                }
+
+                if (msSelectAll) {
+                    msSelectAll.addEventListener('click', function () {
+                        optionEls.forEach(function (opt) {
+                            if (opt.style.display !== 'none') {
+                                const cb = opt.querySelector('.kkm-ms-checkbox');
+                                if (cb) cb.checked = true;
+                            }
+                        });
+                        syncMultiselectUi();
+                    });
+                }
+
+                if (msClearAll) {
+                    msClearAll.addEventListener('click', function () {
+                        checkboxes.forEach(function (cb) { cb.checked = false; });
+                        syncMultiselectUi();
+                    });
+                }
+
+                document.addEventListener('click', function (e) {
+                    if (!msRoot.contains(e.target)) {
+                        setOpenState(false);
+                    }
+                });
+
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape' && msRoot.classList.contains('is-open')) {
+                        setOpenState(false);
+                        msTrigger.focus();
+                    }
+                });
+
+                const parentForm = msRoot.closest('form');
+                if (parentForm) {
+                    parentForm.addEventListener('submit', function (e) {
+                        const hasSelected = checkboxes.some(function (cb) { return cb.checked; });
+                        if (!hasSelected) {
+                            e.preventDefault();
+                            msTrigger.classList.add('is-invalid');
+                            setOpenState(true);
+                        }
+                    });
+                }
+
+                syncMultiselectUi();
+            }
+
             const tbody = document.getElementById('kkmPredikatBody');
             const kkmInput = document.getElementById('nilai_kkm');
             const bobotTpInput = document.getElementById('bobot_tp');
+            const bobotSumatifInput = document.getElementById('bobot_sumatif');
             const bobotUjianInput = document.getElementById('bobot_ujian');
+            const bobotTotalBadge = document.getElementById('kkmBobotTotalBadge');
             const autoBtn = document.getElementById('btnAutoGeneratePredikats');
             const addBtn = document.getElementById('btnAddPredikatRow');
 
-            if (bobotTpInput && bobotUjianInput) {
-                bobotTpInput.addEventListener('input', function () {
-                    const tp = Math.max(0, Math.min(100, parseInt(bobotTpInput.value || '0', 10)));
-                    bobotUjianInput.value = 100 - tp;
-                });
-                bobotUjianInput.addEventListener('input', function () {
-                    const ujian = Math.max(0, Math.min(100, parseInt(bobotUjianInput.value || '0', 10)));
-                    bobotTpInput.value = 100 - ujian;
+            const syncBobotTotal = function () {
+                if (!bobotTpInput || !bobotSumatifInput || !bobotUjianInput || !bobotTotalBadge) {
+                    return;
+                }
+                const tp = parseInt(bobotTpInput.value || '0', 10) || 0;
+                const sumatif = parseInt(bobotSumatifInput.value || '0', 10) || 0;
+                const ujian = parseInt(bobotUjianInput.value || '0', 10) || 0;
+                const total = tp + sumatif + ujian;
+                bobotTotalBadge.textContent = 'Total: ' + total + '%' + (total === 100 ? '' : ' (Harus 100%)');
+                bobotTotalBadge.className = 'badge ' + (total === 100 ? 'badge-success' : 'badge-danger');
+            };
+
+            if (bobotTpInput && bobotSumatifInput && bobotUjianInput) {
+                [bobotTpInput, bobotSumatifInput, bobotUjianInput].forEach(function (inp) {
+                    inp.addEventListener('input', syncBobotTotal);
                 });
                 document.querySelectorAll('.js-kkm-bobot-preset').forEach(function (btn) {
                     btn.addEventListener('click', function () {
                         bobotTpInput.value = btn.dataset.tp;
+                        bobotSumatifInput.value = btn.dataset.sumatif || '0';
                         bobotUjianInput.value = btn.dataset.ujian;
+                        syncBobotTotal();
                     });
                 });
+                syncBobotTotal();
             }
 
             if (!tbody) {

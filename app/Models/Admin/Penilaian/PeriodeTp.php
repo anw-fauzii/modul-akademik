@@ -32,21 +32,44 @@ class PeriodeTp extends Model
     ];
 
     /**
-     * Label singkat komponen ujian periode (STS di Mid, SAS di Semester).
+     * Menentukan apakah semester tahun ajaran termasuk semester 2 (genap) sehingga memakai label PSAT.
      */
-    public static function ujianLabel(string $periode): string
+    public static function isSemesterGenap(?string $tahunAjaranSemester): bool
     {
-        return $periode === self::PERIODE_SEMESTER ? 'SAS' : 'STS';
+        $normalized = strtolower(trim((string) $tahunAjaranSemester));
+        if ($normalized === '') {
+            return false;
+        }
+
+        return $normalized === '2'
+            || str_contains($normalized, '2')
+            || str_contains($normalized, 'genap');
     }
 
     /**
-     * Label lengkap komponen ujian periode.
+     * Label singkat komponen ujian periode (PSTS di Mid, PSAS di Semester 1, PSAT di Semester 2).
      */
-    public static function ujianFullLabel(string $periode): string
+    public static function ujianLabel(string $periode, ?string $tahunAjaranSemester = null): string
     {
-        return $periode === self::PERIODE_SEMESTER
-            ? 'SAS (Sumatif Akhir Semester)'
-            : 'STS (Sumatif Tengah Semester)';
+        if ($periode !== self::PERIODE_SEMESTER) {
+            return 'PSTS';
+        }
+
+        return self::isSemesterGenap($tahunAjaranSemester) ? 'PSAT' : 'PSAS';
+    }
+
+    /**
+     * Label lengkap komponen ujian periode (PSTS / PSAS / PSAT).
+     */
+    public static function ujianFullLabel(string $periode, ?string $tahunAjaranSemester = null): string
+    {
+        if ($periode !== self::PERIODE_SEMESTER) {
+            return 'PSTS (Penilaian Sumatif Tengah Semester)';
+        }
+
+        return self::isSemesterGenap($tahunAjaranSemester)
+            ? 'PSAT (Penilaian Sumatif Akhir Tahun)'
+            : 'PSAS (Penilaian Sumatif Akhir Semester)';
     }
 
     /**

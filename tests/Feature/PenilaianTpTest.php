@@ -12,8 +12,10 @@ use App\Models\Admin\Pelajaran\KelompokPelajaran;
 use App\Models\Admin\Pelajaran\MataPelajaran;
 use App\Models\Admin\Penilaian\AspekTp;
 use App\Models\Admin\Penilaian\Kkm;
+use App\Models\Admin\Penilaian\NilaiSumatifBab;
 use App\Models\Admin\Penilaian\RekapMapel;
 use App\Models\Admin\Penilaian\RekapTp;
+use App\Models\Admin\Penilaian\SumatifBab;
 use App\Models\Admin\TujuanPembelajaran\TujuanPembelajaran;
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
@@ -109,6 +111,42 @@ class PenilaianTpTest extends TestCase
 
         $indexResponse = $this->actingAsSso($user)->get(route('penilaian-kkm.index', ['tahun_ajaran_id' => $ta->id]));
         $indexResponse->assertOk()->assertSeeText('Pendidikan Agama Islam');
+
+        // Simpan banyak mata pelajaran & banyak tingkatan kelas sekaligus
+        $mapel2 = MataPelajaran::factory()->create([
+            'akademik_pelajaran_kelompok_pelajaran_id' => $kelompok->id,
+            'singkatan' => 'MTK',
+            'nama_mata_pelajaran' => 'Matematika',
+            'unit' => 'SD',
+        ]);
+
+        $bulkResponse = $this->actingAsSso($user)->post(route('penilaian-kkm.store'), [
+            'akademik_master_tahun_ajaran_id' => $ta->id,
+            'mata_pelajaran_ids' => [$mapel->id, $mapel2->id],
+            'tingkatan_kelas' => '1',
+            'copy_to_tingkatan' => ['2'],
+            'nilai_kkm' => 75,
+            'bobot_tp' => 50,
+            'bobot_sumatif' => 25,
+            'bobot_ujian' => 25,
+            'status' => true,
+            'predikats' => [
+                ['predikat' => 'A', 'keterangan' => 'Sangat Baik', 'nilai_min' => 92, 'nilai_max' => 100, 'is_tuntas' => true],
+                ['predikat' => 'B', 'keterangan' => 'Baik', 'nilai_min' => 83, 'nilai_max' => 91, 'is_tuntas' => true],
+                ['predikat' => 'C', 'keterangan' => 'Cukup', 'nilai_min' => 75, 'nilai_max' => 82, 'is_tuntas' => true],
+                ['predikat' => 'D', 'keterangan' => 'Perlu Bimbingan', 'nilai_min' => 0, 'nilai_max' => 74, 'is_tuntas' => false],
+            ],
+        ]);
+        $bulkResponse->assertRedirect(route('penilaian-kkm.index'));
+
+        $this->assertSame(
+            4,
+            Kkm::query()
+                ->where('akademik_master_tahun_ajaran_id', $ta->id)
+                ->whereIn('akademik_pelajaran_mata_pelajaran_id', [$mapel->id, $mapel2->id])
+                ->whereIn('tingkatan_kelas', ['1', '2'])
+                ->count()
+        );
     }
 
     public function test_mid_selective_inclusion_and_semester_combined_na_tp_pure_average_and_excel_roundtrip(): void
@@ -334,14 +372,14 @@ class PenilaianTpTest extends TestCase
         $this->assertEquals(70.0, $rekapSemAfterSas->nilai_ujian);
         $this->assertEquals(89.0, $rekapSemAfterSas->nilai_akhir_rapor);
 
-        // Uji export & import ulang nilai STS pada kolom ke-10 (STS)
+        // Uji export & import ulang nilai PSTS pada kolom Ujian (PSTS)
         $exportWithSts = (new PenilaianTpExport([
             'tahun_ajaran_id' => $ta->id,
             'kelas_id' => $kelas->id,
             'mata_pelajaran_id' => $mapel->id,
             'periode' => 'mid',
         ]))->array();
-        $stsColIdx = array_search('STS', $exportWithSts[0], true);
+        $stsColIdx = array_search('PSTS', $exportWithSts[0], true);
         $this->assertIsInt($stsColIdx);
         $exportWithSts[2][$stsColIdx] = 90;
 
@@ -389,8 +427,201 @@ class PenilaianTpTest extends TestCase
             ->where('periode', 'semester')
             ->value('deskripsi_capaian');
         $this->assertSame(
-            'Menunjukkan penguasaan yang sangat baik dalam Pemahaman Bacaan, Makhroj & Hafalan, dan Isi Kandungan.',
+            'Menunjukkan penguasaan yang sangat baik dalam Memahami dan membaca surat pendek, Melafalkan makhroj, hafalan, dan arti, dan Menjelaskan isi kandungan surat pendek.',
             $deskripsi1
         );
+    }
+
+    public function test_dynamic_sumatif_bab_per_mapel_merges_mid_and_semester_with_three_component_weights_and_excel_roundtrip(): void
+    {
+        $user = $this->createAdminUser();
+        $ta = TahunAjaran::factory()->active()->create([
+            'nama_tahun_ajaran' => '2026/2027',
+            'semester' => '1',
+        ]);
+        $mapelMat = MataPelajaran::create([
+            'singkatan' => 'MTK',
+            'nama_mata_pelajaran' => 'Matematika',
+            'unit' => 'SD',
+            'sifat' => 'Wajib',
+            'urutan' => 1,
+            'status' => true,
+        ]);
+        $mapelIpas = MataPelajaran::create([
+            'singkatan' => 'IPAS',
+            'nama_mata_pelajaran' => 'Ilmu Pengetahuan Alam dan Sosial',
+            'unit' => 'SD',
+            'sifat' => 'Wajib',
+            'urutan' => 2,
+            'status' => true,
+        ]);
+        $kelas = Kelas::create([
+            'akademik_master_tahun_ajaran_id' => $ta->id,
+            'tingkatan_kelas' => '4',
+            'nama_kelas' => '4 Umar',
+            'jenjang_kelas' => 'SD',
+            'status' => true,
+        ]);
+
+        $siswa = Siswa::factory()->create(['nis' => '20260401', 'nama_lengkap' => 'Budi Santoso']);
+        $anggota = AnggotaKelas::create([
+            'siswa_nis' => $siswa->nis,
+            'akademik_master_kelas_id' => $kelas->id,
+            'pendaftaran' => 'baru',
+        ]);
+
+        $tp1 = TujuanPembelajaran::create([
+            'akademik_master_tahun_ajaran_id' => $ta->id,
+            'akademik_pelajaran_mata_pelajaran_id' => $mapelMat->id,
+            'tingkatan_kelas' => '4',
+            'fase' => 'B',
+            'kode_tp' => 'TP 4.1',
+            'tujuan_pembelajaran' => 'Menghitung operasi bilangan cacah',
+            'urutan' => 1,
+            'status' => true,
+        ]);
+        $aspekMid = AspekTp::create([
+            'tujuan_pembelajaran_id' => $tp1->id,
+            'periode' => 'mid',
+            'nama_aspek' => 'Nilai TP',
+            'urutan' => 1,
+        ]);
+
+        // Tambah 2 Sumatif Bab di Mid untuk Matematika & 1 Sumatif Bab di IPAS (beda jumlah antar mapel)
+        $this->actingAsSso($user)->post(route('penilaian-tp.sumatif-bab.store'), [
+            'tahun_ajaran_id' => $ta->id,
+            'mata_pelajaran_id' => $mapelMat->id,
+            'tingkatan_kelas' => '4',
+            'periode' => 'mid',
+            'nama_bab' => 'Bab 1',
+            'keterangan' => 'Bilangan Cacah',
+            'kelas_id' => $kelas->id,
+        ])->assertRedirect();
+
+        $this->actingAsSso($user)->post(route('penilaian-tp.sumatif-bab.store'), [
+            'tahun_ajaran_id' => $ta->id,
+            'mata_pelajaran_id' => $mapelMat->id,
+            'tingkatan_kelas' => '4',
+            'periode' => 'mid',
+            'nama_bab' => 'Bab 2',
+            'keterangan' => 'Pecahan',
+            'kelas_id' => $kelas->id,
+        ])->assertRedirect();
+
+        $this->actingAsSso($user)->post(route('penilaian-tp.sumatif-bab.store'), [
+            'tahun_ajaran_id' => $ta->id,
+            'mata_pelajaran_id' => $mapelIpas->id,
+            'tingkatan_kelas' => '4',
+            'periode' => 'mid',
+            'nama_bab' => 'Bab 1 IPA',
+            'kelas_id' => $kelas->id,
+        ])->assertRedirect();
+
+        $mtkMidBabs = SumatifBab::query()
+            ->where('akademik_pelajaran_mata_pelajaran_id', $mapelMat->id)
+            ->where('periode', 'mid')
+            ->orderBy('urutan')
+            ->get();
+        $this->assertCount(2, $mtkMidBabs);
+        $this->assertSame(1, SumatifBab::query()->where('akademik_pelajaran_mata_pelajaran_id', $mapelIpas->id)->count());
+
+        // Set bobot 40% TP + 40% Sumatif Bab + 20% Ujian
+        $this->actingAsSso($user)->post(route('penilaian-tp.bobot.update'), [
+            'tahun_ajaran_id' => $ta->id,
+            'kelas_id' => $kelas->id,
+            'mata_pelajaran_id' => $mapelMat->id,
+            'periode' => 'mid',
+            'bobot_tp' => 40,
+            'bobot_sumatif' => 40,
+            'bobot_ujian' => 20,
+        ])->assertRedirect();
+
+        // Simpan nilai Mid: TP=80, Bab1=85, Bab2=95 (Rata=90), STS=100 => 0.4*80 + 0.4*90 + 0.2*100 = 32+36+20 = 88
+        $this->actingAsSso($user)->post(route('penilaian-tp.store'), [
+            'tahun_ajaran_id' => $ta->id,
+            'kelas_id' => $kelas->id,
+            'mata_pelajaran_id' => $mapelMat->id,
+            'periode' => 'mid',
+            'nilai' => [
+                $anggota->id => [$aspekMid->id => 80],
+            ],
+            'sumatif' => [
+                $anggota->id => [
+                    $mtkMidBabs[0]->id => 85,
+                    $mtkMidBabs[1]->id => 95,
+                ],
+            ],
+            'ujian' => [
+                $anggota->id => 100,
+            ],
+        ])->assertRedirect();
+
+        $rekapMid = RekapMapel::query()
+            ->where('akademik_pelajaran_mata_pelajaran_id', $mapelMat->id)
+            ->where('anggota_kelas_id', $anggota->id)
+            ->where('periode', 'mid')
+            ->firstOrFail();
+        $this->assertEquals(90.0, $rekapMid->rata_rata_sumatif);
+        $this->assertEquals(88.0, $rekapMid->nilai_akhir_rapor);
+
+        // Tambah Bab 3 di Semester dan simpan nilai 75 => gabungan Mid(85,95)+Sem(75) = 255/3 = 85
+        $this->actingAsSso($user)->post(route('penilaian-tp.sumatif-bab.store'), [
+            'tahun_ajaran_id' => $ta->id,
+            'mata_pelajaran_id' => $mapelMat->id,
+            'tingkatan_kelas' => '4',
+            'periode' => 'semester',
+            'nama_bab' => 'Bab 3',
+            'kelas_id' => $kelas->id,
+        ])->assertRedirect();
+
+        $mtkSemBab = SumatifBab::query()
+            ->where('akademik_pelajaran_mata_pelajaran_id', $mapelMat->id)
+            ->where('periode', 'semester')
+            ->firstOrFail();
+
+        $this->actingAsSso($user)->post(route('penilaian-tp.store'), [
+            'tahun_ajaran_id' => $ta->id,
+            'kelas_id' => $kelas->id,
+            'mata_pelajaran_id' => $mapelMat->id,
+            'periode' => 'semester',
+            'sumatif' => [
+                $anggota->id => [$mtkSemBab->id => 75],
+            ],
+            'ujian' => [
+                $anggota->id => 90,
+            ],
+        ])->assertRedirect();
+
+        // NA Rapor Sem = 0.4*80 + 0.4*85 + 0.2*90 = 32 + 34 + 18 = 84
+        $rekapSem = RekapMapel::query()
+            ->where('akademik_pelajaran_mata_pelajaran_id', $mapelMat->id)
+            ->where('anggota_kelas_id', $anggota->id)
+            ->where('periode', 'semester')
+            ->firstOrFail();
+        $this->assertEquals(85.0, $rekapSem->rata_rata_sumatif);
+        $this->assertEquals(84.0, $rekapSem->nilai_akhir_rapor);
+
+        // Export & Re-import Semester Excel: kolom Bab 1 (Mid) & Bab 2 (Mid) diabaikan, Bab 3 berubah ke 90 -> rata sumatif (85+95+90)/3 = 90
+        $exportRows = (new PenilaianTpExport([
+            'tahun_ajaran_id' => $ta->id,
+            'kelas_id' => $kelas->id,
+            'mata_pelajaran_id' => $mapelMat->id,
+            'periode' => 'semester',
+        ]))->array();
+        $bab3ColIdx = array_search('Bab 3', $exportRows[1], true);
+        $this->assertIsInt($bab3ColIdx);
+        $exportRows[2][$bab3ColIdx] = 90;
+
+        $import = new PenilaianTpSheetImport($kelas, $mapelMat, 'semester', 'NIPY-SD-02');
+        $import->collection(new Collection($exportRows));
+        $this->assertSame([], $import->errors);
+        $this->assertEquals(90.0, (float) NilaiSumatifBab::query()->where('sumatif_bab_id', $mtkSemBab->id)->value('nilai'));
+        $this->assertEquals(90.0, (float) $rekapSem->refresh()->rata_rata_sumatif);
+
+        // Hapus Bab 3 -> otomatis menghitung ulang Rata Sumatif kembali ke gabungan Mid (90)
+        $this->actingAsSso($user)->delete(route('penilaian-tp.sumatif-bab.destroy', $mtkSemBab->id), [
+            'kelas_id' => $kelas->id,
+        ])->assertRedirect();
+        $this->assertEquals(90.0, (float) $rekapSem->refresh()->rata_rata_sumatif);
     }
 }

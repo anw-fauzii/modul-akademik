@@ -218,7 +218,7 @@ class KaryawanModelAndViewTest extends TestCase
                 200,
                 [
                     'Content-Type' => 'image/jpeg',
-                    'Set-Cookie' => 'sipit-kepegawaian-session=remote-new; Path=/',
+                    'Set-Cookie' => 'PION-kepegawaian-session=remote-new; Path=/',
                 ]
             ),
         ]);
@@ -229,7 +229,7 @@ class KaryawanModelAndViewTest extends TestCase
             [],
             [],
             [],
-            ['HTTP_COOKIE' => 'modul-akademik-session=local-secret; XSRF-TOKEN=csrf123; sipit-kepegawaian-session=remote-123']
+            ['HTTP_COOKIE' => 'modul-akademik-session=local-secret; XSRF-TOKEN=csrf123; PION-kepegawaian-session=remote-123']
         );
 
         $response = app(KaryawanController::class)->foto($request, $karyawan);
@@ -240,7 +240,7 @@ class KaryawanModelAndViewTest extends TestCase
         Http::assertSent(function (ClientRequest $sent): bool {
             $cookieHeader = $sent->header('Cookie')[0] ?? '';
 
-            return str_contains($cookieHeader, 'sipit-kepegawaian-session=remote-123')
+            return str_contains($cookieHeader, 'PION-kepegawaian-session=remote-123')
                 && ! str_contains($cookieHeader, 'modul-akademik-session')
                 && ! str_contains($cookieHeader, 'XSRF-TOKEN');
         });

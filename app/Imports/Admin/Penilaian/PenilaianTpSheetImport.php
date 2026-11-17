@@ -6,6 +6,8 @@ use App\Models\Admin\DataMaster\AnggotaKelas;
 use App\Models\Admin\DataMaster\Kelas;
 use App\Models\Admin\Pelajaran\MataPelajaran;
 use App\Models\Admin\Penilaian\AspekTp;
+use App\Models\Admin\Penilaian\PeriodeTp;
+use App\Models\Admin\Penilaian\SumatifBab;
 use App\Models\Admin\TujuanPembelajaran\TujuanPembelajaran;
 use App\Services\Admin\Penilaian\PenilaianTpService;
 use Illuminate\Support\Collection;
@@ -76,6 +78,16 @@ class PenilaianTpSheetImport implements SkipsEmptyRows, ToCollection
             }
         }
 
+        $sumatifLookup = SumatifBab::query()
+            ->select(['id', 'nama_bab'])
+            ->where('akademik_master_tahun_ajaran_id', $this->kelas->akademik_master_tahun_ajaran_id)
+            ->where('akademik_pelajaran_mata_pelajaran_id', $this->mapel->id)
+            ->where('tingkatan_kelas', (string) $this->kelas->tingkatan_kelas)
+            ->where('periode', $this->periode)
+            ->get()
+            ->mapWithKeys(static fn (SumatifBab $bab): array => [mb_strtolower(trim($bab->nama_bab)) => $bab->id])
+            ->all();
+
         $nisHeaderIdx = $this->detectNisColumnIndex($tpHeaderRow, $aspekHeaderRow);
         if ($nisHeaderIdx === null) {
             $this->errors[] = 'Kolom "NIS" tidak ditemukan pada header Excel.';
@@ -83,35 +95,65 @@ class PenilaianTpSheetImport implements SkipsEmptyRows, ToCollection
             return;
         }
 
-        // Petakan tiap kolom aspek dari baris header 1 (Kode TP dengan carry-forward untuk sel ter-merge) & baris header 2 (Nama Aspek)
+        // Petakan tiap kolom aspek TP, Sumatif Bab, dan Ujian dari 2 baris header (mendukung merge carry-forward)
         $colToAspekId = [];
+        $colToSumatifId = [];
         $ujianColIdx = null;
         $maxCol = max(count($tpHeaderRow), count($aspekHeaderRow));
         $currentKodeTp = '';
+        $currentSection = '';
 
         for ($colIdx = $nisHeaderIdx + 1; $colIdx < $maxCol; $colIdx++) {
             $rawTop = strtoupper(trim((string) ($tpHeaderRow[$colIdx] ?? '')));
             $rawSub = trim((string) ($aspekHeaderRow[$colIdx] ?? ''));
             $upperSub = strtoupper($rawSub);
 
-            if (in_array($rawTop, ['STS', 'SAS', 'UJIAN', 'NILAI UJIAN', 'PTS', 'PAS'], true)) {
+            if (in_array($rawTop, ['PSTS', 'PSAS', 'PSAT', 'STS', 'SAS', 'UJIAN', 'NILAI UJIAN', 'PTS', 'PAS'], true)) {
                 $ujianColIdx = $colIdx;
                 $currentKodeTp = '';
+                $currentSection = '';
 
                 continue;
             }
 
             if (in_array($rawTop, ['NA RAPOR', 'PREDIKAT', 'KETUNTASAN', 'STATUS KKM'], true)) {
                 $currentKodeTp = '';
+                $currentSection = '';
 
                 continue;
             }
 
-            if ($rawTop !== '') {
+            if (in_array($rawTop, ['SUMATIF BAB', 'SUMATIF'], true)) {
+                $currentSection = 'sumatif';
+                $currentKodeTp = '';
+            } elseif ($rawTop !== '') {
+                $currentSection = 'tp';
                 $currentKodeTp = $rawTop;
             }
 
-            if ($currentKodeTp === '' || $rawSub === '') {
+            if ($rawSub === '') {
+                continue;
+            }
+
+            if ($currentSection === 'sumatif') {
+                if (in_array($upperSub, ['RATA SUMATIF', 'RATA', 'RATA-RATA'], true)) {
+                    continue;
+                }
+
+                $lowerSub = mb_strtolower($rawSub);
+                if ($this->periode === PeriodeTp::PERIODE_SEMESTER && str_ends_with($lowerSub, '(mid)')) {
+                    continue;
+                }
+
+                $babId = $sumatifLookup[$lowerSub] ?? null;
+                if ($babId !== null) {
+                    $colToSumatifId[$colIdx] = $babId;
+                }
+
+                continue;
+            }
+
+            if ($currentKodeTp === '') {
                 continue;
             }
 
@@ -130,8 +172,8 @@ class PenilaianTpSheetImport implements SkipsEmptyRows, ToCollection
             }
         }
 
-        if ($colToAspekId === [] && $ujianColIdx === null) {
-            $this->errors[] = 'Tidak ada kolom aspek TP maupun kolom Ujian (STS/SAS) yang cocok dengan konfigurasi kelas ini.';
+        if ($colToAspekId === [] && $colToSumatifId === [] && $ujianColIdx === null) {
+            $this->errors[] = 'Tidak ada kolom aspek TP, Sumatif Bab, maupun kolom Ujian (PSTS/PSAS/PSAT) yang cocok dengan konfigurasi kelas ini.';
 
             return;
         }
@@ -143,6 +185,7 @@ class PenilaianTpSheetImport implements SkipsEmptyRows, ToCollection
             ->keyBy(static fn (AnggotaKelas $a): string => trim((string) $a->siswa_nis));
 
         $nilaiMatrix = [];
+        $sumatifMatrix = [];
         $ujianMatrix = [];
 
         for ($r = 2; $r < $rows->count(); $r++) {
@@ -161,37 +204,22 @@ class PenilaianTpSheetImport implements SkipsEmptyRows, ToCollection
                 continue;
             }
 
-            $rowValues = [];
-            foreach ($colToAspekId as $colIdx => $aspekId) {
-                $rawCell = $studentRow[$colIdx] ?? null;
-
-                if ($rawCell === null || trim((string) $rawCell) === '') {
-                    $rowValues[$aspekId] = null;
-
-                    continue;
-                }
-
-                $normalizedText = str_replace(',', '.', trim((string) $rawCell));
-                if (! is_numeric($normalizedText)) {
-                    $excelLine = $r + 1;
-                    $this->errors[] = "Baris {$excelLine} (NIS {$nis}): Nilai \"{$rawCell}\" harus berupa angka 0–100.";
-
-                    continue 2;
-                }
-
-                $numeric = (float) $normalizedText;
-                if ($numeric < 0 || $numeric > 100) {
-                    $excelLine = $r + 1;
-                    $this->errors[] = "Baris {$excelLine} (NIS {$nis}): Nilai {$numeric} di luar rentang 0–100.";
-
-                    continue 2;
-                }
-
-                $rowValues[$aspekId] = $numeric;
-            }
+            $excelLine = $r + 1;
 
             if ($colToAspekId !== []) {
-                $nilaiMatrix[$anggota->id] = $rowValues;
+                $rowAspekValues = $this->extractScoreColumns($colToAspekId, $studentRow, $excelLine, $nis, 'Nilai');
+                if ($rowAspekValues === null) {
+                    continue;
+                }
+                $nilaiMatrix[$anggota->id] = $rowAspekValues;
+            }
+
+            if ($colToSumatifId !== []) {
+                $rowSumatifValues = $this->extractScoreColumns($colToSumatifId, $studentRow, $excelLine, $nis, 'Nilai Sumatif Bab');
+                if ($rowSumatifValues === null) {
+                    continue;
+                }
+                $sumatifMatrix[$anggota->id] = $rowSumatifValues;
             }
 
             if ($ujianColIdx !== null) {
@@ -201,7 +229,6 @@ class PenilaianTpSheetImport implements SkipsEmptyRows, ToCollection
                 } else {
                     $normalizedUjianText = str_replace(',', '.', trim((string) $rawUjianCell));
                     if (! is_numeric($normalizedUjianText)) {
-                        $excelLine = $r + 1;
                         $this->errors[] = "Baris {$excelLine} (NIS {$nis}): Nilai Ujian \"{$rawUjianCell}\" harus berupa angka 0–100.";
 
                         continue;
@@ -209,7 +236,6 @@ class PenilaianTpSheetImport implements SkipsEmptyRows, ToCollection
 
                     $numericUjian = (float) $normalizedUjianText;
                     if ($numericUjian < 0 || $numericUjian > 100) {
-                        $excelLine = $r + 1;
                         $this->errors[] = "Baris {$excelLine} (NIS {$nis}): Nilai Ujian {$numericUjian} di luar rentang 0–100.";
 
                         continue;
@@ -220,8 +246,8 @@ class PenilaianTpSheetImport implements SkipsEmptyRows, ToCollection
             }
         }
 
-        if ($this->errors !== [] || ($nilaiMatrix === [] && $ujianMatrix === [])) {
-            if ($nilaiMatrix === [] && $ujianMatrix === [] && $this->errors === []) {
+        if ($this->errors !== [] || ($nilaiMatrix === [] && $sumatifMatrix === [] && $ujianMatrix === [])) {
+            if ($nilaiMatrix === [] && $sumatifMatrix === [] && $ujianMatrix === [] && $this->errors === []) {
                 $this->errors[] = 'Tidak ada baris nilai siswa yang dapat diimpor.';
             }
 
@@ -234,11 +260,57 @@ class PenilaianTpSheetImport implements SkipsEmptyRows, ToCollection
             $this->periode,
             $nilaiMatrix,
             $this->dinilaiOlehNipy,
-            $ujianMatrix
+            $ujianMatrix,
+            $sumatifMatrix
         );
 
         $this->savedCells = $result['saved_cells'];
         $this->updatedStudents = $result['updated_students'];
+    }
+
+    /**
+     * Mengekstrak dan memvalidasi sel angka 0–100 untuk kolom aspek TP maupun Sumatif Bab.
+     *
+     * @param  array<int, int>  $colToTargetId
+     * @param  array<int, mixed>  $studentRow
+     * @return array<int, float|null>|null
+     */
+    protected function extractScoreColumns(
+        array $colToTargetId,
+        array $studentRow,
+        int $excelLine,
+        string $nis,
+        string $label
+    ): ?array {
+        $values = [];
+
+        foreach ($colToTargetId as $colIdx => $targetId) {
+            $rawCell = $studentRow[$colIdx] ?? null;
+
+            if ($rawCell === null || trim((string) $rawCell) === '') {
+                $values[$targetId] = null;
+
+                continue;
+            }
+
+            $normalizedText = str_replace(',', '.', trim((string) $rawCell));
+            if (! is_numeric($normalizedText)) {
+                $this->errors[] = "Baris {$excelLine} (NIS {$nis}): {$label} \"{$rawCell}\" harus berupa angka 0–100.";
+
+                return null;
+            }
+
+            $numeric = (float) $normalizedText;
+            if ($numeric < 0 || $numeric > 100) {
+                $this->errors[] = "Baris {$excelLine} (NIS {$nis}): {$label} {$numeric} di luar rentang 0–100.";
+
+                return null;
+            }
+
+            $values[$targetId] = $numeric;
+        }
+
+        return $values;
     }
 
     /**

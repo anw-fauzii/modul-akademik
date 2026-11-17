@@ -16,21 +16,6 @@ class SimpanNilaiTpRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $rawMatrix = $this->input('nilai', []);
-        $normalized = [];
-
-        if (is_array($rawMatrix)) {
-            foreach ($rawMatrix as $anggotaId => $aspekValues) {
-                if (! is_array($aspekValues)) {
-                    continue;
-                }
-                foreach ($aspekValues as $aspekId => $val) {
-                    $trimmed = is_string($val) ? trim(str_replace(',', '.', $val)) : $val;
-                    $normalized[$anggotaId][$aspekId] = ($trimmed === '' || $trimmed === null) ? null : $trimmed;
-                }
-            }
-        }
-
         $rawUjian = $this->input('ujian', []);
         $normalizedUjian = [];
 
@@ -43,9 +28,36 @@ class SimpanNilaiTpRequest extends FormRequest
 
         $this->merge([
             'periode' => strtolower(trim((string) $this->input('periode', PeriodeTp::PERIODE_MID))),
-            'nilai' => $normalized,
+            'nilai' => $this->normalizeScoreMatrix($this->input('nilai', [])),
+            'sumatif' => $this->normalizeScoreMatrix($this->input('sumatif', [])),
             'ujian' => $normalizedUjian,
         ]);
+    }
+
+    /**
+     * Menormalkan matriks input nilai [anggota_kelas_id => [kolom_id => nilai|null]].
+     *
+     * @return array<int|string, array<int|string, mixed>>
+     */
+    protected function normalizeScoreMatrix(mixed $rawMatrix): array
+    {
+        $normalized = [];
+
+        if (! is_array($rawMatrix)) {
+            return $normalized;
+        }
+
+        foreach ($rawMatrix as $anggotaId => $colValues) {
+            if (! is_array($colValues)) {
+                continue;
+            }
+            foreach ($colValues as $colId => $val) {
+                $trimmed = is_string($val) ? trim(str_replace(',', '.', $val)) : $val;
+                $normalized[$anggotaId][$colId] = ($trimmed === '' || $trimmed === null) ? null : $trimmed;
+            }
+        }
+
+        return $normalized;
     }
 
     /**
@@ -69,6 +81,9 @@ class SimpanNilaiTpRequest extends FormRequest
             'nilai' => ['nullable', 'array'],
             'nilai.*' => ['array'],
             'nilai.*.*' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'sumatif' => ['nullable', 'array'],
+            'sumatif.*' => ['array'],
+            'sumatif.*.*' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'ujian' => ['nullable', 'array'],
             'ujian.*' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ];
@@ -85,6 +100,9 @@ class SimpanNilaiTpRequest extends FormRequest
             'nilai.*.*.numeric' => 'Nilai harus berupa angka valid.',
             'nilai.*.*.min' => 'Nilai minimal adalah 0.',
             'nilai.*.*.max' => 'Nilai maksimal adalah 100.',
+            'sumatif.*.*.numeric' => 'Nilai Sumatif Bab harus berupa angka valid.',
+            'sumatif.*.*.min' => 'Nilai Sumatif Bab minimal adalah 0.',
+            'sumatif.*.*.max' => 'Nilai Sumatif Bab maksimal adalah 100.',
             'ujian.*.numeric' => 'Nilai ujian harus berupa angka valid.',
             'ujian.*.min' => 'Nilai ujian minimal adalah 0.',
             'ujian.*.max' => 'Nilai ujian maksimal adalah 100.',

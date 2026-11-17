@@ -10,7 +10,7 @@
             <span class="block sm:inline">Hak cipta dilindungi undang-undang.</span>
         </div>
         <div class="flex items-center gap-2 text-slate-400">
-            <span>SIPIT Akademik</span>
+            <span>PION Akademik</span>
             <span class="inline-block h-1 w-1 rounded-full bg-slate-300"></span>
             <span class="font-medium text-slate-500">v1.0.0</span>
         </div>

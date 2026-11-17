@@ -18,11 +18,13 @@ class UpdateBobotRaporRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $bobotTp = filled($this->input('bobot_tp')) ? (int) $this->input('bobot_tp') : Kkm::DEFAULT_BOBOT_TP;
+        $bobotSumatif = filled($this->input('bobot_sumatif')) ? (int) $this->input('bobot_sumatif') : Kkm::DEFAULT_BOBOT_SUMATIF;
         $bobotUjian = filled($this->input('bobot_ujian')) ? (int) $this->input('bobot_ujian') : Kkm::DEFAULT_BOBOT_UJIAN;
 
         $this->merge([
             'periode' => strtolower(trim((string) $this->input('periode', PeriodeTp::PERIODE_MID))),
             'bobot_tp' => $bobotTp,
+            'bobot_sumatif' => $bobotSumatif,
             'bobot_ujian' => $bobotUjian,
         ]);
     }
@@ -46,12 +48,13 @@ class UpdateBobotRaporRequest extends FormRequest
             ],
             'periode' => ['required', 'string', Rule::in([PeriodeTp::PERIODE_MID, PeriodeTp::PERIODE_SEMESTER])],
             'bobot_tp' => ['required', 'integer', 'min:0', 'max:100'],
+            'bobot_sumatif' => ['required', 'integer', 'min:0', 'max:100'],
             'bobot_ujian' => ['required', 'integer', 'min:0', 'max:100'],
         ];
     }
 
     /**
-     * Memastikan jumlah bobot TP dan bobot ujian tepat 100%.
+     * Memastikan jumlah bobot TP, Sumatif Bab, dan bobot ujian tepat 100%.
      *
      * @return array<int, callable(Validator): void>
      */
@@ -61,7 +64,8 @@ class UpdateBobotRaporRequest extends FormRequest
             function (Validator $validator): void {
                 $error = Kkm::validateBobotPair(
                     (int) $this->input('bobot_tp', 0),
-                    (int) $this->input('bobot_ujian', 0)
+                    (int) $this->input('bobot_ujian', 0),
+                    (int) $this->input('bobot_sumatif', Kkm::DEFAULT_BOBOT_SUMATIF)
                 );
 
                 if ($error !== null) {

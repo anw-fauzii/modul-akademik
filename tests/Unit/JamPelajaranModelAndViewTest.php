@@ -300,8 +300,9 @@ class JamPelajaranModelAndViewTest extends TestCase
 
         $this->assertStringContainsString('Jam Ke-2', $indexHtml);
         $this->assertStringContainsString('SD', $indexHtml);
-        $this->assertStringContainsString('07:35', $indexHtml);
-        $this->assertStringContainsString('08:10', $indexHtml);
+        $this->assertStringContainsString('Waktu (Mulai - Selesai)', $indexHtml);
+        $this->assertStringContainsString('Durasi', $indexHtml);
+        $this->assertStringContainsString('07:35 - 08:10', $indexHtml);
         $this->assertStringContainsString('35 menit', $indexHtml);
         $this->assertStringContainsString('Matematika &amp; Literasi', $indexHtml);
         $this->assertStringContainsString(route('jam-pelajaran.edit', 44), $indexHtml);

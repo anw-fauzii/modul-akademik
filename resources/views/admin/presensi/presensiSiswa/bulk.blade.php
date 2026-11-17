@@ -1,7 +1,7 @@
 @extends('layouts.appui')
 
 @section('title')
-    <title>Input Presensi Massal - SIPIT Akademik</title>
+    <title>Input Presensi Massal - PION Akademik</title>
 @endsection
 
 @push('css')

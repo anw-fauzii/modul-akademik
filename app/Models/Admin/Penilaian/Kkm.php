@@ -19,6 +19,7 @@ use Illuminate\Support\Collection;
     'tingkatan_kelas',
     'nilai_kkm',
     'bobot_tp',
+    'bobot_sumatif',
     'bobot_ujian',
     'status',
 ])]
@@ -29,12 +30,20 @@ class Kkm extends Model
 
     public const int DEFAULT_BOBOT_TP = 100;
 
+    public const int DEFAULT_BOBOT_SUMATIF = 0;
+
     public const int DEFAULT_BOBOT_UJIAN = 0;
 
-    public static function validateBobotPair(int $bobotTp, int $bobotUjian): ?string
-    {
-        if (($bobotTp + $bobotUjian) !== 100) {
-            return 'Total Bobot NA TP (%) dan Bobot Nilai Ujian (%) harus tepat 100%.';
+    /**
+     * Memvalidasi bahwa jumlah bobot komponen rapor (NA TP + Sumatif Bab + Ujian PSTS/PSAS/PSAT) tepat 100%.
+     */
+    public static function validateBobotPair(
+        int $bobotTp,
+        int $bobotUjian,
+        int $bobotSumatif = self::DEFAULT_BOBOT_SUMATIF
+    ): ?string {
+        if (($bobotTp + $bobotSumatif + $bobotUjian) !== 100) {
+            return 'Total Bobot NA TP (%), Bobot Sumatif Bab (%), dan Bobot Nilai Ujian (%) harus tepat 100%.';
         }
 
         return null;
@@ -72,6 +81,7 @@ class Kkm extends Model
             'akademik_pelajaran_mata_pelajaran_id' => 'integer',
             'nilai_kkm' => 'float',
             'bobot_tp' => 'integer',
+            'bobot_sumatif' => 'integer',
             'bobot_ujian' => 'integer',
             'status' => 'boolean',
         ];

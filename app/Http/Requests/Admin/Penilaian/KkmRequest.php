@@ -35,9 +35,33 @@ class KkmRequest extends FormRequest
             }
         }
 
+        $rawMapelIds = $this->input('mata_pelajaran_ids', []);
+        $normalizedMapelIds = [];
+
+        if (is_array($rawMapelIds)) {
+            foreach ($rawMapelIds as $rawId) {
+                if (is_numeric($rawId) && (int) $rawId > 0) {
+                    $normalizedMapelIds[] = (int) $rawId;
+                }
+            }
+        }
+
+        $singleMapelId = $this->input('akademik_pelajaran_mata_pelajaran_id');
+        if (is_numeric($singleMapelId) && (int) $singleMapelId > 0) {
+            $normalizedMapelIds[] = (int) $singleMapelId;
+        }
+
+        $normalizedMapelIds = array_values(array_unique($normalizedMapelIds));
+        $primaryMapelId = is_numeric($singleMapelId) && (int) $singleMapelId > 0
+            ? (int) $singleMapelId
+            : ($normalizedMapelIds[0] ?? null);
+
         $this->merge([
+            'akademik_pelajaran_mata_pelajaran_id' => $primaryMapelId,
+            'mata_pelajaran_ids' => $normalizedMapelIds,
             'tingkatan_kelas' => trim((string) $this->input('tingkatan_kelas', '')),
             'bobot_tp' => filled($this->input('bobot_tp')) ? (int) $this->input('bobot_tp') : Kkm::DEFAULT_BOBOT_TP,
+            'bobot_sumatif' => filled($this->input('bobot_sumatif')) ? (int) $this->input('bobot_sumatif') : Kkm::DEFAULT_BOBOT_SUMATIF,
             'bobot_ujian' => filled($this->input('bobot_ujian')) ? (int) $this->input('bobot_ujian') : Kkm::DEFAULT_BOBOT_UJIAN,
             'status' => $this->has('status') ? $this->boolean('status') : true,
             'predikats' => $normalizedPredikats,
@@ -54,6 +78,21 @@ class KkmRequest extends FormRequest
 
         $taId = $this->input('akademik_master_tahun_ajaran_id');
         $mapelId = $this->input('akademik_pelajaran_mata_pelajaran_id');
+        $isBatchMapel = $ignoreId === null && count((array) $this->input('mata_pelajaran_ids', [])) > 1;
+
+        $tingkatanRules = [
+            'required',
+            'string',
+            Rule::in(Kkm::SD_TINGKATAN_OPTIONS),
+        ];
+
+        if (! $isBatchMapel) {
+            $tingkatanRules[] = Rule::unique('akademik_penilaian_kkm', 'tingkatan_kelas')
+                ->where(static fn ($query) => $query
+                    ->where('akademik_master_tahun_ajaran_id', $taId)
+                    ->where('akademik_pelajaran_mata_pelajaran_id', $mapelId))
+                ->ignore($ignoreId);
+        }
 
         return [
             'akademik_master_tahun_ajaran_id' => [
@@ -67,18 +106,16 @@ class KkmRequest extends FormRequest
                 Rule::exists('akademik_pelajaran_mata_pelajaran', 'id')
                     ->where('unit', Kkm::TARGET_UNIT),
             ],
-            'tingkatan_kelas' => [
-                'required',
-                'string',
-                Rule::in(Kkm::SD_TINGKATAN_OPTIONS),
-                Rule::unique('akademik_penilaian_kkm', 'tingkatan_kelas')
-                    ->where(static fn ($query) => $query
-                        ->where('akademik_master_tahun_ajaran_id', $taId)
-                        ->where('akademik_pelajaran_mata_pelajaran_id', $mapelId))
-                    ->ignore($ignoreId),
+            'mata_pelajaran_ids' => ['nullable', 'array', 'min:1'],
+            'mata_pelajaran_ids.*' => [
+                'integer',
+                Rule::exists('akademik_pelajaran_mata_pelajaran', 'id')
+                    ->where('unit', Kkm::TARGET_UNIT),
             ],
+            'tingkatan_kelas' => $tingkatanRules,
             'nilai_kkm' => ['required', 'numeric', 'min:1', 'max:100'],
             'bobot_tp' => ['required', 'integer', 'min:0', 'max:100'],
+            'bobot_sumatif' => ['required', 'integer', 'min:0', 'max:100'],
             'bobot_ujian' => ['required', 'integer', 'min:0', 'max:100'],
             'status' => ['required', 'boolean'],
             'copy_to_tingkatan' => ['nullable', 'array'],
@@ -93,7 +130,7 @@ class KkmRequest extends FormRequest
     }
 
     /**
-     * Memastikan jumlah bobot NA TP dan Nilai Ujian tepat 100%.
+     * Memastikan jumlah bobot NA TP, Sumatif Bab, dan Nilai Ujian tepat 100%.
      *
      * @return array<int, callable(Validator): void>
      */
@@ -103,7 +140,8 @@ class KkmRequest extends FormRequest
             function (Validator $validator): void {
                 $error = Kkm::validateBobotPair(
                     (int) $this->input('bobot_tp', Kkm::DEFAULT_BOBOT_TP),
-                    (int) $this->input('bobot_ujian', Kkm::DEFAULT_BOBOT_UJIAN)
+                    (int) $this->input('bobot_ujian', Kkm::DEFAULT_BOBOT_UJIAN),
+                    (int) $this->input('bobot_sumatif', Kkm::DEFAULT_BOBOT_SUMATIF)
                 );
 
                 if ($error !== null) {
@@ -120,8 +158,9 @@ class KkmRequest extends FormRequest
     {
         return [
             'akademik_master_tahun_ajaran_id.required' => 'Tahun ajaran / semester wajib dipilih.',
-            'akademik_pelajaran_mata_pelajaran_id.required' => 'Mata pelajaran SD wajib dipilih.',
+            'akademik_pelajaran_mata_pelajaran_id.required' => 'Minimal satu mata pelajaran SD wajib dipilih.',
             'akademik_pelajaran_mata_pelajaran_id.exists' => 'Mata pelajaran harus berasal dari unit SD.',
+            'mata_pelajaran_ids.*.exists' => 'Semua mata pelajaran yang dipilih harus berasal dari unit SD.',
             'tingkatan_kelas.required' => 'Tingkatan kelas SD wajib dipilih.',
             'tingkatan_kelas.in' => 'Tingkatan kelas hanya mendukung Kelas 1 sampai Kelas 6 SD.',
             'tingkatan_kelas.unique' => 'KKM untuk kombinasi Tahun Ajaran, Mata Pelajaran, dan Tingkatan Kelas tersebut sudah ada.',

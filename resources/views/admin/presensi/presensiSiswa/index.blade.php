@@ -1,7 +1,7 @@
 @extends('layouts.appui')
 
 @section('title')
-    <title>Presensi Siswa - SIPIT Akademik</title>
+    <title>Presensi Siswa - PION Akademik</title>
 @endsection
 
 @push('css')

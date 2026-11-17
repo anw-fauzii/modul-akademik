@@ -21,7 +21,7 @@
         <div class="hidden sm:flex items-center gap-2">
             <span class="inline-flex items-center gap-1.5 rounded-full bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-700 border border-orange-200/60">
                 <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                SIPIT AKADEMIK
+                PION AKADEMIK
             </span>
             <span class="text-xs text-slate-400 font-medium">|</span>
             <span class="text-xs font-medium text-slate-500">Yayasan Prima Insani</span>

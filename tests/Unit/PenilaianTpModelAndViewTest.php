@@ -9,6 +9,7 @@ use App\Http\Requests\Admin\Penilaian\AspekTpRequest;
 use App\Http\Requests\Admin\Penilaian\ImportNilaiTpRequest;
 use App\Http\Requests\Admin\Penilaian\KkmRequest;
 use App\Http\Requests\Admin\Penilaian\SimpanNilaiTpRequest;
+use App\Http\Requests\Admin\Penilaian\SumatifBabRequest;
 use App\Http\Requests\Admin\Penilaian\UpdateBobotRaporRequest;
 use App\Imports\Admin\Penilaian\PenilaianTpImport;
 use App\Imports\Admin\Penilaian\PenilaianTpSheetImport;
@@ -21,9 +22,11 @@ use App\Models\Admin\Penilaian\AspekTp;
 use App\Models\Admin\Penilaian\Kkm;
 use App\Models\Admin\Penilaian\KkmPredikat;
 use App\Models\Admin\Penilaian\NilaiAspek;
+use App\Models\Admin\Penilaian\NilaiSumatifBab;
 use App\Models\Admin\Penilaian\PeriodeTp;
 use App\Models\Admin\Penilaian\RekapMapel;
 use App\Models\Admin\Penilaian\RekapTp;
+use App\Models\Admin\Penilaian\SumatifBab;
 use App\Models\Admin\TujuanPembelajaran\TujuanPembelajaran;
 use App\Services\Admin\Penilaian\KkmService;
 use App\Services\Admin\Penilaian\PenilaianTpService;
@@ -60,15 +63,19 @@ class PenilaianTpModelAndViewTest extends TestCase
             'tingkatan_kelas',
             'nilai_kkm',
             'bobot_tp',
+            'bobot_sumatif',
             'bobot_ujian',
             'status',
         ], $kkm->getFillable());
         $this->assertSame('float', $kkm->getCasts()['nilai_kkm']);
         $this->assertSame('integer', $kkm->getCasts()['bobot_tp']);
+        $this->assertSame('integer', $kkm->getCasts()['bobot_sumatif']);
         $this->assertSame('integer', $kkm->getCasts()['bobot_ujian']);
         $this->assertSame('boolean', $kkm->getCasts()['status']);
         $this->assertNull(Kkm::validateBobotPair(70, 30));
+        $this->assertNull(Kkm::validateBobotPair(40, 20, 40));
         $this->assertNotNull(Kkm::validateBobotPair(70, 20));
+        $this->assertNotNull(Kkm::validateBobotPair(40, 20, 30));
         $this->assertSame('kkm_id', $kkm->predikats()->getForeignKeyName());
 
         $predikat = new KkmPredikat;
@@ -97,12 +104,31 @@ class PenilaianTpModelAndViewTest extends TestCase
 
         $rekapMapel = new RekapMapel;
         $this->assertSame('akademik_penilaian_rekap_mapel', $rekapMapel->getTable());
+        $this->assertSame('float', $rekapMapel->getCasts()['rata_rata_sumatif']);
         $this->assertSame('float', $rekapMapel->getCasts()['nilai_akhir_rapor']);
         $this->assertSame('float', $rekapMapel->getCasts()['nilai_ujian']);
         $this->assertSame('integer', $rekapMapel->getCasts()['bobot_tp_snapshot']);
+        $this->assertSame('integer', $rekapMapel->getCasts()['bobot_sumatif_snapshot']);
         $this->assertSame('integer', $rekapMapel->getCasts()['bobot_ujian_snapshot']);
-        $this->assertSame('STS', PeriodeTp::ujianLabel(PeriodeTp::PERIODE_MID));
-        $this->assertSame('SAS', PeriodeTp::ujianLabel(PeriodeTp::PERIODE_SEMESTER));
+        $this->assertSame('PSTS', PeriodeTp::ujianLabel(PeriodeTp::PERIODE_MID));
+        $this->assertSame('PSTS', PeriodeTp::ujianLabel(PeriodeTp::PERIODE_MID, '2'));
+        $this->assertSame('PSAS', PeriodeTp::ujianLabel(PeriodeTp::PERIODE_SEMESTER));
+        $this->assertSame('PSAS', PeriodeTp::ujianLabel(PeriodeTp::PERIODE_SEMESTER, '1'));
+        $this->assertSame('PSAT', PeriodeTp::ujianLabel(PeriodeTp::PERIODE_SEMESTER, '2'));
+        $this->assertSame('PSTS (Penilaian Sumatif Tengah Semester)', PeriodeTp::ujianFullLabel(PeriodeTp::PERIODE_MID));
+        $this->assertSame('PSAS (Penilaian Sumatif Akhir Semester)', PeriodeTp::ujianFullLabel(PeriodeTp::PERIODE_SEMESTER, '1'));
+        $this->assertSame('PSAT (Penilaian Sumatif Akhir Tahun)', PeriodeTp::ujianFullLabel(PeriodeTp::PERIODE_SEMESTER, '2'));
+
+        $sumatifBab = new SumatifBab;
+        $this->assertSame('akademik_penilaian_sumatif_bab', $sumatifBab->getTable());
+        $this->assertSame('integer', $sumatifBab->getCasts()['urutan']);
+        $this->assertSame('sumatif_bab_id', $sumatifBab->nilaiSumatif()->getForeignKeyName());
+
+        $nilaiSumatifBab = new NilaiSumatifBab;
+        $this->assertSame('akademik_penilaian_nilai_sumatif_bab', $nilaiSumatifBab->getTable());
+        $this->assertSame('float', $nilaiSumatifBab->getCasts()['nilai']);
+        $this->assertSame('sumatif_bab_id', $nilaiSumatifBab->sumatifBab()->getForeignKeyName());
+        $this->assertSame('anggota_kelas_id', $nilaiSumatifBab->anggotaKelas()->getForeignKeyName());
     }
 
     #[TestWith([75.0, 92, 83, 75, 74])]
@@ -240,7 +266,7 @@ class PenilaianTpModelAndViewTest extends TestCase
         $this->assertSame(93.0, PenilaianTpService::computeNaTp([1 => 100, 2 => 80], [1 => 2, 2 => 1]));
     }
 
-    public function test_compute_na_rapor_handles_tp_only_weighted_ujian_and_empty_ujian_fallback(): void
+    public function test_compute_na_rapor_handles_tp_only_sumatif_bab_weighted_ujian_and_fallbacks(): void
     {
         $this->assertSame(85.0, PenilaianTpService::computeNaRapor(85.0, 90.0, 100, 0));
         $this->assertSame(85.0, PenilaianTpService::computeNaRapor(85.0, null, 70, 30));
@@ -248,6 +274,21 @@ class PenilaianTpModelAndViewTest extends TestCase
         $this->assertSame(88.0, PenilaianTpService::computeNaRapor(null, 88.0, 70, 30));
         $this->assertNull(PenilaianTpService::computeNaRapor(null, 88.0, 100, 0));
         $this->assertNull(PenilaianTpService::computeNaRapor(null, null, 70, 30));
+
+        // Dukungan Sumatif Bab + 3 komponen bobot (% NA TP + % Sumatif Bab + % Ujian STS/SAS)
+        $this->assertSame(85.0, PenilaianTpService::computeRataSumatif([1 => 80, 2 => 90, 3 => null, 4 => '']));
+        $this->assertSame(45.0, PenilaianTpService::computeRataSumatif([1 => 0, 2 => 90]));
+        $this->assertNull(PenilaianTpService::computeRataSumatif([1 => null, 2 => '']));
+
+        // 40% TP (80) + 40% Sumatif (85) + 20% Ujian (90) = 32 + 34 + 18 = 84
+        $this->assertSame(84.0, PenilaianTpService::computeNaRapor(80.0, 90.0, 40, 20, 85.0, 40));
+        // Bila ujian kosong, bobot dinormalisasi di antara komponen aktif (40% TP + 40% Sumatif)
+        $this->assertSame(85.0, PenilaianTpService::computeNaRapor(80.0, null, 40, 20, 90.0, 40));
+        // Bila Sumatif kosong, normalisasi 40% TP + 20% Ujian => (3200+1800)/60 = 83.33 -> 83
+        $this->assertSame(83.0, PenilaianTpService::computeNaRapor(80.0, 90.0, 40, 20, null, 40));
+        // Mode 0% TP + 60% Sumatif + 40% Ujian
+        $this->assertSame(84.0, PenilaianTpService::computeNaRapor(80.0, 90.0, 0, 40, 80.0, 60));
+        $this->assertNull(PenilaianTpService::computeNaRapor(80.0, null, 0, 40, null, 60));
     }
 
     public function test_format_daftar_topik_and_build_deskripsi_capaian_group_all_scored_tps_by_kkm_predikat(): void
@@ -271,21 +312,21 @@ class PenilaianTpModelAndViewTest extends TestCase
 
         // KKM 75 => A: 92-100 (Sangat Baik), B: 83-91 (Baik), C: 75-82 (Cukup), D: 0-74 (Perlu Bimbingan)
         $narrative = PenilaianTpService::buildDeskripsiCapaian([
-            ['kode_tp' => 'TP 5.1', 'tujuan_pembelajaran' => 'TP 1', 'lingkup_materi' => 'Teks Narasi', 'nilai' => 95], // A (1/2)
-            ['kode_tp' => 'TP 5.2', 'tujuan_pembelajaran' => 'TP 2', 'lingkup_materi' => 'Surat Pendek', 'nilai' => 92], // A (2/2) -> pakai "dan"
-            ['kode_tp' => 'TP 5.3', 'tujuan_pembelajaran' => 'TP 3', 'lingkup_materi' => 'Pengurangan', 'nilai' => 88], // B (1/3)
-            ['kode_tp' => 'TP 5.4', 'tujuan_pembelajaran' => 'TP 4', 'lingkup_materi' => 'Perkalian', 'nilai' => 85], // B (2/3)
-            ['kode_tp' => 'TP 5.5', 'tujuan_pembelajaran' => 'TP 5', 'lingkup_materi' => 'Pembagian', 'nilai' => 83], // B (3/3) -> pakai koma & "dan"
-            ['kode_tp' => 'TP 5.6', 'tujuan_pembelajaran' => 'TP 6', 'lingkup_materi' => 'Pidato', 'nilai' => 78], // C (1/1)
-            ['kode_tp' => 'TP 5.7', 'tujuan_pembelajaran' => 'TP 7', 'lingkup_materi' => null, 'nilai' => null], // null diabaikan
-            ['kode_tp' => 'TP 5.8', 'tujuan_pembelajaran' => 'Memahami pecahan sederhana.', 'lingkup_materi' => '', 'nilai' => 65], // D fallback teks TP
+            ['kode_tp' => 'TP 5.1', 'tujuan_pembelajaran' => 'Memahami teks narasi.', 'lingkup_materi' => 'Materi Abaikan 1', 'nilai' => 95], // A (1/2)
+            ['kode_tp' => 'TP 5.2', 'tujuan_pembelajaran' => 'Membaca surat pendek', 'lingkup_materi' => 'Materi Abaikan 2', 'nilai' => 92], // A (2/2) -> pakai "dan"
+            ['kode_tp' => 'TP 5.3', 'tujuan_pembelajaran' => 'Menghitung pengurangan', 'lingkup_materi' => 'Lingkup 3', 'nilai' => 88], // B (1/3)
+            ['kode_tp' => 'TP 5.4', 'tujuan_pembelajaran' => 'Menghitung perkalian', 'lingkup_materi' => 'Lingkup 4', 'nilai' => 85], // B (2/3)
+            ['kode_tp' => 'TP 5.5', 'tujuan_pembelajaran' => 'Menghitung pembagian', 'lingkup_materi' => 'Lingkup 5', 'nilai' => 83], // B (3/3) -> pakai koma & "dan"
+            ['kode_tp' => 'TP 5.6', 'tujuan_pembelajaran' => 'Membaca pidato singkat', 'lingkup_materi' => 'Lingkup 6', 'nilai' => 78], // C (1/1)
+            ['kode_tp' => 'TP 5.7', 'tujuan_pembelajaran' => 'TP Abai', 'lingkup_materi' => null, 'nilai' => null], // null diabaikan
+            ['kode_tp' => 'TP 5.8', 'tujuan_pembelajaran' => '', 'lingkup_materi' => 'Pecahan Sederhana.', 'nilai' => 65], // fallback ke lingkup jika TP kosong
         ], 75.0);
 
         $this->assertSame(
-            'Menunjukkan penguasaan yang sangat baik dalam Teks Narasi dan Surat Pendek. '
-            .'Menunjukkan penguasaan yang baik dalam Pengurangan, Perkalian, dan Pembagian. '
-            .'Menunjukkan penguasaan yang cukup dalam Pidato. '
-            .'Perlu bimbingan dan pendampingan lebih lanjut dalam Memahami pecahan sederhana.',
+            'Menunjukkan penguasaan yang sangat baik dalam Memahami teks narasi dan Membaca surat pendek. '
+            .'Menunjukkan penguasaan yang baik dalam Menghitung pengurangan, Menghitung perkalian, dan Menghitung pembagian. '
+            .'Menunjukkan penguasaan yang cukup dalam Membaca pidato singkat. '
+            .'Perlu bimbingan dan pendampingan lebih lanjut dalam Pecahan Sederhana.',
             $narrative
         );
 
@@ -297,14 +338,14 @@ class PenilaianTpModelAndViewTest extends TestCase
         ]);
 
         $customNarrative = PenilaianTpService::buildDeskripsiCapaian([
-            ['kode_tp' => 'TP 1', 'tujuan_pembelajaran' => 'A', 'lingkup_materi' => 'Tajwid', 'nilai' => 91],
-            ['kode_tp' => 'TP 2', 'tujuan_pembelajaran' => 'B', 'lingkup_materi' => 'Hafalan', 'nilai' => 79],
-            ['kode_tp' => 'TP 3', 'tujuan_pembelajaran' => 'C', 'lingkup_materi' => 'Adab', 'nilai' => 0],
+            ['kode_tp' => 'TP 1', 'tujuan_pembelajaran' => 'Menerapkan hukum tajwid', 'lingkup_materi' => 'Tajwid', 'nilai' => 91],
+            ['kode_tp' => 'TP 2', 'tujuan_pembelajaran' => 'Menghafal surat pendek', 'lingkup_materi' => 'Hafalan', 'nilai' => 79],
+            ['kode_tp' => 'TP 3', 'tujuan_pembelajaran' => 'Mempraktikkan adab belajar', 'lingkup_materi' => 'Adab', 'nilai' => 0],
         ], 80.0, $customPredikats);
 
         $this->assertSame(
-            'Menunjukkan penguasaan yang istimewa dalam Tajwid. '
-            .'Perlu pendampingan dan latihan lebih lanjut (belum terpenuhi) dalam Hafalan dan Adab.',
+            'Menunjukkan penguasaan yang istimewa dalam Menerapkan hukum tajwid. '
+            .'Perlu pendampingan dan latihan lebih lanjut (belum terpenuhi) dalam Menghafal surat pendek dan Mempraktikkan adab belajar.',
             $customNarrative
         );
     }
@@ -325,6 +366,7 @@ class PenilaianTpModelAndViewTest extends TestCase
         (new ReflectionMethod(KkmRequest::class, 'prepareForValidation'))->invoke($kkmReq);
 
         $this->assertSame('5', $kkmReq->input('tingkatan_kelas'));
+        $this->assertSame([2], $kkmReq->input('mata_pelajaran_ids'));
         $this->assertTrue($kkmReq->input('status'));
         $this->assertSame('A', $kkmReq->input('predikats.0.predikat'));
         $this->assertTrue($kkmReq->input('predikats.0.is_tuntas'));
@@ -332,6 +374,23 @@ class PenilaianTpModelAndViewTest extends TestCase
 
         $kkmRules = $kkmReq->rules();
         $this->assertTrue(collect($kkmRules['tingkatan_kelas'])->contains(static fn ($r) => $r instanceof Unique));
+
+        $bulkKkmReq = KkmRequest::create('/penilaian/kkm', 'POST', [
+            'akademik_master_tahun_ajaran_id' => 1,
+            'mata_pelajaran_ids' => ['2', '5', '2'],
+            'tingkatan_kelas' => ' 4 ',
+            'nilai_kkm' => 75,
+            'predikats' => [
+                ['predikat' => 'A', 'keterangan' => 'Sangat Baik', 'nilai_min' => 90, 'nilai_max' => 100, 'is_tuntas' => '1'],
+                ['predikat' => 'D', 'keterangan' => 'Perlu Bimbingan', 'nilai_min' => 0, 'nilai_max' => 89, 'is_tuntas' => '0'],
+            ],
+        ]);
+        (new ReflectionMethod(KkmRequest::class, 'prepareForValidation'))->invoke($bulkKkmReq);
+
+        $this->assertSame(2, $bulkKkmReq->input('akademik_pelajaran_mata_pelajaran_id'));
+        $this->assertSame([2, 5], $bulkKkmReq->input('mata_pelajaran_ids'));
+        $bulkRules = $bulkKkmReq->rules();
+        $this->assertFalse(collect($bulkRules['tingkatan_kelas'])->contains(static fn ($r) => $r instanceof Unique));
 
         $aspekReq = AspekTpRequest::create('/penilaian/nilai-tp/aspek', 'POST', [
             'tujuan_pembelajaran_id' => 10,
@@ -355,6 +414,9 @@ class PenilaianTpModelAndViewTest extends TestCase
             'nilai' => [
                 101 => [5 => ' 87,5 ', 6 => '   '],
             ],
+            'sumatif' => [
+                101 => [9 => ' 88,5 ', 10 => '   '],
+            ],
             'ujian' => [
                 101 => ' 92,5 ',
                 102 => '   ',
@@ -365,6 +427,8 @@ class PenilaianTpModelAndViewTest extends TestCase
         $this->assertSame('mid', $nilaiReq->input('periode'));
         $this->assertSame('87.5', $nilaiReq->input('nilai.101.5'));
         $this->assertNull($nilaiReq->input('nilai.101.6'));
+        $this->assertSame('88.5', $nilaiReq->input('sumatif.101.9'));
+        $this->assertNull($nilaiReq->input('sumatif.101.10'));
         $this->assertSame('92.5', $nilaiReq->input('ujian.101'));
         $this->assertNull($nilaiReq->input('ujian.102'));
 
@@ -372,18 +436,34 @@ class PenilaianTpModelAndViewTest extends TestCase
         $this->assertTrue(collect($nilaiRules['kelas_id'])->contains(static fn ($r) => $r instanceof Exists));
         $this->assertContains('nullable', $nilaiRules['nilai']);
         $this->assertContains('max:100', $nilaiRules['nilai.*.*']);
+        $this->assertContains('max:100', $nilaiRules['sumatif.*.*']);
         $this->assertContains('max:100', $nilaiRules['ujian.*']);
+
+        $sumatifReq = SumatifBabRequest::create('/penilaian/nilai-tp/sumatif-bab', 'POST', [
+            'tahun_ajaran_id' => 1,
+            'mata_pelajaran_id' => 2,
+            'tingkatan_kelas' => ' 5 ',
+            'periode' => ' SEMESTER ',
+            'nama_bab' => '  Sumatif   Bab 1  ',
+            'keterangan' => '  Bilangan   Cacah  ',
+        ]);
+        (new ReflectionMethod(SumatifBabRequest::class, 'prepareForValidation'))->invoke($sumatifReq);
+        $this->assertSame('5', $sumatifReq->input('tingkatan_kelas'));
+        $this->assertSame('semester', $sumatifReq->input('periode'));
+        $this->assertSame('Sumatif Bab 1', $sumatifReq->input('nama_bab'));
+        $this->assertSame('Bilangan Cacah', $sumatifReq->input('keterangan'));
 
         $bobotReq = UpdateBobotRaporRequest::create('/penilaian/nilai-tp/bobot', 'POST', [
             'kelas_id' => 4,
             'mata_pelajaran_id' => 2,
             'periode' => ' SEMESTER ',
-            'bobot_tp' => '70',
+            'bobot_tp' => '40',
+            'bobot_sumatif' => '30',
             'bobot_ujian' => '20',
         ]);
         (new ReflectionMethod(UpdateBobotRaporRequest::class, 'prepareForValidation'))->invoke($bobotReq);
         $this->assertSame('semester', $bobotReq->input('periode'));
-        $bobotValidator = app('validator')->make($bobotReq->all(), ['bobot_tp' => 'integer', 'bobot_ujian' => 'integer']);
+        $bobotValidator = app('validator')->make($bobotReq->all(), ['bobot_tp' => 'integer', 'bobot_sumatif' => 'integer', 'bobot_ujian' => 'integer']);
         foreach ($bobotReq->after() as $hook) {
             $bobotValidator->after($hook);
         }
@@ -479,11 +559,21 @@ class PenilaianTpModelAndViewTest extends TestCase
         ]);
         $rekapMapel->id = 60;
 
+        $sumatifBab = SumatifBab::make([
+            'akademik_master_tahun_ajaran_id' => 1,
+            'akademik_pelajaran_mata_pelajaran_id' => 2,
+            'tingkatan_kelas' => '5',
+            'periode' => PeriodeTp::PERIODE_MID,
+            'nama_bab' => 'Bab 1',
+        ]);
+        $sumatifBab->id = 70;
+
         $penilaianService = $this->createMock(PenilaianTpService::class);
         $penilaianService->expects($this->once())->method('getMatrixData')->willReturn([]);
         $penilaianService->expects($this->once())->method('getRekapData')->willReturn([]);
         $penilaianService->expects($this->once())->method('toggleMasukRapor')->with($tp, 'mid', false)->willReturn(new PeriodeTp);
         $penilaianService->expects($this->once())->method('deleteAspek')->with($aspek);
+        $penilaianService->expects($this->once())->method('deleteSumatifBab')->with($sumatifBab);
         $penilaianService->expects($this->once())->method('updateDeskripsi')->with($rekapMapel, 'Bagus sekali')->willReturn($rekapMapel);
 
         $penilaianController = new PenilaianTpController($penilaianService);
@@ -496,6 +586,10 @@ class PenilaianTpModelAndViewTest extends TestCase
         $this->assertStringContainsString(
             route('penilaian-tp.index'),
             $penilaianController->destroyAspek(Request::create('/penilaian/nilai-tp/aspek/40', 'DELETE'), $aspek)->getTargetUrl()
+        );
+        $this->assertStringContainsString(
+            route('penilaian-tp.index'),
+            $penilaianController->destroySumatifBab(Request::create('/penilaian/nilai-tp/sumatif-bab/70', 'DELETE'), $sumatifBab)->getTargetUrl()
         );
         $this->assertStringContainsString(
             route('penilaian-rekap.index'),
@@ -576,9 +670,54 @@ class PenilaianTpModelAndViewTest extends TestCase
         $this->assertSame('TP Mid PAI 5 Al-Fatihah', $export->title());
 
         $rows = $export->array();
-        $this->assertSame(['No', 'NIS', 'Nama Siswa', 'TP 5.1', '', '', 'TP 5.2', '', '', '', 'STS', 'NA Rapor', 'Predikat', 'Ketuntasan'], $rows[0]);
+        $this->assertSame(['No', 'NIS', 'Nama Siswa', 'TP 5.1', '', '', 'TP 5.2', '', '', '', 'PSTS', 'NA Rapor', 'Predikat', 'Ketuntasan'], $rows[0]);
         $this->assertSame(['', '', '', 'Pemahaman', 'Bacaan', 'NA TP', 'Makhroj', 'Hafalan', 'Artinya', 'NA TP', 'Ujian', 'Nilai', 'Huruf', 'KKM'], $rows[1]);
         $this->assertSame([1, '202600001', 'Aisyah Putri', 100.0, 80.0, 90, 80.0, 80.0, 75.0, 78, 86.0, 85, 'B', 'Tuntas'], $rows[2]);
+
+        // Export Semester dengan kolom Sumatif Bab gabungan (Mid carry-over + Semester aktif)
+        $midBab = SumatifBab::make(['nama_bab' => 'Bab 1', 'periode' => PeriodeTp::PERIODE_MID, 'urutan' => 1]);
+        $midBab->id = 401;
+        $semBab = SumatifBab::make(['nama_bab' => 'Bab 2', 'periode' => PeriodeTp::PERIODE_SEMESTER, 'urutan' => 1]);
+        $semBab->id = 402;
+        $mockSemesterMatrix = array_merge($mockMatrix, [
+            'periode' => PeriodeTp::PERIODE_SEMESTER,
+            'carriedMidSumatifBabs' => new Collection([$midBab]),
+            'activeSumatifBabs' => new Collection([$semBab]),
+            'sumatifNilaiLookup' => [
+                '301:401' => NilaiSumatifBab::make(['nilai' => 84.0]),
+                '301:402' => NilaiSumatifBab::make(['nilai' => 92.0]),
+            ],
+            'rekapTpLookup' => [
+                '301:101:semester' => RekapTp::make(['nilai_akhir_tp' => 90]),
+                '301:102:semester' => RekapTp::make(['nilai_akhir_tp' => 80]),
+            ],
+            'rekapMapelLookup' => [
+                '301:semester' => RekapMapel::make([
+                    'rata_rata_sumatif' => 88.0,
+                    'nilai_ujian' => 86.0,
+                    'nilai_akhir_rapor' => 86,
+                    'predikat_rapor' => 'B',
+                    'tuntas_kkm' => true,
+                ]),
+            ],
+        ]);
+        $mockServiceSem = $this->createMock(PenilaianTpService::class);
+        $mockServiceSem->expects($this->once())->method('getMatrixData')->willReturn($mockSemesterMatrix);
+        $this->app->instance(PenilaianTpService::class, $mockServiceSem);
+
+        $semRows = (new PenilaianTpExport(['periode' => 'semester']))->array();
+        $this->assertSame(
+            ['No', 'NIS', 'Nama Siswa', 'TP 5.1', '', '', 'TP 5.2', '', '', '', 'SUMATIF BAB', '', '', 'PSAS', 'NA Rapor', 'Predikat', 'Ketuntasan'],
+            $semRows[0]
+        );
+        $this->assertSame(
+            ['', '', '', 'Pemahaman', 'Bacaan', 'NA TP', 'Makhroj', 'Hafalan', 'Artinya', 'NA TP', 'Bab 1 (Mid)', 'Bab 2', 'Rata Sumatif', 'Ujian', 'Nilai', 'Huruf', 'KKM'],
+            $semRows[1]
+        );
+        $this->assertSame(
+            [1, '202600001', 'Aisyah Putri', 100.0, 80.0, 90, 80.0, 80.0, 75.0, 80, 84.0, 92.0, 88, 86.0, 86, 'B', 'Tuntas'],
+            $semRows[2]
+        );
 
         $import = new PenilaianTpImport($kelas, $mapel, PeriodeTp::PERIODE_MID, 'NIPY001');
         $this->assertInstanceOf(Import::class, $import);
@@ -609,6 +748,9 @@ class PenilaianTpModelAndViewTest extends TestCase
             'akademik_pelajaran_mata_pelajaran_id' => 2,
             'tingkatan_kelas' => '5',
             'nilai_kkm' => 75,
+            'bobot_tp' => 40,
+            'bobot_sumatif' => 40,
+            'bobot_ujian' => 20,
             'status' => true,
         ]);
         $kkm->id = 10;
@@ -633,6 +775,43 @@ class PenilaianTpModelAndViewTest extends TestCase
         $aspek2 = AspekTp::make(['tujuan_pembelajaran_id' => 21, 'periode' => 'mid', 'nama_aspek' => 'Bacaan', 'urutan' => 2]);
         $aspek2->id = 32;
 
+        $tp2 = TujuanPembelajaran::make([
+            'akademik_master_tahun_ajaran_id' => 1,
+            'akademik_pelajaran_mata_pelajaran_id' => 2,
+            'tingkatan_kelas' => '5',
+            'kode_tp' => 'TP 5.2',
+            'tujuan_pembelajaran' => 'Menghafal surat pendek pilihan.',
+            'lingkup_materi' => 'Hafalan Surat',
+            'urutan' => 2,
+            'status' => true,
+        ]);
+        $tp2->id = 22;
+
+        $aspek3 = AspekTp::make(['tujuan_pembelajaran_id' => 22, 'periode' => 'semester', 'nama_aspek' => 'Kelancaran', 'urutan' => 1]);
+        $aspek3->id = 33;
+
+        $sumatifBabMid = SumatifBab::make([
+            'akademik_master_tahun_ajaran_id' => 1,
+            'akademik_pelajaran_mata_pelajaran_id' => 2,
+            'tingkatan_kelas' => '5',
+            'periode' => 'mid',
+            'nama_bab' => 'Bab 1',
+            'keterangan' => 'Tajwid Dasar',
+            'urutan' => 1,
+        ]);
+        $sumatifBabMid->id = 61;
+
+        $sumatifBabSem = SumatifBab::make([
+            'akademik_master_tahun_ajaran_id' => 1,
+            'akademik_pelajaran_mata_pelajaran_id' => 2,
+            'tingkatan_kelas' => '5',
+            'periode' => 'semester',
+            'nama_bab' => 'Bab 2',
+            'keterangan' => 'Surat Pendek',
+            'urutan' => 1,
+        ]);
+        $sumatifBabSem->id = 62;
+
         $siswa = Siswa::make(['nis' => '202600001', 'nama_lengkap' => 'Aisyah Putri']);
         $anggota = AnggotaKelas::make(['siswa_nis' => '202600001', 'akademik_master_kelas_id' => 3]);
         $anggota->id = 41;
@@ -646,18 +825,27 @@ class PenilaianTpModelAndViewTest extends TestCase
             'predikat' => 'B',
             'tuntas_kkm' => true,
         ]);
+        $rekapSem = RekapTp::make([
+            'tujuan_pembelajaran_id' => 22,
+            'anggota_kelas_id' => 41,
+            'periode' => 'semester',
+            'nilai_akhir_tp' => 88,
+            'predikat' => 'B',
+            'tuntas_kkm' => true,
+        ]);
         $rekapMapel = RekapMapel::make([
             'akademik_master_tahun_ajaran_id' => 1,
             'akademik_pelajaran_mata_pelajaran_id' => 2,
             'anggota_kelas_id' => 41,
             'periode' => 'semester',
             'rata_rata_tp' => 90,
+            'rata_rata_sumatif' => 88,
             'nilai_ujian' => 94,
-            'nilai_akhir_rapor' => 91,
+            'nilai_akhir_rapor' => 90,
             'predikat_rapor' => 'B',
             'keterangan_predikat' => 'Baik',
             'tuntas_kkm' => true,
-            'deskripsi_capaian' => 'Menunjukkan penguasaan yang baik dalam Pemahaman Bacaan.',
+            'deskripsi_capaian' => 'Menunjukkan penguasaan yang baik dalam Memahami bacaan surat pendek.',
         ]);
         $rekapMapel->id = 51;
 
@@ -672,7 +860,11 @@ class PenilaianTpModelAndViewTest extends TestCase
                 'tingkatanOptions' => Kkm::SD_TINGKATAN_OPTIONS,
             ])->render();
             $this->assertStringContainsString('Pendidikan Agama Islam', $kkmIndexHtml);
-            $this->assertStringContainsString('Kelas 5', $kkmIndexHtml);
+            $this->assertStringContainsString('40% TP', $kkmIndexHtml);
+            $this->assertStringContainsString('40% Sumatif', $kkmIndexHtml);
+            $this->assertStringContainsString('action-dropdown', $kkmIndexHtml);
+            $this->assertStringContainsString('fa-ellipsis-v', $kkmIndexHtml);
+            $this->assertStringContainsString('Total Aturan KKM', $kkmIndexHtml);
 
             $kkmCreateHtml = view('admin.penilaian.kkm.create', [
                 'tahunAjaranOptions' => new Collection([$ta]),
@@ -682,6 +874,10 @@ class PenilaianTpModelAndViewTest extends TestCase
                 'defaults' => ['tahun_ajaran_id' => '1', 'mata_pelajaran_id' => '2', 'tingkatan_kelas' => '5'],
             ])->render();
             $this->assertStringContainsString('Generate Rentang dari KKM', $kkmCreateHtml);
+            $this->assertStringContainsString('bobot_sumatif', $kkmCreateHtml);
+            $this->assertStringContainsString('50% TP / 25% Sumatif / 25% Ujian', $kkmCreateHtml);
+            $this->assertStringContainsString('kkmMapelMultiselect', $kkmCreateHtml);
+            $this->assertStringContainsString('mata_pelajaran_ids[]', $kkmCreateHtml);
 
             $kkmEditHtml = view('admin.penilaian.kkm.edit', [
                 'kkm' => $kkm,
@@ -703,48 +899,220 @@ class PenilaianTpModelAndViewTest extends TestCase
                 'periode' => PeriodeTp::PERIODE_SEMESTER,
                 'periodeOptions' => PeriodeTp::PERIODE_OPTIONS,
                 'teknikOptions' => AspekTp::TEKNIK_OPTIONS,
-                'tpList' => new Collection([$tp1]),
-                'periodeSettingsByTp' => collect([21 => PeriodeTp::make(['tujuan_pembelajaran_id' => 21, 'periode' => 'semester', 'masuk_rapor' => true])]),
-                'aspeksByTp' => collect([21 => new Collection([$aspek1, $aspek2])]),
+                'tpList' => new Collection([$tp1, $tp2]),
+                'periodeSettingsByTp' => collect([
+                    21 => PeriodeTp::make(['tujuan_pembelajaran_id' => 21, 'periode' => 'semester', 'masuk_rapor' => true]),
+                    22 => PeriodeTp::make(['tujuan_pembelajaran_id' => 22, 'periode' => 'semester', 'masuk_rapor' => true]),
+                ]),
+                'aspeksByTp' => collect([
+                    21 => new Collection([$aspek1, $aspek2]),
+                    22 => new Collection([$aspek3]),
+                ]),
+                'carriedMidSumatifBabs' => new Collection([$sumatifBabMid]),
+                'activeSumatifBabs' => new Collection([$sumatifBabSem]),
+                'sumatifNilaiLookup' => [
+                    '41:61' => NilaiSumatifBab::make(['nilai' => 84]),
+                    '41:62' => NilaiSumatifBab::make(['nilai' => 92]),
+                ],
                 'students' => new Collection([$anggota]),
-                'nilaiLookup' => ['41:31' => NilaiAspek::make(['nilai' => 100]), '41:32' => NilaiAspek::make(['nilai' => 80])],
-                'rekapTpLookup' => ['41:21:mid' => $rekapMid],
+                'nilaiLookup' => [
+                    '41:31' => NilaiAspek::make(['nilai' => 100]),
+                    '41:32' => NilaiAspek::make(['nilai' => 80]),
+                    '41:33' => NilaiAspek::make(['nilai' => 88]),
+                ],
+                'rekapTpLookup' => [
+                    '41:21:mid' => $rekapMid,
+                    '41:22:semester' => $rekapSem,
+                ],
                 'rekapMapelLookup' => ['41:semester' => $rekapMapel],
                 'kkmNilai' => 75.0,
                 'kkmPredikats' => $predikatModels,
-                'bobotTp' => 70,
-                'bobotUjian' => 30,
-                'ujianLabel' => 'SAS',
+                'bobotTp' => 40,
+                'bobotSumatif' => 40,
+                'bobotUjian' => 20,
+                'ujianLabel' => 'PSAS',
+                'ujianFullLabel' => 'PSAS (Penilaian Sumatif Akhir Semester)',
                 'hasKkmConfig' => true,
                 'kkmModel' => $kkm,
-                'includedTpCount' => 1,
+                'includedTpCount' => 2,
             ])->render();
             $this->assertStringContainsString('TP 5.1', $nilaiHtml);
+            $this->assertStringContainsString('Memahami bacaan surat pendek.', $nilaiHtml);
+            $this->assertStringContainsString('NA Mid', $nilaiHtml);
+            $this->assertStringContainsString('data-readonly-mid-tp-cell="41:21"', $nilaiHtml);
+            $this->assertStringNotContainsString('name="nilai[41][31]"', $nilaiHtml);
+            $this->assertStringContainsString('data-sumatif-mid-col="61"', $nilaiHtml);
+            $this->assertStringContainsString('data-readonly-mid-sumatif-cell="41:61"', $nilaiHtml);
+            $this->assertStringNotContainsString('name="sumatif[41][61]"', $nilaiHtml);
+            $this->assertStringContainsString('Read-Only Mid:', $nilaiHtml);
+            $this->assertStringContainsString('1 TP Mid', $nilaiHtml);
+            $this->assertStringContainsString('1 Sumatif Mid', $nilaiHtml);
+            $this->assertStringContainsString('TP 5.2', $nilaiHtml);
+            $this->assertStringContainsString('name="nilai[41][33]"', $nilaiHtml);
+            $this->assertStringContainsString('name="sumatif[41][62]"', $nilaiHtml);
             $this->assertStringContainsString('Aisyah Putri', $nilaiHtml);
-            $this->assertStringContainsString('Mid: 90', $nilaiHtml);
-            $this->assertStringContainsString('70% TP + 30% SAS', $nilaiHtml);
+            $this->assertStringContainsString('40% TP + 40% Sumatif Bab + 20% PSAS', $nilaiHtml);
+            $this->assertStringContainsString('50% TP + 25% Sumatif + 25% PSAS', $nilaiHtml);
+            $this->assertStringContainsString('Bab 2', $nilaiHtml);
+            $this->assertStringContainsString('Surat Pendek', $nilaiHtml);
+            $this->assertStringContainsString('sumatifBabModal', $nilaiHtml);
+            $this->assertStringContainsString('sumatifManagerModal', $nilaiHtml);
+            $this->assertStringContainsString('npTpTooltip', $nilaiHtml);
+            $this->assertStringContainsString('tpManagerModal', $nilaiHtml);
+            $this->assertStringContainsString('tpAspekForm', $nilaiHtml);
+            $this->assertStringContainsString('np-summary-grid', $nilaiHtml);
+            $this->assertStringContainsString('np-matrix-toolbar', $nilaiHtml);
+            $this->assertStringContainsString('npStudentSearch', $nilaiHtml);
+            $this->assertStringContainsString('btnToggleMidCols', $nilaiHtml);
+            $this->assertStringContainsString('Nilai Mid: Tampil (2)', $nilaiHtml);
+            $this->assertStringContainsString('np-mid-col', $nilaiHtml);
+            $this->assertStringContainsString('npSumatifGroupTh', $nilaiHtml);
+            $this->assertStringContainsString('btn-edit-aspek-modal', $nilaiHtml);
+            $this->assertStringContainsString(route('penilaian-tp.aspek.update', 33), $nilaiHtml);
+            $this->assertStringContainsString('Menghafal surat pendek pilihan.', $nilaiHtml);
 
-            $rekapHtml = view('admin.penilaian.rekap.index', [
+            $nilaiMidHtml = view('admin.penilaian.nilaiTp.index', [
                 'tahunAjaranOptions' => new Collection([$ta]),
                 'kelasOptions' => new Collection([$kelas]),
                 'mataPelajaranOptions' => new Collection([$mapel]),
                 'selectedTahunAjaranId' => 1,
                 'selectedKelas' => $kelas,
                 'selectedMapel' => $mapel,
-                'periode' => PeriodeTp::PERIODE_SEMESTER,
-                'bobotTp' => 70,
-                'bobotUjian' => 30,
-                'ujianLabel' => 'SAS',
-                'tpList' => new Collection([$tp1]),
+                'periode' => PeriodeTp::PERIODE_MID,
+                'periodeOptions' => PeriodeTp::PERIODE_OPTIONS,
+                'teknikOptions' => AspekTp::TEKNIK_OPTIONS,
+                'tpList' => new Collection([$tp1, $tp2]),
+                'periodeSettingsByTp' => collect([
+                    21 => PeriodeTp::make(['tujuan_pembelajaran_id' => 21, 'periode' => 'mid', 'masuk_rapor' => true]),
+                    22 => PeriodeTp::make(['tujuan_pembelajaran_id' => 22, 'periode' => 'mid', 'masuk_rapor' => true]),
+                ]),
+                'aspeksByTp' => collect([
+                    21 => new Collection([$aspek1, $aspek2]),
+                    22 => new Collection([$aspek3]),
+                ]),
+                'carriedMidSumatifBabs' => new Collection,
+                'activeSumatifBabs' => new Collection([$sumatifBabMid]),
+                'sumatifNilaiLookup' => [
+                    '41:61' => NilaiSumatifBab::make(['nilai' => 84]),
+                ],
+                'students' => new Collection([$anggota]),
+                'nilaiLookup' => [
+                    '41:31' => NilaiAspek::make(['nilai' => 100]),
+                    '41:32' => NilaiAspek::make(['nilai' => 80]),
+                ],
+                'rekapTpLookup' => [
+                    '41:21:mid' => $rekapMid,
+                    '41:22:semester' => $rekapSem,
+                ],
+                'rekapMapelLookup' => ['41:mid' => $rekapMapel],
+                'kkmNilai' => 75.0,
+                'kkmPredikats' => $predikatModels,
+                'bobotTp' => 40,
+                'bobotSumatif' => 40,
+                'bobotUjian' => 20,
+                'ujianLabel' => 'PSTS',
+                'ujianFullLabel' => 'PSTS (Penilaian Sumatif Tengah Semester)',
+                'hasKkmConfig' => true,
+                'kkmModel' => $kkm,
+                'includedTpCount' => 1,
+            ])->render();
+            $this->assertStringContainsString('TP 5.1', $nilaiMidHtml);
+            $this->assertStringContainsString('name="nilai[41][31]"', $nilaiMidHtml);
+            $this->assertStringNotContainsString('TP 5.2', $nilaiMidHtml);
+            $this->assertStringNotContainsString('Menghafal surat pendek pilihan.', $nilaiMidHtml);
+            $this->assertStringContainsString('Disembunyikan:', $nilaiMidHtml);
+            $this->assertStringContainsString('1 TP Semester', $nilaiMidHtml);
+            $this->assertStringContainsString('Tajwid Dasar', $nilaiMidHtml);
+            $this->assertStringNotContainsString('Surat Pendek', $nilaiMidHtml);
+            $this->assertStringNotContainsString('id="btnToggleMidCols"', $nilaiMidHtml);
+
+            $rekapMidHtml = view('admin.penilaian.rekap.index', [
+                'tahunAjaranOptions' => new Collection([$ta]),
+                'kelasOptions' => new Collection([$kelas]),
+                'mataPelajaranOptions' => new Collection([$mapel]),
+                'selectedTahunAjaranId' => 1,
+                'selectedTahunAjaran' => TahunAjaran::make(['nama_tahun_ajaran' => '2026/2027', 'semester' => '1']),
+                'selectedKelas' => $kelas,
+                'selectedMapel' => $mapel,
+                'periode' => PeriodeTp::PERIODE_MID,
+                'bobotTp' => 40,
+                'bobotSumatif' => 40,
+                'bobotUjian' => 20,
+                'tpList' => new Collection([$tp1, $tp2]),
+                'rekapSumatifCols' => new Collection([$sumatifBabMid]),
                 'students' => new Collection([$anggota]),
                 'combinedTpSummaries' => [
-                    41 => [21 => ['included' => true, 'nilai' => 90, 'predikat' => 'B', 'tuntas' => true, 'source' => 'Mid']],
+                    41 => [
+                        21 => ['included' => true, 'nilai' => 90, 'predikat' => 'B', 'tuntas' => true, 'source' => 'Mid'],
+                        22 => ['included' => true, 'nilai' => null, 'predikat' => null, 'tuntas' => null, 'source' => null],
+                    ],
+                ],
+                'combinedSumatifSummaries' => [
+                    41 => [
+                        61 => ['nilai' => 84, 'source' => 'Mid'],
+                    ],
+                ],
+                'rekapTpLookup' => [
+                    '41:21:mid' => $rekapMid,
+                    '41:22:semester' => $rekapSem,
+                ],
+                'rekapMapelLookup' => ['41:mid' => $rekapMapel],
+                'kkmNilai' => 75.0,
+            ])->render();
+            $this->assertStringContainsString('TP 5.1', $rekapMidHtml);
+            $this->assertStringNotContainsString('TP 5.2', $rekapMidHtml);
+            $this->assertStringContainsString('1 TP Semester', $rekapMidHtml);
+            $this->assertStringContainsString('PSTS', $rekapMidHtml);
+            $this->assertStringNotContainsString('id="btnToggleMidCols"', $rekapMidHtml);
+
+            $rekapHtml = view('admin.penilaian.rekap.index', [
+                'tahunAjaranOptions' => new Collection([$ta]),
+                'kelasOptions' => new Collection([$kelas]),
+                'mataPelajaranOptions' => new Collection([$mapel]),
+                'selectedTahunAjaranId' => 1,
+                'selectedTahunAjaran' => TahunAjaran::make(['nama_tahun_ajaran' => '2026/2027', 'semester' => '2']),
+                'selectedKelas' => $kelas,
+                'selectedMapel' => $mapel,
+                'periode' => PeriodeTp::PERIODE_SEMESTER,
+                'bobotTp' => 40,
+                'bobotSumatif' => 40,
+                'bobotUjian' => 20,
+                'tpList' => new Collection([$tp1, $tp2]),
+                'rekapSumatifCols' => new Collection([$sumatifBabMid, $sumatifBabSem]),
+                'students' => new Collection([$anggota]),
+                'combinedTpSummaries' => [
+                    41 => [
+                        21 => ['included' => true, 'nilai' => 90, 'predikat' => 'B', 'tuntas' => true, 'source' => 'Mid'],
+                        22 => ['included' => true, 'nilai' => 88, 'predikat' => 'B', 'tuntas' => true, 'source' => 'Semester'],
+                    ],
+                ],
+                'combinedSumatifSummaries' => [
+                    41 => [
+                        61 => ['nilai' => 84, 'source' => 'Mid'],
+                        62 => ['nilai' => 92, 'source' => 'Semester'],
+                    ],
+                ],
+                'rekapTpLookup' => [
+                    '41:21:mid' => $rekapMid,
+                    '41:22:semester' => $rekapSem,
                 ],
                 'rekapMapelLookup' => ['41:semester' => $rekapMapel],
                 'kkmNilai' => 75.0,
             ])->render();
-            $this->assertStringContainsString('Menunjukkan penguasaan yang baik dalam Pemahaman Bacaan.', $rekapHtml);
-            $this->assertStringContainsString('SAS', $rekapHtml);
+            $this->assertStringContainsString('Menunjukkan penguasaan yang baik dalam Memahami bacaan surat pendek.', $rekapHtml);
+            $this->assertStringContainsString('TP 5.1', $rekapHtml);
+            $this->assertStringContainsString('TP 5.2', $rekapHtml);
+            $this->assertStringContainsString('Bab 1', $rekapHtml);
+            $this->assertStringContainsString('Bab 2', $rekapHtml);
+            $this->assertStringContainsString('Rata Sumatif', $rekapHtml);
+            $this->assertStringContainsString('PSAT', $rekapHtml);
+            $this->assertStringContainsString('rkRekapTable', $rekapHtml);
+            $this->assertStringContainsString('rkSearchInput', $rekapHtml);
+            $this->assertStringContainsString('btnToggleMidCols', $rekapHtml);
+            $this->assertStringContainsString('Nilai Mid: Tampil (2)', $rekapHtml);
+            $this->assertStringContainsString('rk-mid-col', $rekapHtml);
+            $this->assertStringContainsString('btnToggleAllDesc', $rekapHtml);
+            $this->assertStringContainsString('Tuntas KKM', $rekapHtml);
         } finally {
             Model::preventLazyLoading(false);
         }
