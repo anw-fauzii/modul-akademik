@@ -14,7 +14,9 @@ class AgendaSekolahController extends Controller
 {
     public function __construct(
         protected AgendaSekolahService $service
-    ) {}
+    ) {
+        $this->middleware('role:super admin');
+    }
 
     /**
      * Menampilkan daftar agenda sekolah beserta filter tahun ajaran dan unit.

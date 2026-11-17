@@ -14,7 +14,9 @@ class AnggotaT2qController extends Controller
 {
     public function __construct(
         protected AnggotaT2qService $service
-    ) {}
+    ) {
+        $this->middleware('role:super admin');
+    }
 
     /**
      * Menampilkan daftar anggota T2Q dengan filter tahun ajaran, guru T2Q, tingkat, dan kelas opsional.

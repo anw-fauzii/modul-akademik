@@ -14,7 +14,9 @@ class KelompokPelajaranController extends Controller
 {
     public function __construct(
         protected KelompokPelajaranService $service
-    ) {}
+    ) {
+        $this->middleware('role:super admin');
+    }
 
     /**
      * Menampilkan daftar kelompok pelajaran.

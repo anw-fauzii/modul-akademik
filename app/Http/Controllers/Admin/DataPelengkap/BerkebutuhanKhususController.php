@@ -13,7 +13,9 @@ class BerkebutuhanKhususController extends Controller
 {
     public function __construct(
         protected BerkebutuhanKhususService $service
-    ) {}
+    ) {
+        $this->middleware('role:super admin');
+    }
 
     public function index(): View
     {

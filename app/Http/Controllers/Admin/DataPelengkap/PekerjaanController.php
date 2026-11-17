@@ -13,7 +13,9 @@ class PekerjaanController extends Controller
 {
     public function __construct(
         protected PekerjaanService $service
-    ) {}
+    ) {
+        $this->middleware('role:super admin');
+    }
 
     public function index(): View
     {

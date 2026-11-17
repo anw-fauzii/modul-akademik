@@ -16,7 +16,9 @@ class KelasController extends Controller
 {
     public function __construct(
         protected KelasService $service
-    ) {}
+    ) {
+        $this->middleware('role:super admin');
+    }
 
     /**
      * Menampilkan daftar data kelas (default tahun ajaran aktif) beserta filter dan ringkasan tiap jenjang.

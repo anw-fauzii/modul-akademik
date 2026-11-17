@@ -13,7 +13,9 @@ class EkstrakurikulerController extends Controller
 {
     public function __construct(
         protected EkstrakurikulerService $service
-    ) {}
+    ) {
+        $this->middleware('role:super admin');
+    }
 
     /**
      * Menampilkan daftar data ekstrakurikuler.

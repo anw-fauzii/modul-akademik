@@ -17,7 +17,9 @@ class PresensiSiswaController extends Controller
 {
     public function __construct(
         private readonly PresensiSiswaService $presensiSiswaService,
-    ) {}
+    ) {
+        $this->middleware('role:super admin');
+    }
 
     /**
      * Menampilkan daftar & matriks presensi siswa.

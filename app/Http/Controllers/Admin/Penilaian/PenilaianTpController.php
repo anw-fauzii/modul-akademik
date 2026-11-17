@@ -29,7 +29,9 @@ class PenilaianTpController extends Controller
 {
     public function __construct(
         protected PenilaianTpService $service
-    ) {}
+    ) {
+        $this->middleware('role:super admin');
+    }
 
     /**
      * Menampilkan matriks input nilai TP per kelas, mapel, dan periode (Mid / Semester).

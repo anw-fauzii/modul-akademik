@@ -15,7 +15,9 @@ class SiswaController extends Controller
 {
     public function __construct(
         protected SiswaService $service
-    ) {}
+    ) {
+        $this->middleware('role:super admin');
+    }
 
     /**
      * Menampilkan statistik, filter, dan daftar data siswa (dimuat saat difilter agar ringan).

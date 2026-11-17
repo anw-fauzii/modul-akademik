@@ -14,7 +14,9 @@ class KkmController extends Controller
 {
     public function __construct(
         protected KkmService $service
-    ) {}
+    ) {
+        $this->middleware('role:super admin');
+    }
 
     /**
      * Menampilkan daftar pengaturan KKM dan rentang predikat jenjang SD.

@@ -13,7 +13,9 @@ class TahunAjaranController extends Controller
 {
     public function __construct(
         protected TahunAjaranService $service
-    ) {}
+    ) {
+        $this->middleware('role:super admin');
+    }
 
     public function index(): View
     {

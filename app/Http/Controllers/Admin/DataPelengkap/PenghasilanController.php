@@ -13,7 +13,9 @@ class PenghasilanController extends Controller
 {
     public function __construct(
         protected PenghasilanService $service
-    ) {}
+    ) {
+        $this->middleware('role:super admin');
+    }
 
     public function index(): View
     {

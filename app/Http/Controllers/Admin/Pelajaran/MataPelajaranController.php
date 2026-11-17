@@ -14,7 +14,9 @@ class MataPelajaranController extends Controller
 {
     public function __construct(
         protected MataPelajaranService $service
-    ) {}
+    ) {
+        $this->middleware('role:super admin');
+    }
 
     /**
      * Menampilkan daftar mata pelajaran beserta filter unit, kelompok, sifat, status, dan pencarian.

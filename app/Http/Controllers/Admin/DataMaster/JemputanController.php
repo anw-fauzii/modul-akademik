@@ -13,7 +13,9 @@ class JemputanController extends Controller
 {
     public function __construct(
         protected JemputanService $service
-    ) {}
+    ) {
+        $this->middleware('role:super admin');
+    }
 
     /**
      * Menampilkan daftar data jemputan.

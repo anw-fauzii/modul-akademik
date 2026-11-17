@@ -14,7 +14,9 @@ class JamPelajaranController extends Controller
 {
     public function __construct(
         protected JamPelajaranService $service
-    ) {}
+    ) {
+        $this->middleware('role:super admin');
+    }
 
     /**
      * Menampilkan daftar jam pelajaran beserta filter unit dan pencarian.

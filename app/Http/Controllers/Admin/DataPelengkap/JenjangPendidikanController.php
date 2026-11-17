@@ -13,7 +13,9 @@ class JenjangPendidikanController extends Controller
 {
     public function __construct(
         protected JenjangPendidikanService $service
-    ) {}
+    ) {
+        $this->middleware('role:super admin');
+    }
 
     public function index(): View
     {

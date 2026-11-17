@@ -15,7 +15,9 @@ class AnggotaJemputanController extends Controller
 {
     public function __construct(
         protected AnggotaJemputanService $service
-    ) {}
+    ) {
+        $this->middleware('role:super admin');
+    }
 
     /**
      * Menampilkan daftar anggota jemputan dengan filter tahun ajaran, jemputan, dan kelas opsional.

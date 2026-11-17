@@ -15,7 +15,9 @@ class AnggotaEkstrakurikulerController extends Controller
 {
     public function __construct(
         protected AnggotaEkstrakurikulerService $service
-    ) {}
+    ) {
+        $this->middleware('role:super admin');
+    }
 
     /**
      * Menampilkan daftar anggota ekstrakurikuler dengan filter tahun ajaran, ekstrakurikuler, dan kelas opsional.

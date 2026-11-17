@@ -14,7 +14,9 @@ class JadwalPelajaranController extends Controller
 {
     public function __construct(
         protected JadwalPelajaranService $service
-    ) {}
+    ) {
+        $this->middleware('role:super admin');
+    }
 
     /**
      * Menampilkan daftar jadwal pelajaran beserta filter dan pratinjau matriks mingguan per kelas.

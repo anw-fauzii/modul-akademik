@@ -13,7 +13,9 @@ class TransportasiController extends Controller
 {
     public function __construct(
         protected TransportasiService $service
-    ) {}
+    ) {
+        $this->middleware('role:super admin');
+    }
 
     public function index(): View
     {

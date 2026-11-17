@@ -25,6 +25,11 @@ class KaryawanController extends Controller
         'image/avif',
     ];
 
+    public function __construct()
+    {
+        $this->middleware('role:super admin');
+    }
+
     /**
      * Menampilkan daftar data guru / karyawan.
      */

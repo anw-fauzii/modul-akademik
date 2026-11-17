@@ -15,7 +15,9 @@ class AnggotaKelasController extends Controller
 {
     public function __construct(
         protected AnggotaKelasService $service
-    ) {}
+    ) {
+        $this->middleware('role:super admin');
+    }
 
     /**
      * Menampilkan daftar anggota kelas dengan filter tahun ajaran dan kelas opsional.

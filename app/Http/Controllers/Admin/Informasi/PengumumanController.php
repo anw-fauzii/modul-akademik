@@ -14,7 +14,9 @@ class PengumumanController extends Controller
 {
     public function __construct(
         protected PengumumanService $service
-    ) {}
+    ) {
+        $this->middleware('role:super admin');
+    }
 
     /**
      * Menampilkan daftar pengumuman siswa beserta filter tahun ajaran dan pencarian.

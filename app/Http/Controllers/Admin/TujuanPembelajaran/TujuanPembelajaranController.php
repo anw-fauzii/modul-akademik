@@ -20,7 +20,9 @@ class TujuanPembelajaranController extends Controller
 {
     public function __construct(
         protected TujuanPembelajaranService $service
-    ) {}
+    ) {
+        $this->middleware('role:super admin');
+    }
 
     /**
      * Menampilkan daftar tujuan pembelajaran (TP) beserta filter tahun ajaran/semester, unit, mapel, dan tingkat.
