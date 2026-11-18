@@ -34,11 +34,19 @@ class SidebarViewTest extends TestCase
     ];
 
     #[TestWith(['/home', 'dashboard'])]
-    #[TestWith(['/data-master/kelas', 'data-master'])]
-    #[TestWith(['/data-master/anggota-jemputan', 'data-master'])]
-    #[TestWith(['/data-master/anggota-t2q', 'data-master'])]
-    #[TestWith(['/data-master/titimangsa', 'data-master'])]
-    #[TestWith(['/data-master/sekolah', 'data-master'])]
+    #[TestWith(['/data-master/sekolah', 'master-sekolah'])]
+    #[TestWith(['/data-master/tahun-ajaran', 'master-sekolah'])]
+    #[TestWith(['/data-master/titimangsa', 'master-sekolah'])]
+    #[TestWith(['/data-master/siswa', 'master-sdm'])]
+    #[TestWith(['/data-master/karyawan', 'master-sdm'])]
+    #[TestWith(['/data-master/kelas', 'master-program'])]
+    #[TestWith(['/data-master/anggota-kelas', 'master-program'])]
+    #[TestWith(['/data-master/ekstrakurikuler', 'master-program'])]
+    #[TestWith(['/data-master/anggota-ekstrakurikuler', 'master-program'])]
+    #[TestWith(['/data-master/anggota-jemputan', 'master-program'])]
+    #[TestWith(['/data-master/anggota-t2q', 'master-t2q'])]
+    #[TestWith(['/data-master/daftar-jilid', 'master-t2q'])]
+    #[TestWith(['/data-master/target-capaian', 'master-t2q'])]
     #[TestWith(['/data-pelengkap/pekerjaan', 'data-pelengkap'])]
     #[TestWith(['/informasi/agenda-sekolah', 'informasi'])]
     #[TestWith(['/informasi/pengumuman', 'informasi'])]
@@ -61,9 +69,21 @@ class SidebarViewTest extends TestCase
             $xpath,
             sprintf('//nav//a[@href="%s"]', route('home'))
         );
-        $dataMasterButton = $this->querySingleElement(
+        $masterSekolahButton = $this->querySingleElement(
             $xpath,
-            '//nav//button[@data-sidebar-toggle="submenu-data-master"]'
+            '//nav//button[@data-sidebar-toggle="submenu-master-sekolah"]'
+        );
+        $masterSdmButton = $this->querySingleElement(
+            $xpath,
+            '//nav//button[@data-sidebar-toggle="submenu-master-sdm"]'
+        );
+        $masterProgramButton = $this->querySingleElement(
+            $xpath,
+            '//nav//button[@data-sidebar-toggle="submenu-master-program"]'
+        );
+        $masterT2qButton = $this->querySingleElement(
+            $xpath,
+            '//nav//button[@data-sidebar-toggle="submenu-master-t2q"]'
         );
         $dataPelengkapButton = $this->querySingleElement(
             $xpath,
@@ -87,7 +107,10 @@ class SidebarViewTest extends TestCase
         );
 
         $this->assertMenuState($xpath, $dashboardLink, $expectedActiveMenu === 'dashboard', false);
-        $this->assertMenuState($xpath, $dataMasterButton, $expectedActiveMenu === 'data-master', true);
+        $this->assertMenuState($xpath, $masterSekolahButton, $expectedActiveMenu === 'master-sekolah', true);
+        $this->assertMenuState($xpath, $masterSdmButton, $expectedActiveMenu === 'master-sdm', true);
+        $this->assertMenuState($xpath, $masterProgramButton, $expectedActiveMenu === 'master-program', true);
+        $this->assertMenuState($xpath, $masterT2qButton, $expectedActiveMenu === 'master-t2q', true);
         $this->assertMenuState($xpath, $dataPelengkapButton, $expectedActiveMenu === 'data-pelengkap', true);
         $this->assertMenuState($xpath, $informasiButton, $expectedActiveMenu === 'informasi', true);
         $this->assertMenuState($xpath, $pelajaranButton, $expectedActiveMenu === 'pelajaran', true);

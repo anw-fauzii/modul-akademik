@@ -61,6 +61,19 @@ class TahunAjaran extends Model
     }
 
     /**
+     * Mengurutkan daftar tahun ajaran untuk dropdown (aktif dahulu, terbaru, semester) dengan kolom minimal.
+     */
+    #[Scope]
+    protected function orderedForDropdown(Builder $query): Builder
+    {
+        return $query
+            ->select(['id', 'nama_tahun_ajaran', 'semester', 'is_active'])
+            ->orderByDesc('is_active')
+            ->orderByDesc('nama_tahun_ajaran')
+            ->orderBy('semester');
+    }
+
+    /**
      * Memfilter tahun ajaran yang sedang aktif.
      */
     #[Scope]
@@ -117,5 +130,15 @@ class TahunAjaran extends Model
             'akademik_master_tahun_ajaran_id',
             'akademik_master_kelas_id'
         );
+    }
+
+    /**
+     * Relasi ke seluruh target capaian T2Q pada tahun ajaran ini.
+     *
+     * @return HasMany<TargetCapaian, $this>
+     */
+    public function targetCapaian(): HasMany
+    {
+        return $this->hasMany(TargetCapaian::class, 'akademik_master_tahun_ajaran_id');
     }
 }

@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\DataMaster\AnggotaEkstrakurikulerController;
 use App\Http\Controllers\Admin\DataMaster\AnggotaJemputanController;
 use App\Http\Controllers\Admin\DataMaster\AnggotaKelasController;
 use App\Http\Controllers\Admin\DataMaster\AnggotaT2qController;
+use App\Http\Controllers\Admin\DataMaster\DaftarJilidController;
 use App\Http\Controllers\Admin\DataMaster\EkstrakurikulerController;
 use App\Http\Controllers\Admin\DataMaster\JemputanController;
 use App\Http\Controllers\Admin\DataMaster\KaryawanController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\Admin\DataMaster\KelasController;
 use App\Http\Controllers\Admin\DataMaster\SekolahController;
 use App\Http\Controllers\Admin\DataMaster\SiswaController;
 use App\Http\Controllers\Admin\DataMaster\TahunAjaranController;
+use App\Http\Controllers\Admin\DataMaster\TargetCapaianController;
 use App\Http\Controllers\Admin\DataMaster\TitimangsaController;
 use App\Http\Controllers\Admin\DataPelengkap\BerkebutuhanKhususController;
 use App\Http\Controllers\Admin\DataPelengkap\JenjangPendidikanController;
@@ -139,6 +141,11 @@ Route::middleware(['auth', 'sso.check', 'nocache'])->group(function () {
     Route::resource('/data-master/anggota-t2q', AnggotaT2qController::class)
         ->except(['show'])
         ->parameters(['anggota-t2q' => 'anggota_t2q']);
+    Route::get('/data-master/daftar-jilid', [DaftarJilidController::class, 'index'])
+        ->name('daftar-jilid.index');
+    Route::resource('/data-master/target-capaian', TargetCapaianController::class)
+        ->except(['show'])
+        ->parameters(['target-capaian' => 'target_capaian']);
     Route::resource('/data-master/siswa', SiswaController::class);
     Route::get('/data-master/karyawan', [KaryawanController::class, 'index'])->name('karyawan.index');
     Route::get('/data-master/karyawan/{karyawan}', [KaryawanController::class, 'show'])->name('karyawan.show');

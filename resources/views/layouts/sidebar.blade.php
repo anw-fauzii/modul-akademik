@@ -45,7 +45,17 @@
                 $isWaliPerkembanganActive = request()->routeIs('wali-kelas.perkembangan-siswa.*');
                 $isWaliPresensiActive = request()->routeIs('wali-kelas.presensi-siswa.*');
                 $isWaliPenilaianActive = request()->routeIs('wali-kelas.penilaian-tp.*', 'wali-kelas.penilaian-rekap.*');
-                $isDataMasterActive = request()->is('data-master*');
+                $isMasterSekolahActive = request()->is('data-master/sekolah*', 'data-master/tahun-ajaran*', 'data-master/titimangsa*');
+                $isMasterSdmActive = request()->is('data-master/siswa*', 'data-master/karyawan*');
+                $isMasterProgramActive = request()->is(
+                    'data-master/kelas*',
+                    'data-master/anggota-kelas*',
+                    'data-master/ekstrakurikuler*',
+                    'data-master/anggota-ekstrakurikuler*',
+                    'data-master/jemputan*',
+                    'data-master/anggota-jemputan*'
+                );
+                $isMasterT2qActive = request()->is('data-master/anggota-t2q*', 'data-master/daftar-jilid*', 'data-master/target-capaian*');
                 $isDataPelengkapActive = request()->is('data-pelengkap*');
                 $isInformasiActive = request()->is('informasi*');
                 $isPelajaranActive = request()->is('pelajaran*');
@@ -195,72 +205,142 @@
                         </div>
                     @endforeach
                 @endif
+            </nav>
+        </div>
 
-                @if ($showAdminMenus)
-                    <!-- Data Master Dropdown -->
-                <div class="has-submenu relative group/submenu">
-                    <button type="button" data-sidebar-toggle="submenu-data-master"
-                        aria-expanded="{{ $isDataMasterActive ? 'true' : 'false' }}"
-                        class="w-full group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all {{ $isDataMasterActive ? $menuActiveClass : $menuInactiveClass }}">
-                        <div class="flex items-center gap-3">
-                            <svg class="h-4 w-4 shrink-0 {{ $isDataMasterActive ? $menuIconActiveClass : $menuIconInactiveClass }}" fill="none"
-                                stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7C5 4 4 5 4 7zm0 4h16M10 4v16" />
-                            </svg>
-                            <span class="menu-text">Data Master</span>
-                        </div>
-                        <svg class="menu-chevron h-3.5 w-3.5 transition-transform duration-200 {{ $isDataMasterActive ? 'text-white rotate-180' : 'text-slate-400 group-hover:text-white' }}"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </button>
-                    <!-- Submenu list & flyout popup container -->
-                    <div id="submenu-data-master"
-                        class="{{ $isDataMasterActive ? '' : 'hidden' }} submenu-flyout mt-1 space-y-1 pl-4 border-l border-slate-800 ml-5 py-1">
-                        <div class="flyout-header hidden">
-                            <span>Data Master</span>
-                        </div>
-                        <a href="{{ route('tahun-ajaran.index') }}"
-                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('data-master/tahun-ajaran*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
-                            Tahun Ajaran
-                        </a>
-                        <a href="{{ route('kelas.index') }}"
-                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('data-master/kelas*') || request()->is('data-master/anggota-kelas*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
-                            Kelas
-                        </a>
-                        <a href="{{ route('ekstrakurikuler.index') }}"
-                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('data-master/ekstrakurikuler*') || request()->is('data-master/anggota-ekstrakurikuler*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
-                            Ekstrakurikuler
-                        </a>
-                        <a href="{{ route('jemputan.index') }}"
-                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('data-master/jemputan*') || request()->is('data-master/anggota-jemputan*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
-                            Jemputan
-                        </a>
-                        <a href="{{ route('anggota-t2q.index') }}"
-                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('data-master/anggota-t2q*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
-                            Anggota T2Q
-                        </a>
-                        <a href="{{ route('siswa.index') }}"
-                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('data-master/siswa*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
-                            Siswa
-                        </a>
-                        <a href="{{ route('karyawan.index') }}"
-                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('data-master/karyawan*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
-                            Guru & Karyawan
-                        </a>
-                        <a href="{{ route('titimangsa.index') }}"
-                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('data-master/titimangsa*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
-                            Titimangsa Rapor
-                        </a>
-                        <a href="{{ route('sekolah.index') }}"
-                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('data-master/sekolah*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
-                            Identitas Sekolah
-                        </a>
-                    </div>
-                </div>
+        @if ($showAdminMenus)
+            @php
+                $dataMasterGroups = [
+                    [
+                        'id' => 'submenu-master-sekolah',
+                        'label' => 'Sekolah & Periode',
+                        'active' => $isMasterSekolahActive,
+                        'icon' => 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
+                        'items' => [
+                            [
+                                'label' => 'Identitas Sekolah',
+                                'route' => 'sekolah.index',
+                                'active' => request()->is('data-master/sekolah*'),
+                            ],
+                            [
+                                'label' => 'Tahun Ajaran',
+                                'route' => 'tahun-ajaran.index',
+                                'active' => request()->is('data-master/tahun-ajaran*'),
+                            ],
+                            [
+                                'label' => 'Titimangsa Rapor',
+                                'route' => 'titimangsa.index',
+                                'active' => request()->is('data-master/titimangsa*'),
+                            ],
+                        ],
+                    ],
+                    [
+                        'id' => 'submenu-master-sdm',
+                        'label' => 'SDM & Siswa',
+                        'active' => $isMasterSdmActive,
+                        'icon' => 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z',
+                        'items' => [
+                            [
+                                'label' => 'Siswa',
+                                'route' => 'siswa.index',
+                                'active' => request()->is('data-master/siswa*'),
+                            ],
+                            [
+                                'label' => 'Guru & Karyawan',
+                                'route' => 'karyawan.index',
+                                'active' => request()->is('data-master/karyawan*'),
+                            ],
+                        ],
+                    ],
+                    [
+                        'id' => 'submenu-master-program',
+                        'label' => 'Kelas & Program',
+                        'active' => $isMasterProgramActive,
+                        'icon' => 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z',
+                        'items' => [
+                            [
+                                'label' => 'Kelas',
+                                'route' => 'kelas.index',
+                                'active' => request()->is('data-master/kelas*') || request()->is('data-master/anggota-kelas*'),
+                            ],
+                            [
+                                'label' => 'Ekstrakurikuler',
+                                'route' => 'ekstrakurikuler.index',
+                                'active' => request()->is('data-master/ekstrakurikuler*') || request()->is('data-master/anggota-ekstrakurikuler*'),
+                            ],
+                            [
+                                'label' => 'Jemputan',
+                                'route' => 'jemputan.index',
+                                'active' => request()->is('data-master/jemputan*') || request()->is('data-master/anggota-jemputan*'),
+                            ],
+                        ],
+                    ],
+                    [
+                        'id' => 'submenu-master-t2q',
+                        'label' => 'T2Q',
+                        'active' => $isMasterT2qActive,
+                        'icon' => 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253',
+                        'items' => [
+                            [
+                                'label' => 'Anggota T2Q',
+                                'route' => 'anggota-t2q.index',
+                                'active' => request()->is('data-master/anggota-t2q*'),
+                            ],
+                            [
+                                'label' => 'Daftar Jilid',
+                                'route' => 'daftar-jilid.index',
+                                'active' => request()->is('data-master/daftar-jilid*'),
+                            ],
+                            [
+                                'label' => 'Target Capaian',
+                                'route' => 'target-capaian.index',
+                                'active' => request()->is('data-master/target-capaian*'),
+                            ],
+                        ],
+                    ],
+                ];
+            @endphp
 
-                <!-- Data Pelengkap Dropdown -->
+            <!-- Section 2: Data Master (Dikategorikan) -->
+            <div>
+                <p class="px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2 menu-heading">
+                    Data Master
+                </p>
+                <nav class="space-y-1">
+                    @foreach ($dataMasterGroups as $masterGroup)
+                        <div class="has-submenu relative group/submenu">
+                            <button type="button" data-sidebar-toggle="{{ $masterGroup['id'] }}"
+                                aria-expanded="{{ $masterGroup['active'] ? 'true' : 'false' }}"
+                                class="w-full group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all {{ $masterGroup['active'] ? $menuActiveClass : $menuInactiveClass }}">
+                                <div class="flex items-center gap-3">
+                                    <svg class="h-4 w-4 shrink-0 {{ $masterGroup['active'] ? $menuIconActiveClass : $menuIconInactiveClass }}" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="{{ $masterGroup['icon'] }}" />
+                                    </svg>
+                                    <span class="menu-text">{{ $masterGroup['label'] }}</span>
+                                </div>
+                                <svg class="menu-chevron h-3.5 w-3.5 transition-transform duration-200 {{ $masterGroup['active'] ? 'text-white rotate-180' : 'text-slate-400 group-hover:text-white' }}"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <div id="{{ $masterGroup['id'] }}"
+                                class="{{ $masterGroup['active'] ? '' : 'hidden' }} submenu-flyout mt-1 space-y-1 pl-4 border-l border-slate-800 ml-5 py-1">
+                                <div class="flyout-header hidden">
+                                    <span>{{ $masterGroup['label'] }}</span>
+                                </div>
+                                @foreach ($masterGroup['items'] as $masterItem)
+                                    <a href="{{ route($masterItem['route']) }}"
+                                        class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ $masterItem['active'] ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                                        {{ $masterItem['label'] }}
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
+
+                    <!-- Data Pelengkap Dropdown -->
                 <div class="has-submenu relative group/submenu">
                     <button type="button" data-sidebar-toggle="submenu-data-pelengkap"
                         aria-expanded="{{ $isDataPelengkapActive ? 'true' : 'false' }}"
@@ -306,6 +386,15 @@
                         </a>
                     </div>
                 </div>
+                </nav>
+            </div>
+
+            <!-- Section 3: Akademik & Informasi -->
+            <div>
+                <p class="px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2 menu-heading">
+                    Akademik &amp; Informasi
+                </p>
+                <nav class="space-y-1">
 
                 <!-- Informasi Dropdown -->
                 <div class="has-submenu relative group/submenu">
@@ -496,9 +585,9 @@
                         </a>
                     </div>
                 </div>
-                @endif
-            </nav>
-        </div>
+                </nav>
+            </div>
+        @endif
     </div>
 
     <!-- Section 2: Akun & Logout (Pinned Bottom) -->
