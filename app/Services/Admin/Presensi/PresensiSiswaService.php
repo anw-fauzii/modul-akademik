@@ -18,9 +18,10 @@ class PresensiSiswaService
      * Mengambil data daftar & matriks presensi siswa per kelas tanpa query N+1.
      *
      * @param  array<string, mixed>  $filters
+     * @param  ?Collection<int, Kelas>  $scopedKelasOptions
      * @return array<string, mixed>
      */
-    public function getIndexData(array $filters = []): array
+    public function getIndexData(array $filters = [], ?Collection $scopedKelasOptions = null): array
     {
         $tanggal = trim((string) ($filters['tanggal'] ?? ''));
         $status = trim((string) ($filters['status'] ?? ''));
@@ -35,19 +36,20 @@ class PresensiSiswaService
                 || $rawBulan !== '');
         $bulan = $this->resolveMonth($rawBulan);
 
-        $tahunAjaranOptions = $this->getTahunAjaranOptions();
-        $allKelasOptions = $this->getKelasOptions();
+        $scoped = $this->resolveScopedOptions($scopedKelasOptions);
+        $tahunAjaranOptions = $scoped['tahunAjaranOptions'];
+        $allKelasOptions = $scoped['allKelasOptions'];
         $tahunAjaranId = $this->resolveDefaultTahunAjaranId(
             $filters,
             $kelasId,
             $tahunAjaranOptions,
             $allKelasOptions
         );
-        $scopedKelasOptions = $this->scopeKelasByTahunAjaran($allKelasOptions, $tahunAjaranId);
+        $scopedByTa = $this->scopeKelasByTahunAjaran($allKelasOptions, $tahunAjaranId);
 
         $selectedKelas = $kelasId > 0
-            ? $this->resolveSelectedKelas($kelasId, $allKelasOptions)
-            : $scopedKelasOptions->first();
+            ? $this->resolveSelectedKelas($kelasId, $allKelasOptions, ! $scoped['isScoped'])
+            : $scopedByTa->first();
 
         $effectiveKelasId = $selectedKelas?->id ?? ($kelasId > 0 ? $kelasId : null);
 
@@ -82,19 +84,27 @@ class PresensiSiswaService
     /**
      * Mengambil data opsi form create/edit presensi siswa tanpa N+1.
      *
+     * @param  ?Collection<int, Kelas>  $scopedKelasOptions
      * @return array<string, mixed>
      */
-    public function getFormData(): array
+    public function getFormData(?Collection $scopedKelasOptions = null): array
     {
-        $anggotaKelasOptions = AnggotaKelas::query()
-            ->select(['id', 'siswa_nis', 'akademik_master_kelas_id', 'pendaftaran'])
-            ->with([
-                'siswa:nis,nama_lengkap,nisn',
-                'kelas:id,akademik_master_tahun_ajaran_id,nama_kelas,jenjang_kelas,tingkatan_kelas',
-                'kelas.tahunAjaran:id,nama_tahun_ajaran,semester,is_active',
-            ])
-            ->orderByDesc('id')
-            ->get();
+        $allowedKelasIds = $scopedKelasOptions !== null
+            ? $scopedKelasOptions->pluck('id')->map(fn ($id): int => (int) $id)->filter(fn (int $id): bool => $id > 0)->values()->all()
+            : null;
+
+        $anggotaKelasOptions = $allowedKelasIds === []
+            ? collect()
+            : AnggotaKelas::query()
+                ->select(['id', 'siswa_nis', 'akademik_master_kelas_id', 'pendaftaran'])
+                ->with([
+                    'siswa:nis,nama_lengkap,nisn',
+                    'kelas:id,akademik_master_tahun_ajaran_id,nama_kelas,jenjang_kelas,tingkatan_kelas',
+                    'kelas.tahunAjaran:id,nama_tahun_ajaran,semester,is_active',
+                ])
+                ->when($allowedKelasIds !== null, fn (Builder $query) => $query->whereIn('akademik_master_kelas_id', $allowedKelasIds))
+                ->orderByDesc('id')
+                ->get();
 
         return [
             'anggotaKelasOptions' => $anggotaKelasOptions,
@@ -125,12 +135,13 @@ class PresensiSiswaService
     /**
      * Menyiapkan data form input presensi massal per kelas dan tanggal (tanpa N+1).
      *
+     * @param  ?Collection<int, Kelas>  $scopedKelasOptions
      * @return array<string, mixed>
      */
-    public function getBulkData(?int $kelasId, string $tanggal): array
+    public function getBulkData(?int $kelasId, string $tanggal, ?Collection $scopedKelasOptions = null): array
     {
         $normalizedDate = $this->resolveDate($tanggal);
-        $kelasOptions = $this->getKelasOptions();
+        $kelasOptions = $scopedKelasOptions !== null ? $scopedKelasOptions->values() : $this->getKelasOptions();
         $selectedKelas = $kelasId && $kelasId > 0 ? $kelasOptions->firstWhere('id', $kelasId) : null;
 
         $rows = [];
@@ -243,9 +254,10 @@ class PresensiSiswaService
      * Mengambil data rekapitulasi dan persentase kehadiran siswa (tanpa N+1).
      *
      * @param  array<string, mixed>  $filters
+     * @param  ?Collection<int, Kelas>  $scopedKelasOptions
      * @return array<string, mixed>
      */
-    public function getRekapData(array $filters = []): array
+    public function getRekapData(array $filters = [], ?Collection $scopedKelasOptions = null): array
     {
         $kelasId = (int) ($filters['kelas_id'] ?? 0);
         $rawBulan = trim((string) ($filters['bulan'] ?? ''));
@@ -259,15 +271,16 @@ class PresensiSiswaService
                 || $includeWeekend);
 
         $period = $this->resolveRekapPeriod($rawBulan);
-        $tahunAjaranOptions = $this->getTahunAjaranOptions();
-        $allKelasOptions = $this->getKelasOptions();
+        $scoped = $this->resolveScopedOptions($scopedKelasOptions);
+        $tahunAjaranOptions = $scoped['tahunAjaranOptions'];
+        $allKelasOptions = $scoped['allKelasOptions'];
         $tahunAjaranId = $this->resolveDefaultTahunAjaranId(
             $filters,
             $kelasId,
             $tahunAjaranOptions,
             $allKelasOptions
         );
-        $scopedKelasOptions = $this->scopeKelasByTahunAjaran($allKelasOptions, $tahunAjaranId);
+        $scopedByTa = $this->scopeKelasByTahunAjaran($allKelasOptions, $tahunAjaranId);
 
         $basePayload = [
             'hasFilter' => true,
@@ -286,13 +299,13 @@ class PresensiSiswaService
         if ($kelasId > 0) {
             return array_merge(
                 $basePayload,
-                $this->buildClassStudentRekap($kelasId, $allKelasOptions, $period, $includeWeekend)
+                $this->buildClassStudentRekap($kelasId, $allKelasOptions, $period, $includeWeekend, ! $scoped['isScoped'])
             );
         }
 
         return array_merge(
             $basePayload,
-            $this->buildAllClassesRekap($scopedKelasOptions, $period, $includeWeekend)
+            $this->buildAllClassesRekap($scopedByTa, $period, $includeWeekend)
         );
     }
 
@@ -300,9 +313,10 @@ class PresensiSiswaService
      * Mengambil statistik presensi siswa tahunan berbasis Tahun Ajaran (per semester, bulan, jenjang, kelas, dan siswa) tanpa N+1.
      *
      * @param  array<string, mixed>  $filters
+     * @param  ?Collection<int, Kelas>  $scopedKelasOptions
      * @return array<string, mixed>
      */
-    public function getTahunanData(array $filters = []): array
+    public function getTahunanData(array $filters = [], ?Collection $scopedKelasOptions = null): array
     {
         $tahunAjaranId = (int) ($filters['tahun_ajaran_id'] ?? 0);
         $kelasId = (int) ($filters['kelas_id'] ?? 0);
@@ -323,7 +337,9 @@ class PresensiSiswaService
                 || $kelasId > 0
                 || $includeWeekend);
 
-        $tahunAjaranOptions = $this->getTahunAjaranOptions();
+        $scoped = $this->resolveScopedOptions($scopedKelasOptions);
+        $tahunAjaranOptions = $scoped['tahunAjaranOptions'];
+        $allKelasOptions = $scoped['allKelasOptions'];
         $activeTahunAjaran = $tahunAjaranOptions->firstWhere('is_active', true);
         $namaTahunAjaranOptions = $tahunAjaranOptions
             ->pluck('nama_tahun_ajaran')
@@ -343,10 +359,13 @@ class PresensiSiswaService
         }
 
         if ($rawNamaTahunAjaran === '' && $shortcutTahunAjaran === null && $kelasId > 0) {
-            $directKelas = Kelas::query()
-                ->select(['id', 'akademik_master_tahun_ajaran_id'])
-                ->with('tahunAjaran:id,nama_tahun_ajaran,semester')
-                ->find($kelasId);
+            $directKelas = $allKelasOptions->firstWhere('id', $kelasId);
+            if ($directKelas === null && ! $scoped['isScoped']) {
+                $directKelas = Kelas::query()
+                    ->select(['id', 'akademik_master_tahun_ajaran_id'])
+                    ->with('tahunAjaran:id,nama_tahun_ajaran,semester')
+                    ->find($kelasId);
+            }
             if ($directKelas?->tahunAjaran !== null) {
                 $rawNamaTahunAjaran = trim((string) $directKelas->tahunAjaran->nama_tahun_ajaran);
             }
@@ -375,8 +394,6 @@ class PresensiSiswaService
             ->map(fn ($id): int => (int) $id)
             ->values()
             ->all();
-
-        $allKelasOptions = $this->getKelasOptions();
 
         $yearScopedKelas = $selectedNamaTahunAjaran !== ''
             ? $allKelasOptions->filter(
@@ -589,9 +606,10 @@ class PresensiSiswaService
         int $kelasId,
         Collection $kelasOptions,
         array $period,
-        bool $includeWeekend
+        bool $includeWeekend,
+        bool $allowDatabaseFallback = true
     ): array {
-        $selectedKelas = $this->resolveSelectedKelas($kelasId, $kelasOptions);
+        $selectedKelas = $this->resolveSelectedKelas($kelasId, $kelasOptions, $allowDatabaseFallback);
         $summaryCounts = array_merge(['siswa' => 0, 'jumlah_kelas' => $selectedKelas ? 1 : 0], $this->emptyAttendanceCounts());
 
         if (! $selectedKelas) {
@@ -846,9 +864,17 @@ class PresensiSiswaService
         return $count;
     }
 
-    private function resolveSelectedKelas(int $kelasId, Collection $kelasOptions): ?Kelas
-    {
-        return $kelasOptions->firstWhere('id', $kelasId) ?? Kelas::query()
+    private function resolveSelectedKelas(
+        int $kelasId,
+        Collection $kelasOptions,
+        bool $allowDatabaseFallback = true
+    ): ?Kelas {
+        $matched = $kelasOptions->firstWhere('id', $kelasId);
+        if ($matched !== null || ! $allowDatabaseFallback) {
+            return $matched;
+        }
+
+        return Kelas::query()
             ->select(['id', 'akademik_master_tahun_ajaran_id', 'karyawan_nipy', 'nama_kelas', 'jenjang_kelas', 'tingkatan_kelas'])
             ->with(['tahunAjaran:id,nama_tahun_ajaran,semester,is_active', 'waliKelas:nipy,nama_lengkap,gelar'])
             ->find($kelasId);
@@ -933,6 +959,47 @@ class PresensiSiswaService
             'jam_masuk' => $jamMasuk,
             'status' => $status,
             'keterlambatan_menit' => $keterlambatanMenit,
+        ];
+    }
+
+    /**
+     * Menyediakan opsi kelas & tahun ajaran sesuai cakupan (admin global atau kelas binaan Wali Kelas) tanpa N+1.
+     *
+     * @param  ?Collection<int, Kelas>  $scopedKelasOptions
+     * @return array{allKelasOptions: Collection<int, Kelas>, tahunAjaranOptions: Collection<int, TahunAjaran>, isScoped: bool}
+     */
+    private function resolveScopedOptions(?Collection $scopedKelasOptions = null): array
+    {
+        if ($scopedKelasOptions === null) {
+            return [
+                'allKelasOptions' => $this->getKelasOptions(),
+                'tahunAjaranOptions' => $this->getTahunAjaranOptions(),
+                'isScoped' => false,
+            ];
+        }
+
+        $kelasOptions = $scopedKelasOptions->values();
+        $tahunAjaranOptions = $kelasOptions
+            ->pluck('tahunAjaran')
+            ->filter()
+            ->unique('id')
+            ->sortByDesc('nama_tahun_ajaran')
+            ->values();
+
+        if ($tahunAjaranOptions->isEmpty()) {
+            $activeTa = TahunAjaran::query()
+                ->select(['id', 'nama_tahun_ajaran', 'semester', 'is_active'])
+                ->active()
+                ->first();
+            if ($activeTa !== null) {
+                $tahunAjaranOptions = collect([$activeTa]);
+            }
+        }
+
+        return [
+            'allKelasOptions' => $kelasOptions,
+            'tahunAjaranOptions' => $tahunAjaranOptions,
+            'isScoped' => true,
         ];
     }
 

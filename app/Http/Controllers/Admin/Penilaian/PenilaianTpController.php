@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Penilaian;
 
 use App\Exports\Admin\Penilaian\PenilaianTpExport;
+use App\Http\Controllers\Concerns\ManagesPenilaianTpActions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Penilaian\AspekTpRequest;
 use App\Http\Requests\Admin\Penilaian\ImportNilaiTpRequest;
@@ -13,20 +14,20 @@ use App\Imports\Admin\Penilaian\PenilaianTpImport;
 use App\Models\Admin\DataMaster\Kelas;
 use App\Models\Admin\Pelajaran\MataPelajaran;
 use App\Models\Admin\Penilaian\AspekTp;
-use App\Models\Admin\Penilaian\PeriodeTp;
 use App\Models\Admin\Penilaian\RekapMapel;
 use App\Models\Admin\Penilaian\SumatifBab;
 use App\Models\Admin\TujuanPembelajaran\TujuanPembelajaran;
 use App\Services\Admin\Penilaian\PenilaianTpService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class PenilaianTpController extends Controller
 {
+    use ManagesPenilaianTpActions;
+
     public function __construct(
         protected PenilaianTpService $service
     ) {
@@ -38,12 +39,7 @@ class PenilaianTpController extends Controller
      */
     public function index(Request $request): View
     {
-        $data = $this->service->getMatrixData($request->only([
-            'tahun_ajaran_id',
-            'kelas_id',
-            'mata_pelajaran_id',
-            'periode',
-        ]));
+        $data = $this->service->getMatrixData($this->extractPenilaianFilters($request));
 
         return view('admin.penilaian.nilaiTp.index', $data);
     }
@@ -68,17 +64,7 @@ class PenilaianTpController extends Controller
             $validated['sumatif'] ?? []
         );
 
-        return redirect()
-            ->route('penilaian-tp.index', $this->contextQueryParams(
-                $kelas->akademik_master_tahun_ajaran_id,
-                $kelas->id,
-                $mapel->id,
-                $periode
-            ))
-            ->with(
-                'success',
-                "Berhasil menyimpan {$result['saved_cells']} sel nilai untuk {$result['updated_students']} siswa dan memperbarui NA TP & Rapor."
-            );
+        return $this->buildStoreRedirectResponse($kelas, $mapel, $periode, $result, 'penilaian-tp');
     }
 
     /**
@@ -96,17 +82,15 @@ class PenilaianTpController extends Controller
 
         $this->service->updateBobotRapor($kelas, $mapel, $bobotTp, $bobotUjian, $bobotSumatif);
 
-        return redirect()
-            ->route('penilaian-tp.index', $this->contextQueryParams(
-                $kelas->akademik_master_tahun_ajaran_id,
-                $kelas->id,
-                $mapel->id,
-                $periode
-            ))
-            ->with(
-                'success',
-                "Bobot Rapor jenjang Kelas {$kelas->tingkatan_kelas} SD diperbarui menjadi {$bobotTp}% NA TP + {$bobotSumatif}% Sumatif Bab + {$bobotUjian}% Nilai Ujian."
-            );
+        return $this->buildUpdateBobotRedirectResponse(
+            $kelas,
+            $mapel,
+            $periode,
+            $bobotTp,
+            $bobotSumatif,
+            $bobotUjian,
+            'penilaian-tp'
+        );
     }
 
     /**
@@ -117,14 +101,14 @@ class PenilaianTpController extends Controller
         $validated = $request->validated();
         $sumatifBab = $this->service->saveSumatifBab($validated);
 
-        return redirect()
-            ->route('penilaian-tp.index', $this->contextQueryParams(
-                $sumatifBab->akademik_master_tahun_ajaran_id,
-                $validated['kelas_id'] ?? null,
-                $sumatifBab->akademik_pelajaran_mata_pelajaran_id,
-                $sumatifBab->periode
-            ))
-            ->with('success', "Kolom Sumatif Bab \"{$sumatifBab->nama_bab}\" berhasil ditambahkan (seragam jenjang Kelas {$sumatifBab->tingkatan_kelas}).");
+        return $this->buildSumatifRedirectResponse(
+            $sumatifBab->akademik_master_tahun_ajaran_id,
+            $validated['kelas_id'] ?? null,
+            $sumatifBab->akademik_pelajaran_mata_pelajaran_id,
+            $sumatifBab->periode,
+            $this->buildSumatifCreatedMessage($sumatifBab),
+            'penilaian-tp'
+        );
     }
 
     /**
@@ -135,14 +119,14 @@ class PenilaianTpController extends Controller
         $validated = $request->validated();
         $updated = $this->service->saveSumatifBab($validated, $sumatifBab);
 
-        return redirect()
-            ->route('penilaian-tp.index', $this->contextQueryParams(
-                $updated->akademik_master_tahun_ajaran_id,
-                $validated['kelas_id'] ?? null,
-                $updated->akademik_pelajaran_mata_pelajaran_id,
-                $updated->periode
-            ))
-            ->with('success', "Kolom Sumatif Bab \"{$updated->nama_bab}\" berhasil diperbarui.");
+        return $this->buildSumatifRedirectResponse(
+            $updated->akademik_master_tahun_ajaran_id,
+            $validated['kelas_id'] ?? null,
+            $updated->akademik_pelajaran_mata_pelajaran_id,
+            $updated->periode,
+            "Kolom Sumatif Bab \"{$updated->nama_bab}\" berhasil diperbarui.",
+            'penilaian-tp'
+        );
     }
 
     /**
@@ -157,14 +141,14 @@ class PenilaianTpController extends Controller
 
         $this->service->deleteSumatifBab($sumatifBab);
 
-        return redirect()
-            ->route('penilaian-tp.index', $this->contextQueryParams(
-                $tahunAjaranId,
-                $request->input('kelas_id'),
-                $mapelId,
-                $periode
-            ))
-            ->with('success', "Kolom Sumatif Bab \"{$namaBab}\" berhasil dihapus dan NA Rapor disinkronkan ulang.");
+        return $this->buildSumatifRedirectResponse(
+            $tahunAjaranId,
+            $request->input('kelas_id'),
+            $mapelId,
+            $periode,
+            "Kolom Sumatif Bab \"{$namaBab}\" berhasil dihapus dan NA Rapor disinkronkan ulang.",
+            'penilaian-tp'
+        );
     }
 
     /**
@@ -172,26 +156,18 @@ class PenilaianTpController extends Controller
      */
     public function toggleMasukRapor(Request $request, TujuanPembelajaran $tujuanPembelajaran): RedirectResponse
     {
-        $periode = strtolower(trim((string) $request->input('periode', PeriodeTp::PERIODE_MID)));
-        if (! in_array($periode, [PeriodeTp::PERIODE_MID, PeriodeTp::PERIODE_SEMESTER], true)) {
-            $periode = PeriodeTp::PERIODE_MID;
-        }
-
+        $periode = $this->normalizePeriodeInput($request);
         $masukRapor = filter_var($request->input('masuk_rapor', false), FILTER_VALIDATE_BOOLEAN);
 
         $this->service->toggleMasukRapor($tujuanPembelajaran, $periode, $masukRapor);
 
-        $statusLabel = $masukRapor ? 'dimasukkan ke Rapor' : 'dikecualikan dari Rapor';
-        $periodeLabel = $periode === PeriodeTp::PERIODE_MID ? 'Mid Semester' : 'Semester';
-
-        return redirect()
-            ->route('penilaian-tp.index', $this->contextQueryParams(
-                $tujuanPembelajaran->akademik_master_tahun_ajaran_id,
-                $request->input('kelas_id'),
-                $tujuanPembelajaran->akademik_pelajaran_mata_pelajaran_id,
-                $periode
-            ))
-            ->with('success', "{$tujuanPembelajaran->kode_tp} berhasil {$statusLabel} ({$periodeLabel}).");
+        return $this->buildToggleMasukRaporResponse(
+            $tujuanPembelajaran,
+            $request->input('kelas_id'),
+            $periode,
+            $masukRapor,
+            'penilaian-tp'
+        );
     }
 
     /**
@@ -203,14 +179,13 @@ class PenilaianTpController extends Controller
         $tp = TujuanPembelajaran::query()->findOrFail((int) $validated['tujuan_pembelajaran_id']);
         $aspek = $this->service->saveAspek($tp, $validated);
 
-        return redirect()
-            ->route('penilaian-tp.index', $this->contextQueryParams(
-                $tp->akademik_master_tahun_ajaran_id,
-                $validated['kelas_id'] ?? null,
-                $tp->akademik_pelajaran_mata_pelajaran_id,
-                (string) $validated['periode']
-            ))
-            ->with('success', "Aspek \"{$aspek->nama_aspek}\" berhasil ditambahkan pada {$tp->kode_tp} (seragam jenjang Kelas {$tp->tingkatan_kelas}).");
+        return $this->buildAspekRedirectResponse(
+            $tp,
+            $validated['kelas_id'] ?? null,
+            (string) $validated['periode'],
+            "Aspek \"{$aspek->nama_aspek}\" berhasil ditambahkan pada {$tp->kode_tp} (seragam jenjang Kelas {$tp->tingkatan_kelas}).",
+            'penilaian-tp'
+        );
     }
 
     /**
@@ -222,14 +197,13 @@ class PenilaianTpController extends Controller
         $tp = TujuanPembelajaran::query()->findOrFail((int) $validated['tujuan_pembelajaran_id']);
         $this->service->saveAspek($tp, $validated, $aspekTp);
 
-        return redirect()
-            ->route('penilaian-tp.index', $this->contextQueryParams(
-                $tp->akademik_master_tahun_ajaran_id,
-                $validated['kelas_id'] ?? null,
-                $tp->akademik_pelajaran_mata_pelajaran_id,
-                (string) $validated['periode']
-            ))
-            ->with('success', 'Aspek penilaian berhasil diperbarui.');
+        return $this->buildAspekRedirectResponse(
+            $tp,
+            $validated['kelas_id'] ?? null,
+            (string) $validated['periode'],
+            'Aspek penilaian berhasil diperbarui.',
+            'penilaian-tp'
+        );
     }
 
     /**
@@ -243,14 +217,13 @@ class PenilaianTpController extends Controller
 
         $this->service->deleteAspek($aspekTp);
 
-        return redirect()
-            ->route('penilaian-tp.index', $this->contextQueryParams(
-                $tp?->akademik_master_tahun_ajaran_id,
-                $request->input('kelas_id'),
-                $tp?->akademik_pelajaran_mata_pelajaran_id,
-                $periode
-            ))
-            ->with('success', 'Aspek penilaian berhasil dihapus dan NA TP disinkronkan ulang.');
+        return $this->buildAspekRedirectResponse(
+            $tp,
+            $request->input('kelas_id'),
+            $periode,
+            'Aspek penilaian berhasil dihapus dan NA TP disinkronkan ulang.',
+            'penilaian-tp'
+        );
     }
 
     /**
@@ -258,18 +231,10 @@ class PenilaianTpController extends Controller
      */
     public function export(Request $request): BinaryFileResponse
     {
-        $filters = $request->only([
-            'tahun_ajaran_id',
-            'kelas_id',
-            'mata_pelajaran_id',
-            'periode',
-        ]);
-
-        $periode = ($filters['periode'] ?? 'mid') === PeriodeTp::PERIODE_SEMESTER ? 'semester' : 'mid';
-        $kelasSlug = Str::slug((string) ($request->input('kelas_id', 'sd')));
-        $filename = "nilai-tp-{$periode}-kelas-{$kelasSlug}-".now()->format('Ymd-His').'.xlsx';
-
-        return Excel::download(new PenilaianTpExport($filters), $filename);
+        return Excel::download(
+            new PenilaianTpExport($this->extractPenilaianFilters($request)),
+            $this->buildExportFilename($request)
+        );
     }
 
     /**
@@ -285,23 +250,7 @@ class PenilaianTpController extends Controller
         $import = new PenilaianTpImport($kelas, $mapel, $periode, $request->user()?->no_induk);
         Excel::import($import, $request->file('file'));
 
-        $redirect = redirect()->route('penilaian-tp.index', $this->contextQueryParams(
-            $kelas->akademik_master_tahun_ajaran_id,
-            $kelas->id,
-            $mapel->id,
-            $periode
-        ));
-
-        if ($import->getErrors() !== []) {
-            return $redirect
-                ->with('error', 'Import nilai TP gagal. Periksa daftar error di bawah ini.')
-                ->with('import_errors', array_slice($import->getErrors(), 0, 15));
-        }
-
-        return $redirect->with(
-            'success',
-            "Import berhasil: {$import->getSavedCells()} sel nilai diperbarui untuk {$import->getUpdatedStudents()} siswa."
-        );
+        return $this->buildImportRedirectResponse($kelas, $mapel, $periode, $import, 'penilaian-tp');
     }
 
     /**
@@ -309,12 +258,7 @@ class PenilaianTpController extends Controller
      */
     public function rekap(Request $request): View
     {
-        $data = $this->service->getRekapData($request->only([
-            'tahun_ajaran_id',
-            'kelas_id',
-            'mata_pelajaran_id',
-            'periode',
-        ]));
+        $data = $this->service->getRekapData($this->extractPenilaianFilters($request));
 
         return view('admin.penilaian.rekap.index', $data);
     }
@@ -331,14 +275,7 @@ class PenilaianTpController extends Controller
 
         $this->service->updateDeskripsi($rekapMapel, $validated['deskripsi_capaian'] ?? null);
 
-        return redirect()
-            ->route('penilaian-rekap.index', $this->contextQueryParams(
-                $rekapMapel->akademik_master_tahun_ajaran_id,
-                $validated['kelas_id'] ?? null,
-                $rekapMapel->akademik_pelajaran_mata_pelajaran_id,
-                $rekapMapel->periode
-            ))
-            ->with('success', 'Deskripsi capaian rapor berhasil diperbarui.');
+        return $this->buildUpdateDeskripsiResponse($rekapMapel, $validated['kelas_id'] ?? null, 'penilaian-rekap');
     }
 
     /**
@@ -356,30 +293,12 @@ class PenilaianTpController extends Controller
         $mapel = MataPelajaran::query()->findOrFail((int) $validated['mata_pelajaran_id']);
         $count = $this->service->regenerateAllDeskripsi($kelas, $mapel, (string) $validated['periode']);
 
-        return redirect()
-            ->route('penilaian-rekap.index', $this->contextQueryParams(
-                $kelas->akademik_master_tahun_ajaran_id,
-                $kelas->id,
-                $mapel->id,
-                (string) $validated['periode']
-            ))
-            ->with('success', "Draf deskripsi rapor otomatis berhasil disegarkan untuk {$count} data rekap.");
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    protected function contextQueryParams(
-        mixed $tahunAjaranId,
-        mixed $kelasId,
-        mixed $mapelId,
-        string $periode
-    ): array {
-        return array_filter([
-            'tahun_ajaran_id' => $tahunAjaranId,
-            'kelas_id' => $kelasId,
-            'mata_pelajaran_id' => $mapelId,
-            'periode' => $periode,
-        ], static fn (mixed $v): bool => $v !== null && $v !== '');
+        return $this->buildRegenerateDeskripsiResponse(
+            $kelas,
+            $mapel,
+            (string) $validated['periode'],
+            $count,
+            'penilaian-rekap'
+        );
     }
 }

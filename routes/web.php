@@ -28,6 +28,10 @@ use App\Http\Controllers\Admin\Presensi\PresensiSiswaController;
 use App\Http\Controllers\Admin\TujuanPembelajaran\TujuanPembelajaranController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SSOController;
+use App\Http\Controllers\WaliKelas\AnggotaKelasController as WaliKelasAnggotaKelasController;
+use App\Http\Controllers\WaliKelas\DashboardController as WaliKelasDashboardController;
+use App\Http\Controllers\WaliKelas\PenilaianTpController as WaliKelasPenilaianTpController;
+use App\Http\Controllers\WaliKelas\PresensiSiswaController as WaliKelasPresensiSiswaController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -42,6 +46,60 @@ Auth::routes();
 
 Route::middleware(['auth', 'sso.check', 'nocache'])->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
+    Route::get('/wali-kelas/dashboard', [WaliKelasDashboardController::class, 'index'])
+        ->name('wali-kelas.dashboard');
+    Route::get('/wali-kelas/anggota-kelas', [WaliKelasAnggotaKelasController::class, 'index'])
+        ->name('wali-kelas.anggota-kelas.index');
+    Route::get('/wali-kelas/anggota-kelas/{anggota_kelas}', [WaliKelasAnggotaKelasController::class, 'show'])
+        ->name('wali-kelas.anggota-kelas.show');
+    Route::get('/wali-kelas/presensi-siswa/tahunan', [WaliKelasPresensiSiswaController::class, 'tahunan'])
+        ->name('wali-kelas.presensi-siswa.tahunan');
+    Route::get('/wali-kelas/presensi-siswa/rekap', [WaliKelasPresensiSiswaController::class, 'rekap'])
+        ->name('wali-kelas.presensi-siswa.rekap');
+    Route::get('/wali-kelas/presensi-siswa/bulk', [WaliKelasPresensiSiswaController::class, 'bulk'])
+        ->name('wali-kelas.presensi-siswa.bulk');
+    Route::post('/wali-kelas/presensi-siswa/bulk', [WaliKelasPresensiSiswaController::class, 'bulkStore'])
+        ->name('wali-kelas.presensi-siswa.bulk.store');
+    Route::delete('/wali-kelas/presensi-siswa/bulk', [WaliKelasPresensiSiswaController::class, 'bulkDestroy'])
+        ->name('wali-kelas.presensi-siswa.bulk.destroy');
+    Route::get('/wali-kelas/presensi-siswa', [WaliKelasPresensiSiswaController::class, 'index'])
+        ->name('wali-kelas.presensi-siswa.index');
+    Route::get('/wali-kelas/presensi-siswa/{presensi_siswa}/edit', [WaliKelasPresensiSiswaController::class, 'edit'])
+        ->name('wali-kelas.presensi-siswa.edit');
+    Route::match(['put', 'patch'], '/wali-kelas/presensi-siswa/{presensi_siswa}', [WaliKelasPresensiSiswaController::class, 'update'])
+        ->name('wali-kelas.presensi-siswa.update');
+    Route::delete('/wali-kelas/presensi-siswa/{presensi_siswa}', [WaliKelasPresensiSiswaController::class, 'destroy'])
+        ->name('wali-kelas.presensi-siswa.destroy');
+    Route::get('/wali-kelas/penilaian/nilai-tp', [WaliKelasPenilaianTpController::class, 'index'])
+        ->name('wali-kelas.penilaian-tp.index');
+    Route::post('/wali-kelas/penilaian/nilai-tp', [WaliKelasPenilaianTpController::class, 'store'])
+        ->name('wali-kelas.penilaian-tp.store');
+    Route::post('/wali-kelas/penilaian/nilai-tp/bobot', [WaliKelasPenilaianTpController::class, 'updateBobot'])
+        ->name('wali-kelas.penilaian-tp.bobot.update');
+    Route::post('/wali-kelas/penilaian/nilai-tp/tp/{tujuan_pembelajaran}/toggle-masuk-rapor', [WaliKelasPenilaianTpController::class, 'toggleMasukRapor'])
+        ->name('wali-kelas.penilaian-tp.toggle-masuk-rapor');
+    Route::post('/wali-kelas/penilaian/nilai-tp/aspek', [WaliKelasPenilaianTpController::class, 'storeAspek'])
+        ->name('wali-kelas.penilaian-tp.aspek.store');
+    Route::put('/wali-kelas/penilaian/nilai-tp/aspek/{aspek_tp}', [WaliKelasPenilaianTpController::class, 'updateAspek'])
+        ->name('wali-kelas.penilaian-tp.aspek.update');
+    Route::delete('/wali-kelas/penilaian/nilai-tp/aspek/{aspek_tp}', [WaliKelasPenilaianTpController::class, 'destroyAspek'])
+        ->name('wali-kelas.penilaian-tp.aspek.destroy');
+    Route::post('/wali-kelas/penilaian/nilai-tp/sumatif-bab', [WaliKelasPenilaianTpController::class, 'storeSumatifBab'])
+        ->name('wali-kelas.penilaian-tp.sumatif-bab.store');
+    Route::put('/wali-kelas/penilaian/nilai-tp/sumatif-bab/{sumatif_bab}', [WaliKelasPenilaianTpController::class, 'updateSumatifBab'])
+        ->name('wali-kelas.penilaian-tp.sumatif-bab.update');
+    Route::delete('/wali-kelas/penilaian/nilai-tp/sumatif-bab/{sumatif_bab}', [WaliKelasPenilaianTpController::class, 'destroySumatifBab'])
+        ->name('wali-kelas.penilaian-tp.sumatif-bab.destroy');
+    Route::get('/wali-kelas/penilaian/nilai-tp/export', [WaliKelasPenilaianTpController::class, 'export'])
+        ->name('wali-kelas.penilaian-tp.export');
+    Route::post('/wali-kelas/penilaian/nilai-tp/import', [WaliKelasPenilaianTpController::class, 'import'])
+        ->name('wali-kelas.penilaian-tp.import');
+    Route::get('/wali-kelas/penilaian/rekap', [WaliKelasPenilaianTpController::class, 'rekap'])
+        ->name('wali-kelas.penilaian-rekap.index');
+    Route::put('/wali-kelas/penilaian/rekap/{rekap_mapel}/deskripsi', [WaliKelasPenilaianTpController::class, 'updateDeskripsi'])
+        ->name('wali-kelas.penilaian-rekap.deskripsi.update');
+    Route::post('/wali-kelas/penilaian/rekap/regenerate-deskripsi', [WaliKelasPenilaianTpController::class, 'regenerateDeskripsi'])
+        ->name('wali-kelas.penilaian-rekap.deskripsi.regenerate');
     Route::post('/data-master/tahun-ajaran/{tahun_ajaran}/toggle-active', [TahunAjaranController::class, 'toggleActive'])->name('tahun-ajaran.toggle-active');
     Route::resource('/data-master/tahun-ajaran', TahunAjaranController::class);
     Route::resource('/data-master/kelas', KelasController::class)->parameters(

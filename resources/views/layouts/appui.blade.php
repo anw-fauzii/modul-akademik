@@ -124,6 +124,7 @@
 
                     const config = $.extend(true, {}, dtDefaultConfig, options);
                     const emptyMessage = $table.attr('data-empty-table');
+                    const searchPlaceholder = $table.attr('data-search-placeholder');
                     const $tbodyRows = $table.children('tbody').children('tr');
 
                     // DataTables rejects colspan inside tbody (tn/18); remove legacy empty placeholder rows.
@@ -141,6 +142,10 @@
                     if (emptyMessage) {
                         const safeText = $('<div>').text(emptyMessage).html();
                         config.language.emptyTable = '<i class="fa fa-info-circle mr-1"></i> ' + safeText;
+                    }
+
+                    if (searchPlaceholder) {
+                        config.language.searchPlaceholder = searchPlaceholder;
                     }
 
                     $table.DataTable(config);

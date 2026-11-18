@@ -468,6 +468,9 @@
     @endpush
 
     @php
+        $tpRoutePrefix = $tpRoutePrefix ?? 'penilaian-tp';
+        $rekapRoutePrefix = $rekapRoutePrefix ?? 'penilaian-rekap';
+        $isWaliKelasScope = $isWaliKelasScope ?? false;
         $periode = $periode ?? \App\Models\Admin\Penilaian\PeriodeTp::PERIODE_MID;
         $isMid = $periode === \App\Models\Admin\Penilaian\PeriodeTp::PERIODE_MID;
         $bobotTp = (int) ($bobotTp ?? \App\Models\Admin\Penilaian\Kkm::DEFAULT_BOBOT_TP);
@@ -580,6 +583,9 @@
                     </div>
                     <div>
                         Rekap Nilai &amp; Deskripsi Rapor ({{ $isMid ? 'Mid Semester' : 'Semester' }})
+                        @if ($isWaliKelasScope)
+                            <span class="badge badge-warning text-dark ml-1 align-middle" style="font-size: 0.7rem;">Kelas Binaan Wali Kelas</span>
+                        @endif
                         <div class="page-title-subheading">
                             Bobot aktif: <strong>{{ $formulaBadge }}</strong> &bull; KKM <strong>{{ $kkmDisplay }}</strong>
                             @if (! $isMid)
@@ -590,13 +596,13 @@
                 </div>
 
                 <div class="page-title-actions flex-wrap">
-                    <a href="{{ route('penilaian-tp.index', $contextParams) }}" class="btn btn-light shadow-sm"
+                    <a href="{{ route($tpRoutePrefix.'.index', $contextParams) }}" class="btn btn-light shadow-sm"
                         style="border-radius: 10px; font-weight: 600;">
                         <i class="fa fa-th mr-1"></i> Input Nilai
                     </a>
 
                     @if ($selectedKelas && $selectedMapel && $students->isNotEmpty())
-                        <form method="POST" action="{{ route('penilaian-rekap.deskripsi.regenerate') }}" class="d-inline">
+                        <form method="POST" action="{{ route($rekapRoutePrefix.'.deskripsi.regenerate') }}" class="d-inline">
                             @csrf
                             <input type="hidden" name="kelas_id" value="{{ $selectedKelas->id }}">
                             <input type="hidden" name="mata_pelajaran_id" value="{{ $selectedMapel->id }}">
@@ -613,7 +619,7 @@
         </div>
 
         <div class="rk-filter-bar">
-            <form method="GET" action="{{ route('penilaian-rekap.index') }}">
+            <form method="GET" action="{{ route($rekapRoutePrefix.'.index') }}">
                 <input type="hidden" name="periode" value="{{ $periode }}">
                 <div class="rk-filter-grid">
                     <div>
@@ -656,11 +662,11 @@
                     <div>
                         <div class="small font-weight-semibold text-muted mb-1">Periode Rapor</div>
                         <div class="rk-periode-tabs">
-                            <a href="{{ route('penilaian-rekap.index', array_merge($contextParams, ['periode' => 'mid'])) }}"
+                            <a href="{{ route($rekapRoutePrefix.'.index', array_merge($contextParams, ['periode' => 'mid'])) }}"
                                 class="rk-periode-tab {{ $isMid ? 'is-active' : '' }}">
                                 Mid Semester
                             </a>
-                            <a href="{{ route('penilaian-rekap.index', array_merge($contextParams, ['periode' => 'semester'])) }}"
+                            <a href="{{ route($rekapRoutePrefix.'.index', array_merge($contextParams, ['periode' => 'semester'])) }}"
                                 class="rk-periode-tab {{ ! $isMid ? 'is-active' : '' }}">
                                 Semester
                             </a>
@@ -989,7 +995,7 @@
                                                 @if ($rekapMapel !== null)
                                                     <button type="button"
                                                         class="rk-desc-edit-btn btn-edit-deskripsi"
-                                                        data-action="{{ route('penilaian-rekap.deskripsi.update', $rekapMapel->id) }}"
+                                                        data-action="{{ route($rekapRoutePrefix.'.deskripsi.update', $rekapMapel->id) }}"
                                                         data-student="{{ $studentName }}"
                                                         data-rapor="{{ $rekapMapel->nilai_akhir_rapor !== null ? (int) round((float) $rekapMapel->nilai_akhir_rapor) : '-' }}"
                                                         data-predikat="{{ $rekapMapel->predikat_rapor ?? '-' }}"

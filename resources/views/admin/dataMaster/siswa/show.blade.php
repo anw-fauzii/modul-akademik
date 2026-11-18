@@ -429,6 +429,12 @@
 
 @section('content')
     @php
+        $showAdminLinks = $showAdminLinks ?? true;
+        $backUrl = $backUrl ?? route('siswa.index');
+        $backLabel = $backLabel ?? 'Kembali ke Daftar';
+        $anggotaKelas = $anggotaKelas ?? null;
+        $displayKelas = $anggotaKelas?->kelas ?? $siswa->kelas;
+
         $keluargaGroups = [
             'ayah' => [
                 'title' => 'Data Ayah',
@@ -477,12 +483,14 @@
                 </div>
 
                 <div class="page-title-actions d-flex align-items-center" style="gap: 0.5rem;">
-                    <a href="{{ route('siswa.edit', $siswa->nis) }}" class="btn btn-primary shadow-sm" style="border-radius: 8px;">
-                        <i class="fa fa-edit mr-1"></i> Edit Data
-                    </a>
-                    <a href="{{ route('siswa.index') }}" class="btn text-white shadow-sm"
+                    @if ($showAdminLinks)
+                        <a href="{{ route('siswa.edit', $siswa->nis) }}" class="btn btn-primary shadow-sm" style="border-radius: 8px;">
+                            <i class="fa fa-edit mr-1"></i> Edit Data
+                        </a>
+                    @endif
+                    <a href="{{ $backUrl }}" class="btn text-white shadow-sm"
                         style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 8px;">
-                        <i class="fa fa-reply mr-1"></i> Kembali ke Daftar
+                        <i class="fa fa-reply mr-1"></i> {{ $backLabel }}
                     </a>
                 </div>
             </div>
@@ -528,19 +536,24 @@
                                     <i class="fa fa-fingerprint text-info"></i> NISN: {{ $siswa->nisn }}
                                 </span>
                             @endif
-                            @if ($siswa->kelas)
-                                @if ($siswa->kelas->id)
-                                    <a href="{{ route('kelas.show', $siswa->kelas->id) }}" class="siswa-chip"
+                            @if ($displayKelas)
+                                @if ($showAdminLinks && $displayKelas->id)
+                                    <a href="{{ route('kelas.show', $displayKelas->id) }}" class="siswa-chip"
                                         title="Lihat detail kelas">
                                         <i class="fa fa-school text-success"></i>
-                                        {{ $siswa->kelas->nama_kelas }} ({{ $siswa->kelas->jenjang_kelas }})
+                                        {{ $displayKelas->nama_kelas }} ({{ $displayKelas->jenjang_kelas }})
                                     </a>
                                 @else
                                     <span class="siswa-chip">
                                         <i class="fa fa-school text-success"></i>
-                                        {{ $siswa->kelas->nama_kelas }} ({{ $siswa->kelas->jenjang_kelas }})
+                                        {{ $displayKelas->nama_kelas }} ({{ $displayKelas->jenjang_kelas }})
                                     </span>
                                 @endif
+                            @endif
+                            @if ($anggotaKelas?->pendaftaran)
+                                <span class="siswa-chip">
+                                    <i class="fa fa-tag text-warning"></i> {{ $anggotaKelas->pendaftaran }}
+                                </span>
                             @endif
                         </div>
                     </div>
@@ -624,17 +637,17 @@
                                 <div class="siswa-kv-item">
                                     <div class="siswa-kv-label">Kelas Saat Ini</div>
                                     <div class="siswa-kv-value">
-                                        @if ($siswa->kelas)
-                                            @if ($siswa->kelas->id)
-                                                <a href="{{ route('kelas.show', $siswa->kelas->id) }}" class="text-primary text-decoration-none">
-                                                    {{ $siswa->kelas->nama_kelas }} ({{ $siswa->kelas->jenjang_kelas }})
+                                        @if ($displayKelas)
+                                            @if ($showAdminLinks && $displayKelas->id)
+                                                <a href="{{ route('kelas.show', $displayKelas->id) }}" class="text-primary text-decoration-none">
+                                                    {{ $displayKelas->nama_kelas }} ({{ $displayKelas->jenjang_kelas }})
                                                 </a>
                                             @else
-                                                {{ $siswa->kelas->nama_kelas }} ({{ $siswa->kelas->jenjang_kelas }})
+                                                {{ $displayKelas->nama_kelas }} ({{ $displayKelas->jenjang_kelas }})
                                             @endif
-                                            @if ($siswa->kelas->tahunAjaran)
+                                            @if ($displayKelas->tahunAjaran)
                                                 <div class="small text-muted font-weight-normal">
-                                                    {{ $siswa->kelas->tahunAjaran->nama_tahun_ajaran }} - Sem {{ $siswa->kelas->tahunAjaran->semester }}
+                                                    {{ $displayKelas->tahunAjaran->nama_tahun_ajaran }} - Sem {{ $displayKelas->tahunAjaran->semester }}
                                                 </div>
                                             @endif
                                         @else
@@ -652,7 +665,7 @@
                                     <div class="siswa-kv-label">Ekstrakurikuler</div>
                                     <div class="siswa-kv-value">
                                         @if ($siswa->ekstrakurikuler)
-                                            @if (Route::has('ekstrakurikuler.show') && $siswa->ekstrakurikuler->id)
+                                            @if ($showAdminLinks && Route::has('ekstrakurikuler.show') && $siswa->ekstrakurikuler->id)
                                                 <a href="{{ route('ekstrakurikuler.show', $siswa->ekstrakurikuler->id) }}"
                                                     class="text-decoration-none font-weight-bold text-primary">
                                                     {{ $siswa->ekstrakurikuler->nama_ekstrakurikuler }}
@@ -674,7 +687,7 @@
                                             @php
                                                 $jemputanLabel = $siswa->jemputan->petugas?->nama_gelar ?? 'Petugas #' . $siswa->jemputan->karyawan_nipy;
                                             @endphp
-                                            @if (Route::has('jemputan.show') && $siswa->jemputan->id)
+                                            @if ($showAdminLinks && Route::has('jemputan.show') && $siswa->jemputan->id)
                                                 <a href="{{ route('jemputan.show', $siswa->jemputan->id) }}"
                                                     class="text-decoration-none font-weight-bold text-slate-800">
                                                     {{ $jemputanLabel }}

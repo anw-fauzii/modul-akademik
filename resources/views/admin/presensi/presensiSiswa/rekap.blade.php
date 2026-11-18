@@ -52,6 +52,8 @@
 
 @section('content')
     @php
+        $presensiRoutePrefix = $presensiRoutePrefix ?? 'presensi-siswa';
+        $isWaliKelasScope = $isWaliKelasScope ?? false;
         $totalCatatan = (int) ($summary['total_catatan'] ?? 0);
         $pctHadirBar = $totalCatatan > 0 ? round(($summary['hadir'] / $totalCatatan) * 100, 1) : 0;
         $pctTelatBar = $totalCatatan > 0 ? round(($summary['terlambat'] / $totalCatatan) * 100, 1) : 0;
@@ -70,13 +72,16 @@
                     </div>
                     <div>
                         Rekap &amp; Persentase Presensi Siswa
+                        @if ($isWaliKelasScope)
+                            <span class="badge badge-warning text-dark ml-1 align-middle" style="font-size: 0.7rem;">Kelas Binaan Wali Kelas</span>
+                        @endif
                         <div class="page-title-subheading">
                             Ringkasan total kehadiran, keterlambatan, dan persentase per siswa maupun antar-kelas.
                         </div>
                     </div>
                 </div>
                 <div class="page-title-actions d-flex flex-wrap align-items-center" style="gap: 0.5rem;">
-                    <a href="{{ route('presensi-siswa.bulk', array_filter([
+                    <a href="{{ route($presensiRoutePrefix.'.bulk', array_filter([
                         'kelas_id' => $filters['kelas_id'],
                     ])) }}"
                         class="btn text-white shadow-sm font-weight-bold"
@@ -220,7 +225,7 @@
                         Total Catatan: <strong>{{ $totalCatatan }}</strong>
                     </span>
                     @if ($hasExplicitFilter ?? false)
-                        <a href="{{ route('presensi-siswa.rekap') }}" class="filter-btn filter-btn-secondary"
+                        <a href="{{ route($presensiRoutePrefix.'.rekap') }}" class="filter-btn filter-btn-secondary"
                             style="height: 1.9rem; min-height: 1.9rem; padding: 0 0.7rem; font-size: 0.75rem;">
                             <i class="fa fa-undo"></i> Reset
                         </a>
@@ -229,7 +234,7 @@
             </div>
 
             <div class="filter-card-body">
-                <form method="GET" action="{{ route('presensi-siswa.rekap') }}"
+                <form method="GET" action="{{ route($presensiRoutePrefix.'.rekap') }}"
                     class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
                     <div class="lg:col-span-4">
                         <label for="rekap_tahun_ajaran_id" class="filter-label">Tahun Ajaran</label>
@@ -490,7 +495,7 @@
                                                 </td>
                                                 <td class="text-center no-print">
                                                     <div class="d-inline-flex align-items-center gap-1">
-                                                        <a href="{{ route('presensi-siswa.rekap', array_filter([
+                                                        <a href="{{ route($presensiRoutePrefix.'.rekap', array_filter([
                                                             'tahun_ajaran_id' => $filters['tahun_ajaran_id'],
                                                             'kelas_id' => $kelas->id,
                                                             'bulan' => $filters['bulan'],
@@ -499,7 +504,7 @@
                                                             class="btn btn-sm btn-primary" style="border-radius: 7px;">
                                                             <i class="fa fa-users mr-1"></i> Siswa
                                                         </a>
-                                                        <a href="{{ route('presensi-siswa.index', [
+                                                        <a href="{{ route($presensiRoutePrefix.'.index', [
                                                             'kelas_id' => $kelas->id,
                                                             'bulan' => $filters['bulan'],
                                                         ]) }}"

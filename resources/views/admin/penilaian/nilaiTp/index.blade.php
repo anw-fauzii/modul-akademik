@@ -829,6 +829,9 @@
     @endpush
 
     @php
+        $tpRoutePrefix = $tpRoutePrefix ?? 'penilaian-tp';
+        $rekapRoutePrefix = $rekapRoutePrefix ?? 'penilaian-rekap';
+        $isWaliKelasScope = $isWaliKelasScope ?? false;
         $periode = $periode ?? \App\Models\Admin\Penilaian\PeriodeTp::PERIODE_MID;
         $isMid = $periode === \App\Models\Admin\Penilaian\PeriodeTp::PERIODE_MID;
         $kkmNilai = $kkmNilai ?? \App\Models\Admin\Penilaian\Kkm::DEFAULT_KKM;
@@ -924,6 +927,9 @@
                     </div>
                     <div>
                         Penilaian Tujuan Pembelajaran (SD)
+                        @if ($isWaliKelasScope)
+                            <span class="badge badge-warning text-dark ml-1 align-middle" style="font-size: 0.7rem;">Kelas Binaan Wali Kelas</span>
+                        @endif
                         <div class="page-title-subheading">
                             Input nilai aspek per TP jenjang SD. Periode Semester menggabungkan seluruh NA TP Mid &amp; Semester secara otomatis.
                         </div>
@@ -932,11 +938,11 @@
 
                 <div class="page-title-actions flex-wrap">
                     @if ($selectedKelas && $selectedMapel && ($tpList->isNotEmpty() || $hasSumatifCols))
-                        <a href="{{ route('penilaian-rekap.index', $contextParams) }}" class="btn btn-light shadow-sm"
+                        <a href="{{ route($rekapRoutePrefix.'.index', $contextParams) }}" class="btn btn-light shadow-sm"
                             style="border-radius: 10px; font-weight: 600;">
                             <i class="fa fa-list-alt mr-1"></i> Rekap &amp; Deskripsi
                         </a>
-                        <a href="{{ route('penilaian-tp.export', $contextParams) }}" class="btn btn-light shadow-sm"
+                        <a href="{{ route($tpRoutePrefix.'.export', $contextParams) }}" class="btn btn-light shadow-sm"
                             style="border-radius: 10px; font-weight: 600; color: #0f766e; border-color: #99f6e4; background: #f0fdfa;">
                             <i class="fa fa-file-excel mr-1"></i> Export Excel
                         </a>
@@ -962,7 +968,7 @@
 
         <!-- Filter Konteks + Tab Periode Mid / Semester -->
         <div class="np-filter-bar">
-            <form method="GET" action="{{ route('penilaian-tp.index') }}" id="matrixFilterForm">
+            <form method="GET" action="{{ route($tpRoutePrefix.'.index') }}" id="matrixFilterForm">
                 <input type="hidden" name="periode" value="{{ $periode }}">
                 <div class="np-filter-grid">
                     <div>
@@ -1005,11 +1011,11 @@
                     <div>
                         <div class="small font-weight-semibold text-muted mb-1">Periode Penilaian</div>
                         <div class="np-periode-tabs">
-                            <a href="{{ route('penilaian-tp.index', array_merge($contextParams, ['periode' => 'mid'])) }}"
+                            <a href="{{ route($tpRoutePrefix.'.index', array_merge($contextParams, ['periode' => 'mid'])) }}"
                                 class="np-periode-tab {{ $isMid ? 'is-active' : '' }}">
                                 Mid Semester
                             </a>
-                            <a href="{{ route('penilaian-tp.index', array_merge($contextParams, ['periode' => 'semester'])) }}"
+                            <a href="{{ route($tpRoutePrefix.'.index', array_merge($contextParams, ['periode' => 'semester'])) }}"
                                 class="np-periode-tab {{ ! $isMid ? 'is-active' : '' }}">
                                 Semester
                             </a>
@@ -1028,15 +1034,17 @@
                             <span class="np-card-dot" style="background: #ea580c;"></span>
                             KKM Tingkat {{ $selectedKelas->tingkatan_kelas }}
                         </span>
-                        @if (! $hasKkmConfig)
-                            <a href="{{ route('penilaian-kkm.create', ['tahun_ajaran_id' => $selectedTahunAjaranId, 'mata_pelajaran_id' => $selectedMapel->id, 'tingkatan_kelas' => $selectedKelas->tingkatan_kelas]) }}"
-                                class="np-card-action">
-                                <i class="fa fa-sliders-h"></i> Atur KKM
-                            </a>
-                        @else
-                            <a href="{{ route('penilaian-kkm.edit', $kkmModel->id) }}" class="np-card-action">
-                                <i class="fa fa-cog"></i> Ubah KKM
-                            </a>
+                        @if (! $isWaliKelasScope)
+                            @if (! $hasKkmConfig)
+                                <a href="{{ route('penilaian-kkm.create', ['tahun_ajaran_id' => $selectedTahunAjaranId, 'mata_pelajaran_id' => $selectedMapel->id, 'tingkatan_kelas' => $selectedKelas->tingkatan_kelas]) }}"
+                                    class="np-card-action">
+                                    <i class="fa fa-sliders-h"></i> Atur KKM
+                                </a>
+                            @else
+                                <a href="{{ route('penilaian-kkm.edit', $kkmModel->id) }}" class="np-card-action">
+                                    <i class="fa fa-cog"></i> Ubah KKM
+                                </a>
+                            @endif
                         @endif
                     </div>
                     <div class="np-card-metric">
@@ -1129,10 +1137,12 @@
                         Tambahkan Tujuan Pembelajaran terlebih dahulu di menu Daftar TP, atau tambahkan kolom Sumatif Bab per mapel &amp; tingkatan kelas.
                     </div>
                     <div class="d-flex flex-wrap justify-content-center gap-2">
-                        <a href="{{ route('tujuan-pembelajaran.create') }}" class="btn btn-sm text-white"
-                            style="background: #ea580c; border-radius: 8px;">
-                            <i class="fa fa-plus mr-1"></i> Buat Tujuan Pembelajaran
-                        </a>
+                        @if (! $isWaliKelasScope)
+                            <a href="{{ route('tujuan-pembelajaran.create') }}" class="btn btn-sm text-white"
+                                style="background: #ea580c; border-radius: 8px;">
+                                <i class="fa fa-plus mr-1"></i> Buat Tujuan Pembelajaran
+                            </a>
+                        @endif
                         @if ($selectedKelas && $selectedMapel)
                             <button type="button" class="btn btn-sm text-white btn-open-sumatif-modal"
                                 style="background: #0f766e; border-radius: 8px; font-weight: 600;">
@@ -1151,7 +1161,7 @@
             </div>
         @else
             <!-- Grid Nilai 2-Baris Header Ala Spreadsheet dengan Toolbar Terintegrasi -->
-            <form method="POST" action="{{ route('penilaian-tp.store') }}" id="nilaiGridForm">
+            <form method="POST" action="{{ route($tpRoutePrefix.'.store') }}" id="nilaiGridForm">
                 @csrf
                 <input type="hidden" name="tahun_ajaran_id" value="{{ $selectedTahunAjaranId }}">
                 <input type="hidden" name="kelas_id" value="{{ $selectedKelas->id }}">
@@ -1255,7 +1265,7 @@
                                                 @else
                                                     <button type="button"
                                                         class="np-th-mini-btn {{ $isIncluded ? 'is-rapor-on' : 'is-rapor-off' }} btn-toggle-rapor-tp"
-                                                        data-action="{{ route('penilaian-tp.toggle-masuk-rapor', $tp->id) }}"
+                                                        data-action="{{ route($tpRoutePrefix.'.toggle-masuk-rapor', $tp->id) }}"
                                                         data-next="{{ $isIncluded ? '0' : '1' }}"
                                                         title="{{ $isIncluded ? 'Masuk Rapor (klik untuk kecualikan)' : 'Tidak Masuk Rapor (klik untuk masukkan)' }}">
                                                         <i class="fa {{ $isIncluded ? 'fa-check' : 'fa-ban' }}"></i>
@@ -1315,7 +1325,7 @@
                                                         <span>{{ $aspek->nama_aspek }}</span>
                                                         <button type="button"
                                                             class="np-aspek-edit btn-edit-aspek-modal"
-                                                            data-action="{{ route('penilaian-tp.aspek.update', $aspek->id) }}"
+                                                            data-action="{{ route($tpRoutePrefix.'.aspek.update', $aspek->id) }}"
                                                             data-tp-id="{{ $tp->id }}"
                                                             data-tp-kode="{{ $tp->kode_tp }}"
                                                             data-nama="{{ $aspek->nama_aspek }}"
@@ -1329,7 +1339,7 @@
                                                         @if ($tpAspeks->count() > 1)
                                                             <button type="button"
                                                                 class="np-aspek-del btn-delete-aspek"
-                                                                data-action="{{ route('penilaian-tp.aspek.destroy', $aspek->id) }}"
+                                                                data-action="{{ route($tpRoutePrefix.'.aspek.destroy', $aspek->id) }}"
                                                                 data-label="{{ $tp->kode_tp }} - {{ $aspek->nama_aspek }}"
                                                                 title="Hapus aspek {{ $aspek->nama_aspek }}">
                                                                 &times;
@@ -1358,7 +1368,7 @@
                                                     <span>{{ $bab->nama_bab }}</span>
                                                     <button type="button"
                                                         class="np-sumatif-action-btn btn-edit-sumatif-modal"
-                                                        data-action="{{ route('penilaian-tp.sumatif-bab.update', $bab->id) }}"
+                                                        data-action="{{ route($tpRoutePrefix.'.sumatif-bab.update', $bab->id) }}"
                                                         data-nama="{{ $bab->nama_bab }}"
                                                         data-keterangan="{{ $bab->keterangan ?? '' }}"
                                                         data-urutan="{{ $bab->urutan }}"
@@ -1367,7 +1377,7 @@
                                                     </button>
                                                     <button type="button"
                                                         class="np-sumatif-action-btn is-danger btn-delete-sumatif"
-                                                        data-action="{{ route('penilaian-tp.sumatif-bab.destroy', $bab->id) }}"
+                                                        data-action="{{ route($tpRoutePrefix.'.sumatif-bab.destroy', $bab->id) }}"
                                                         data-label="{{ $bab->nama_bab }}"
                                                         title="Hapus {{ $bab->nama_bab }}">
                                                         &times;
@@ -1650,7 +1660,7 @@
                                                 @foreach ($tpAspeks as $aspek)
                                                     <button type="button"
                                                         class="np-aspek-pill-btn btn-edit-aspek-modal"
-                                                        data-action="{{ route('penilaian-tp.aspek.update', $aspek->id) }}"
+                                                        data-action="{{ route($tpRoutePrefix.'.aspek.update', $aspek->id) }}"
                                                         data-tp-id="{{ $tp->id }}"
                                                         data-tp-kode="{{ $tp->kode_tp }}"
                                                         data-nama="{{ $aspek->nama_aspek }}"
@@ -1674,7 +1684,7 @@
                                         @else
                                             <button type="button"
                                                 class="btn btn-sm py-1 px-2 {{ $isIncluded ? 'btn-success' : 'btn-outline-secondary' }} btn-toggle-rapor-tp"
-                                                data-action="{{ route('penilaian-tp.toggle-masuk-rapor', $tp->id) }}"
+                                                data-action="{{ route($tpRoutePrefix.'.toggle-masuk-rapor', $tp->id) }}"
                                                 data-next="{{ $isIncluded ? '0' : '1' }}"
                                                 style="font-size: 0.7rem; border-radius: 999px;">
                                                 <i class="fa {{ $isIncluded ? 'fa-check-square' : 'fa-square' }} mr-1"></i>
@@ -1717,8 +1727,8 @@
                 </h5>
                 <button type="button" class="btn btn-sm btn-light" data-close-modal="tpAspekModal">&times;</button>
             </div>
-            <form method="POST" id="tpAspekForm" action="{{ route('penilaian-tp.aspek.store') }}"
-                data-store-action="{{ route('penilaian-tp.aspek.store') }}">
+            <form method="POST" id="tpAspekForm" action="{{ route($tpRoutePrefix.'.aspek.store') }}"
+                data-store-action="{{ route($tpRoutePrefix.'.aspek.store') }}">
                 @csrf
                 <input type="hidden" name="_method" id="tpAspekMethod" value="POST">
                 <input type="hidden" name="periode" value="{{ $periode }}">
@@ -1824,7 +1834,7 @@
                                     <td class="text-center align-middle pr-3">
                                         <button type="button"
                                             class="btn btn-sm btn-light py-1 px-2 btn-edit-sumatif-modal"
-                                            data-action="{{ route('penilaian-tp.sumatif-bab.update', $bab->id) }}"
+                                            data-action="{{ route($tpRoutePrefix.'.sumatif-bab.update', $bab->id) }}"
                                             data-nama="{{ $bab->nama_bab }}"
                                             data-keterangan="{{ $bab->keterangan ?? '' }}"
                                             data-urutan="{{ $bab->urutan }}"
@@ -1833,7 +1843,7 @@
                                         </button>
                                         <button type="button"
                                             class="btn btn-sm btn-light py-1 px-2 btn-delete-sumatif"
-                                            data-action="{{ route('penilaian-tp.sumatif-bab.destroy', $bab->id) }}"
+                                            data-action="{{ route($tpRoutePrefix.'.sumatif-bab.destroy', $bab->id) }}"
                                             data-label="{{ $bab->nama_bab }}"
                                             title="Hapus {{ $bab->nama_bab }}">
                                             <i class="fa fa-trash text-danger"></i>
@@ -1865,8 +1875,8 @@
                     </h5>
                     <button type="button" class="btn btn-sm btn-light" data-close-modal="sumatifBabModal">&times;</button>
                 </div>
-                <form method="POST" id="sumatifBabForm" action="{{ route('penilaian-tp.sumatif-bab.store') }}"
-                    data-store-action="{{ route('penilaian-tp.sumatif-bab.store') }}">
+                <form method="POST" id="sumatifBabForm" action="{{ route($tpRoutePrefix.'.sumatif-bab.store') }}"
+                    data-store-action="{{ route($tpRoutePrefix.'.sumatif-bab.store') }}">
                     @csrf
                     <input type="hidden" name="_method" id="sumatifBabMethod" value="POST">
                     <input type="hidden" name="tahun_ajaran_id" value="{{ $selectedTahunAjaranId }}">
@@ -1919,7 +1929,7 @@
                     </h5>
                     <button type="button" class="btn btn-sm btn-light" data-close-modal="tpBobotModal">&times;</button>
                 </div>
-                <form method="POST" action="{{ route('penilaian-tp.bobot.update') }}">
+                <form method="POST" action="{{ route($tpRoutePrefix.'.bobot.update') }}">
                     @csrf
                     <input type="hidden" name="tahun_ajaran_id" value="{{ $selectedTahunAjaranId }}">
                     <input type="hidden" name="kelas_id" value="{{ $selectedKelas->id }}">
@@ -1990,7 +2000,7 @@
                     </h5>
                     <button type="button" class="btn btn-sm btn-light" data-close-modal="tpImportNilaiModal">&times;</button>
                 </div>
-                <form method="POST" action="{{ route('penilaian-tp.import') }}" enctype="multipart/form-data">
+                <form method="POST" action="{{ route($tpRoutePrefix.'.import') }}" enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" name="tahun_ajaran_id" value="{{ $selectedTahunAjaranId }}">
                     <input type="hidden" name="kelas_id" value="{{ $selectedKelas->id }}">

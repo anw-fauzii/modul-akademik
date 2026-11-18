@@ -285,6 +285,8 @@
 
 @section('content')
     @php
+        $presensiRoutePrefix = $presensiRoutePrefix ?? 'presensi-siswa';
+        $isWaliKelasScope = $isWaliKelasScope ?? false;
         $tahunAjaranOptions = $tahunAjaranOptions ?? collect();
         $namaTahunAjaranOptions = $namaTahunAjaranOptions ?? collect();
         $semesterOptions = $semesterOptions ?? \App\Models\Admin\DataMaster\TahunAjaran::SEMESTER_OPTIONS;
@@ -340,13 +342,16 @@
                     </div>
                     <div>
                         Statistik Presensi Tahunan
+                        @if ($isWaliKelasScope)
+                            <span class="badge badge-warning text-dark ml-1 align-middle" style="font-size: 0.7rem;">Kelas Binaan Wali Kelas</span>
+                        @endif
                         <div class="page-title-subheading">
                             Analisis tren kehadiran, keterlambatan, dan perbandingan performa siswa berdasarkan Tahun Ajaran.
                         </div>
                     </div>
                 </div>
                 <div class="page-title-actions d-flex flex-wrap align-items-center" style="gap: 0.5rem;">
-                    <a href="{{ route('presensi-siswa.bulk', array_filter([
+                    <a href="{{ route($presensiRoutePrefix.'.bulk', array_filter([
                         'kelas_id' => $filters['kelas_id'],
                     ])) }}"
                         class="btn text-white shadow-sm font-weight-bold"
@@ -488,7 +493,7 @@
                         Total Catatan: <strong>{{ $totalCatatan }}</strong>
                     </span>
                     @if ($hasExplicitFilter ?? false)
-                        <a href="{{ route('presensi-siswa.tahunan') }}" class="filter-btn filter-btn-secondary"
+                        <a href="{{ route($presensiRoutePrefix.'.tahunan') }}" class="filter-btn filter-btn-secondary"
                             style="height: 1.9rem; min-height: 1.9rem; padding: 0 0.7rem; font-size: 0.75rem;">
                             <i class="fa fa-undo"></i> Reset
                         </a>
@@ -497,7 +502,7 @@
             </div>
 
             <div class="filter-card-body">
-                <form method="GET" action="{{ route('presensi-siswa.tahunan') }}"
+                <form method="GET" action="{{ route($presensiRoutePrefix.'.tahunan') }}"
                     class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
                     <div class="lg:col-span-3">
                         <label for="tahunan_nama_tahun_ajaran" class="filter-label">Tahun Ajaran</label>
@@ -678,7 +683,7 @@
                                             @php
                                                 $sCounts = $sRow['counts'];
                                             @endphp
-                                            <a href="{{ route('presensi-siswa.tahunan', array_filter([
+                                            <a href="{{ route($presensiRoutePrefix.'.tahunan', array_filter([
                                                 'nama_tahun_ajaran' => $sRow['nama_tahun_ajaran'],
                                                 'semester' => $sRow['semester'],
                                                 'jenjang' => $filters['jenjang'],
@@ -803,14 +808,14 @@
                             </div>
 
                             <div class="d-flex flex-wrap gap-2 pt-1 no-print">
-                                <a href="{{ route('presensi-siswa.rekap', array_filter([
+                                <a href="{{ route($presensiRoutePrefix.'.rekap', array_filter([
                                     'tahun_ajaran_id' => $drillTahunAjaranId,
                                     'kelas_id' => $filters['kelas_id'],
                                 ])) }}"
                                     class="btn btn-sm btn-light border shadow-sm flex-1 font-weight-bold" style="border-radius: 8px;">
                                     <i class="fa fa-chart-bar mr-1"></i> Rekap Bulanan
                                 </a>
-                                <a href="{{ route('presensi-siswa.bulk', array_filter([
+                                <a href="{{ route($presensiRoutePrefix.'.bulk', array_filter([
                                     'kelas_id' => $filters['kelas_id'],
                                 ])) }}"
                                     class="btn btn-sm text-white shadow-sm flex-1 font-weight-bold"
@@ -1014,7 +1019,7 @@
                                                         </span>
                                                     </td>
                                                     <td class="text-center no-print">
-                                                        <a href="{{ route('presensi-siswa.tahunan', array_filter([
+                                                        <a href="{{ route($presensiRoutePrefix.'.tahunan', array_filter([
                                                             'nama_tahun_ajaran' => $kelas->tahunAjaran?->nama_tahun_ajaran ?? $filters['nama_tahun_ajaran'],
                                                             'semester' => $kelas->tahunAjaran?->semester ?? ($selectedSemesterFilter !== '' ? $selectedSemesterFilter : null),
                                                             'jenjang' => $filters['jenjang'],
@@ -1119,7 +1124,7 @@
                                                                     return in_array(strtolower(trim((string) $ta->semester)), $mPreferredSemesters, true);
                                                                 })?->id ?? $drillTahunAjaranId));
                                                     @endphp
-                                                    <a href="{{ route('presensi-siswa.rekap', array_filter([
+                                                    <a href="{{ route($presensiRoutePrefix.'.rekap', array_filter([
                                                         'tahun_ajaran_id' => $mTargetTaId,
                                                         'kelas_id' => $filters['kelas_id'],
                                                         'bulan' => $mRow['bulan'],

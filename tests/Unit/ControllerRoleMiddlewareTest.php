@@ -10,6 +10,10 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SSOController;
+use App\Http\Controllers\WaliKelas\AnggotaKelasController as WaliKelasAnggotaKelasController;
+use App\Http\Controllers\WaliKelas\DashboardController as WaliKelasDashboardController;
+use App\Http\Controllers\WaliKelas\PenilaianTpController as WaliKelasPenilaianTpController;
+use App\Http\Controllers\WaliKelas\PresensiSiswaController as WaliKelasPresensiSiswaController;
 use App\Models\User;
 use Illuminate\Contracts\Http\Kernel;
 use RecursiveDirectoryIterator;
@@ -33,11 +37,11 @@ class ControllerRoleMiddlewareTest extends TestCase
         $this->assertSame(RoleMiddleware::class, app('router')->getMiddleware()['role'] ?? null);
     }
 
-    public function test_all_admin_controllers_and_home_controller_require_super_admin_role(): void
+    public function test_all_admin_controllers_and_dashboards_register_expected_role_middlewares(): void
     {
         $adminDir = app_path('Http/Controllers/Admin');
         $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($adminDir));
-        $controllerClasses = [HomeController::class];
+        $adminControllers = [];
 
         foreach ($iterator as $file) {
             if (! $file->isFile() || $file->getExtension() !== 'php') {
@@ -50,13 +54,13 @@ class ControllerRoleMiddlewareTest extends TestCase
                 $file->getPathname()
             );
 
-            $controllerClasses[] = 'App\\'.$relative;
+            $adminControllers[] = 'App\\'.$relative;
         }
 
-        sort($controllerClasses);
-        $this->assertCount(26, $controllerClasses);
+        sort($adminControllers);
+        $this->assertCount(25, $adminControllers);
 
-        foreach ($controllerClasses as $controllerClass) {
+        foreach ($adminControllers as $controllerClass) {
             $controller = app()->make($controllerClass);
             $middlewares = collect($controller->getMiddleware())->pluck('middleware')->all();
 
@@ -69,9 +73,22 @@ class ControllerRoleMiddlewareTest extends TestCase
 
         $homeMiddlewares = collect(app()->make(HomeController::class)->getMiddleware())->pluck('middleware')->all();
         $this->assertContains('auth', $homeMiddlewares);
+        $this->assertContains('role:super admin|wali kelas', $homeMiddlewares);
+
+        $waliMiddlewares = collect(app()->make(WaliKelasDashboardController::class)->getMiddleware())->pluck('middleware')->all();
+        $this->assertContains('role:super admin|wali kelas', $waliMiddlewares);
+
+        $waliAnggotaMiddlewares = collect(app()->make(WaliKelasAnggotaKelasController::class)->getMiddleware())->pluck('middleware')->all();
+        $this->assertContains('role:super admin|wali kelas', $waliAnggotaMiddlewares);
+
+        $waliPresensiMiddlewares = collect(app()->make(WaliKelasPresensiSiswaController::class)->getMiddleware())->pluck('middleware')->all();
+        $this->assertContains('role:super admin|wali kelas', $waliPresensiMiddlewares);
+
+        $waliPenilaianMiddlewares = collect(app()->make(WaliKelasPenilaianTpController::class)->getMiddleware())->pluck('middleware')->all();
+        $this->assertContains('role:super admin|wali kelas', $waliPenilaianMiddlewares);
     }
 
-    public function test_auth_and_sso_controllers_remain_accessible_without_super_admin_role(): void
+    public function test_auth_and_sso_controllers_remain_accessible_without_super_admin_or_wali_kelas_role(): void
     {
         $publicAuthControllers = [
             ConfirmPasswordController::class,
@@ -91,6 +108,11 @@ class ControllerRoleMiddlewareTest extends TestCase
                 'role:super admin',
                 $middlewares,
                 "Controller {$controllerClass} tidak boleh dibatasi role:super admin."
+            );
+            $this->assertNotContains(
+                'role:super admin|wali kelas',
+                $middlewares,
+                "Controller {$controllerClass} tidak boleh dibatasi role wali kelas."
             );
         }
     }

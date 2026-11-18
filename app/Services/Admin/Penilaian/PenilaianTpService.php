@@ -252,11 +252,33 @@ class PenilaianTpService
      * Memuat seluruh data grid Penilaian TP (SD) dengan query datar tanpa N+1.
      *
      * @param  array<string, mixed>  $input
+     * @param  ?EloquentCollection<int, Kelas>  $scopedKelasOptions
      * @return array<string, mixed>
      */
-    public function getMatrixData(array $input = []): array
+    public function getMatrixData(array $input = [], ?EloquentCollection $scopedKelasOptions = null): array
     {
-        $tahunAjaranOptions = $this->getTahunAjaranOptions();
+        if ($scopedKelasOptions !== null) {
+            $tahunAjaranOptions = new EloquentCollection(
+                $scopedKelasOptions
+                    ->pluck('tahunAjaran')
+                    ->filter()
+                    ->unique('id')
+                    ->sortByDesc('is_active')
+                    ->values()
+                    ->all()
+            );
+
+            if ($tahunAjaranOptions->isEmpty()) {
+                $activeTa = TahunAjaran::query()
+                    ->select(['id', 'nama_tahun_ajaran', 'semester', 'is_active'])
+                    ->active()
+                    ->first();
+                $tahunAjaranOptions = $activeTa !== null ? new EloquentCollection([$activeTa]) : new EloquentCollection;
+            }
+        } else {
+            $tahunAjaranOptions = $this->getTahunAjaranOptions();
+        }
+
         $defaultTa = $this->resolveDefaultTahunAjaran($tahunAjaranOptions);
         $tahunAjaranId = $this->resolvePositiveInt($input['tahun_ajaran_id'] ?? null) ?? $defaultTa?->id;
         $selectedTahunAjaran = $tahunAjaranId !== null ? $tahunAjaranOptions->firstWhere('id', $tahunAjaranId) : null;
@@ -265,9 +287,21 @@ class PenilaianTpService
         $ujianLabel = PeriodeTp::ujianLabel($periode, $selectedTahunAjaran?->semester);
         $ujianFullLabel = PeriodeTp::ujianFullLabel($periode, $selectedTahunAjaran?->semester);
 
-        $kelasOptions = $tahunAjaranId !== null
-            ? $this->getSdKelasOptions($tahunAjaranId)
-            : new EloquentCollection;
+        if ($tahunAjaranId !== null) {
+            $kelasOptions = $scopedKelasOptions !== null
+                ? new EloquentCollection(
+                    $scopedKelasOptions
+                        ->filter(
+                            static fn (Kelas $k): bool => (int) $k->akademik_master_tahun_ajaran_id === (int) $tahunAjaranId
+                                && strtoupper(trim((string) $k->jenjang_kelas)) === Kkm::TARGET_UNIT
+                        )
+                        ->values()
+                        ->all()
+                )
+                : $this->getSdKelasOptions($tahunAjaranId);
+        } else {
+            $kelasOptions = new EloquentCollection;
+        }
 
         $mataPelajaranOptions = $this->getSdMapelOptions();
 
@@ -496,11 +530,12 @@ class PenilaianTpService
      * Memuat data halaman Rekap Rapor & Deskripsi Capaian (Mid vs Semester) tanpa N+1.
      *
      * @param  array<string, mixed>  $input
+     * @param  ?EloquentCollection<int, Kelas>  $scopedKelasOptions
      * @return array<string, mixed>
      */
-    public function getRekapData(array $input = []): array
+    public function getRekapData(array $input = [], ?EloquentCollection $scopedKelasOptions = null): array
     {
-        $matrix = $this->getMatrixData($input);
+        $matrix = $this->getMatrixData($input, $scopedKelasOptions);
         $periode = $matrix['periode'];
         $carriedMidSumatif = $matrix['carriedMidSumatifBabs'] ?? collect();
         $activeSumatif = $matrix['activeSumatifBabs'] ?? collect();

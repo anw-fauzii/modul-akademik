@@ -146,6 +146,8 @@
 
 @section('content')
     @php
+        $presensiRoutePrefix = $presensiRoutePrefix ?? 'presensi-siswa';
+        $isWaliKelasScope = $isWaliKelasScope ?? false;
         $matrixKelas = $matrix['kelas'];
         $matrixSummary = $matrix['summary'];
         $matrixDays = $matrix['days'];
@@ -160,7 +162,7 @@
             'alpa' => ['code' => 'A', 'class' => 'bg-rose-500/15 text-rose-700 border-rose-300 hover:bg-rose-500 hover:text-white'],
         ];
 
-        $buildStatusPayload = static function ($record, $siswa, $kelas, string $fallbackDate = '-'): array {
+        $buildStatusPayload = static function ($record, $siswa, $kelas, string $fallbackDate = '-') use ($presensiRoutePrefix): array {
             return [
                 'nama' => $siswa?->nama_lengkap ?? '-',
                 'nis' => $siswa?->nis ?? '-',
@@ -171,8 +173,8 @@
                 'keterangan' => $record->status_keterangan,
                 'jam_masuk' => $record->jam_masuk ? substr((string) $record->jam_masuk, 0, 5) : '-',
                 'terlambat_menit' => (int) $record->keterlambatan_menit,
-                'edit_url' => route('presensi-siswa.edit', $record),
-                'destroy_url' => route('presensi-siswa.destroy', $record),
+                'edit_url' => route($presensiRoutePrefix.'.edit', $record),
+                'destroy_url' => route($presensiRoutePrefix.'.destroy', $record),
             ];
         };
 
@@ -224,13 +226,16 @@
                     </div>
                     <div>
                         Presensi Siswa
+                        @if ($isWaliKelasScope)
+                            <span class="badge badge-warning text-dark ml-1 align-middle" style="font-size: 0.7rem;">Kelas Binaan Wali Kelas</span>
+                        @endif
                         <div class="page-title-subheading">
                             Matriks kehadiran hari sekolah (Senin–Jumat) per kelas.
                         </div>
                     </div>
                 </div>
                 <div class="page-title-actions d-flex flex-wrap align-items-center" style="gap: 0.5rem;">
-                    <a href="{{ route('presensi-siswa.bulk', array_filter([
+                    <a href="{{ route($presensiRoutePrefix.'.bulk', array_filter([
                         'kelas_id' => ($filters['kelas_id'] ?? 0) > 0 ? $filters['kelas_id'] : null,
                         'tanggal' => ($filters['tanggal'] ?? '') !== '' ? $filters['tanggal'] : null,
                     ])) }}"
@@ -345,7 +350,7 @@
                         Catatan Kelas: <strong>{{ (int) ($matrixSummary['total_catatan'] ?? 0) }}</strong>
                     </span>
                     @if ($hasExplicitFilter ?? false)
-                        <a href="{{ route('presensi-siswa.index') }}" class="filter-btn filter-btn-secondary"
+                        <a href="{{ route($presensiRoutePrefix.'.index') }}" class="filter-btn filter-btn-secondary"
                             style="height: 1.9rem; min-height: 1.9rem; padding: 0 0.7rem; font-size: 0.75rem;">
                             <i class="fa fa-undo"></i> Reset
                         </a>
@@ -354,7 +359,7 @@
             </div>
 
             <div class="filter-card-body">
-                <form method="GET" action="{{ route('presensi-siswa.index') }}"
+                <form method="GET" action="{{ route($presensiRoutePrefix.'.index') }}"
                     class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
                     <div class="lg:col-span-3">
                         <label for="filter_tahun_ajaran_id" class="filter-label">Tahun Ajaran</label>
@@ -407,7 +412,7 @@
                         <button type="submit" class="filter-btn filter-btn-primary flex-1 min-w-0 px-3" title="Tampilkan Data">
                             <i class="fa fa-filter"></i> Filter
                         </button>
-                        <a href="{{ route('presensi-siswa.index') }}" class="filter-btn filter-btn-secondary filter-btn-icon"
+                        <a href="{{ route($presensiRoutePrefix.'.index') }}" class="filter-btn filter-btn-secondary filter-btn-icon"
                             title="Reset Filter">
                             <i class="fa fa-sync-alt"></i>
                         </a>
@@ -462,7 +467,7 @@
                                         <i class="fa fa-trash-alt mr-1"></i> Hapus Per Tanggal
                                     </button>
                                 @endif
-                                <a href="{{ route('presensi-siswa.rekap', [
+                                <a href="{{ route($presensiRoutePrefix.'.rekap', [
                                     'kelas_id' => $matrixKelas->id,
                                     'bulan' => $matrix['bulan'],
                                 ]) }}"
@@ -481,7 +486,7 @@
                                         </th>
                                         @foreach ($matrixDays as $dayInfo)
                                             <th class="{{ $dayInfo['is_today'] ? 'bg-orange-50 text-orange-700' : '' }}">
-                                                <a href="{{ route('presensi-siswa.bulk', ['kelas_id' => $matrixKelas->id, 'tanggal' => $dayInfo['date']]) }}"
+                                                <a href="{{ route($presensiRoutePrefix.'.bulk', ['kelas_id' => $matrixKelas->id, 'tanggal' => $dayInfo['date']]) }}"
                                                     class="block rounded px-1 py-0.5 text-inherit hover:bg-orange-50 hover:text-orange-700 transition-colors"
                                                     style="text-decoration: none;"
                                                     title="Input massal tanggal {{ $dayInfo['date'] }}">
@@ -672,7 +677,7 @@
                 </button>
             </div>
 
-            <form id="presensiBulkDeleteForm" action="{{ route('presensi-siswa.bulk.destroy') }}" method="POST">
+            <form id="presensiBulkDeleteForm" action="{{ route($presensiRoutePrefix.'.bulk.destroy') }}" method="POST">
                 @csrf
                 @method('DELETE')
                 @foreach ($preservedRedirectFields as $fieldName => $fieldValue)

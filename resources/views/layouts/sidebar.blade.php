@@ -34,7 +34,15 @@
                 Menu Utama
             </p>
             @php
-                $isDashboardActive = request()->routeIs('home');
+                $authUser = Auth::user();
+                $isSuperAdmin = $authUser?->hasRole('super admin') ?? false;
+                $isWaliKelas = $authUser?->hasRole('wali kelas') ?? false;
+                $showAdminMenus = $authUser === null || $isSuperAdmin;
+                $isDashboardActive = request()->routeIs('home') || (! $isSuperAdmin && request()->routeIs('wali-kelas.dashboard'));
+                $isWaliDashboardActive = $isSuperAdmin && request()->routeIs('wali-kelas.dashboard');
+                $isWaliAnggotaActive = request()->routeIs('wali-kelas.anggota-kelas.*');
+                $isWaliPresensiActive = request()->routeIs('wali-kelas.presensi-siswa.*');
+                $isWaliPenilaianActive = request()->routeIs('wali-kelas.penilaian-tp.*', 'wali-kelas.penilaian-rekap.*');
                 $isDataMasterActive = request()->is('data-master*');
                 $isDataPelengkapActive = request()->is('data-pelengkap*');
                 $isInformasiActive = request()->is('informasi*');
@@ -58,13 +66,132 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                             </svg>
-                            <span class="menu-text">Dashboard</span>
+                            <span class="menu-text">{{ ! $isSuperAdmin && $isWaliKelas ? 'Dashboard Wali Kelas' : 'Dashboard' }}</span>
                         </div>
                     </a>
-                    <div class="sidebar-tooltip">Dashboard</div>
+                    <div class="sidebar-tooltip">{{ ! $isSuperAdmin && $isWaliKelas ? 'Dashboard Wali Kelas' : 'Dashboard' }}</div>
                 </div>
 
-                <!-- Data Master Dropdown -->
+                @if ($isSuperAdmin)
+                    <div class="relative group/tooltip">
+                        <a href="{{ route('wali-kelas.dashboard') }}"
+                            class="group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all {{ $isWaliDashboardActive ? $menuActiveClass : $menuInactiveClass }}">
+                            <div class="flex items-center gap-3">
+                                <svg class="h-4 w-4 shrink-0 {{ $isWaliDashboardActive ? $menuIconActiveClass : $menuIconInactiveClass }}"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                                </svg>
+                                <span class="menu-text">Dashboard Wali Kelas</span>
+                            </div>
+                        </a>
+                        <div class="sidebar-tooltip">Dashboard Wali Kelas</div>
+                    </div>
+                @endif
+
+                @if ($isSuperAdmin || $isWaliKelas)
+                    @php
+                        $waliAnggotaMenuLabel = $isSuperAdmin ? 'Anggota Kelas Binaan' : 'Anggota Kelas';
+                        $waliDropdownGroups = [
+                            [
+                                'id' => 'submenu-wali-penilaian',
+                                'label' => $isSuperAdmin ? 'Penilaian Kelas Binaan' : 'Penilaian (SD)',
+                                'active' => $isWaliPenilaianActive,
+                                'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01',
+                                'items' => [
+                                    [
+                                        'label' => 'Input Nilai TP',
+                                        'route' => 'wali-kelas.penilaian-tp.index',
+                                        'active' => request()->routeIs('wali-kelas.penilaian-tp.*'),
+                                    ],
+                                    [
+                                        'label' => 'Rekap & Deskripsi',
+                                        'route' => 'wali-kelas.penilaian-rekap.index',
+                                        'active' => request()->routeIs('wali-kelas.penilaian-rekap.*'),
+                                    ],
+                                ],
+                            ],
+                            [
+                                'id' => 'submenu-wali-presensi',
+                                'label' => $isSuperAdmin ? 'Presensi Kelas Binaan' : 'Presensi Siswa',
+                                'active' => $isWaliPresensiActive,
+                                'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
+                                'items' => [
+                                    [
+                                        'label' => 'Matriks & Log Presensi',
+                                        'route' => 'wali-kelas.presensi-siswa.index',
+                                        'active' => request()->routeIs('wali-kelas.presensi-siswa.index', 'wali-kelas.presensi-siswa.edit'),
+                                    ],
+                                    [
+                                        'label' => 'Input Presensi Massal',
+                                        'route' => 'wali-kelas.presensi-siswa.bulk',
+                                        'active' => request()->routeIs('wali-kelas.presensi-siswa.bulk*'),
+                                    ],
+                                    [
+                                        'label' => 'Rekap & Persentase',
+                                        'route' => 'wali-kelas.presensi-siswa.rekap',
+                                        'active' => request()->routeIs('wali-kelas.presensi-siswa.rekap'),
+                                    ],
+                                    [
+                                        'label' => 'Statistik Tahunan',
+                                        'route' => 'wali-kelas.presensi-siswa.tahunan',
+                                        'active' => request()->routeIs('wali-kelas.presensi-siswa.tahunan'),
+                                    ],
+                                ],
+                            ],
+                        ];
+                    @endphp
+                    <div class="relative group/tooltip">
+                        <a href="{{ route('wali-kelas.anggota-kelas.index') }}"
+                            class="group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all {{ $isWaliAnggotaActive ? $menuActiveClass : $menuInactiveClass }}">
+                            <div class="flex items-center gap-3">
+                                <svg class="h-4 w-4 shrink-0 {{ $isWaliAnggotaActive ? $menuIconActiveClass : $menuIconInactiveClass }}"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                <span class="menu-text">{{ $waliAnggotaMenuLabel }}</span>
+                            </div>
+                        </a>
+                        <div class="sidebar-tooltip">{{ $waliAnggotaMenuLabel }}</div>
+                    </div>
+
+                    @foreach ($waliDropdownGroups as $dropdownGroup)
+                        <div class="has-submenu relative group/submenu">
+                            <button type="button" data-sidebar-toggle="{{ $dropdownGroup['id'] }}"
+                                aria-expanded="{{ $dropdownGroup['active'] ? 'true' : 'false' }}"
+                                class="w-full group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all {{ $dropdownGroup['active'] ? $menuActiveClass : $menuInactiveClass }}">
+                                <div class="flex items-center gap-3">
+                                    <svg class="h-4 w-4 shrink-0 {{ $dropdownGroup['active'] ? $menuIconActiveClass : $menuIconInactiveClass }}"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="{{ $dropdownGroup['icon'] }}" />
+                                    </svg>
+                                    <span class="menu-text">{{ $dropdownGroup['label'] }}</span>
+                                </div>
+                                <svg class="menu-chevron h-3.5 w-3.5 transition-transform duration-200 {{ $dropdownGroup['active'] ? 'text-white rotate-180' : 'text-slate-400 group-hover:text-white' }}"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <div id="{{ $dropdownGroup['id'] }}"
+                                class="{{ $dropdownGroup['active'] ? '' : 'hidden' }} submenu-flyout mt-1 space-y-1 pl-4 border-l border-slate-800 ml-5 py-1">
+                                <div class="flyout-header hidden">
+                                    <span>{{ $dropdownGroup['label'] }}</span>
+                                </div>
+                                @foreach ($dropdownGroup['items'] as $submenuItem)
+                                    <a href="{{ route($submenuItem['route']) }}"
+                                        class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ $submenuItem['active'] ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                                        {{ $submenuItem['label'] }}
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
+                @endif
+
+                @if ($showAdminMenus)
+                    <!-- Data Master Dropdown -->
                 <div class="has-submenu relative group/submenu">
                     <button type="button" data-sidebar-toggle="submenu-data-master"
                         aria-expanded="{{ $isDataMasterActive ? 'true' : 'false' }}"
@@ -351,6 +478,7 @@
                         </a>
                     </div>
                 </div>
+                @endif
             </nav>
         </div>
     </div>

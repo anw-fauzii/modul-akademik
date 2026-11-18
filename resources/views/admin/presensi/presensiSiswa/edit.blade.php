@@ -5,6 +5,10 @@
 @endsection
 
 @section('content')
+    @php
+        $presensiRoutePrefix = $presensiRoutePrefix ?? 'presensi-siswa';
+        $isWaliKelasScope = $isWaliKelasScope ?? false;
+    @endphp
     <div class="app-main__inner">
         <div class="app-page-title">
             <div class="page-title-wrapper">
@@ -15,13 +19,16 @@
                     </div>
                     <div>
                         Edit Presensi Siswa
+                        @if ($isWaliKelasScope)
+                            <span class="badge badge-warning text-dark ml-1 align-middle" style="font-size: 0.7rem;">Kelas Binaan Wali Kelas</span>
+                        @endif
                         <div class="page-title-subheading">
                             Perbarui status kehadiran, jam masuk, atau keterlambatan siswa.
                         </div>
                     </div>
                 </div>
                 <div class="page-title-actions">
-                    <a href="{{ route('presensi-siswa.index') }}" class="btn btn-light shadow-sm" style="border-radius: 10px;">
+                    <a href="{{ route($presensiRoutePrefix.'.index') }}" class="btn btn-light shadow-sm" style="border-radius: 10px;">
                         <i class="fa fa-arrow-left mr-1"></i> Kembali
                     </a>
                 </div>
@@ -30,14 +37,14 @@
 
         <div class="main-card card shadow-sm border-0" style="border-radius: 16px;">
             <div class="card-body p-6">
-                <form action="{{ route('presensi-siswa.update', $presensiSiswa) }}" method="POST">
+                <form action="{{ route($presensiRoutePrefix.'.update', $presensiSiswa) }}" method="POST">
                     @csrf
                     @method('PUT')
 
                     @include('admin.presensi.presensiSiswa._form')
 
                     <div class="mt-6 pt-4 border-t border-slate-100 flex justify-end gap-3">
-                        <a href="{{ route('presensi-siswa.index') }}" class="btn btn-light" style="border-radius: 10px;">
+                        <a href="{{ route($presensiRoutePrefix.'.index') }}" class="btn btn-light" style="border-radius: 10px;">
                             Batal
                         </a>
                         <button type="submit" class="btn text-white shadow-sm"

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin\Presensi;
 
+use App\Http\Controllers\Concerns\ManagesPresensiSiswaActions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Presensi\PresensiSiswaBulkDestroyRequest;
 use App\Http\Requests\Admin\Presensi\PresensiSiswaBulkRequest;
@@ -15,6 +16,8 @@ use Illuminate\View\View;
 
 class PresensiSiswaController extends Controller
 {
+    use ManagesPresensiSiswaActions;
+
     public function __construct(
         private readonly PresensiSiswaService $presensiSiswaService,
     ) {
@@ -26,19 +29,10 @@ class PresensiSiswaController extends Controller
      */
     public function index(Request $request): View
     {
-        $filters = $request->only([
-            'tanggal',
-            'status',
-            'kelas_id',
-            'tahun_ajaran_id',
-            'bulan',
-        ]);
-        $filters['has_explicit_tahun_ajaran'] = $request->exists('tahun_ajaran_id');
-        $filters['has_explicit_filter'] = $request->hasAny(['tanggal', 'status', 'kelas_id', 'tahun_ajaran_id', 'bulan']);
-
-        $data = $this->presensiSiswaService->getIndexData($filters);
-
-        return view('admin.presensi.presensiSiswa.index', $data);
+        return view(
+            'admin.presensi.presensiSiswa.index',
+            $this->presensiSiswaService->getIndexData($this->extractIndexFilters($request))
+        );
     }
 
     /**
@@ -86,30 +80,9 @@ class PresensiSiswaController extends Controller
         $validated = $request->validated();
         $kelasId = (int) $validated['kelas_id'];
         $tanggal = Carbon::parse($validated['tanggal'])->format('Y-m-d');
-
         $deletedCount = $this->presensiSiswaService->deleteBulkByClassAndDate($kelasId, $tanggal);
-        $flashKey = $deletedCount > 0 ? 'success' : 'warning';
-        $flashMessage = $deletedCount > 0
-            ? "Berhasil menghapus {$deletedCount} data presensi siswa pada {$tanggal}."
-            : "Tidak ada data presensi pada tanggal {$tanggal} untuk kelas yang dipilih.";
 
-        if ($request->input('redirect_to') === 'bulk') {
-            return redirect()
-                ->route('presensi-siswa.bulk', [
-                    'kelas_id' => $kelasId,
-                    'tanggal' => $tanggal,
-                ])
-                ->with($flashKey, $flashMessage);
-        }
-
-        $redirectQuery = $this->extractIndexRedirectQuery($request, [
-            'kelas_id' => $kelasId,
-            'bulan' => Carbon::parse($tanggal)->format('Y-m'),
-        ]);
-
-        return redirect()
-            ->route('presensi-siswa.index', $redirectQuery)
-            ->with($flashKey, $flashMessage);
+        return $this->buildBulkDestroyRedirect($request, $kelasId, $tanggal, $deletedCount, 'presensi-siswa');
     }
 
     /**
@@ -145,21 +118,10 @@ class PresensiSiswaController extends Controller
      */
     public function rekap(Request $request): View
     {
-        $filters = $request->only([
-            'tahun_ajaran_id',
-            'kelas_id',
-            'bulan',
-            'include_weekend',
-        ]);
-        $filters['has_explicit_tahun_ajaran'] = $request->exists('tahun_ajaran_id');
-        $filters['has_explicit_filter'] = $request->hasAny([
-            'tahun_ajaran_id',
-            'kelas_id',
-            'bulan',
-            'include_weekend',
-        ]);
-
-        return view('admin.presensi.presensiSiswa.rekap', $this->presensiSiswaService->getRekapData($filters));
+        return view(
+            'admin.presensi.presensiSiswa.rekap',
+            $this->presensiSiswaService->getRekapData($this->extractRekapFilters($request))
+        );
     }
 
     /**
@@ -167,44 +129,9 @@ class PresensiSiswaController extends Controller
      */
     public function tahunan(Request $request): View
     {
-        $filters = $request->only([
-            'nama_tahun_ajaran',
-            'tahun_ajaran_id',
-            'semester',
-            'jenjang',
-            'kelas_id',
-            'include_weekend',
-        ]);
-        $filters['has_explicit_filter'] = $request->hasAny([
-            'nama_tahun_ajaran',
-            'tahun_ajaran_id',
-            'semester',
-            'jenjang',
-            'kelas_id',
-            'include_weekend',
-        ]);
-
-        return view('admin.presensi.presensiSiswa.tahunan', $this->presensiSiswaService->getTahunanData($filters));
-    }
-
-    /**
-     * Mengambil parameter query redirect yang dipertahankan saat kembali ke index.
-     *
-     * @param  array<string, mixed>  $defaults
-     * @return array<string, mixed>
-     */
-    private function extractIndexRedirectQuery(Request $request, array $defaults = []): array
-    {
-        $redirectQuery = $defaults;
-        if ($request->exists('redirect_tahun_ajaran_id')) {
-            $redirectQuery['tahun_ajaran_id'] = (string) $request->input('redirect_tahun_ajaran_id', '');
-        }
-        foreach (['kelas_id', 'bulan', 'status', 'tanggal'] as $key) {
-            if ($request->filled("redirect_{$key}")) {
-                $redirectQuery[$key] = $request->input("redirect_{$key}");
-            }
-        }
-
-        return $redirectQuery;
+        return view(
+            'admin.presensi.presensiSiswa.tahunan',
+            $this->presensiSiswaService->getTahunanData($this->extractTahunanFilters($request))
+        );
     }
 }

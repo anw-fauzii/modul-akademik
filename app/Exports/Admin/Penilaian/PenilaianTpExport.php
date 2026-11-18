@@ -2,8 +2,10 @@
 
 namespace App\Exports\Admin\Penilaian;
 
+use App\Models\Admin\DataMaster\Kelas;
 use App\Models\Admin\Penilaian\PeriodeTp;
 use App\Services\Admin\Penilaian\PenilaianTpService;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Maatwebsite\Excel\Concerns\Export;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -66,9 +68,11 @@ class PenilaianTpExport implements Export, FromArray, ShouldAutoSize, WithStyles
 
     /**
      * @param  array<string, mixed>  $filters
+     * @param  ?EloquentCollection<int, Kelas>  $scopedKelasOptions
      */
     public function __construct(
-        protected array $filters = []
+        protected array $filters = [],
+        protected ?EloquentCollection $scopedKelasOptions = null
     ) {}
 
     /**
@@ -471,7 +475,10 @@ class PenilaianTpExport implements Export, FromArray, ShouldAutoSize, WithStyles
     protected function resolveMatrix(): array
     {
         if ($this->cachedMatrix === null) {
-            $this->cachedMatrix = app(PenilaianTpService::class)->getMatrixData($this->filters);
+            $service = app(PenilaianTpService::class);
+            $this->cachedMatrix = $this->scopedKelasOptions !== null
+                ? $service->getMatrixData($this->filters, $this->scopedKelasOptions)
+                : $service->getMatrixData($this->filters);
         }
 
         return $this->cachedMatrix;

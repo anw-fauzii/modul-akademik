@@ -9,25 +9,38 @@ use App\Models\Admin\DataPelengkap\JenjangPendidikan;
 use App\Models\Admin\DataPelengkap\Pekerjaan;
 use App\Models\Admin\DataPelengkap\Penghasilan;
 use App\Models\Admin\DataPelengkap\Transportasi;
-use Carbon\Carbon;
+use App\Services\WaliKelas\WaliKelasDashboardService;
 use Illuminate\Contracts\Support\Renderable;
+use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
     /**
      * Create a new controller instance.
      */
-    public function __construct()
-    {
+    public function __construct(
+        protected ?WaliKelasDashboardService $waliKelasDashboardService = null
+    ) {
         $this->middleware('auth');
-        $this->middleware('role:super admin');
+        $this->middleware('role:super admin|wali kelas');
+        $this->waliKelasDashboardService ??= app(WaliKelasDashboardService::class);
     }
 
     /**
-     * Menampilkan dashboard utama akademik dengan ringkasan data master dan data pelengkap.
+     * Menampilkan dashboard utama sesuai role pengguna (Admin atau Wali Kelas pada tahun ajaran aktif).
      */
-    public function index(): Renderable
+    public function index(Request $request): Renderable
     {
+        $user = $request->user();
+        if ($user !== null && ! $user->hasRole('super admin') && $user->hasRole('wali kelas')) {
+            return view(
+                'waliKelas.dashboard',
+                $this->waliKelasDashboardService->getDashboardData(
+                    $user,
+                    $request->integer('kelas_id') ?: null
+                )
+            );
+        }
         // 1. DATA MASTER
         $activeTahunAjaran = TahunAjaran::where('is_active', true)->first();
         $totalTahunAjaran = TahunAjaran::count();

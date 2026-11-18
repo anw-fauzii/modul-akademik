@@ -342,6 +342,8 @@
 
 @section('content')
     @php
+        $presensiRoutePrefix = $presensiRoutePrefix ?? 'presensi-siswa';
+        $isWaliKelasScope = $isWaliKelasScope ?? false;
         $batasJamMasuk = \App\Models\Admin\Presensi\PresensiSiswa::BATAS_JAM_MASUK;
         $statusShortLabels = [
             'hadir' => 'H',
@@ -362,13 +364,16 @@
                     </div>
                     <div>
                         Input Presensi Massal Per Tanggal
+                        @if ($isWaliKelasScope)
+                            <span class="badge badge-warning text-dark ml-1 align-middle" style="font-size: 0.7rem;">Kelas Binaan Wali Kelas</span>
+                        @endif
                         <div class="page-title-subheading">
                             Catat atau perbarui kehadiran satu kelas sekaligus pada tanggal pilihan Anda.
                         </div>
                     </div>
                 </div>
                 <div class="page-title-actions d-flex flex-wrap align-items-center" style="gap: 0.5rem;">
-                    <a href="{{ route('presensi-siswa.index', array_filter([
+                    <a href="{{ route($presensiRoutePrefix.'.index', array_filter([
                         'kelas_id' => $selectedKelasId > 0 ? $selectedKelasId : null,
                         'bulan' => \Carbon\Carbon::parse($tanggal)->format('Y-m'),
                     ])) }}"
@@ -417,7 +422,7 @@
                             Sudah Tercatat: <strong>{{ $existingCount }}</strong>
                         </span>
                         @if ($existingCount > 0)
-                            <form id="bulkDestroyCurrentForm" action="{{ route('presensi-siswa.bulk.destroy') }}" method="POST" class="d-inline">
+                            <form id="bulkDestroyCurrentForm" action="{{ route($presensiRoutePrefix.'.bulk.destroy') }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('DELETE')
                                 <input type="hidden" name="kelas_id" value="{{ $selectedKelas->id }}">
@@ -435,7 +440,7 @@
             </div>
 
             <div class="filter-card-body">
-                <form method="GET" action="{{ route('presensi-siswa.bulk') }}" id="bulkContextForm"
+                <form method="GET" action="{{ route($presensiRoutePrefix.'.bulk') }}" id="bulkContextForm"
                     class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
                     <div class="md:col-span-6">
                         <label for="bulk_kelas_id" class="filter-label">Kelas</label>
@@ -518,7 +523,7 @@
                 </div>
             </div>
 
-            <form method="POST" action="{{ route('presensi-siswa.bulk.store') }}" id="bulkAttendanceForm">
+            <form method="POST" action="{{ route($presensiRoutePrefix.'.bulk.store') }}" id="bulkAttendanceForm">
                 @csrf
                 <input type="hidden" name="kelas_id" value="{{ $selectedKelas->id }}">
                 <input type="hidden" name="tanggal" value="{{ $tanggal }}">
@@ -719,7 +724,7 @@
                             &bull; Batas tepat waktu: <strong>{{ $batasJamMasuk }}</strong> (lewat {{ $batasJamMasuk }} otomatis Terlambat).
                         </div>
                         <div class="d-flex align-items-center" style="gap: 0.5rem;">
-                            <a href="{{ route('presensi-siswa.index', [
+                            <a href="{{ route($presensiRoutePrefix.'.index', [
                                 'kelas_id' => $selectedKelas->id,
                                 'bulan' => \Carbon\Carbon::parse($tanggal)->format('Y-m'),
                             ]) }}"
