@@ -140,4 +140,3 @@ trait ManagesPresensiSiswaActions
             ->with($flashKey, $flashMessage);
     }
 }
-

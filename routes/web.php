@@ -30,7 +30,9 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SSOController;
 use App\Http\Controllers\WaliKelas\AnggotaKelasController as WaliKelasAnggotaKelasController;
 use App\Http\Controllers\WaliKelas\DashboardController as WaliKelasDashboardController;
+use App\Http\Controllers\WaliKelas\JadwalPelajaranController as WaliKelasJadwalPelajaranController;
 use App\Http\Controllers\WaliKelas\PenilaianTpController as WaliKelasPenilaianTpController;
+use App\Http\Controllers\WaliKelas\PerkembanganSiswaController as WaliKelasPerkembanganSiswaController;
 use App\Http\Controllers\WaliKelas\PresensiSiswaController as WaliKelasPresensiSiswaController;
 use Illuminate\Support\Facades\Route;
 
@@ -52,6 +54,12 @@ Route::middleware(['auth', 'sso.check', 'nocache'])->group(function () {
         ->name('wali-kelas.anggota-kelas.index');
     Route::get('/wali-kelas/anggota-kelas/{anggota_kelas}', [WaliKelasAnggotaKelasController::class, 'show'])
         ->name('wali-kelas.anggota-kelas.show');
+    Route::get('/wali-kelas/jadwal-pelajaran', [WaliKelasJadwalPelajaranController::class, 'index'])
+        ->name('wali-kelas.jadwal-pelajaran.index');
+    Route::get('/wali-kelas/perkembangan-siswa', [WaliKelasPerkembanganSiswaController::class, 'index'])
+        ->name('wali-kelas.perkembangan-siswa.index');
+    Route::get('/wali-kelas/perkembangan-siswa/{anggota_kelas}', [WaliKelasPerkembanganSiswaController::class, 'show'])
+        ->name('wali-kelas.perkembangan-siswa.show');
     Route::get('/wali-kelas/presensi-siswa/tahunan', [WaliKelasPresensiSiswaController::class, 'tahunan'])
         ->name('wali-kelas.presensi-siswa.tahunan');
     Route::get('/wali-kelas/presensi-siswa/rekap', [WaliKelasPresensiSiswaController::class, 'rekap'])

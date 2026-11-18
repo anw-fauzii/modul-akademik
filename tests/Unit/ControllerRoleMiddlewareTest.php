@@ -12,7 +12,9 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SSOController;
 use App\Http\Controllers\WaliKelas\AnggotaKelasController as WaliKelasAnggotaKelasController;
 use App\Http\Controllers\WaliKelas\DashboardController as WaliKelasDashboardController;
+use App\Http\Controllers\WaliKelas\JadwalPelajaranController as WaliKelasJadwalPelajaranController;
 use App\Http\Controllers\WaliKelas\PenilaianTpController as WaliKelasPenilaianTpController;
+use App\Http\Controllers\WaliKelas\PerkembanganSiswaController as WaliKelasPerkembanganSiswaController;
 use App\Http\Controllers\WaliKelas\PresensiSiswaController as WaliKelasPresensiSiswaController;
 use App\Models\User;
 use Illuminate\Contracts\Http\Kernel;
@@ -86,6 +88,12 @@ class ControllerRoleMiddlewareTest extends TestCase
 
         $waliPenilaianMiddlewares = collect(app()->make(WaliKelasPenilaianTpController::class)->getMiddleware())->pluck('middleware')->all();
         $this->assertContains('role:super admin|wali kelas', $waliPenilaianMiddlewares);
+
+        $waliPerkembanganMiddlewares = collect(app()->make(WaliKelasPerkembanganSiswaController::class)->getMiddleware())->pluck('middleware')->all();
+        $this->assertContains('role:super admin|wali kelas', $waliPerkembanganMiddlewares);
+
+        $waliJadwalMiddlewares = collect(app()->make(WaliKelasJadwalPelajaranController::class)->getMiddleware())->pluck('middleware')->all();
+        $this->assertContains('role:super admin|wali kelas', $waliJadwalMiddlewares);
     }
 
     public function test_auth_and_sso_controllers_remain_accessible_without_super_admin_or_wali_kelas_role(): void

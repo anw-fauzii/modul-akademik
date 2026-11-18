@@ -253,10 +253,14 @@ class PenilaianTpService
      *
      * @param  array<string, mixed>  $input
      * @param  ?EloquentCollection<int, Kelas>  $scopedKelasOptions
+     * @param  ?EloquentCollection<int, MataPelajaran>  $scopedMapelOptions
      * @return array<string, mixed>
      */
-    public function getMatrixData(array $input = [], ?EloquentCollection $scopedKelasOptions = null): array
-    {
+    public function getMatrixData(
+        array $input = [],
+        ?EloquentCollection $scopedKelasOptions = null,
+        ?EloquentCollection $scopedMapelOptions = null
+    ): array {
         if ($scopedKelasOptions !== null) {
             $tahunAjaranOptions = new EloquentCollection(
                 $scopedKelasOptions
@@ -303,7 +307,9 @@ class PenilaianTpService
             $kelasOptions = new EloquentCollection;
         }
 
-        $mataPelajaranOptions = $this->getSdMapelOptions();
+        $mataPelajaranOptions = $scopedMapelOptions !== null
+            ? $scopedMapelOptions->values()
+            : $this->getSdMapelOptions();
 
         $requestedKelasId = $this->resolvePositiveInt($input['kelas_id'] ?? null);
         $selectedKelas = $requestedKelasId !== null
@@ -531,11 +537,15 @@ class PenilaianTpService
      *
      * @param  array<string, mixed>  $input
      * @param  ?EloquentCollection<int, Kelas>  $scopedKelasOptions
+     * @param  ?EloquentCollection<int, MataPelajaran>  $scopedMapelOptions
      * @return array<string, mixed>
      */
-    public function getRekapData(array $input = [], ?EloquentCollection $scopedKelasOptions = null): array
-    {
-        $matrix = $this->getMatrixData($input, $scopedKelasOptions);
+    public function getRekapData(
+        array $input = [],
+        ?EloquentCollection $scopedKelasOptions = null,
+        ?EloquentCollection $scopedMapelOptions = null
+    ): array {
+        $matrix = $this->getMatrixData($input, $scopedKelasOptions, $scopedMapelOptions);
         $periode = $matrix['periode'];
         $carriedMidSumatif = $matrix['carriedMidSumatifBabs'] ?? collect();
         $activeSumatif = $matrix['activeSumatifBabs'] ?? collect();

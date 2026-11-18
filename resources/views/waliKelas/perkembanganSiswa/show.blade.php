@@ -1,0 +1,300 @@
+@extends('layouts.appui')
+
+@section('title')
+    <title>Detail Perkembangan {{ $siswa->nama_lengkap }} - PION Yayasan Prima Insani</title>
+@endsection
+
+@section('content')
+    @include('waliKelas.partials._styles')
+
+    @php
+        $isSd = $isSd ?? false;
+        $periode = $periode ?? \App\Models\Admin\Penilaian\PeriodeTp::PERIODE_MID;
+        $isMid = $periode === \App\Models\Admin\Penilaian\PeriodeTp::PERIODE_MID;
+        $presensiStats = $presensiStats ?? ['total' => 0, 'hadir' => 0, 'terlambat' => 0, 'izin' => 0, 'sakit' => 0, 'alpa' => 0, 'hadir_rate' => null];
+        $summary = $summary ?? ['total_mapel' => 0, 'dinilai_count' => 0, 'tuntas_count' => 0, 'belum_tuntas_count' => 0, 'rata_rapor' => null];
+        $subjectDetails = $subjectDetails ?? collect();
+    @endphp
+
+    <div class="app-main__inner">
+        <div class="wk-hero">
+            <div class="wk-hero-glow"></div>
+            <div class="row align-items-center position-relative" style="z-index: 1;">
+                <div class="col-lg-8 mb-3 mb-lg-0">
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                        <span class="badge text-white px-2 py-1 font-weight-bold"
+                            style="background: rgba(234, 88, 12, 0.92); font-size: 11px; border-radius: 6px;">
+                            <i class="fa fa-user-graduate mr-1"></i> PERKEMBANGAN SISWA
+                        </span>
+                        <span class="badge px-2.5 py-1"
+                            style="background: rgba(255, 255, 255, 0.14); color: #ffffff; font-size: 11px;">
+                            {{ $selectedKelas->nama_kelas }} ({{ $selectedKelas->jenjang_kelas }})
+                        </span>
+                        @if ($activeTahunAjaran)
+                            <span class="badge px-2.5 py-1"
+                                style="background: rgba(16, 185, 129, 0.22); color: #ecfdf5; font-size: 11px;">
+                                {{ $activeTahunAjaran->full_label }}
+                            </span>
+                        @endif
+                    </div>
+
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        @if ($siswa->avatar_url)
+                            <img src="{{ $siswa->avatar_url }}" alt="{{ $siswa->nama_lengkap }}"
+                                style="width: 56px; height: 56px; border-radius: 14px; object-fit: cover; border: 2px solid rgba(255,255,255,0.3);">
+                        @else
+                            <div class="wk-avatar-fallback" style="width: 56px; height: 56px; font-size: 1.15rem; border-radius: 14px;">
+                                {{ $siswa->inisial_nama }}
+                            </div>
+                        @endif
+                        <div>
+                            <h3 class="font-weight-bold text-white mb-0">{{ $siswa->nama_lengkap }}</h3>
+                            <div class="small" style="color: rgba(255,255,255,0.78);">
+                                NIS: <strong>{{ $siswa->nis }}</strong>
+                                @if ($siswa->nisn)
+                                    &bull; NISN: {{ $siswa->nisn }}
+                                @endif
+                                &bull; {{ $siswa->jenis_kelamin_label }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 d-flex flex-wrap justify-content-lg-end gap-2">
+                    <a href="{{ route('wali-kelas.anggota-kelas.show', $anggotaKelas->id) }}"
+                        class="btn btn-sm btn-light font-weight-semibold shadow-sm" style="border-radius: 9px;">
+                        <i class="fa fa-id-card mr-1"></i> Biodata Siswa
+                    </a>
+                    <a href="{{ route('wali-kelas.perkembangan-siswa.index', ['kelas_id' => $selectedKelas->id, 'periode' => $periode]) }}"
+                        class="btn btn-sm text-white font-weight-semibold shadow-sm"
+                        style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 9px;">
+                        <i class="fa fa-arrow-left mr-1"></i> Kembali ke Leger
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        @if ($isSd)
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                <div class="small text-muted font-weight-semibold">
+                    Menampilkan rekap periode <strong>{{ $isMid ? 'Mid Semester' : 'Semester' }}</strong> (beserta perbandingan Mid vs Semester per mapel &amp; TP).
+                </div>
+                <div class="btn-group btn-group-sm shadow-sm">
+                    <a href="{{ route('wali-kelas.perkembangan-siswa.show', ['anggota_kelas' => $anggotaKelas->id, 'periode' => 'mid']) }}"
+                        class="btn {{ $isMid ? 'text-white font-weight-bold' : 'btn-light border text-slate-700' }}"
+                        style="{{ $isMid ? 'background: linear-gradient(135deg, #ea580c 0%, #d97706 100%);' : '' }}">
+                        Mid Semester
+                    </a>
+                    <a href="{{ route('wali-kelas.perkembangan-siswa.show', ['anggota_kelas' => $anggotaKelas->id, 'periode' => 'semester']) }}"
+                        class="btn {{ ! $isMid ? 'text-white font-weight-bold' : 'btn-light border text-slate-700' }}"
+                        style="{{ ! $isMid ? 'background: linear-gradient(135deg, #ea580c 0%, #d97706 100%);' : '' }}">
+                        Semester
+                    </a>
+                </div>
+            </div>
+        @endif
+
+        <!-- KPI SUMMARY -->
+        <div class="wk-kpi-grid">
+            <div class="wk-kpi-card">
+                <div>
+                    <div class="wk-kpi-label">
+                        <span class="wk-kpi-dot" style="background: #ea580c;"></span> Rata-Rata NA Rapor
+                    </div>
+                    <div class="wk-kpi-value" style="color: #c2410c;">
+                        {{ $summary['rata_rapor'] !== null ? number_format((float) $summary['rata_rapor'], 1) : '-' }}
+                    </div>
+                    <div class="wk-kpi-sub">
+                        {{ $summary['dinilai_count'] }} dari {{ $summary['total_mapel'] }} mapel dinilai
+                    </div>
+                </div>
+                <span class="wk-kpi-icon" style="background: #fff7ed; color: #ea580c;">
+                    <i class="fa fa-star"></i>
+                </span>
+            </div>
+
+            <div class="wk-kpi-card">
+                <div>
+                    <div class="wk-kpi-label">
+                        <span class="wk-kpi-dot" style="background: #10b981;"></span> Mapel Tuntas KKM
+                    </div>
+                    <div class="wk-kpi-value" style="color: #047857;">{{ $summary['tuntas_count'] }}</div>
+                    <div class="wk-kpi-sub">
+                        Dari {{ $summary['dinilai_count'] }} mapel bernilai
+                    </div>
+                </div>
+                <span class="wk-kpi-icon" style="background: #ecfdf5; color: #059669;">
+                    <i class="fa fa-check-circle"></i>
+                </span>
+            </div>
+
+            <div class="wk-kpi-card">
+                <div>
+                    <div class="wk-kpi-label">
+                        <span class="wk-kpi-dot" style="background: #ef4444;"></span> Perlu Pendampingan
+                    </div>
+                    <div class="wk-kpi-value" style="color: #b91c1c;">{{ $summary['belum_tuntas_count'] }}</div>
+                    <div class="wk-kpi-sub">
+                        Mapel dengan nilai di bawah KKM
+                    </div>
+                </div>
+                <span class="wk-kpi-icon" style="background: #fef2f2; color: #dc2626;">
+                    <i class="fa fa-exclamation-triangle"></i>
+                </span>
+            </div>
+
+            <div class="wk-kpi-card">
+                <div>
+                    <div class="wk-kpi-label">
+                        <span class="wk-kpi-dot" style="background: #8b5cf6;"></span> Kehadiran Presensi
+                    </div>
+                    <div class="wk-kpi-value" style="color: #6d28d9;">
+                        {{ $presensiStats['hadir_rate'] !== null ? $presensiStats['hadir_rate'].'%' : '-' }}
+                    </div>
+                    <div class="wk-kpi-sub">
+                        H:{{ $presensiStats['hadir'] }} T:{{ $presensiStats['terlambat'] }} I:{{ $presensiStats['izin'] }} S:{{ $presensiStats['sakit'] }} A:{{ $presensiStats['alpa'] }}
+                    </div>
+                </div>
+                <span class="wk-kpi-icon" style="background: #f5f3ff; color: #7c3aed;">
+                    <i class="fa fa-calendar-check"></i>
+                </span>
+            </div>
+        </div>
+
+        @if ($isSd)
+            @foreach ($subjectDetails as $item)
+                @php
+                    $mp = $item['mapel'];
+                    $selectedRekap = $item['selected_rekap'];
+                    $rekapMid = $item['rekap_mid'];
+                    $rekapSem = $item['rekap_semester'];
+                    $tpItems = $item['tp_items'];
+                @endphp
+                <div class="wk-surface">
+                    <div class="wk-surface-head">
+                        <div>
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <h6 class="wk-surface-title">[{{ $mp->singkatan }}] {{ $mp->nama_mata_pelajaran }}</h6>
+                                @if ($item['is_taught_by_user'])
+                                    <span class="badge badge-warning text-dark font-weight-bold" style="font-size: 0.67rem;">Anda Ampu</span>
+                                @endif
+                            </div>
+                            <div class="small text-muted">
+                                Guru Pengampu: <strong>{{ $item['teachers'] !== [] ? implode(', ', $item['teachers']) : 'Belum dijadwalkan' }}</strong>
+                                &bull; KKM: <strong>{{ rtrim(rtrim(number_format((float) $item['kkm'], 2, '.', ''), '0'), '.') }}</strong>
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            @if ($rekapMid?->nilai_akhir_rapor !== null)
+                                <span class="badge badge-light border px-2 py-1" style="font-size: 0.72rem;">
+                                    Mid: <strong>{{ rtrim(rtrim(number_format((float) $rekapMid->nilai_akhir_rapor, 1, '.', ''), '0'), '.') }}</strong>
+                                </span>
+                            @endif
+                            @if ($rekapSem?->nilai_akhir_rapor !== null)
+                                <span class="badge badge-light border px-2 py-1" style="font-size: 0.72rem;">
+                                    Sem: <strong>{{ rtrim(rtrim(number_format((float) $rekapSem->nilai_akhir_rapor, 1, '.', ''), '0'), '.') }}</strong>
+                                </span>
+                            @endif
+
+                            @if ($selectedRekap?->nilai_akhir_rapor !== null)
+                                <span class="badge {{ $selectedRekap->tuntas_kkm ? 'badge-success' : 'badge-danger' }} px-2.5 py-1" style="font-size: 0.74rem;">
+                                    NA {{ rtrim(rtrim(number_format((float) $selectedRekap->nilai_akhir_rapor, 1, '.', ''), '0'), '.') }}
+                                    @if ($selectedRekap->predikat_rapor)
+                                        ({{ $selectedRekap->predikat_rapor }})
+                                    @endif
+                                    &bull; {{ $selectedRekap->tuntas_kkm ? 'Tuntas' : 'Belum Tuntas' }}
+                                </span>
+                            @else
+                                <span class="badge badge-secondary px-2 py-1" style="font-size: 0.72rem;">Belum Dinilai</span>
+                            @endif
+
+                            @if ($item['is_taught_by_user'])
+                                <a href="{{ route('wali-kelas.penilaian-tp.index', ['kelas_id' => $selectedKelas->id, 'mata_pelajaran_id' => $mp->id, 'periode' => $periode]) }}"
+                                    class="btn btn-sm btn-outline-primary font-weight-semibold" style="border-radius: 8px; font-size: 0.72rem;">
+                                    <i class="fa fa-edit mr-1"></i> Kelola Nilai
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="p-3">
+                        @if ($selectedRekap)
+                            <div class="d-flex flex-wrap gap-3 small mb-2 px-2 py-2 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                                <span>NA TP: <strong>{{ $selectedRekap->rata_rata_tp !== null ? number_format((float) $selectedRekap->rata_rata_tp, 1) : '-' }}</strong></span>
+                                <span>Rata Sumatif: <strong>{{ $selectedRekap->rata_rata_sumatif !== null ? number_format((float) $selectedRekap->rata_rata_sumatif, 1) : '-' }}</strong></span>
+                                <span>Nilai Ujian: <strong>{{ $selectedRekap->nilai_ujian !== null ? number_format((float) $selectedRekap->nilai_ujian, 1) : '-' }}</strong></span>
+                            </div>
+
+                            @if ($selectedRekap->deskripsi_capaian)
+                                <div class="small p-2.5 rounded mb-2" style="background: #fff7ed; border: 1px solid #fed7aa; color: #7c2d12;">
+                                    <strong class="d-block mb-0.5"><i class="fa fa-align-left mr-1"></i> Deskripsi Capaian Rapor:</strong>
+                                    {{ $selectedRekap->deskripsi_capaian }}
+                                </div>
+                            @endif
+                        @endif
+
+                        @if ($tpItems->isNotEmpty())
+                            <div class="table-responsive">
+                                <table class="wk-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 90px;">Kode TP</th>
+                                            <th>Tujuan Pembelajaran / Lingkup Materi</th>
+                                            <th class="text-center" style="width: 110px;">NA Mid</th>
+                                            <th class="text-center" style="width: 110px;">NA Semester</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($tpItems as $tpRow)
+                                            @php
+                                                $tpModel = $tpRow['tp'];
+                                                $midTp = $tpRow['mid'];
+                                                $semTp = $tpRow['semester'];
+                                            @endphp
+                                            <tr>
+                                                <td class="font-weight-bold text-dark">{{ $tpModel->kode_tp }}</td>
+                                                <td>
+                                                    <div class="text-dark">{{ $tpModel->tujuan_pembelajaran }}</div>
+                                                    @if ($tpModel->lingkup_materi)
+                                                        <div class="small text-muted" style="font-size: 0.7rem;">{{ $tpModel->lingkup_materi }}</div>
+                                                    @endif
+                                                </td>
+                                                <td class="text-center">
+                                                    @if ($midTp?->nilai_akhir_tp !== null)
+                                                        <span class="badge {{ $midTp->tuntas_kkm === false ? 'badge-danger' : 'badge-success' }}">
+                                                            {{ rtrim(rtrim(number_format((float) $midTp->nilai_akhir_tp, 1, '.', ''), '0'), '.') }}
+                                                        </span>
+                                                    @else
+                                                        <span class="text-muted small">-</span>
+                                                    @endif
+                                                </td>
+                                                <td class="text-center">
+                                                    @if ($semTp?->nilai_akhir_tp !== null)
+                                                        <span class="badge {{ $semTp->tuntas_kkm === false ? 'badge-danger' : 'badge-success' }}">
+                                                            {{ rtrim(rtrim(number_format((float) $semTp->nilai_akhir_tp, 1, '.', ''), '0'), '.') }}
+                                                        </span>
+                                                    @else
+                                                        <span class="text-muted small">-</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
+                            <div class="small text-muted font-italic">Belum ada Tujuan Pembelajaran aktif untuk mata pelajaran ini.</div>
+                        @endif
+                    </div>
+                </div>
+            @endforeach
+        @else
+            <div class="wk-surface p-4 text-center text-muted small">
+                <i class="fa fa-info-circle text-warning mr-1"></i>
+                Penilaian TP &amp; deskripsi rapor terperinci saat ini hanya tersedia untuk jenjang SD. Ringkasan presensi siswa ditampilkan di kartu di atas.
+            </div>
+        @endif
+    </div>
+@endsection
+

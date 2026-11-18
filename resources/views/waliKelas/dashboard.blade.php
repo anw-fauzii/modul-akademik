@@ -156,6 +156,11 @@
                                     style="border-radius: 9px; font-size: 0.74rem; white-space: nowrap;">
                                     <i class="fa fa-id-card mr-1"></i> Anggota Kelas
                                 </a>
+                                <a href="{{ route('wali-kelas.perkembangan-siswa.index', ['kelas_id' => $selectedKelas->id]) }}"
+                                    class="btn btn-sm btn-light border font-weight-semibold"
+                                    style="border-radius: 9px; font-size: 0.74rem; white-space: nowrap; color: #c2410c; border-color: #fed7aa; background: #fff7ed;">
+                                    <i class="fa fa-chart-line mr-1"></i> Perkembangan
+                                </a>
                                 <a href="{{ route('wali-kelas.presensi-siswa.bulk', ['kelas_id' => $selectedKelas->id]) }}"
                                     class="btn btn-sm text-white font-weight-semibold shadow-sm"
                                     style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 9px; font-size: 0.74rem; white-space: nowrap;">
@@ -328,9 +333,16 @@
                                 </h6>
                                 <div class="small text-muted">{{ $todayDayLabel }}, {{ $todayDate->copy()->locale('id')->translatedFormat('d M Y') }}</div>
                             </div>
-                            <span class="badge badge-light" style="font-weight: 700;">
-                                {{ $jadwalHariIni->count() }} Slot
-                            </span>
+                            <div class="d-flex align-items-center" style="gap: 0.45rem;">
+                                <span class="badge badge-light" style="font-weight: 700;">
+                                    {{ $jadwalHariIni->count() }} Slot
+                                </span>
+                                <a href="{{ route('wali-kelas.jadwal-pelajaran.index', ['kelas_id' => $selectedKelas->id]) }}"
+                                    class="btn btn-xs btn-light border font-weight-semibold px-2 py-1"
+                                    style="font-size: 0.72rem; border-radius: 7px;">
+                                    Lihat Mingguan
+                                </a>
+                            </div>
                         </div>
                         <div class="p-3">
                             @if (! $isWeekday)

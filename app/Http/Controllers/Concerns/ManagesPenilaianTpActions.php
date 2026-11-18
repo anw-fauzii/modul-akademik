@@ -230,4 +230,3 @@ trait ManagesPenilaianTpActions
         return "Kolom Sumatif Bab \"{$sumatifBab->nama_bab}\" berhasil ditambahkan (seragam jenjang Kelas {$sumatifBab->tingkatan_kelas}).";
     }
 }
-

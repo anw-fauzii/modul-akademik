@@ -359,7 +359,7 @@ class WaliKelasAnggotaKelasTest extends TestCase
         $this->assertStringNotContainsString('Data Master', $waliSidebarHtml);
     }
 
-    public function test_super_admin_sidebar_renders_wali_kelas_anggota_kelas_menu(): void
+    public function test_super_admin_sidebar_hides_wali_kelas_menus(): void
     {
         $superAdmin = $this->makeUserWithRole('Super Admin', 'admin@primainsani.sch.id', null, 'super admin');
         $superAdmin->setRelation('karyawan', null);
@@ -368,8 +368,12 @@ class WaliKelasAnggotaKelasTest extends TestCase
 
         $sidebarHtml = view('layouts.sidebar')->render();
 
-        $this->assertStringContainsString('Dashboard Wali Kelas', $sidebarHtml);
-        $this->assertStringContainsString('Anggota Kelas Binaan', $sidebarHtml);
-        $this->assertStringContainsString(route('wali-kelas.anggota-kelas.index'), $sidebarHtml);
+        $this->assertStringContainsString('Data Master', $sidebarHtml);
+        $this->assertStringNotContainsString('Dashboard Wali Kelas', $sidebarHtml);
+        $this->assertStringNotContainsString(route('wali-kelas.dashboard'), $sidebarHtml);
+        $this->assertStringNotContainsString(route('wali-kelas.anggota-kelas.index'), $sidebarHtml);
+        $this->assertStringNotContainsString(route('wali-kelas.perkembangan-siswa.index'), $sidebarHtml);
+        $this->assertStringNotContainsString('submenu-wali-penilaian', $sidebarHtml);
+        $this->assertStringNotContainsString('submenu-wali-presensi', $sidebarHtml);
     }
 }

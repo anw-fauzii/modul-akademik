@@ -72,6 +72,17 @@ class WaliKelasPenilaianTest extends TestCase
         $kelasSd->setRelation('tahunAjaran', $ta);
         $kelasSd->setRelation('waliKelas', $wali);
 
+        $kelasSdLain = Kelas::make([
+            'akademik_master_tahun_ajaran_id' => 1,
+            'karyawan_nipy' => 'NIPY-LAIN',
+            'pendamping_nipy' => null,
+            'tingkatan_kelas' => '5',
+            'nama_kelas' => '5 An-Naba',
+            'jenjang_kelas' => 'SD',
+        ]);
+        $kelasSdLain->id = 13;
+        $kelasSdLain->setRelation('tahunAjaran', $ta);
+
         $kelasSmp = Kelas::make([
             'akademik_master_tahun_ajaran_id' => 1,
             'karyawan_nipy' => 'NIPY-001',
@@ -84,6 +95,9 @@ class WaliKelasPenilaianTest extends TestCase
 
         $mapel = MataPelajaran::make(['singkatan' => 'PAI', 'nama_mata_pelajaran' => 'Pendidikan Agama Islam', 'unit' => 'SD']);
         $mapel->id = 21;
+
+        $mapelMtk = MataPelajaran::make(['singkatan' => 'MTK', 'nama_mata_pelajaran' => 'Matematika', 'unit' => 'SD']);
+        $mapelMtk->id = 22;
 
         $kkm = Kkm::make([
             'akademik_master_tahun_ajaran_id' => 1,
@@ -153,7 +167,7 @@ class WaliKelasPenilaianTest extends TestCase
         $rekapMapel->id = 501;
         $rekapMapel->setRelation('anggotaKelas', $anggota);
 
-        return compact('ta', 'wali', 'kelasSd', 'kelasSmp', 'mapel', 'kkm', 'predikatA', 'tp', 'aspek', 'sumatifBab', 'anggota', 'nilai', 'rekapTp', 'rekapMapel');
+        return compact('ta', 'wali', 'kelasSd', 'kelasSdLain', 'kelasSmp', 'mapel', 'mapelMtk', 'kkm', 'predikatA', 'tp', 'aspek', 'sumatifBab', 'anggota', 'nilai', 'rekapTp', 'rekapMapel');
     }
 
     public function test_scope_service_authorizes_sd_scope_and_blocks_cross_class_grade_and_year(): void
@@ -161,8 +175,14 @@ class WaliKelasPenilaianTest extends TestCase
         $f = $this->makeSdPenilaianFixtures();
         $user = $this->makeUserWithRole('Ustadzah Sari', 'sari@primainsani.sch.id', 'NIPY-001', 'wali kelas', $f['wali']);
 
+        $taughtClasses = new EloquentCollection([$f['kelasSd'], $f['kelasSdLain']]);
+        $taughtMapelsByClass = collect([
+            11 => new EloquentCollection([$f['mapel']]),
+            13 => new EloquentCollection([$f['mapelMtk']]),
+        ]);
+
         $mockScope = $this->getMockBuilder(WaliKelasScopeService::class)
-            ->onlyMethods(['resolveScopeContext'])
+            ->onlyMethods(['resolveScopeContext', 'getTaughtSdScopeForUser'])
             ->getMock();
 
         $mockScope->method('resolveScopeContext')
@@ -176,15 +196,85 @@ class WaliKelasPenilaianTest extends TestCase
                 'selectedKelas' => $f['kelasSd'],
                 'peranDiKelas' => 'Wali Kelas',
             ]);
+        $mockScope->method('getTaughtSdScopeForUser')
+            ->willReturn([
+                'isEligible' => true,
+                'ineligibleReason' => null,
+                'nipy' => 'NIPY-001',
+                'karyawanProfile' => $f['wali'],
+                'activeTahunAjaran' => $f['ta'],
+                'taughtClasses' => $taughtClasses,
+                'taughtMapelsByClass' => $taughtMapelsByClass,
+            ]);
 
         Model::preventLazyLoading(true);
         try {
-            $auth = $mockScope->authorizeSdClassScope($user, 11, 1, '5');
+            $auth = $mockScope->authorizeSdMapelScope($user, 11, 21, 1, '5');
             $this->assertSame($f['kelasSd'], $auth['selectedKelas']);
-            $this->assertCount(1, $auth['sdClasses']);
+            $this->assertCount(1, $auth['allowedMapels']);
+
+            // Kelas SD lain yang tidak diampu sebagai Wali Kelas/Pendamping tetap diizinkan bila mapel diampu di jadwal
+            $otherClassAuth = $mockScope->authorizeSdMapelScope($user, 13, 22, 1, '5');
+            $this->assertSame($f['kelasSdLain'], $otherClassAuth['selectedKelas']);
+            $this->assertSame('MTK', $otherClassAuth['allowedMapels']->first()?->singkatan);
 
             $rekapAuth = $mockScope->authorizeRekapMapelForUser($user, $f['rekapMapel']);
             $this->assertSame($f['kelasSd'], $rekapAuth['selectedKelas']);
+
+            $otherClassAnggota = AnggotaKelas::make(['siswa_nis' => '202602001', 'akademik_master_kelas_id' => 13]);
+            $otherClassRekap = RekapMapel::make([
+                'akademik_master_tahun_ajaran_id' => 1,
+                'akademik_pelajaran_mata_pelajaran_id' => 22,
+                'anggota_kelas_id' => 302,
+            ]);
+            $otherClassRekap->setRelation('anggotaKelas', $otherClassAnggota);
+            $otherRekapAuth = $mockScope->authorizeRekapMapelForUser($user, $otherClassRekap);
+            $this->assertSame($f['kelasSdLain'], $otherRekapAuth['selectedKelas']);
+
+            // Mapel lain di kelas yang sama (atau mapel yang diampu di kelas berbeda) harus ditolak 403
+            try {
+                $mockScope->authorizeSdMapelScope($user, 13, 21, 1, '5');
+                $this->fail('Seharusnya menolak mapel PAI pada kelas 13 karena user hanya mengampu MTK di kelas 13.');
+            } catch (HttpException $e) {
+                $this->assertSame(403, $e->getStatusCode());
+            }
+
+            try {
+                $mockScope->authorizeSdMapelScope($user, 11, 999, 1, '5');
+                $this->fail('Seharusnya menolak mapel yang tidak diampu di kelas ini.');
+            } catch (HttpException $e) {
+                $this->assertSame(403, $e->getStatusCode());
+            }
+
+            // RekapMapel mapel yang tidak diampu di kelasnya harus ditolak 403
+            $untaughtRekap = RekapMapel::make([
+                'akademik_master_tahun_ajaran_id' => 1,
+                'akademik_pelajaran_mata_pelajaran_id' => 999,
+                'anggota_kelas_id' => 301,
+            ]);
+            $untaughtRekap->setRelation('anggotaKelas', $f['anggota']);
+            try {
+                $mockScope->authorizeRekapMapelForUser($user, $untaughtRekap);
+                $this->fail('Seharusnya menolak deskripsi pada mapel yang tidak diampu.');
+            } catch (HttpException $e) {
+                $this->assertSame(403, $e->getStatusCode());
+            }
+
+            // Kelas yang tidak memiliki jadwal ajar user harus ditolak 403
+            try {
+                $mockScope->authorizeSdMapelScope($user, 99, 21, 1);
+                $this->fail('Seharusnya menolak kelas yang tidak dijadwalkan untuk user.');
+            } catch (HttpException $e) {
+                $this->assertSame(403, $e->getStatusCode());
+            }
+
+            // Tahun ajaran tidak aktif pada authorizeSdMapelScope harus ditolak 403
+            try {
+                $mockScope->authorizeSdMapelScope($user, 13, 22, 999);
+                $this->fail('Seharusnya menolak tahun ajaran di luar TA aktif.');
+            } catch (HttpException $e) {
+                $this->assertSame(403, $e->getStatusCode());
+            }
 
             // Kelas SMP (non-SD) harus ditolak pada modul Penilaian TP SD
             try {
@@ -194,7 +284,7 @@ class WaliKelasPenilaianTest extends TestCase
                 $this->assertSame(403, $e->getStatusCode());
             }
 
-            // Kelas SD milik wali kelas lain harus ditolak
+            // Kelas SD milik wali kelas lain harus ditolak pada scope kelas binaan saja
             try {
                 $mockScope->authorizeSdClassScope($user, 99, 1);
                 $this->fail('Seharusnya menolak kelas yang tidak diampu.');
@@ -238,18 +328,19 @@ class WaliKelasPenilaianTest extends TestCase
         $f = $this->makeSdPenilaianFixtures();
         $user = $this->makeUserWithRole('Ustadzah Sari', 'sari@primainsani.sch.id', 'NIPY-001', 'wali kelas', $f['wali']);
 
-        // Guru hanya mengampu SMP (tidak punya kelas SD)
+        // Guru hanya mengampu kelas SMP (tidak punya jadwal ajar mapel SD aktif)
         $smpOnlyScope = $this->createMock(WaliKelasScopeService::class);
-        $smpOnlyScope->method('resolveScopeContext')->willReturn([
-            'isEligible' => true,
-            'ineligibleReason' => null,
+        $smpOnlyScope->method('getTaughtSdScopeForUser')->willReturn([
+            'isEligible' => false,
+            'ineligibleReason' => 'not_assigned_active_year',
             'nipy' => 'NIPY-001',
             'karyawanProfile' => $f['wali'],
             'activeTahunAjaran' => $f['ta'],
-            'assignedClasses' => new EloquentCollection([$f['kelasSmp']]),
-            'selectedKelas' => $f['kelasSmp'],
-            'peranDiKelas' => 'Wali Kelas',
+            'taughtClasses' => new EloquentCollection,
+            'taughtMapelsByClass' => collect(),
         ]);
+        $smpOnlyScope->method('getAssignedClassesForUser')
+            ->willReturn(new EloquentCollection([$f['kelasSmp']]));
         $smpOnlyScope->method('filterSdClasses')->willReturn(new EloquentCollection);
 
         $unusedAdminService = $this->createMock(PenilaianTpService::class);
@@ -260,39 +351,82 @@ class WaliKelasPenilaianTest extends TestCase
         $this->assertFalse($guardResult['isEligible']);
         $this->assertSame('non_sd_only', $guardResult['guardReason']);
 
-        // Guru mengampu kelas SD: hanya meneruskan SD classes ke PenilaianTpService
+        // Guru mengampu mapel di kelas binaan (11 -> PAI) sekaligus di kelas lain (13 -> MTK)
+        $sdClasses = new EloquentCollection([$f['kelasSd'], $f['kelasSdLain']]);
+        $taughtPai = new EloquentCollection([$f['mapel']]);
+        $taughtMtk = new EloquentCollection([$f['mapelMtk']]);
         $sdScope = $this->createMock(WaliKelasScopeService::class);
-        $sdClasses = new EloquentCollection([$f['kelasSd']]);
-        $sdScope->method('resolveScopeContext')->willReturn([
+        $sdScope->method('getTaughtSdScopeForUser')->willReturn([
             'isEligible' => true,
             'ineligibleReason' => null,
             'nipy' => 'NIPY-001',
             'karyawanProfile' => $f['wali'],
             'activeTahunAjaran' => $f['ta'],
-            'assignedClasses' => $sdClasses,
-            'selectedKelas' => $f['kelasSd'],
-            'peranDiKelas' => 'Wali Kelas',
+            'taughtClasses' => $sdClasses,
+            'taughtMapelsByClass' => collect([
+                11 => $taughtPai,
+                13 => $taughtMtk,
+            ]),
         ]);
-        $sdScope->method('filterSdClasses')->willReturn($sdClasses);
+        $sdScope->method('resolveRoleInKelas')
+            ->willReturnCallback(static fn (Kelas $kelas): string => $kelas->id === 11 ? 'Wali Kelas' : 'Guru Pengampu');
 
         $adminService = $this->createMock(PenilaianTpService::class);
         $adminService->expects($this->once())
             ->method('getMatrixData')
-            ->with(['tahun_ajaran_id' => 1, 'kelas_id' => 11], $sdClasses)
+            ->with(['tahun_ajaran_id' => 1, 'kelas_id' => 11], $sdClasses, $taughtPai)
             ->willReturn(['selectedKelas' => $f['kelasSd']]);
         $adminService->expects($this->once())
             ->method('getRekapData')
-            ->with(['tahun_ajaran_id' => 1, 'kelas_id' => 11], $sdClasses)
-            ->willReturn(['selectedKelas' => $f['kelasSd']]);
+            ->with(['tahun_ajaran_id' => 1, 'kelas_id' => 13], $sdClasses, $taughtMtk)
+            ->willReturn(['selectedKelas' => $f['kelasSdLain']]);
 
         $sdService = new WaliKelasPenilaianService($sdScope, $adminService);
         $matrix = $sdService->getPageData($user, ['kelas_id' => 11], false);
         $this->assertTrue($matrix['isEligible']);
         $this->assertSame('wali-kelas.penilaian-tp', $matrix['tpRoutePrefix']);
         $this->assertSame('wali-kelas.penilaian-rekap', $matrix['rekapRoutePrefix']);
+        $this->assertSame('Wali Kelas', $matrix['peranDiKelas']);
 
-        $rekap = $sdService->getPageData($user, ['kelas_id' => 11], true);
+        $rekap = $sdService->getPageData($user, ['kelas_id' => 13], true);
         $this->assertTrue($rekap['isEligible']);
+        $this->assertSame('Guru Pengampu', $rekap['peranDiKelas']);
+
+        // Mengakses mata pelajaran yang tidak diampu di kelas tersebut harus ditolak 403
+        try {
+            $sdService->getPageData($user, ['kelas_id' => 13, 'mata_pelajaran_id' => 21], false);
+            $this->fail('Seharusnya menolak mata_pelajaran_id PAI yang tidak diampu pada kelas 13.');
+        } catch (HttpException $e) {
+            $this->assertSame(403, $e->getStatusCode());
+        }
+
+        // Mengakses kelas SD yang tidak ada jadwal ajarnya harus ditolak 403
+        try {
+            $sdService->getPageData($user, ['kelas_id' => 99], false);
+            $this->fail('Seharusnya menolak kelas_id yang tidak ada pada jadwal ajar user.');
+        } catch (HttpException $e) {
+            $this->assertSame(403, $e->getStatusCode());
+        }
+
+        // Wali kelas SD tanpa penugasan mapel di jadwal pelajaran menampilkan guard no_taught_mapel
+        $homeroomSdOnly = new EloquentCollection([$f['kelasSd']]);
+        $noMapelScope = $this->createMock(WaliKelasScopeService::class);
+        $noMapelScope->method('getTaughtSdScopeForUser')->willReturn([
+            'isEligible' => false,
+            'ineligibleReason' => 'not_assigned_active_year',
+            'nipy' => 'NIPY-001',
+            'karyawanProfile' => $f['wali'],
+            'activeTahunAjaran' => $f['ta'],
+            'taughtClasses' => new EloquentCollection,
+            'taughtMapelsByClass' => collect(),
+        ]);
+        $noMapelScope->method('getAssignedClassesForUser')->willReturn($homeroomSdOnly);
+        $noMapelScope->method('filterSdClasses')->willReturn($homeroomSdOnly);
+
+        $noMapelService = new WaliKelasPenilaianService($noMapelScope, $this->createMock(PenilaianTpService::class));
+        $noMapelResult = $noMapelService->getPageData($user, []);
+        $this->assertFalse($noMapelResult['isEligible']);
+        $this->assertSame('no_taught_mapel', $noMapelResult['guardReason']);
     }
 
     public function test_controller_reuses_penilaian_views_without_admin_only_links_and_renders_sidebar(): void
@@ -390,7 +524,9 @@ class WaliKelasPenilaianTest extends TestCase
         }
 
         // Reuse view Nilai TP dengan seluruh action menunjuk route wali-kelas.*, bukan route admin/kkm/tp-create
-        $this->assertStringContainsString('Kelas Binaan Wali Kelas', $matrixHtml);
+        $this->assertStringContainsString('Mapel Diampu', $matrixHtml);
+        $this->assertStringContainsString(route('wali-kelas.perkembangan-siswa.index', ['periode' => PeriodeTp::PERIODE_MID]), $matrixHtml);
+        $this->assertStringNotContainsString(route('wali-kelas.perkembangan-siswa.index', ['kelas_id' => 11, 'periode' => PeriodeTp::PERIODE_MID]), $matrixHtml);
         $this->assertStringContainsString(route('wali-kelas.penilaian-tp.store'), $matrixHtml);
         $this->assertStringContainsString(route('wali-kelas.penilaian-tp.bobot.update'), $matrixHtml);
         $this->assertStringContainsString(route('wali-kelas.penilaian-tp.aspek.update', 201), $matrixHtml);
@@ -401,7 +537,8 @@ class WaliKelasPenilaianTest extends TestCase
         $this->assertStringNotContainsString(route('penilaian-kkm.edit', 31), $matrixHtml);
 
         // Reuse view Rekap dengan route wali-kelas.*
-        $this->assertStringContainsString('Kelas Binaan Wali Kelas', $rekapHtml);
+        $this->assertStringContainsString('Mapel Diampu', $rekapHtml);
+        $this->assertStringContainsString(route('wali-kelas.perkembangan-siswa.index', ['periode' => PeriodeTp::PERIODE_MID]), $rekapHtml);
         $this->assertStringContainsString(route('wali-kelas.penilaian-tp.index'), $rekapHtml);
         $this->assertStringContainsString(route('wali-kelas.penilaian-rekap.deskripsi.update', 501), $rekapHtml);
         $this->assertStringContainsString(route('wali-kelas.penilaian-rekap.deskripsi.regenerate'), $rekapHtml);
@@ -417,4 +554,3 @@ class WaliKelasPenilaianTest extends TestCase
         $this->assertStringContainsString(route('wali-kelas.penilaian-rekap.index'), $waliSidebarHtml);
     }
 }
-

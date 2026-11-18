@@ -120,6 +120,8 @@ class JadwalPelajaranService
      * default tahun ajaran aktif, statistik per hari, opsi filter, serta matriks mingguan bila 1 kelas dipilih.
      *
      * @param  array<string, mixed>  $input
+     * @param  ?Collection<int, Kelas>  $scopedKelasOptions
+     * @param  ?Collection<int, TahunAjaran>  $scopedTahunAjaranOptions
      * @return array{
      *     jadwalPelajaran: Collection<int, JadwalPelajaran>,
      *     summary: array{total: int, aktif: int, nonaktif: int, per_hari: array<int, int>},
@@ -132,33 +134,37 @@ class JadwalPelajaranService
      *     weeklyMatrix: array{jamSlots: Collection<int, JamPelajaran>, grid: array<int, array<int, JadwalPelajaran>>}|null
      * }
      */
-    public function getIndexData(array $input = []): array
-    {
-        $tahunAjaranOptions = $this->getTahunAjaranOptions();
-        $activeTahunAjaran = $tahunAjaranOptions->firstWhere('is_active', true);
+    public function getIndexData(
+        array $input = [],
+        ?Collection $scopedKelasOptions = null,
+        ?Collection $scopedTahunAjaranOptions = null
+    ): array {
+        $isScoped = $scopedKelasOptions !== null;
+        $tahunAjaranOptions = $scopedTahunAjaranOptions ?? $this->getTahunAjaranOptions();
+        $activeTahunAjaran = $tahunAjaranOptions->firstWhere('is_active', true) ?? $tahunAjaranOptions->first();
 
         $rawTa = array_key_exists('tahun_ajaran_id', $input) ? trim((string) $input['tahun_ajaran_id']) : '';
-        if ($rawTa === self::FILTER_ALL) {
+        if (! $isScoped && $rawTa === self::FILTER_ALL) {
             $effectiveTa = self::FILTER_ALL;
-        } elseif ($rawTa !== '' && ctype_digit($rawTa) && (int) $rawTa > 0) {
+        } elseif (! $isScoped && $rawTa !== '' && ctype_digit($rawTa) && (int) $rawTa > 0) {
             $effectiveTa = $rawTa;
         } elseif ($activeTahunAjaran) {
             $effectiveTa = (string) $activeTahunAjaran->id;
         } else {
-            $effectiveTa = self::FILTER_ALL;
+            $effectiveTa = $isScoped ? '' : self::FILTER_ALL;
         }
 
         $rawStatus = trim((string) ($input['status'] ?? self::FILTER_ALL));
         $filters = [
             'tahun_ajaran_id' => $effectiveTa,
-            'unit' => strtoupper(trim((string) ($input['unit'] ?? ''))),
+            'unit' => $isScoped ? '' : strtoupper(trim((string) ($input['unit'] ?? ''))),
             'kelas_id' => trim((string) ($input['kelas_id'] ?? '')),
             'hari' => trim((string) ($input['hari'] ?? '')),
             'status' => in_array($rawStatus, ['1', '0', self::FILTER_ALL], true) ? $rawStatus : self::FILTER_ALL,
             'search' => trim((string) ($input['search'] ?? '')),
         ];
 
-        $kelasOptions = $this->getKelasOptions(
+        $kelasOptions = $scopedKelasOptions ?? $this->getKelasOptions(
             $this->resolvePositiveInt($filters['tahun_ajaran_id']),
             $filters['unit']
         );

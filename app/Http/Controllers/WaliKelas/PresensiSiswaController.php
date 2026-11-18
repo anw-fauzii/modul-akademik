@@ -176,4 +176,3 @@ class PresensiSiswaController extends Controller
         return view($viewName, $data);
     }
 }
-

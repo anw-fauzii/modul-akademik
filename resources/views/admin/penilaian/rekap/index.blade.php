@@ -584,7 +584,7 @@
                     <div>
                         Rekap Nilai &amp; Deskripsi Rapor ({{ $isMid ? 'Mid Semester' : 'Semester' }})
                         @if ($isWaliKelasScope)
-                            <span class="badge badge-warning text-dark ml-1 align-middle" style="font-size: 0.7rem;">Kelas Binaan Wali Kelas</span>
+                            <span class="badge badge-warning text-dark ml-1 align-middle" style="font-size: 0.7rem;">Mapel Diampu</span>
                         @endif
                         <div class="page-title-subheading">
                             Bobot aktif: <strong>{{ $formulaBadge }}</strong> &bull; KKM <strong>{{ $kkmDisplay }}</strong>
@@ -596,6 +596,13 @@
                 </div>
 
                 <div class="page-title-actions flex-wrap">
+                    @if ($isWaliKelasScope)
+                        <a href="{{ route('wali-kelas.perkembangan-siswa.index', ['periode' => $periode]) }}"
+                            class="btn btn-light shadow-sm"
+                            style="border-radius: 10px; font-weight: 600; color: #ea580c; border-color: #fed7aa; background: #fff7ed;">
+                            <i class="fa fa-chart-line mr-1"></i> Perkembangan Semua Mapel
+                        </a>
+                    @endif
                     <a href="{{ route($tpRoutePrefix.'.index', $contextParams) }}" class="btn btn-light shadow-sm"
                         style="border-radius: 10px; font-weight: 600;">
                         <i class="fa fa-th mr-1"></i> Input Nilai
@@ -635,7 +642,8 @@
 
                     <div>
                         <label for="rk_kelas" class="small font-weight-semibold text-muted mb-1">Kelas (SD)</label>
-                        <select name="kelas_id" id="rk_kelas" class="form-control form-control-sm" onchange="this.form.submit()">
+                        <select name="kelas_id" id="rk_kelas" class="form-control form-control-sm"
+                            onchange="@if ($isWaliKelasScope) const mapelEl = document.getElementById('rk_mapel'); if (mapelEl) { mapelEl.disabled = true; } @endif this.form.submit()">
                             @forelse ($kelasOptions as $kls)
                                 <option value="{{ $kls->id }}" @selected($selectedKelas && (int) $selectedKelas->id === (int) $kls->id)>
                                     {{ $kls->nama_kelas }} (Tingkat {{ $kls->tingkatan_kelas }})

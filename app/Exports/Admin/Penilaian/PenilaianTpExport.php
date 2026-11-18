@@ -3,6 +3,7 @@
 namespace App\Exports\Admin\Penilaian;
 
 use App\Models\Admin\DataMaster\Kelas;
+use App\Models\Admin\Pelajaran\MataPelajaran;
 use App\Models\Admin\Penilaian\PeriodeTp;
 use App\Services\Admin\Penilaian\PenilaianTpService;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -69,10 +70,12 @@ class PenilaianTpExport implements Export, FromArray, ShouldAutoSize, WithStyles
     /**
      * @param  array<string, mixed>  $filters
      * @param  ?EloquentCollection<int, Kelas>  $scopedKelasOptions
+     * @param  ?EloquentCollection<int, MataPelajaran>  $scopedMapelOptions
      */
     public function __construct(
         protected array $filters = [],
-        protected ?EloquentCollection $scopedKelasOptions = null
+        protected ?EloquentCollection $scopedKelasOptions = null,
+        protected ?EloquentCollection $scopedMapelOptions = null
     ) {}
 
     /**
@@ -476,9 +479,16 @@ class PenilaianTpExport implements Export, FromArray, ShouldAutoSize, WithStyles
     {
         if ($this->cachedMatrix === null) {
             $service = app(PenilaianTpService::class);
-            $this->cachedMatrix = $this->scopedKelasOptions !== null
-                ? $service->getMatrixData($this->filters, $this->scopedKelasOptions)
-                : $service->getMatrixData($this->filters);
+
+            if ($this->scopedKelasOptions !== null || $this->scopedMapelOptions !== null) {
+                $this->cachedMatrix = $service->getMatrixData(
+                    $this->filters,
+                    $this->scopedKelasOptions,
+                    $this->scopedMapelOptions
+                );
+            } else {
+                $this->cachedMatrix = $service->getMatrixData($this->filters);
+            }
         }
 
         return $this->cachedMatrix;
