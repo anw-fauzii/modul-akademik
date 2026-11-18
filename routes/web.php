@@ -9,8 +9,10 @@ use App\Http\Controllers\Admin\DataMaster\EkstrakurikulerController;
 use App\Http\Controllers\Admin\DataMaster\JemputanController;
 use App\Http\Controllers\Admin\DataMaster\KaryawanController;
 use App\Http\Controllers\Admin\DataMaster\KelasController;
+use App\Http\Controllers\Admin\DataMaster\SekolahController;
 use App\Http\Controllers\Admin\DataMaster\SiswaController;
 use App\Http\Controllers\Admin\DataMaster\TahunAjaranController;
+use App\Http\Controllers\Admin\DataMaster\TitimangsaController;
 use App\Http\Controllers\Admin\DataPelengkap\BerkebutuhanKhususController;
 use App\Http\Controllers\Admin\DataPelengkap\JenjangPendidikanController;
 use App\Http\Controllers\Admin\DataPelengkap\PekerjaanController;
@@ -24,6 +26,7 @@ use App\Http\Controllers\Admin\Pelajaran\KelompokPelajaranController;
 use App\Http\Controllers\Admin\Pelajaran\MataPelajaranController;
 use App\Http\Controllers\Admin\Penilaian\KkmController;
 use App\Http\Controllers\Admin\Penilaian\PenilaianTpController;
+use App\Http\Controllers\Admin\Penilaian\RaporController;
 use App\Http\Controllers\Admin\Presensi\PresensiSiswaController;
 use App\Http\Controllers\Admin\TujuanPembelajaran\TujuanPembelajaranController;
 use App\Http\Controllers\HomeController;
@@ -34,6 +37,7 @@ use App\Http\Controllers\WaliKelas\JadwalPelajaranController as WaliKelasJadwalP
 use App\Http\Controllers\WaliKelas\PenilaianTpController as WaliKelasPenilaianTpController;
 use App\Http\Controllers\WaliKelas\PerkembanganSiswaController as WaliKelasPerkembanganSiswaController;
 use App\Http\Controllers\WaliKelas\PresensiSiswaController as WaliKelasPresensiSiswaController;
+use App\Http\Controllers\WaliKelas\RaporController as WaliKelasRaporController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -108,6 +112,14 @@ Route::middleware(['auth', 'sso.check', 'nocache'])->group(function () {
         ->name('wali-kelas.penilaian-rekap.deskripsi.update');
     Route::post('/wali-kelas/penilaian/rekap/regenerate-deskripsi', [WaliKelasPenilaianTpController::class, 'regenerateDeskripsi'])
         ->name('wali-kelas.penilaian-rekap.deskripsi.regenerate');
+    Route::get('/wali-kelas/rapor/identitas/kelas/{kelas}', [WaliKelasRaporController::class, 'identitasKelas'])
+        ->name('wali-kelas.rapor.identitas.kelas');
+    Route::get('/wali-kelas/rapor/identitas/siswa/{anggota_kelas}', [WaliKelasRaporController::class, 'identitasSiswa'])
+        ->name('wali-kelas.rapor.identitas.siswa');
+    Route::get('/wali-kelas/rapor/nilai/kelas/{kelas}', [WaliKelasRaporController::class, 'nilaiKelas'])
+        ->name('wali-kelas.rapor.nilai.kelas');
+    Route::get('/wali-kelas/rapor/nilai/siswa/{anggota_kelas}', [WaliKelasRaporController::class, 'nilaiSiswa'])
+        ->name('wali-kelas.rapor.nilai.siswa');
     Route::post('/data-master/tahun-ajaran/{tahun_ajaran}/toggle-active', [TahunAjaranController::class, 'toggleActive'])->name('tahun-ajaran.toggle-active');
     Route::resource('/data-master/tahun-ajaran', TahunAjaranController::class);
     Route::resource('/data-master/kelas', KelasController::class)->parameters(
@@ -131,6 +143,16 @@ Route::middleware(['auth', 'sso.check', 'nocache'])->group(function () {
     Route::get('/data-master/karyawan', [KaryawanController::class, 'index'])->name('karyawan.index');
     Route::get('/data-master/karyawan/{karyawan}', [KaryawanController::class, 'show'])->name('karyawan.show');
     Route::get('/data-master/karyawan/{karyawan}/foto', [KaryawanController::class, 'foto'])->name('karyawan.foto');
+    Route::post('/data-master/titimangsa/{titimangsa}/toggle-status', [TitimangsaController::class, 'toggleStatus'])
+        ->name('titimangsa.toggle-status');
+    Route::resource('/data-master/titimangsa', TitimangsaController::class)
+        ->except(['show'])
+        ->parameters(['titimangsa' => 'titimangsa']);
+    Route::post('/data-master/sekolah/{sekolah}/toggle-status', [SekolahController::class, 'toggleStatus'])
+        ->name('sekolah.toggle-status');
+    Route::resource('/data-master/sekolah', SekolahController::class)
+        ->except(['show'])
+        ->parameters(['sekolah' => 'sekolah']);
 
     // Data Pelengkap
     Route::resource('/data-pelengkap/berkebutuhan-khusus', BerkebutuhanKhususController::class);
@@ -214,6 +236,16 @@ Route::middleware(['auth', 'sso.check', 'nocache'])->group(function () {
         ->name('penilaian-rekap.deskripsi.update');
     Route::post('/penilaian/rekap/regenerate-deskripsi', [PenilaianTpController::class, 'regenerateDeskripsi'])
         ->name('penilaian-rekap.deskripsi.regenerate');
+    Route::get('/penilaian/rapor', [RaporController::class, 'index'])
+        ->name('penilaian-rapor.index');
+    Route::get('/penilaian/rapor/identitas/kelas/{kelas}', [RaporController::class, 'identitasKelas'])
+        ->name('penilaian-rapor.identitas.kelas');
+    Route::get('/penilaian/rapor/identitas/siswa/{anggota_kelas}', [RaporController::class, 'identitasSiswa'])
+        ->name('penilaian-rapor.identitas.siswa');
+    Route::get('/penilaian/rapor/nilai/kelas/{kelas}', [RaporController::class, 'nilaiKelas'])
+        ->name('penilaian-rapor.nilai.kelas');
+    Route::get('/penilaian/rapor/nilai/siswa/{anggota_kelas}', [RaporController::class, 'nilaiSiswa'])
+        ->name('penilaian-rapor.nilai.siswa');
 
     // Presensi
     Route::get('/presensi/presensi-siswa/tahunan', [PresensiSiswaController::class, 'tahunan'])

@@ -249,6 +249,14 @@
                             class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('data-master/karyawan*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
                             Guru & Karyawan
                         </a>
+                        <a href="{{ route('titimangsa.index') }}"
+                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('data-master/titimangsa*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                            Titimangsa Rapor
+                        </a>
+                        <a href="{{ route('sekolah.index') }}"
+                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('data-master/sekolah*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                            Identitas Sekolah
+                        </a>
                     </div>
                 </div>
 
@@ -439,6 +447,10 @@
                         <a href="{{ route('penilaian-rekap.index') }}"
                             class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('penilaian/rekap*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
                             Rekap &amp; Deskripsi
+                        </a>
+                        <a href="{{ route('penilaian-rapor.index') }}"
+                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->is('penilaian/rapor*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                            Cetak Rapor PDF
                         </a>
                     </div>
                 </div>

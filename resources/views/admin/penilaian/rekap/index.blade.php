@@ -602,6 +602,12 @@
                             style="border-radius: 10px; font-weight: 600; color: #ea580c; border-color: #fed7aa; background: #fff7ed;">
                             <i class="fa fa-chart-line mr-1"></i> Perkembangan Semua Mapel
                         </a>
+                    @elseif ($selectedKelas)
+                        <a href="{{ route('penilaian-rapor.index', array_filter(['tahun_ajaran_id' => $selectedTahunAjaranId, 'kelas_id' => $selectedKelas->id, 'periode' => $periode])) }}"
+                            class="btn btn-light shadow-sm"
+                            style="border-radius: 10px; font-weight: 600; color: #1d4ed8; border-color: #bfdbfe; background: #eff6ff;">
+                            <i class="fa fa-file-pdf mr-1"></i> Cetak Rapor PDF
+                        </a>
                     @endif
                     <a href="{{ route($tpRoutePrefix.'.index', $contextParams) }}" class="btn btn-light shadow-sm"
                         style="border-radius: 10px; font-weight: 600;">

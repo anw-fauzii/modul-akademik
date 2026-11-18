@@ -61,9 +61,19 @@
                 </div>
 
                 <div class="col-lg-4 d-flex flex-wrap justify-content-lg-end gap-2">
+                    <a href="{{ route('wali-kelas.rapor.identitas.siswa', $anggotaKelas->id) }}" target="_blank"
+                        class="btn btn-sm btn-light font-weight-semibold shadow-sm" style="border-radius: 9px;">
+                        <i class="fa fa-id-card text-primary mr-1"></i> PDF Identitas
+                    </a>
+                    @if ($isSd)
+                        <a href="{{ route('wali-kelas.rapor.nilai.siswa', ['anggota_kelas' => $anggotaKelas->id, 'periode' => $periode]) }}" target="_blank"
+                            class="btn btn-sm btn-light font-weight-semibold shadow-sm" style="border-radius: 9px; color: #c2410c;">
+                            <i class="fa fa-file-pdf mr-1"></i> PDF Nilai
+                        </a>
+                    @endif
                     <a href="{{ route('wali-kelas.anggota-kelas.show', $anggotaKelas->id) }}"
                         class="btn btn-sm btn-light font-weight-semibold shadow-sm" style="border-radius: 9px;">
-                        <i class="fa fa-id-card mr-1"></i> Biodata Siswa
+                        <i class="fa fa-user mr-1"></i> Biodata
                     </a>
                     <a href="{{ route('wali-kelas.perkembangan-siswa.index', ['kelas_id' => $selectedKelas->id, 'periode' => $periode]) }}"
                         class="btn btn-sm text-white font-weight-semibold shadow-sm"

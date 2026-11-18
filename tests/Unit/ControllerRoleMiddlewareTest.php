@@ -16,6 +16,7 @@ use App\Http\Controllers\WaliKelas\JadwalPelajaranController as WaliKelasJadwalP
 use App\Http\Controllers\WaliKelas\PenilaianTpController as WaliKelasPenilaianTpController;
 use App\Http\Controllers\WaliKelas\PerkembanganSiswaController as WaliKelasPerkembanganSiswaController;
 use App\Http\Controllers\WaliKelas\PresensiSiswaController as WaliKelasPresensiSiswaController;
+use App\Http\Controllers\WaliKelas\RaporController as WaliKelasRaporController;
 use App\Models\User;
 use Illuminate\Contracts\Http\Kernel;
 use RecursiveDirectoryIterator;
@@ -60,7 +61,7 @@ class ControllerRoleMiddlewareTest extends TestCase
         }
 
         sort($adminControllers);
-        $this->assertCount(25, $adminControllers);
+        $this->assertCount(28, $adminControllers);
 
         foreach ($adminControllers as $controllerClass) {
             $controller = app()->make($controllerClass);
@@ -94,6 +95,9 @@ class ControllerRoleMiddlewareTest extends TestCase
 
         $waliJadwalMiddlewares = collect(app()->make(WaliKelasJadwalPelajaranController::class)->getMiddleware())->pluck('middleware')->all();
         $this->assertContains('role:super admin|wali kelas', $waliJadwalMiddlewares);
+
+        $waliRaporMiddlewares = collect(app()->make(WaliKelasRaporController::class)->getMiddleware())->pluck('middleware')->all();
+        $this->assertContains('role:super admin|wali kelas', $waliRaporMiddlewares);
     }
 
     public function test_auth_and_sso_controllers_remain_accessible_without_super_admin_or_wali_kelas_role(): void

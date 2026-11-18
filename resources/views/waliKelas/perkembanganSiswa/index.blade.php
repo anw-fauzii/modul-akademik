@@ -228,9 +228,25 @@
                             Leger Perkembangan Siswa Kelas {{ $selectedKelas->nama_kelas }}
                         </h6>
                         <div class="small text-muted">
-                            Klik nama siswa atau tombol <strong>Detail</strong> untuk melihat perkembangan lengkap per mata pelajaran, rincian TP, deskripsi rapor, dan presensi.
+                            Klik nama siswa atau tombol <strong>Detail</strong> untuk melihat perkembangan lengkap, atau cetak PDF Identitas &amp; Nilai Rapor terpisah.
                         </div>
                     </div>
+                    @if ($students->isNotEmpty())
+                        <div class="d-flex flex-wrap align-items-center" style="gap: 0.45rem;">
+                            <a href="{{ route('wali-kelas.rapor.identitas.kelas', $selectedKelas->id) }}" target="_blank"
+                                class="btn btn-sm btn-outline-primary font-weight-semibold"
+                                style="border-radius: 8px; font-size: 0.74rem;">
+                                <i class="fa fa-id-card mr-1"></i> Identitas (1 Kelas)
+                            </a>
+                            @if ($isSd)
+                                <a href="{{ route('wali-kelas.rapor.nilai.kelas', ['kelas' => $selectedKelas->id, 'periode' => $periode]) }}" target="_blank"
+                                    class="btn btn-sm text-white font-weight-semibold shadow-sm"
+                                    style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%); border-radius: 8px; font-size: 0.74rem;">
+                                    <i class="fa fa-file-pdf mr-1"></i> Nilai Rapor (1 Kelas)
+                                </a>
+                            @endif
+                        </div>
+                    @endif
                 </div>
 
                 <div class="p-3 p-md-4">
@@ -252,7 +268,7 @@
                                         <th class="text-center" data-searchable="false">Ketuntasan</th>
                                         <th class="text-center" data-searchable="false">Rata NA</th>
                                     @endif
-                                    <th class="text-center" style="width: 96px;" data-orderable="false" data-searchable="false">Aksi</th>
+                                    <th class="text-center" style="width: 72px; text-align: center;" data-orderable="false" data-searchable="false">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -327,10 +343,23 @@
                                             </td>
                                         @endif
                                         <td class="text-center">
-                                            <a href="{{ $detailUrl }}" class="btn btn-sm btn-outline-primary font-weight-semibold"
-                                                style="border-radius: 8px; font-size: 0.72rem;" title="Lihat detail perkembangan semua mapel">
-                                                <i class="fa fa-chart-area mr-1"></i> Detail
-                                            </a>
+                                            <x-action-dropdown>
+                                                <a href="{{ $detailUrl }}" class="action-dropdown-item" role="menuitem">
+                                                    <i class="fa fa-chart-area text-primary action-item-icon"></i>
+                                                    <span>Detail Perkembangan</span>
+                                                </a>
+                                                <div class="action-dropdown-divider"></div>
+                                                <a href="{{ route('wali-kelas.rapor.identitas.siswa', $anggota->id) }}" target="_blank" class="action-dropdown-item" role="menuitem">
+                                                    <i class="fa fa-id-card text-info action-item-icon"></i>
+                                                    <span>Cetak Identitas (PDF)</span>
+                                                </a>
+                                                @if ($isSd)
+                                                    <a href="{{ route('wali-kelas.rapor.nilai.siswa', ['anggota_kelas' => $anggota->id, 'periode' => $periode]) }}" target="_blank" class="action-dropdown-item" role="menuitem">
+                                                        <i class="fa fa-file-pdf text-danger action-item-icon"></i>
+                                                        <span>Cetak Nilai Rapor (PDF)</span>
+                                                    </a>
+                                                @endif
+                                            </x-action-dropdown>
                                         </td>
                                     </tr>
                                 @endforeach

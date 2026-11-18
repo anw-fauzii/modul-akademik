@@ -37,6 +37,8 @@ class SidebarViewTest extends TestCase
     #[TestWith(['/data-master/kelas', 'data-master'])]
     #[TestWith(['/data-master/anggota-jemputan', 'data-master'])]
     #[TestWith(['/data-master/anggota-t2q', 'data-master'])]
+    #[TestWith(['/data-master/titimangsa', 'data-master'])]
+    #[TestWith(['/data-master/sekolah', 'data-master'])]
     #[TestWith(['/data-pelengkap/pekerjaan', 'data-pelengkap'])]
     #[TestWith(['/informasi/agenda-sekolah', 'informasi'])]
     #[TestWith(['/informasi/pengumuman', 'informasi'])]
@@ -48,6 +50,7 @@ class SidebarViewTest extends TestCase
     #[TestWith(['/penilaian/kkm', 'penilaian'])]
     #[TestWith(['/penilaian/nilai-tp', 'penilaian'])]
     #[TestWith(['/penilaian/rekap', 'penilaian'])]
+    #[TestWith(['/penilaian/rapor', 'penilaian'])]
     public function test_parent_dropdown_menus_match_dashboard_active_colors_when_child_route_is_active(
         string $uri,
         string $expectedActiveMenu

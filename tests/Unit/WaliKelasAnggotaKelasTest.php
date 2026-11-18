@@ -342,6 +342,9 @@ class WaliKelasAnggotaKelasTest extends TestCase
         $this->assertStringNotContainsString('Semua Gender', $indexHtml);
         $this->assertStringNotContainsString('Semua Pendaftaran', $indexHtml);
         $this->assertStringNotContainsString('Terapkan', $indexHtml);
+        $this->assertStringNotContainsString('Cetak Identitas (PDF)', $indexHtml);
+        $this->assertStringNotContainsString(route('wali-kelas.rapor.identitas.kelas', 10), $indexHtml);
+        $this->assertStringNotContainsString(route('wali-kelas.rapor.identitas.siswa', 55), $indexHtml);
 
         // Reuse view detail siswa tanpa menampilkan tautan admin-only edit/kelas/ekskul/jemputan
         $this->assertStringContainsString('Ahmad Fauzi', $showHtml);
