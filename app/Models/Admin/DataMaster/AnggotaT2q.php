@@ -2,6 +2,8 @@
 
 namespace App\Models\Admin\DataMaster;
 
+use App\Models\Admin\T2q\YaumiyahTahfizh;
+use App\Models\Admin\T2q\YaumiyahTahsin;
 use Database\Factories\Admin\DataMaster\AnggotaT2qFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -12,6 +14,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'anggota_kelas_id',
@@ -190,8 +193,28 @@ class AnggotaT2q extends Model
     #[Scope]
     protected function forKelas(Builder $query, int $kelasId): Builder
     {
-        return $query->whereHas('anggotaKelas', function (Builder $anggotaKelasQuery) use ($kelasId): void {
-            $anggotaKelasQuery->where('akademik_master_kelas_id', $kelasId);
+        return $this->forKelasIds($query, [$kelasId]);
+    }
+
+    /**
+     * Filter anggota T2Q berdasarkan sekumpulan ID kelas pada anggota kelas (untuk cakupan Wali Kelas).
+     *
+     * @param  list<int>  $kelasIds
+     */
+    #[Scope]
+    protected function forKelasIds(Builder $query, array $kelasIds): Builder
+    {
+        $normalized = array_values(array_unique(array_filter(
+            array_map(static fn ($id): int => (int) $id, $kelasIds),
+            static fn (int $id): bool => $id > 0
+        )));
+
+        if ($normalized === []) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->whereHas('anggotaKelas', static function (Builder $anggotaKelasQuery) use ($normalized): void {
+            $anggotaKelasQuery->whereIn('akademik_master_kelas_id', $normalized);
         });
     }
 
@@ -258,5 +281,25 @@ class AnggotaT2q extends Model
     public function karyawan(): BelongsTo
     {
         return $this->guruT2q();
+    }
+
+    /**
+     * Relasi catatan yaumiyah Tahsin milik anggota T2Q ini.
+     *
+     * @return HasMany<YaumiyahTahsin, $this>
+     */
+    public function yaumiyahTahsin(): HasMany
+    {
+        return $this->hasMany(YaumiyahTahsin::class, 'anggota_t2q_id');
+    }
+
+    /**
+     * Relasi catatan yaumiyah Tahfizh milik anggota T2Q ini.
+     *
+     * @return HasMany<YaumiyahTahfizh, $this>
+     */
+    public function yaumiyahTahfizh(): HasMany
+    {
+        return $this->hasMany(YaumiyahTahfizh::class, 'anggota_t2q_id');
     }
 }

@@ -61,7 +61,7 @@ class ControllerRoleMiddlewareTest extends TestCase
         }
 
         sort($adminControllers);
-        $this->assertCount(30, $adminControllers);
+        $this->assertCount(32, $adminControllers);
 
         foreach ($adminControllers as $controllerClass) {
             $controller = app()->make($controllerClass);

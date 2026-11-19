@@ -433,6 +433,9 @@ class AnggotaT2qModelAndViewTest extends TestCase
 
         $this->assertStringContainsString('Edit Anggota T2Q', $editHtml);
         $this->assertStringContainsString('Samakan dg Kelas', $editHtml);
+        $this->assertStringContainsString('t2q-form-grid', $editHtml);
+        $this->assertStringContainsString('t2q-form-label-bar', $editHtml);
+        $this->assertStringContainsString('t2q-sync-btn', $editHtml);
         $this->assertStringContainsString('value="1" selected', preg_replace('/\s+/', ' ', $editHtml) ?? '');
     }
 }

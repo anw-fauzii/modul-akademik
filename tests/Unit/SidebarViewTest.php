@@ -59,6 +59,8 @@ class SidebarViewTest extends TestCase
     #[TestWith(['/penilaian/nilai-tp', 'penilaian'])]
     #[TestWith(['/penilaian/rekap', 'penilaian'])]
     #[TestWith(['/penilaian/rapor', 'penilaian'])]
+    #[TestWith(['/t2q/yaumiyah-tahsin', 't2q'])]
+    #[TestWith(['/t2q/yaumiyah-tahfizh', 't2q'])]
     public function test_parent_dropdown_menus_match_dashboard_active_colors_when_child_route_is_active(
         string $uri,
         string $expectedActiveMenu
@@ -105,6 +107,10 @@ class SidebarViewTest extends TestCase
             $xpath,
             '//nav//button[@data-sidebar-toggle="submenu-penilaian"]'
         );
+        $t2qButton = $this->querySingleElement(
+            $xpath,
+            '//nav//button[@data-sidebar-toggle="submenu-t2q"]'
+        );
 
         $this->assertMenuState($xpath, $dashboardLink, $expectedActiveMenu === 'dashboard', false);
         $this->assertMenuState($xpath, $masterSekolahButton, $expectedActiveMenu === 'master-sekolah', true);
@@ -116,6 +122,7 @@ class SidebarViewTest extends TestCase
         $this->assertMenuState($xpath, $pelajaranButton, $expectedActiveMenu === 'pelajaran', true);
         $this->assertMenuState($xpath, $tujuanPembelajaranButton, $expectedActiveMenu === 'tujuan-pembelajaran', true);
         $this->assertMenuState($xpath, $penilaianButton, $expectedActiveMenu === 'penilaian', true);
+        $this->assertMenuState($xpath, $t2qButton, $expectedActiveMenu === 't2q', true);
     }
 
     /**

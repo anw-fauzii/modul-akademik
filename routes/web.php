@@ -30,6 +30,8 @@ use App\Http\Controllers\Admin\Penilaian\KkmController;
 use App\Http\Controllers\Admin\Penilaian\PenilaianTpController;
 use App\Http\Controllers\Admin\Penilaian\RaporController;
 use App\Http\Controllers\Admin\Presensi\PresensiSiswaController;
+use App\Http\Controllers\Admin\T2q\YaumiyahTahfizhController;
+use App\Http\Controllers\Admin\T2q\YaumiyahTahsinController;
 use App\Http\Controllers\Admin\TujuanPembelajaran\TujuanPembelajaranController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SSOController;
@@ -40,6 +42,7 @@ use App\Http\Controllers\WaliKelas\PenilaianTpController as WaliKelasPenilaianTp
 use App\Http\Controllers\WaliKelas\PerkembanganSiswaController as WaliKelasPerkembanganSiswaController;
 use App\Http\Controllers\WaliKelas\PresensiSiswaController as WaliKelasPresensiSiswaController;
 use App\Http\Controllers\WaliKelas\RaporController as WaliKelasRaporController;
+use App\Http\Controllers\WaliKelas\YaumiyahT2qController as WaliKelasYaumiyahT2qController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -122,6 +125,14 @@ Route::middleware(['auth', 'sso.check', 'nocache'])->group(function () {
         ->name('wali-kelas.rapor.nilai.kelas');
     Route::get('/wali-kelas/rapor/nilai/siswa/{anggota_kelas}', [WaliKelasRaporController::class, 'nilaiSiswa'])
         ->name('wali-kelas.rapor.nilai.siswa');
+    Route::get('/wali-kelas/t2q/yaumiyah-tahsin/matriks', [WaliKelasYaumiyahT2qController::class, 'matriksTahsin'])
+        ->name('wali-kelas.t2q.yaumiyah-tahsin.matriks');
+    Route::get('/wali-kelas/t2q/yaumiyah-tahfizh/matriks', [WaliKelasYaumiyahT2qController::class, 'matriksTahfizh'])
+        ->name('wali-kelas.t2q.yaumiyah-tahfizh.matriks');
+    Route::get('/wali-kelas/t2q/yaumiyah-tahsin/statistik', [WaliKelasYaumiyahT2qController::class, 'statistikTahsin'])
+        ->name('wali-kelas.t2q.yaumiyah-tahsin.statistik');
+    Route::get('/wali-kelas/t2q/yaumiyah-tahfizh/statistik', [WaliKelasYaumiyahT2qController::class, 'statistikTahfizh'])
+        ->name('wali-kelas.t2q.yaumiyah-tahfizh.statistik');
     Route::post('/data-master/tahun-ajaran/{tahun_ajaran}/toggle-active', [TahunAjaranController::class, 'toggleActive'])->name('tahun-ajaran.toggle-active');
     Route::resource('/data-master/tahun-ajaran', TahunAjaranController::class);
     Route::resource('/data-master/kelas', KelasController::class)->parameters(
@@ -268,5 +279,28 @@ Route::middleware(['auth', 'sso.check', 'nocache'])->group(function () {
     Route::resource('/presensi/presensi-siswa', PresensiSiswaController::class)
         ->except(['show', 'create', 'store'])
         ->parameters(['presensi-siswa' => 'presensi_siswa']);
+
+    // T2Q (Yaumiyah Tahsin & Tahfizh)
+    Route::get('/t2q/yaumiyah-tahsin', [YaumiyahTahsinController::class, 'index'])
+        ->name('t2q.yaumiyah-tahsin.index');
+    Route::get('/t2q/yaumiyah-tahsin/matriks', [YaumiyahTahsinController::class, 'matriks'])
+        ->name('t2q.yaumiyah-tahsin.matriks');
+    Route::get('/t2q/yaumiyah-tahsin/statistik', [YaumiyahTahsinController::class, 'statistik'])
+        ->name('t2q.yaumiyah-tahsin.statistik');
+    Route::post('/t2q/yaumiyah-tahsin', [YaumiyahTahsinController::class, 'store'])
+        ->name('t2q.yaumiyah-tahsin.store');
+    Route::delete('/t2q/yaumiyah-tahsin/{yaumiyah_tahsin}', [YaumiyahTahsinController::class, 'destroy'])
+        ->name('t2q.yaumiyah-tahsin.destroy');
+
+    Route::get('/t2q/yaumiyah-tahfizh', [YaumiyahTahfizhController::class, 'index'])
+        ->name('t2q.yaumiyah-tahfizh.index');
+    Route::get('/t2q/yaumiyah-tahfizh/matriks', [YaumiyahTahfizhController::class, 'matriks'])
+        ->name('t2q.yaumiyah-tahfizh.matriks');
+    Route::get('/t2q/yaumiyah-tahfizh/statistik', [YaumiyahTahfizhController::class, 'statistik'])
+        ->name('t2q.yaumiyah-tahfizh.statistik');
+    Route::post('/t2q/yaumiyah-tahfizh', [YaumiyahTahfizhController::class, 'store'])
+        ->name('t2q.yaumiyah-tahfizh.store');
+    Route::delete('/t2q/yaumiyah-tahfizh/{yaumiyah_tahfizh}', [YaumiyahTahfizhController::class, 'destroy'])
+        ->name('t2q.yaumiyah-tahfizh.destroy');
 
 });

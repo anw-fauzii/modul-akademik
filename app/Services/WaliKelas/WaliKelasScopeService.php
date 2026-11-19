@@ -88,6 +88,59 @@ class WaliKelasScopeService
     }
 
     /**
+     * Mengambil seluruh kelas lintas Tahun Ajaran di mana user bertugas sebagai Wali Kelas atau Pendamping tanpa N+1.
+     *
+     * @return EloquentCollection<int, Kelas>
+     */
+    public function getAllAssignedClassesForUser(User $user): EloquentCollection
+    {
+        $nipy = trim((string) ($user->no_induk ?? ''));
+        if ($nipy === '') {
+            return new EloquentCollection;
+        }
+
+        $classes = Kelas::query()
+            ->select(self::KELAS_SELECT_COLUMNS)
+            ->with(self::KELAS_EAGER_RELATIONS)
+            ->withCount('anggotaKelas')
+            ->where(static function (Builder $query) use ($nipy): void {
+                $query->where('karyawan_nipy', $nipy)
+                    ->orWhere('pendamping_nipy', $nipy);
+            })
+            ->get();
+
+        return new EloquentCollection(
+            $classes->sort(static function (Kelas $a, Kelas $b) use ($nipy): int {
+                $aActive = ($a->relationLoaded('tahunAjaran') && $a->tahunAjaran?->is_active) ? 0 : 1;
+                $bActive = ($b->relationLoaded('tahunAjaran') && $b->tahunAjaran?->is_active) ? 0 : 1;
+                if ($aActive !== $bActive) {
+                    return $aActive <=> $bActive;
+                }
+
+                $aTaName = $a->relationLoaded('tahunAjaran') ? (string) ($a->tahunAjaran?->nama_tahun_ajaran ?? '') : '';
+                $bTaName = $b->relationLoaded('tahunAjaran') ? (string) ($b->tahunAjaran?->nama_tahun_ajaran ?? '') : '';
+                $taNameCmp = strnatcasecmp($bTaName, $aTaName);
+                if ($taNameCmp !== 0) {
+                    return $taNameCmp;
+                }
+
+                $aPrimary = trim((string) $a->karyawan_nipy) === $nipy ? 0 : 1;
+                $bPrimary = trim((string) $b->karyawan_nipy) === $nipy ? 0 : 1;
+                if ($aPrimary !== $bPrimary) {
+                    return $aPrimary <=> $bPrimary;
+                }
+
+                $jenjangCmp = Kelas::compareJenjangOrder((string) $a->jenjang_kelas, (string) $b->jenjang_kelas);
+                if ($jenjangCmp !== 0) {
+                    return $jenjangCmp;
+                }
+
+                return strnatcasecmp((string) $a->nama_kelas, (string) $b->nama_kelas);
+            })->values()->all()
+        );
+    }
+
+    /**
      * Menentukan peran user di dalam kelas (Wali Kelas, Guru Pendamping, atau Guru Pengampu opsional).
      */
     public function resolveRoleInKelas(Kelas $kelas, string $nipy, bool $asGuruPengampu = false): string

@@ -61,6 +61,44 @@ class TahunAjaran extends Model
     }
 
     /**
+     * Menghasilkan daftar kunci bulan kalender (Y-m) sesuai nama tahun ajaran dan semester instance ini.
+     *
+     * @return list<string>
+     */
+    public function academicMonthKeys(): array
+    {
+        $range = self::parseYearRange($this->nama_tahun_ajaran);
+        if ($range === null) {
+            return [];
+        }
+
+        [$startYear, $endYear] = $range;
+        $semester = strtolower(trim((string) $this->semester));
+
+        if (in_array($semester, ['1', 'mid 1'], true)) {
+            $months = range(7, 12);
+
+            return array_map(static fn (int $m): string => sprintf('%04d-%02d', $startYear, $m), $months);
+        }
+
+        if (in_array($semester, ['2', 'mid 2'], true)) {
+            $months = range(1, 6);
+
+            return array_map(static fn (int $m): string => sprintf('%04d-%02d', $endYear, $m), $months);
+        }
+
+        $result = [];
+        for ($m = 7; $m <= 12; $m++) {
+            $result[] = sprintf('%04d-%02d', $startYear, $m);
+        }
+        for ($m = 1; $m <= 6; $m++) {
+            $result[] = sprintf('%04d-%02d', $endYear, $m);
+        }
+
+        return $result;
+    }
+
+    /**
      * Mengurutkan daftar tahun ajaran untuk dropdown (aktif dahulu, terbaru, semester) dengan kolom minimal.
      */
     #[Scope]

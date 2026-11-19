@@ -36,8 +36,8 @@
             </div>
         </div>
 
-        <div class="main-card card">
-            <div class="card-body">
+        <div class="main-card card shadow-sm" style="border-radius: 16px; border: 1px solid #e2e8f0;">
+            <div class="card-body" style="padding: 1.5rem;">
                 <form method="post" action="{{ route('anggota-t2q.update', $anggotaT2q->id) }}" id="editForm">
                     @csrf
                     @method('PUT')

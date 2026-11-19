@@ -45,6 +45,7 @@
                 $isWaliPerkembanganActive = request()->routeIs('wali-kelas.perkembangan-siswa.*');
                 $isWaliPresensiActive = request()->routeIs('wali-kelas.presensi-siswa.*');
                 $isWaliPenilaianActive = request()->routeIs('wali-kelas.penilaian-tp.*', 'wali-kelas.penilaian-rekap.*');
+                $isWaliT2qActive = request()->routeIs('wali-kelas.t2q.*');
                 $isMasterSekolahActive = request()->is('data-master/sekolah*', 'data-master/tahun-ajaran*', 'data-master/titimangsa*');
                 $isMasterSdmActive = request()->is('data-master/siswa*', 'data-master/karyawan*');
                 $isMasterProgramActive = request()->is(
@@ -62,6 +63,7 @@
                 $isTujuanPembelajaranActive = request()->is('tujuan-pembelajaran*');
                 $isPenilaianActive = request()->is('penilaian*');
                 $isPresensiActive = request()->is('presensi*');
+                $isT2qActive = request()->is('t2q*');
                 $menuActiveClass = 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md shadow-orange-600/30';
                 $menuInactiveClass = 'text-slate-300 hover:text-white hover:bg-slate-800/80';
                 $menuIconActiveClass = 'text-white';
@@ -150,6 +152,24 @@
                                         'label' => 'Statistik Tahunan',
                                         'route' => 'wali-kelas.presensi-siswa.tahunan',
                                         'active' => request()->routeIs('wali-kelas.presensi-siswa.tahunan'),
+                                    ],
+                                ],
+                            ],
+                            [
+                                'id' => 'submenu-wali-t2q',
+                                'label' => 'Yaumiyah T2Q',
+                                'active' => $isWaliT2qActive,
+                                'icon' => 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253',
+                                'items' => [
+                                    [
+                                        'label' => 'Matriks (Sen–Kam)',
+                                        'route' => 'wali-kelas.t2q.yaumiyah-tahsin.matriks',
+                                        'active' => request()->routeIs('wali-kelas.t2q.yaumiyah-tahsin.matriks', 'wali-kelas.t2q.yaumiyah-tahfizh.matriks'),
+                                    ],
+                                    [
+                                        'label' => 'Statistik Tahun Ajaran',
+                                        'route' => 'wali-kelas.t2q.yaumiyah-tahsin.statistik',
+                                        'active' => request()->routeIs('wali-kelas.t2q.yaumiyah-tahsin.statistik', 'wali-kelas.t2q.yaumiyah-tahfizh.statistik'),
                                     ],
                                 ],
                             ],
@@ -582,6 +602,48 @@
                         <a href="{{ route('presensi-siswa.tahunan') }}"
                             class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->routeIs('presensi-siswa.tahunan') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
                             Statistik Tahunan
+                        </a>
+                    </div>
+                </div>
+
+                <!-- T2Q Yaumiyah Dropdown -->
+                <div class="has-submenu relative group/submenu">
+                    <button type="button" data-sidebar-toggle="submenu-t2q"
+                        aria-expanded="{{ $isT2qActive ? 'true' : 'false' }}"
+                        class="w-full group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all {{ $isT2qActive ? $menuActiveClass : $menuInactiveClass }}">
+                        <div class="flex items-center gap-3">
+                            <svg class="h-4 w-4 shrink-0 {{ $isT2qActive ? $menuIconActiveClass : $menuIconInactiveClass }}"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                            </svg>
+                            <span class="menu-text">Yaumiyah T2Q</span>
+                        </div>
+                        <svg class="menu-chevron h-3.5 w-3.5 transition-transform duration-200 {{ $isT2qActive ? 'text-white rotate-180' : 'text-slate-400 group-hover:text-white' }}"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div id="submenu-t2q"
+                        class="{{ $isT2qActive ? '' : 'hidden' }} submenu-flyout mt-1 space-y-1 pl-4 border-l border-slate-800 ml-5 py-1">
+                        <div class="flyout-header hidden">
+                            <span>Yaumiyah T2Q</span>
+                        </div>
+                        <a href="{{ route('t2q.yaumiyah-tahsin.index') }}"
+                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->routeIs('t2q.yaumiyah-tahsin.index') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                            Yaumiyah Tahsin
+                        </a>
+                        <a href="{{ route('t2q.yaumiyah-tahfizh.index') }}"
+                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->routeIs('t2q.yaumiyah-tahfizh.index') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                            Yaumiyah Tahfizh
+                        </a>
+                        <a href="{{ route('t2q.yaumiyah-tahsin.matriks') }}"
+                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->routeIs('t2q.yaumiyah-*.matriks') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                            Matriks (Sen–Kam)
+                        </a>
+                        <a href="{{ route('t2q.yaumiyah-tahsin.statistik') }}"
+                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->routeIs('t2q.yaumiyah-*.statistik') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                            Statistik Tahun Ajaran
                         </a>
                     </div>
                 </div>
