@@ -9,6 +9,7 @@ use App\Models\Admin\DataMaster\Kelas;
 use App\Models\Admin\DataMaster\Sekolah;
 use App\Models\Admin\DataMaster\Siswa;
 use App\Models\Admin\DataMaster\TahunAjaran;
+use App\Models\Admin\Pelajaran\KelompokPelajaran;
 use App\Models\Admin\Pelajaran\MataPelajaran;
 use App\Models\Admin\Penilaian\Kkm;
 use App\Models\Admin\Penilaian\PeriodeTp;
@@ -346,6 +347,7 @@ class RaporPdfService
                 ->where('akademik_master_tahun_ajaran_id', $kelas->akademik_master_tahun_ajaran_id)
                 ->whereIn('anggota_kelas_id', $anggotaIds)
                 ->where('periode', $periode)
+                ->whereNotNull('nilai_akhir_rapor')
                 ->get();
 
             foreach ($rekapRows as $rekap) {
@@ -372,24 +374,49 @@ class RaporPdfService
         $titimangsa = $this->titimangsaService->resolveForKelas($kelas, $periode);
         $fase = $this->resolveFase((string) $kelas->tingkatan_kelas);
 
+        $templateGroups = self::groupMapelRowsByKelompok(
+            $mapels->map(static fn (MataPelajaran $mapel): array => [
+                'mapel' => $mapel,
+                'rekap' => null,
+            ])->all()
+        );
+
         $entries = $anggotaList->map(function (AnggotaKelas $anggota) use (
-            $mapels,
+            $templateGroups,
             $rekapLookup,
             $ekskulByAnggota,
             $t2qByAnggota,
             $presensiByAnggota
         ): array {
-            $mapelRows = $mapels->map(static function (MataPelajaran $mapel) use ($anggota, $rekapLookup): array {
+            $rawGroups = array_map(static function (array $group) use ($anggota, $rekapLookup): array {
+                $rows = array_map(static function (array $row) use ($anggota, $rekapLookup): array {
+                    /** @var MataPelajaran $mapel */
+                    $mapel = $row['mapel'];
+
+                    return [
+                        'mapel' => $mapel,
+                        'rekap' => $rekapLookup["{$anggota->id}:{$mapel->id}"] ?? null,
+                    ];
+                }, $group['rows']);
+
                 return [
-                    'mapel' => $mapel,
-                    'rekap' => $rekapLookup["{$anggota->id}:{$mapel->id}"] ?? null,
+                    ...$group,
+                    'rows' => $rows,
                 ];
-            })->values()->all();
+            }, $templateGroups);
+
+            $mapelGroups = self::filterScoredMapelGroups($rawGroups);
+
+            $mapelRows = collect($mapelGroups)
+                ->flatMap(static fn (array $group): array => $group['rows'])
+                ->values()
+                ->all();
 
             return [
                 'anggota' => $anggota,
                 'siswa' => $anggota->siswa,
                 'mapelRows' => $mapelRows,
+                'mapelGroups' => $mapelGroups,
                 'ekskulRows' => $ekskulByAnggota->get($anggota->id, collect())->values()->all(),
                 't2q' => $t2qByAnggota->get($anggota->id),
                 'presensi' => $presensiByAnggota[$anggota->id] ?? ['sakit' => 0, 'izin' => 0, 'alpa' => 0],
@@ -407,6 +434,179 @@ class RaporPdfService
             'logoDataUri' => $this->resolveLogoDataUri(),
             'entries' => $entries,
         ];
+    }
+
+    /**
+     * Mengelompokkan dan mengurutkan baris mata pelajaran berdasarkan kelompok pelajaran tanpa lazy loading (DRY).
+     *
+     * @param  iterable<int, array{mapel: MataPelajaran, rekap: ?RekapMapel}>  $mapelRows
+     * @return list<array{
+     *     kelompok: ?KelompokPelajaran,
+     *     kode: string,
+     *     label: string,
+     *     urutan: int,
+     *     rows: list<array{mapel: MataPelajaran, rekap: ?RekapMapel}>
+     * }>
+     */
+    public static function groupMapelRowsByKelompok(iterable $mapelRows): array
+    {
+        $groups = [];
+
+        foreach ($mapelRows as $index => $row) {
+            $mapel = $row['mapel'] ?? null;
+            if (! $mapel instanceof MataPelajaran) {
+                continue;
+            }
+
+            $kelompok = $mapel->relationLoaded('kelompokPelajaran') ? $mapel->kelompokPelajaran : null;
+            $kelompokId = $kelompok instanceof KelompokPelajaran
+                ? (int) ($kelompok->id ?? 0)
+                : (int) ($mapel->akademik_pelajaran_kelompok_pelajaran_id ?? 0);
+            $kode = $kelompok instanceof KelompokPelajaran ? trim((string) ($kelompok->kode ?? '')) : '';
+            $namaKelompok = $kelompok instanceof KelompokPelajaran ? trim((string) ($kelompok->kelompok ?? '')) : '';
+
+            if ($kelompok instanceof KelompokPelajaran) {
+                if ($kelompokId > 0) {
+                    $groupKey = "klp_id_{$kelompokId}";
+                } elseif ($kode !== '') {
+                    $groupKey = 'klp_kode_'.strtolower($kode);
+                } else {
+                    $groupKey = 'klp_obj_'.spl_object_id($kelompok);
+                }
+            } elseif ($kelompokId > 0) {
+                $groupKey = "klp_id_{$kelompokId}";
+            } else {
+                $groupKey = 'klp_other';
+            }
+
+            if (! isset($groups[$groupKey])) {
+                $label = $namaKelompok !== ''
+                    ? $namaKelompok
+                    : ($kode !== '' ? $kode : 'Kelompok Lainnya');
+
+                $groups[$groupKey] = [
+                    'kelompok' => $kelompok instanceof KelompokPelajaran ? $kelompok : null,
+                    'kode' => $kode,
+                    'label' => $label,
+                    'urutan' => ($kelompok instanceof KelompokPelajaran && $kelompok->urutan !== null)
+                        ? (int) $kelompok->urutan
+                        : PHP_INT_MAX,
+                    'kelompok_id' => $kelompokId > 0 ? $kelompokId : PHP_INT_MAX,
+                    'order' => count($groups),
+                    'rows' => [],
+                ];
+            }
+
+            $groups[$groupKey]['rows'][] = [
+                'row' => $row,
+                'urutan' => $mapel->urutan !== null ? (int) $mapel->urutan : PHP_INT_MAX,
+                'nama' => (string) ($mapel->nama_mata_pelajaran ?? ''),
+                'id' => (int) ($mapel->id ?? 0),
+                'order' => is_int($index) ? $index : count($groups[$groupKey]['rows']),
+            ];
+        }
+
+        if ($groups === []) {
+            return [];
+        }
+
+        $groupList = array_values($groups);
+
+        usort($groupList, static function (array $a, array $b): int {
+            $urutanCmp = $a['urutan'] <=> $b['urutan'];
+            if ($urutanCmp !== 0) {
+                return $urutanCmp;
+            }
+
+            $kodeCmp = strnatcasecmp($a['kode'], $b['kode']);
+            if ($kodeCmp !== 0) {
+                return $kodeCmp;
+            }
+
+            $labelCmp = strnatcasecmp($a['label'], $b['label']);
+            if ($labelCmp !== 0) {
+                return $labelCmp;
+            }
+
+            $idCmp = $a['kelompok_id'] <=> $b['kelompok_id'];
+
+            return $idCmp !== 0 ? $idCmp : ($a['order'] <=> $b['order']);
+        });
+
+        return array_map(static function (array $group): array {
+            usort($group['rows'], static function (array $a, array $b): int {
+                $urutanCmp = $a['urutan'] <=> $b['urutan'];
+                if ($urutanCmp !== 0) {
+                    return $urutanCmp;
+                }
+
+                $namaCmp = strnatcasecmp($a['nama'], $b['nama']);
+                if ($namaCmp !== 0) {
+                    return $namaCmp;
+                }
+
+                $idCmp = $a['id'] <=> $b['id'];
+
+                return $idCmp !== 0 ? $idCmp : ($a['order'] <=> $b['order']);
+            });
+
+            return [
+                'kelompok' => $group['kelompok'],
+                'kode' => $group['kode'],
+                'label' => $group['label'],
+                'urutan' => $group['urutan'],
+                'rows' => array_map(static fn (array $item): array => $item['row'], $group['rows']),
+            ];
+        }, $groupList);
+    }
+
+    /**
+     * Menentukan apakah rekap mata pelajaran memiliki nilai akhir rapor yang valid untuk dicetak.
+     */
+    public static function hasNilaiRapor(mixed $rekap): bool
+    {
+        return ($rekap?->nilai_akhir_rapor ?? null) !== null;
+    }
+
+    /**
+     * Memfilter kelompok & baris mata pelajaran agar hanya mapel bernilai yang tampil di rapor (DRY).
+     *
+     * @param  list<array{
+     *     kelompok: ?KelompokPelajaran,
+     *     kode: string,
+     *     label: string,
+     *     urutan: int,
+     *     rows: list<array{mapel: MataPelajaran, rekap: ?RekapMapel}>
+     * }>  $groups
+     * @return list<array{
+     *     kelompok: ?KelompokPelajaran,
+     *     kode: string,
+     *     label: string,
+     *     urutan: int,
+     *     rows: list<array{mapel: MataPelajaran, rekap: ?RekapMapel}>
+     * }>
+     */
+    public static function filterScoredMapelGroups(array $groups): array
+    {
+        $filtered = [];
+
+        foreach ($groups as $group) {
+            $scoredRows = array_values(array_filter(
+                $group['rows'] ?? [],
+                static fn (array $row): bool => self::hasNilaiRapor($row['rekap'] ?? null)
+            ));
+
+            if ($scoredRows === []) {
+                continue;
+            }
+
+            $filtered[] = [
+                ...$group,
+                'rows' => $scoredRows,
+            ];
+        }
+
+        return $filtered;
     }
 
     /**

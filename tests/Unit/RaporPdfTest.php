@@ -15,6 +15,7 @@ use App\Models\Admin\DataMaster\Siswa;
 use App\Models\Admin\DataMaster\TahunAjaran;
 use App\Models\Admin\DataMaster\Titimangsa;
 use App\Models\Admin\DataPelengkap\Pekerjaan;
+use App\Models\Admin\Pelajaran\KelompokPelajaran;
 use App\Models\Admin\Pelajaran\MataPelajaran;
 use App\Models\Admin\Penilaian\PeriodeTp;
 use App\Models\Admin\Penilaian\RekapMapel;
@@ -240,7 +241,7 @@ class RaporPdfTest extends TestCase
         $this->assertStringContainsString('H. Ahmad Fauzi, M.Pd', $identitasHtml);
         $this->assertStringNotContainsString('Capaian Kompetensi Mata Pelajaran', $identitasHtml);
 
-        // PDF Nilai Semester memuat Nilai, Capaian & Deskripsi rata kanan-kiri tanpa kop
+        // PDF Nilai Semester memuat Nilai angka & Deskripsi rata kanan-kiri tanpa kop serta tanpa keterangan SAB/BSH
         $this->assertStringContainsString('PENCAPAIAN KOMPETENSI PESERTA DIDIK', $nilaiHtml);
         $this->assertStringContainsString('text-align: justify;', $nilaiHtml);
         $this->assertStringContainsString('<th style="width: 10%;">NILAI</th>', $nilaiHtml);
@@ -249,6 +250,8 @@ class RaporPdfTest extends TestCase
         $this->assertStringContainsString('Matematika', $nilaiHtml);
         $this->assertStringContainsString('>89<', str_replace(["\n", ' '], '', $nilaiHtml));
         $this->assertStringContainsString('Menunjukkan penguasaan baik pada operasi hitung pecahan.', $nilaiHtml);
+        $this->assertStringNotContainsString('>CAPAIAN<', $nilaiHtml);
+        $this->assertStringNotContainsString('(BSH)', $nilaiHtml);
         $this->assertStringContainsString('Pramuka', $nilaiHtml);
         $this->assertStringContainsString('Jilid 4', $nilaiHtml);
         $this->assertStringContainsString('Ustadz Ridwan, S.Ag', $nilaiHtml);
@@ -260,13 +263,13 @@ class RaporPdfTest extends TestCase
         $this->assertStringNotContainsString('KETERANGAN TENTANG DIRI PESERTA DIDIK', $nilaiHtml);
         $this->assertStringNotContainsString('IDENTITAS SATUAN PENDIDIKAN', $nilaiHtml);
 
-        // PDF Mid Semester hanya menampilkan CAPAIAN & DESKRIPSI tanpa kolom NILAI angka
+        // PDF Mid Semester juga menampilkan kolom NILAI angka & DESKRIPSI tanpa predikat/keterangan SAB, BSH dll
         $this->assertStringContainsString('Ganjil (Mid Semester)', $midHtml);
-        $this->assertStringContainsString('CAPAIAN', $midHtml);
-        $this->assertStringContainsString('(BSH)', $midHtml);
+        $this->assertStringContainsString('<th style="width: 10%;">NILAI</th>', $midHtml);
+        $this->assertStringContainsString('>89<', str_replace(["\n", ' '], '', $midHtml));
         $this->assertStringContainsString('Menunjukkan penguasaan baik pada operasi hitung pecahan.', $midHtml);
-        $this->assertStringNotContainsString('>NILAI<', $midHtml);
-        $this->assertStringNotContainsString('>89<', str_replace(["\n", ' '], '', $midHtml));
+        $this->assertStringNotContainsString('>CAPAIAN<', $midHtml);
+        $this->assertStringNotContainsString('(BSH)', $midHtml);
 
         // Pastikan DomPDF benar-benar bisa merender PDF Identitas, Semester, dan Mid menjadi binary valid (%PDF-)
         $identitasPdfBinary = Pdf::loadView('pdf.rapor.identitas', $identitasPayload)->setPaper('a4', 'portrait')->output();
@@ -396,5 +399,222 @@ class RaporPdfTest extends TestCase
         } catch (HttpException $e) {
             $this->assertSame(403, $e->getStatusCode());
         }
+    }
+
+    public function test_nilai_pdf_separates_tables_by_kelompok_pelajaran_in_urutan_order_without_lazy_loading(): void
+    {
+        $f = $this->makeRaporFixtures();
+
+        $kelompokA = KelompokPelajaran::make(['kode' => 'A', 'kelompok' => 'Kelompok A (Umum)', 'urutan' => 1]);
+        $kelompokA->id = 1;
+        $kelompokB = KelompokPelajaran::make(['kode' => 'B', 'kelompok' => 'Kelompok B (Seni & Olahraga)', 'urutan' => 2]);
+        $kelompokB->id = 2;
+        $kelompokMulok = KelompokPelajaran::make(['kode' => 'MULOK', 'kelompok' => 'Muatan Lokal', 'urutan' => 3]);
+        $kelompokMulok->id = 3;
+        $kelompokKosong = KelompokPelajaran::make(['kode' => 'PIL', 'kelompok' => 'Kelompok Pilihan', 'urutan' => 4]);
+        $kelompokKosong->id = 4;
+
+        $mapelPai = MataPelajaran::make([
+            'akademik_pelajaran_kelompok_pelajaran_id' => 1,
+            'singkatan' => 'PAI',
+            'nama_mata_pelajaran' => 'Pendidikan Agama Islam',
+            'urutan' => 1,
+        ]);
+        $mapelPai->id = 101;
+        $mapelPai->setRelation('kelompokPelajaran', $kelompokA);
+
+        $mapelMtk = MataPelajaran::make([
+            'akademik_pelajaran_kelompok_pelajaran_id' => 1,
+            'singkatan' => 'MTK',
+            'nama_mata_pelajaran' => 'Matematika',
+            'urutan' => 2,
+        ]);
+        $mapelMtk->id = 102;
+        $mapelMtk->setRelation('kelompokPelajaran', $kelompokA);
+
+        $mapelUnscoredInA = MataPelajaran::make([
+            'akademik_pelajaran_kelompok_pelajaran_id' => 1,
+            'singkatan' => 'IPAS',
+            'nama_mata_pelajaran' => 'IPAS (Belum Diajarkan)',
+            'urutan' => 3,
+        ]);
+        $mapelUnscoredInA->id = 103;
+        $mapelUnscoredInA->setRelation('kelompokPelajaran', $kelompokA);
+
+        $mapelSbdp = MataPelajaran::make([
+            'akademik_pelajaran_kelompok_pelajaran_id' => 2,
+            'singkatan' => 'SBDP',
+            'nama_mata_pelajaran' => 'Seni Budaya dan Prakarya',
+            'urutan' => 1,
+        ]);
+        $mapelSbdp->id = 201;
+        $mapelSbdp->setRelation('kelompokPelajaran', $kelompokB);
+
+        $mapelSunda = MataPelajaran::make([
+            'akademik_pelajaran_kelompok_pelajaran_id' => 3,
+            'singkatan' => 'BSUN',
+            'nama_mata_pelajaran' => 'Bahasa Sunda',
+            'urutan' => 1,
+        ]);
+        $mapelSunda->id = 301;
+        $mapelSunda->setRelation('kelompokPelajaran', $kelompokMulok);
+
+        $mapelPilihanTanpaNilai = MataPelajaran::make([
+            'akademik_pelajaran_kelompok_pelajaran_id' => 4,
+            'singkatan' => 'ROBOT',
+            'nama_mata_pelajaran' => 'Robotika (Tidak Ada Di Kelas Ini)',
+            'urutan' => 1,
+        ]);
+        $mapelPilihanTanpaNilai->id = 401;
+        $mapelPilihanTanpaNilai->setRelation('kelompokPelajaran', $kelompokKosong);
+
+        $makeRekap = static fn (int $mapelId, ?float $nilai, string $desc = 'Capaian baik.'): RekapMapel => RekapMapel::make([
+            'akademik_master_tahun_ajaran_id' => 1,
+            'akademik_pelajaran_mata_pelajaran_id' => $mapelId,
+            'anggota_kelas_id' => 301,
+            'periode' => PeriodeTp::PERIODE_SEMESTER,
+            'nilai_akhir_rapor' => $nilai,
+            'deskripsi_capaian' => $desc,
+        ]);
+
+        // Sengaja diacak urutannya dan menyertakan mapel tanpa nilai (rekap null & nilai_akhir_rapor null) + mapel bernilai 0
+        $shuffledRows = [
+            ['mapel' => $mapelSunda, 'rekap' => $makeRekap(301, 0.0, 'Mulai mengikuti pembelajaran bahasa daerah.')],
+            ['mapel' => $mapelMtk, 'rekap' => $f['rekap']],
+            ['mapel' => $mapelUnscoredInA, 'rekap' => $makeRekap(103, null)],
+            ['mapel' => $mapelSbdp, 'rekap' => $makeRekap(201, 91.0)],
+            ['mapel' => $mapelPilihanTanpaNilai, 'rekap' => null],
+            ['mapel' => $mapelPai, 'rekap' => $makeRekap(101, 94.0)],
+        ];
+
+        Model::preventLazyLoading(true);
+        try {
+            $groupedAll = RaporPdfService::groupMapelRowsByKelompok($shuffledRows);
+            $groups = RaporPdfService::filterScoredMapelGroups($groupedAll);
+
+            $this->assertCount(4, $groupedAll);
+            $this->assertCount(3, $groups);
+            $this->assertSame(['Kelompok A (Umum)', 'Kelompok B (Seni & Olahraga)', 'Muatan Lokal'], array_column($groups, 'label'));
+            $this->assertSame(['Pendidikan Agama Islam', 'Matematika'], array_map(
+                static fn (array $r): string => $r['mapel']->nama_mata_pelajaran,
+                $groups[0]['rows']
+            ));
+            $this->assertSame(['Seni Budaya dan Prakarya'], array_map(
+                static fn (array $r): string => $r['mapel']->nama_mata_pelajaran,
+                $groups[1]['rows']
+            ));
+            $this->assertSame(['Bahasa Sunda'], array_map(
+                static fn (array $r): string => $r['mapel']->nama_mata_pelajaran,
+                $groups[2]['rows']
+            ));
+
+            $payload = [
+                'kelas' => $f['kelas'],
+                'tahunAjaran' => $f['ta'],
+                'periode' => PeriodeTp::PERIODE_SEMESTER,
+                'periodeLabel' => 'Semester',
+                'fase' => 'C',
+                'sekolah' => $f['sekolah'],
+                'titimangsa' => $f['titimangsa'],
+                'logoDataUri' => null,
+                'entries' => [
+                    [
+                        'anggota' => $f['anggota1'],
+                        'siswa' => $f['anggota1']->siswa,
+                        'mapelRows' => $shuffledRows,
+                        'mapelGroups' => $groupedAll,
+                        'ekskulRows' => [$f['anggotaEkskul']],
+                        't2q' => $f['anggotaT2q'],
+                        'presensi' => ['sakit' => 1, 'izin' => 0, 'alpa' => 0],
+                    ],
+                ],
+            ];
+
+            $html = view('pdf.rapor.nilai', $payload)->render();
+            $midHtml = view('pdf.rapor.nilai', [
+                ...$payload,
+                'periode' => PeriodeTp::PERIODE_MID,
+                'periodeLabel' => 'Mid Semester',
+            ])->render();
+            // Fallback ketika view hanya menerima mapelRows tanpa mapelGroups juga harus memfilter mapel tanpa nilai & anti-N+1
+            $fallbackPayload = $payload;
+            unset($fallbackPayload['entries'][0]['mapelGroups']);
+            $fallbackHtml = view('pdf.rapor.nilai', $fallbackPayload)->render();
+
+            $emptyScorePayload = $payload;
+            $emptyScorePayload['entries'][0]['mapelGroups'] = [
+                [
+                    'kelompok' => $kelompokKosong,
+                    'kode' => 'PIL',
+                    'label' => 'Kelompok Pilihan',
+                    'urutan' => 4,
+                    'rows' => [['mapel' => $mapelPilihanTanpaNilai, 'rekap' => null]],
+                ],
+            ];
+            $emptyScoreHtml = view('pdf.rapor.nilai', $emptyScorePayload)->render();
+        } finally {
+            Model::preventLazyLoading(false);
+        }
+
+        // Mapel & kelompok tanpa nilai tidak boleh muncul di rapor
+        $this->assertStringNotContainsString('IPAS (Belum Diajarkan)', $html);
+        $this->assertStringNotContainsString('Robotika (Tidak Ada Di Kelas Ini)', $html);
+        $this->assertStringNotContainsString('Kelompok Pilihan', $html);
+        $this->assertStringNotContainsString('IPAS (Belum Diajarkan)', $fallbackHtml);
+        $this->assertStringNotContainsString('Robotika (Tidak Ada Di Kelas Ini)', $fallbackHtml);
+        $this->assertStringContainsString('Belum ada mata pelajaran yang memiliki nilai.', $emptyScoreHtml);
+        $this->assertStringContainsString('Bahasa Sunda', $html);
+
+        // Isolasi bagian kelompok pelajaran (sebelum D. EKSTRAKURIKULER) untuk memverifikasi 3 tabel terpisah & penomoran mulai dari 1 tiap tabel
+        $this->assertStringContainsString('size: A4 portrait;', $html);
+        $this->assertStringContainsString('border-left: none;', $html);
+        $this->assertStringContainsString('border-right: none;', $html);
+        $this->assertStringNotContainsString('border-left: 3px', $html);
+        $this->assertStringContainsString('class="meta-box"', $html);
+        $this->assertStringNotContainsString('score-pill', $html);
+        $this->assertStringContainsString('<td class="font-bold" style="vertical-align: middle;">Matematika</td>', $html);
+        $this->assertStringNotContainsString('CAPAIAN KOMPETENSI MATA PELAJARAN', $html);
+
+        $secStart = strpos($html, 'PENCAPAIAN KOMPETENSI PESERTA DIDIK');
+        $secEkskulStart = strpos($html, '<!-- EKSTRAKURIKULER -->');
+        $this->assertNotFalse($secStart);
+        $this->assertNotFalse($secEkskulStart);
+        $sectionMapelHtml = substr($html, $secStart, $secEkskulStart - $secStart);
+
+        $this->assertSame(3, substr_count($sectionMapelHtml, 'class="rapor-table rapor-table--mapel"'));
+        $this->assertSame(3, substr_count($midHtml, 'class="rapor-table rapor-table--mapel"'));
+        $this->assertSame(3, substr_count($fallbackHtml, 'class="rapor-table rapor-table--mapel"'));
+        $this->assertSame(3, substr_count($sectionMapelHtml, 'class="section-heading uppercase"'));
+        $this->assertSame(3, substr_count($sectionMapelHtml, '>1</td>'));
+        $this->assertSame(3, substr_count($sectionMapelHtml, '<th style="width: 10%;">NILAI</th>'));
+        $this->assertSame(3, substr_count($midHtml, '<th style="width: 10%;">NILAI</th>'));
+        $this->assertStringContainsString('>89<', str_replace(["\n", ' '], '', $midHtml));
+        $this->assertStringNotContainsString('>CAPAIAN<', $sectionMapelHtml);
+        $this->assertStringNotContainsString('>CAPAIAN<', $midHtml);
+        $this->assertStringNotContainsString('(BSH)', $midHtml);
+
+        $posA = strpos($sectionMapelHtml, 'A. Kelompok A (Umum)');
+        $posB = strpos($sectionMapelHtml, 'B. Kelompok B (Seni &amp; Olahraga)');
+        $posMulok = strpos($sectionMapelHtml, 'C. Muatan Lokal');
+        $this->assertNotFalse($posA);
+        $this->assertNotFalse($posB);
+        $this->assertNotFalse($posMulok);
+        $this->assertLessThan($posB, $posA);
+        $this->assertLessThan($posMulok, $posB);
+
+        $this->assertStringContainsString('D. EKSTRAKURIKULER', $html);
+        $this->assertStringContainsString("E. PROGRAM TAHSIN &amp; TAHFIDZ AL-QUR'AN (T2Q)", $html);
+        $this->assertStringContainsString('F. KETIDAKHADIRAN', $html);
+        $this->assertStringContainsString('G. CATATAN WALI KELAS', $html);
+
+        $noT2qPayload = $payload;
+        $noT2qPayload['entries'][0]['t2q'] = null;
+        $noT2qHtml = view('pdf.rapor.nilai', $noT2qPayload)->render();
+        $this->assertStringContainsString('D. EKSTRAKURIKULER', $noT2qHtml);
+        $this->assertStringContainsString('E. KETIDAKHADIRAN', $noT2qHtml);
+        $this->assertStringContainsString('F. CATATAN WALI KELAS', $noT2qHtml);
+
+        $pdfBinary = Pdf::loadView('pdf.rapor.nilai', $payload)->setPaper('a4', 'portrait')->output();
+        $this->assertStringStartsWith('%PDF-', $pdfBinary);
     }
 }

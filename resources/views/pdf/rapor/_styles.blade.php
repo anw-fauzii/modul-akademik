@@ -1,13 +1,14 @@
 <style>
     @page {
-        margin: 14mm 16mm 14mm 16mm;
+        size: A4 portrait;
+        margin: 13mm 15mm 13mm 15mm;
     }
 
     body {
         font-family: DejaVu Sans, sans-serif;
         font-size: 9pt;
-        color: #111827;
-        line-height: 1.4;
+        color: #1e293b;
+        line-height: 1.42;
         margin: 0;
         padding: 0;
     }
@@ -75,53 +76,115 @@
         text-align: center;
         font-size: 10.8pt;
         font-weight: bold;
-        letter-spacing: 0.3px;
+        letter-spacing: 0.4px;
         margin: 10px 0 10px 0;
-        color: #111827;
+        color: #0f172a;
     }
 
-    /* Info Siswa Rapor Nilai (Mengikuti Format Referensi Sekolah) */
+    .doc-title--nilai {
+        margin: 8px 0 10px 0;
+        padding-bottom: 5px;
+        border-bottom: 1.2px solid #cbd5e1;
+    }
+
+    /* Info Siswa Rapor Nilai */
+    .meta-box {
+        background-color: #f8fafc;
+        border-top: 1.2px solid #334155;
+        border-bottom: 1px solid #cbd5e1;
+        border-left: none;
+        border-right: none;
+        padding: 7px 10px;
+        margin-bottom: 10px;
+    }
+
     .meta-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 8.6pt;
-        margin-bottom: 8px;
+        font-size: 8.4pt;
+        color: #1e293b;
     }
 
     .meta-table td {
-        padding: 1.5px 3px;
+        padding: 2px 3px;
         vertical-align: top;
+    }
+
+    .meta-label {
+        color: #475569;
     }
 
     /* Subjudul Bagian */
     .section-heading {
-        font-size: 9pt;
+        font-size: 8.7pt;
         font-weight: bold;
-        color: #111827;
-        margin: 10px 0 4px 0;
+        color: #0f172a;
+        letter-spacing: 0.25px;
+        margin: 11px 0 4px 0;
+        padding: 0;
+        page-break-after: avoid;
     }
 
-    /* Tabel Rapor Standar Rapi */
+    /* Tabel Rapor Modern Tanpa Garis Vertikal (Clean Horizontal Rules) */
     .rapor-table {
         width: 100%;
         border-collapse: collapse;
-        margin-bottom: 8px;
+        margin-bottom: 9px;
         font-size: 8.2pt;
+    }
+
+    .rapor-table--mapel {
+        table-layout: fixed;
+    }
+
+    .rapor-table--headless {
+        border-top: 1.2px solid #334155;
+    }
+
+    .rapor-table thead {
+        display: table-header-group;
     }
 
     .rapor-table th,
     .rapor-table td {
-        border: 0.8px solid #4b5563;
-        padding: 5px 7px;
+        border-top: none;
+        border-left: none;
+        border-right: none;
+        border-bottom: 0.75px solid #e2e8f0;
+        padding: 6px 8px;
         vertical-align: top;
     }
 
+    .rapor-table--mapel th,
+    .rapor-table--mapel td {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
     .rapor-table th {
-        background-color: #f3f4f6;
+        background-color: #eef2f6;
+        border-top: 1.2px solid #334155;
+        border-bottom: 1.2px solid #334155;
         font-weight: bold;
-        color: #111827;
-        font-size: 8pt;
+        color: #0f172a;
+        font-size: 7.7pt;
+        letter-spacing: 0.35px;
         text-align: center;
+        vertical-align: middle;
+        padding-top: 6px;
+        padding-bottom: 6px;
+    }
+
+    .rapor-table th.text-left {
+        text-align: left;
+    }
+
+    .rapor-table tbody tr:nth-child(even) td {
+        background-color: #f8fafc;
+    }
+
+    .rapor-table tbody tr:last-child td {
+        border-bottom: 1px solid #cbd5e1;
     }
 
     .rapor-table tr {
@@ -130,8 +193,8 @@
 
     .desc-text {
         font-size: 8pt;
-        line-height: 1.4;
-        color: #1f2937;
+        line-height: 1.44;
+        color: #1e293b;
         text-align: justify;
     }
 
@@ -164,11 +227,15 @@
     }
 
     .notes-box {
-        border: 0.8px solid #4b5563;
-        min-height: 58px;
+        border-top: 1.2px solid #334155;
+        border-bottom: 1px solid #cbd5e1;
+        border-left: none;
+        border-right: none;
+        background-color: #f8fafc;
+        min-height: 60px;
         padding: 6px 8px;
         font-size: 8.2pt;
-        color: #374151;
+        color: #334155;
     }
 
     /* Tanda Tangan & Titimangsa */

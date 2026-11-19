@@ -24,121 +24,129 @@
         $titimangsaLine = $titimangsa?->titimangsa_label ?: "{$kotaFallback}, ....................";
         $taLabel = $tahunAjaran?->nama_tahun_ajaran ?? '-';
         $semesterText = $tahunAjaran?->semester === '2' ? 'Genap' : 'Ganjil';
-        $isMid = ($periode ?? \App\Models\Admin\Penilaian\PeriodeTp::PERIODE_MID) === \App\Models\Admin\Penilaian\PeriodeTp::PERIODE_MID;
+        $nextSectionLetter = static function (int $index): string {
+            $letters = '';
+            $n = $index;
+            do {
+                $letters = chr(65 + ($n % 26)) . $letters;
+                $n = intdiv($n, 26) - 1;
+            } while ($n >= 0);
+
+            return $letters;
+        };
     @endphp
 
     @forelse ($entries as $entry)
         @php
             $siswa = $entry['siswa'];
             $anggota = $entry['anggota'];
-            $mapelRows = $entry['mapelRows'];
+            $mapelRows = $entry['mapelRows'] ?? [];
+            $rawMapelGroups = $entry['mapelGroups']
+                ?? \App\Services\Admin\Penilaian\RaporPdfService::groupMapelRowsByKelompok($mapelRows);
+            $mapelGroups = \App\Services\Admin\Penilaian\RaporPdfService::filterScoredMapelGroups($rawMapelGroups);
+            $displayMapelGroups = $mapelGroups !== []
+                ? $mapelGroups
+                : [['kelompok' => null, 'kode' => '', 'label' => 'Mata Pelajaran', 'rows' => []]];
             $ekskulRows = $entry['ekskulRows'];
             $t2q = $entry['t2q'];
             $presensi = $entry['presensi'];
+            $sectionIdx = 0;
         @endphp
 
         <div class="{{ ! $loop->last ? 'page-break' : '' }}">
             <!-- IDENTITAS RINGKAS DI BAGIAN PALING ATAS (TANPA KOP) -->
-            <table class="meta-table">
-                <tr>
-                    <td style="width: 21%;">Nama Peserta Didik</td>
-                    <td style="width: 2%;">:</td>
-                    <td style="width: 38%;">{{ $siswa?->nama_lengkap ?? $anggota->siswa_nis }}</td>
-                    <td style="width: 17%;">Kelas / Fase</td>
-                    <td style="width: 2%;">:</td>
-                    <td style="width: 20%;">{{ $kelas->nama_kelas }} / Fase {{ $fase }}</td>
-                </tr>
-                <tr>
-                    <td>Nomor Induk/NISN</td>
-                    <td>:</td>
-                    <td>{{ $siswa?->nis ?? $anggota->siswa_nis }}/{{ $siswa?->nisn ?: '-' }}</td>
-                    <td>Semester</td>
-                    <td>:</td>
-                    <td>{{ $semesterText }} ({{ $periodeLabel }})</td>
-                </tr>
-                <tr>
-                    <td>Nama Sekolah</td>
-                    <td>:</td>
-                    <td>{{ $namaSekolah }}</td>
-                    <td>Tahun Pelajaran</td>
-                    <td>:</td>
-                    <td>{{ $taLabel }}</td>
-                </tr>
-                <tr>
-                    <td>Alamat</td>
-                    <td>:</td>
-                    <td>{{ $alamatSekolah }}</td>
-                    <td colspan="3"></td>
-                </tr>
-            </table>
+            <div class="meta-box">
+                <table class="meta-table">
+                    <tr>
+                        <td class="meta-label" style="width: 21%;">Nama Peserta Didik</td>
+                        <td style="width: 2%;">:</td>
+                        <td class="font-bold" style="width: 38%;">{{ $siswa?->nama_lengkap ?? $anggota->siswa_nis }}</td>
+                        <td class="meta-label" style="width: 17%;">Kelas / Fase</td>
+                        <td style="width: 2%;">:</td>
+                        <td class="font-bold" style="width: 20%;">{{ $kelas->nama_kelas }} / Fase {{ $fase }}</td>
+                    </tr>
+                    <tr>
+                        <td class="meta-label">Nomor Induk/NISN</td>
+                        <td>:</td>
+                        <td>{{ $siswa?->nis ?? $anggota->siswa_nis }}/{{ $siswa?->nisn ?: '-' }}</td>
+                        <td class="meta-label">Semester</td>
+                        <td>:</td>
+                        <td>{{ $semesterText }} ({{ $periodeLabel }})</td>
+                    </tr>
+                    <tr>
+                        <td class="meta-label">Nama Sekolah</td>
+                        <td>:</td>
+                        <td>{{ $namaSekolah }}</td>
+                        <td class="meta-label">Tahun Pelajaran</td>
+                        <td>:</td>
+                        <td>{{ $taLabel }}</td>
+                    </tr>
+                    <tr>
+                        <td class="meta-label">Alamat</td>
+                        <td>:</td>
+                        <td colspan="4">{{ $alamatSekolah }}</td>
+                    </tr>
+                </table>
+            </div>
 
-            <div class="doc-title uppercase">
+            <div class="doc-title doc-title--nilai uppercase">
                 PENCAPAIAN KOMPETENSI PESERTA DIDIK
             </div>
 
-            <!-- A. CAPAIAN KOMPETENSI MATA PELAJARAN -->
-            <div class="section-heading">A. CAPAIAN KOMPETENSI MATA PELAJARAN</div>
-            <table class="rapor-table">
-                <thead>
-                    <tr>
-                        <th style="width: 5%;">NO</th>
-                        <th style="width: {{ $isMid ? '26%' : '25%' }};">MATA PELAJARAN</th>
-                        @if (! $isMid)
-                            <th style="width: 10%;">NILAI</th>
-                        @endif
-                        <th style="width: {{ $isMid ? '13%' : '11%' }};">CAPAIAN</th>
-                        <th style="width: {{ $isMid ? '56%' : '49%' }};">DESKRIPSI</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($mapelRows as $mRow)
-                        @php
-                            $mp = $mRow['mapel'];
-                            $rekap = $mRow['rekap'];
-                            $naRapor = $rekap?->nilai_akhir_rapor;
-                            $predikat = $rekap?->predikat_rapor;
-                            $deskripsi = trim((string) ($rekap?->deskripsi_capaian ?? ''));
-                        @endphp
+            <!-- DAFTAR KELOMPOK PELAJARAN (TABEL TERPISAH PER KELOMPOK) -->
+            @foreach ($displayMapelGroups as $group)
+                @php
+                    $groupHeading = ($group['kelompok'] === null && count($displayMapelGroups) === 1)
+                        ? 'MATA PELAJARAN'
+                        : $group['label'];
+                @endphp
+                <div class="section-heading uppercase">{{ $nextSectionLetter($sectionIdx++) }}. {{ $groupHeading }}</div>
+                <table class="rapor-table rapor-table--mapel">
+                    <thead>
                         <tr>
-                            <td class="text-center">{{ $loop->iteration }}</td>
-                            <td>{{ $mp->nama_mata_pelajaran }}</td>
-                            @if (! $isMid)
-                                <td class="text-center font-bold">
+                            <th style="width: 6%;">NO</th>
+                            <th class="text-left" style="width: 26%;">MATA PELAJARAN</th>
+                            <th style="width: 10%;">NILAI</th>
+                            <th class="text-left" style="width: 58%;">DESKRIPSI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($group['rows'] as $mRow)
+                            @php
+                                $mp = $mRow['mapel'];
+                                $rekap = $mRow['rekap'];
+                                $naRapor = $rekap?->nilai_akhir_rapor;
+                                $deskripsi = trim((string) ($rekap?->deskripsi_capaian ?? ''));
+                            @endphp
+                            <tr>
+                                <td class="text-center muted font-bold" style="vertical-align: middle;">{{ $loop->iteration }}</td>
+                                <td class="font-bold" style="vertical-align: middle;">{{ $mp->nama_mata_pelajaran }}</td>
+                                <td class="text-center font-bold" style="vertical-align: middle; font-size: 8.5pt;">
                                     {{ $naRapor !== null ? number_format((float) $naRapor, 0) : '-' }}
                                 </td>
-                            @endif
-                            <td class="text-center">
-                                @if ($predikat)
-                                    <span class="font-bold">{{ $predikat }}</span>
-                                    @if (filled($rekap->keterangan_predikat))
-                                        <div style="font-size: 7pt; color: #4b5563;">({{ $rekap->keterangan_predikat }})</div>
-                                    @endif
-                                @else
-                                    -
-                                @endif
-                            </td>
-                            <td>
-                                <div class="desc-text">
-                                    {{ $deskripsi !== '' ? $deskripsi : '-' }}
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="{{ $isMid ? 4 : 5 }}" class="text-center muted">Belum ada mata pelajaran aktif.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                                <td>
+                                    <div class="desc-text">
+                                        {{ $deskripsi !== '' ? $deskripsi : '-' }}
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" class="text-center muted">Belum ada mata pelajaran yang memiliki nilai.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            @endforeach
 
-            <!-- B. EKSTRAKURIKULER -->
-            <div class="section-heading">B. EKSTRAKURIKULER</div>
+            <!-- EKSTRAKURIKULER -->
+            <div class="section-heading uppercase">{{ $nextSectionLetter($sectionIdx++) }}. EKSTRAKURIKULER</div>
             <table class="rapor-table">
                 <thead>
                     <tr>
-                        <th style="width: 5%;">NO</th>
-                        <th style="width: 34%;">KEGIATAN EKSTRAKURIKULER</th>
-                        <th style="width: 61%;">KETERANGAN</th>
+                        <th style="width: 6%;">NO</th>
+                        <th class="text-left" style="width: 34%;">KEGIATAN EKSTRAKURIKULER</th>
+                        <th class="text-left" style="width: 60%;">KETERANGAN</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -147,13 +155,13 @@
                             $ekskul = $ekskulItem->relationLoaded('ekstrakurikuler') ? $ekskulItem->ekstrakurikuler : null;
                         @endphp
                         <tr>
-                            <td class="text-center">{{ $loop->iteration }}</td>
-                            <td>{{ $ekskul?->nama_ekstrakurikuler ?? '-' }}</td>
+                            <td class="text-center muted font-bold">{{ $loop->iteration }}</td>
+                            <td class="font-bold">{{ $ekskul?->nama_ekstrakurikuler ?? '-' }}</td>
                             <td>{{ $ekskulItem->keterangan ?: 'Mengikuti kegiatan dengan baik.' }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td class="text-center">1</td>
+                            <td class="text-center muted">1</td>
                             <td class="muted">-</td>
                             <td class="muted">-</td>
                         </tr>
@@ -165,13 +173,13 @@
                 @php
                     $guruT2q = $t2q->relationLoaded('guruT2q') ? $t2q->guruT2q : null;
                 @endphp
-                <div class="section-heading">C. PROGRAM TAHSIN &amp; TAHFIDZ AL-QUR'AN (T2Q)</div>
+                <div class="section-heading uppercase">{{ $nextSectionLetter($sectionIdx++) }}. PROGRAM TAHSIN &amp; TAHFIDZ AL-QUR'AN (T2Q)</div>
                 <table class="rapor-table">
                     <thead>
                         <tr>
                             <th style="width: 24%;">TINGKAT / JILID</th>
-                            <th style="width: 32%;">PEMBIMBING</th>
-                            <th style="width: 44%;">KETERANGAN</th>
+                            <th class="text-left" style="width: 32%;">PEMBIMBING</th>
+                            <th class="text-left" style="width: 44%;">KETERANGAN</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -189,10 +197,10 @@
                 <tbody>
                     <tr>
                         <td style="width: 38%; padding-right: 12px;">
-                            <div class="section-heading" style="margin-top: 4px;">
-                                {{ $t2q ? 'D.' : 'C.' }} KETIDAKHADIRAN
+                            <div class="section-heading uppercase" style="margin-top: 4px;">
+                                {{ $nextSectionLetter($sectionIdx++) }}. KETIDAKHADIRAN
                             </div>
-                            <table class="rapor-table" style="margin-bottom: 0;">
+                            <table class="rapor-table rapor-table--headless" style="margin-bottom: 0;">
                                 <tr>
                                     <td style="width: 65%;">Sakit</td>
                                     <td class="text-center font-bold" style="width: 35%;">{{ (int) ($presensi['sakit'] ?? 0) }} hari</td>
@@ -208,8 +216,8 @@
                             </table>
                         </td>
                         <td style="width: 62%;">
-                            <div class="section-heading" style="margin-top: 4px;">
-                                {{ $t2q ? 'E.' : 'D.' }} CATATAN WALI KELAS
+                            <div class="section-heading uppercase" style="margin-top: 4px;">
+                                {{ $nextSectionLetter($sectionIdx++) }}. CATATAN WALI KELAS
                             </div>
                             <div class="notes-box">
                                 &nbsp;
