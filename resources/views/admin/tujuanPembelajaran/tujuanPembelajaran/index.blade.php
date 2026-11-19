@@ -255,20 +255,20 @@
             || (($filters['status'] ?? 'all') !== 'all')
             || (($filters['search'] ?? '') !== '');
 
-        $baseQueryParams = [
+        $baseQueryParams = \App\Support\Sqid::encodeQueryParams([
             'tahun_ajaran_id' => $filters['tahun_ajaran_id'] ?? 'all',
             'mata_pelajaran_id' => $filters['mata_pelajaran_id'] ?? '',
             'tingkatan_kelas' => $filters['tingkatan_kelas'] ?? '',
             'fase' => $filters['fase'] ?? '',
             'status' => ($filters['status'] ?? 'all') !== 'all' ? $filters['status'] : '',
             'search' => $filters['search'] ?? '',
-        ];
+        ]);
 
-        $createParams = array_filter([
+        $createParams = \App\Support\Sqid::encodeQueryParams(array_filter([
             'tahun_ajaran_id' => ($filters['tahun_ajaran_id'] ?? 'all') !== 'all' ? $filters['tahun_ajaran_id'] : null,
             'mata_pelajaran_id' => ($filters['mata_pelajaran_id'] ?? '') !== '' ? $filters['mata_pelajaran_id'] : null,
             'tingkatan_kelas' => ($filters['tingkatan_kelas'] ?? '') !== '' ? $filters['tingkatan_kelas'] : null,
-        ]);
+        ]));
     @endphp
 
     <div class="app-main__inner">
@@ -289,7 +289,7 @@
                 </div>
 
                 <div class="page-title-actions d-flex flex-wrap align-items-center" style="gap: 0.5rem;">
-                    <a href="{{ route('tujuan-pembelajaran.export', request()->query()) }}"
+                    <a href="{{ route('tujuan-pembelajaran.export', \App\Support\Sqid::encodeQueryParams(request()->query())) }}"
                         class="btn shadow-sm font-weight-bold"
                         style="background: #ffffff; border: 1px solid #cbd5e1; color: #334155; border-radius: 10px;">
                         <i class="fa fa-file-excel text-success mr-1"></i> Export Excel
@@ -369,7 +369,7 @@
                             Semua Semester
                         </option>
                         @foreach ($tahunAjaranOptions as $ta)
-                            <option value="{{ $ta->id }}"
+                            <option value="{{ $ta->sqid }}"
                                 @selected((string) ($filters['tahun_ajaran_id'] ?? '') === (string) $ta->id)>
                                 {{ $ta->full_label }}{{ $ta->is_active ? ' (Aktif)' : '' }}
                             </option>
@@ -394,7 +394,7 @@
                     <select name="mata_pelajaran_id" id="filter_mapel" class="filter-control js-tp-autosubmit">
                         <option value="">Semua Mata Pelajaran</option>
                         @foreach ($mataPelajaranOptions as $mapelOpt)
-                            <option value="{{ $mapelOpt->id }}"
+                            <option value="{{ $mapelOpt->sqid }}"
                                 @selected((string) ($filters['mata_pelajaran_id'] ?? '') === (string) $mapelOpt->id)>
                                 [{{ strtoupper((string) $mapelOpt->unit) }}] {{ $mapelOpt->singkatan }} - {{ $mapelOpt->nama_mata_pelajaran }}
                             </option>
@@ -433,7 +433,7 @@
                             <i class="fa fa-search"></i>
                         </button>
                         @if ($hasActiveFilter)
-                            <a href="{{ route('tujuan-pembelajaran.index', ['tahun_ajaran_id' => $filters['tahun_ajaran_id'] ?? 'all']) }}"
+                            <a href="{{ route('tujuan-pembelajaran.index', \App\Support\Sqid::encodeQueryParams(['tahun_ajaran_id' => $filters['tahun_ajaran_id'] ?? 'all'])) }}"
                                 class="filter-btn filter-btn-secondary filter-btn-icon" title="Reset Filter">
                                 <i class="fa fa-undo"></i>
                             </a>
@@ -530,7 +530,7 @@
                                         <span class="tp-order-pill">{{ $item->urutan }}</span>
                                     </td>
                                     <td class="text-center">
-                                        <form action="{{ route('tujuan-pembelajaran.toggle-status', $item->id) }}" method="POST"
+                                        <form action="{{ route('tujuan-pembelajaran.toggle-status', $item) }}" method="POST"
                                             class="d-inline">
                                             @csrf
                                             <button type="submit"
@@ -545,12 +545,12 @@
                                     </td>
                                     <td class="text-center">
                                         <x-action-dropdown>
-                                            <a href="{{ route('tujuan-pembelajaran.edit', $item->id) }}" class="action-dropdown-item" role="menuitem">
+                                            <a href="{{ route('tujuan-pembelajaran.edit', $item) }}" class="action-dropdown-item" role="menuitem">
                                                 <i class="fa fa-edit text-primary action-item-icon"></i>
                                                 <span>Edit Data</span>
                                             </a>
                                             <div class="action-dropdown-divider"></div>
-                                            <form action="{{ route('tujuan-pembelajaran.destroy', $item->id) }}" method="POST" class="delete-form">
+                                            <form action="{{ route('tujuan-pembelajaran.destroy', $item) }}" method="POST" class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="button" class="action-dropdown-item action-dropdown-item--danger delete-button" role="menuitem">
@@ -608,7 +608,7 @@
                             <select name="default_tahun_ajaran_id" id="import_default_ta" class="filter-control">
                                 <option value="">Ikuti kolom file Excel</option>
                                 @foreach ($tahunAjaranOptions as $ta)
-                                    <option value="{{ $ta->id }}"
+                                    <option value="{{ $ta->sqid }}"
                                         @selected((string) ($filters['tahun_ajaran_id'] ?? '') === (string) $ta->id)>
                                         {{ $ta->full_label }}{{ $ta->is_active ? ' (Aktif)' : '' }}
                                     </option>

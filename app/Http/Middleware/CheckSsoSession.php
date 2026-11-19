@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -13,14 +14,14 @@ class CheckSsoSession
     public function handle(Request $request, Closure $next): Response
     {
         $token = $request->session()->get('access_token');
-        if (!$token) {
+        if (! $token) {
             return $this->logoutLocal($request);
         }
         try {
             $response = Http::withToken($token)
                 ->acceptJson()
                 ->timeout(3)
-                ->get(config('auth.host') . '/api/user');
+                ->get(config('auth.host').'/api/user');
 
             if ($response->status() === 401) {
                 return $this->logoutLocal($request);
@@ -28,7 +29,7 @@ class CheckSsoSession
             if ($response->failed()) {
                 abort(503, 'Server SSO tidak dapat memverifikasi login.');
             }
-        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+        } catch (ConnectionException $e) {
             abort(503, 'Server SSO tidak dapat dihubungi.');
         }
 
@@ -44,7 +45,7 @@ class CheckSsoSession
 
         return redirect()->route('login')
             ->withErrors([
-                'email' => 'Sesi login berakhir. Silakan login kembali.'
+                'email' => 'Sesi login berakhir. Silakan login kembali.',
             ]);
     }
 }

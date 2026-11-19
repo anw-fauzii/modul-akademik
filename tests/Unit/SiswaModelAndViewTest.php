@@ -430,7 +430,7 @@ class SiswaModelAndViewTest extends TestCase
         $this->assertStringContainsString('1 Al-Fatihah (SD)', $createHtml);
         $this->assertStringNotContainsString('tarif_spp_id', $createHtml);
 
-        $this->assertStringContainsString(route('siswa.update', '202601001'), $editHtml);
+        $this->assertStringContainsString(route('siswa.update', sqidFor('siswa.update', 202601001)), $editHtml);
         $this->assertStringContainsString('name="_method" value="PUT"', $editHtml);
         $this->assertStringContainsString('2018-05-10', $editHtml);
         $this->assertStringContainsString('Ahmad Fauzi', $editHtml);

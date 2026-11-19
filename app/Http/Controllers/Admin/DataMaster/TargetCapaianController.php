@@ -16,6 +16,7 @@ class TargetCapaianController extends Controller
         protected TargetCapaianService $service
     ) {
         $this->middleware('role:super admin');
+        $this->authorizeResource(TargetCapaian::class, 'target_capaian');
     }
 
     /**

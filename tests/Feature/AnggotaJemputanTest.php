@@ -113,9 +113,9 @@ class AnggotaJemputanTest extends TestCase
         $response = $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
             ->get(route('anggota-jemputan.index', [
-                'tahun_ajaran_id' => $ta1->id,
-                'jemputan_id' => $jemputanA->id,
-                'kelas_id' => $kelasA->id,
+                'tahun_ajaran_id' => $ta1->sqid,
+                'jemputan_id' => $jemputanA->sqid,
+                'kelas_id' => $kelasA->sqid,
             ]));
 
         $response->assertOk()
@@ -153,7 +153,7 @@ class AnggotaJemputanTest extends TestCase
 
         $response = $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
-            ->get(route('anggota-jemputan.create', ['jemputan_id' => $jemputanA->id]));
+            ->get(route('anggota-jemputan.create', ['jemputan_id' => $jemputanA->sqid]));
 
         $response->assertOk()
             ->assertSee('Eligible Aktif')
@@ -185,10 +185,10 @@ class AnggotaJemputanTest extends TestCase
                 'anggota_kelas_id' => [$ak1->id, $ak2->id],
                 'pendaftaran' => 'Baru',
                 'keterangan' => 'Antar Jemput PP',
-                'redirect_to_jemputan' => $jemputan->id,
+                'redirect_to_jemputan' => $jemputan->sqid,
             ]);
 
-        $response->assertRedirect(route('jemputan.show', $jemputan->id))
+        $response->assertRedirect(route('jemputan.show', $jemputan))
             ->assertSessionHas('success', '2 Anggota Jemputan berhasil disimpan.');
 
         $this->assertDatabaseHas('akademik_master_anggota_jemputan', [
@@ -230,14 +230,14 @@ class AnggotaJemputanTest extends TestCase
         // Mismatch TA: akTa2 (ta2) masuk jemputanSatuTa1 (ta1) -> ditolak
         $mismatchResponse = $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
-            ->from(route('jemputan.show', $jemputanSatuTa1->id))
+            ->from(route('jemputan.show', $jemputanSatuTa1))
             ->post(route('anggota-jemputan.store'), [
                 'akademik_master_jemputan_id' => $jemputanSatuTa1->id,
                 'anggota_kelas_id' => [$akTa2->id],
                 'pendaftaran' => 'Baru',
             ]);
 
-        $mismatchResponse->assertRedirect(route('jemputan.show', $jemputanSatuTa1->id))
+        $mismatchResponse->assertRedirect(route('jemputan.show', $jemputanSatuTa1))
             ->assertSessionHasErrors('anggota_kelas_id');
 
         // Berhasil daftar pada TA1 (jemputanSatuTa1) dan TA2 (jemputanTa2) karena berbeda tahun ajaran
@@ -264,14 +264,14 @@ class AnggotaJemputanTest extends TestCase
         // Duplikat di TA1 (mencoba daftar jemputanDuaTa1 ketika sudah di jemputanSatuTa1) -> ditolak
         $duplicateResponse = $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
-            ->from(route('jemputan.show', $jemputanDuaTa1->id))
+            ->from(route('jemputan.show', $jemputanDuaTa1))
             ->post(route('anggota-jemputan.store'), [
                 'akademik_master_jemputan_id' => $jemputanDuaTa1->id,
                 'anggota_kelas_id' => [$akTa1->id],
                 'pendaftaran' => 'Baru',
             ]);
 
-        $duplicateResponse->assertRedirect(route('jemputan.show', $jemputanDuaTa1->id))
+        $duplicateResponse->assertRedirect(route('jemputan.show', $jemputanDuaTa1))
             ->assertSessionHasErrors('anggota_kelas_id');
     }
 
@@ -302,15 +302,15 @@ class AnggotaJemputanTest extends TestCase
 
         $updateResponse = $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
-            ->put(route('anggota-jemputan.update', $anggota->id), [
+            ->put(route('anggota-jemputan.update', $anggota), [
                 'anggota_kelas_id' => $ak->id,
                 'akademik_master_jemputan_id' => $jemputanDua->id,
                 'pendaftaran' => 'Lanjutan',
                 'keterangan' => 'Pindah rute driver',
-                'redirect_to_jemputan' => $jemputanDua->id,
+                'redirect_to_jemputan' => $jemputanDua->sqid,
             ]);
 
-        $updateResponse->assertRedirect(route('jemputan.show', $jemputanDua->id))
+        $updateResponse->assertRedirect(route('jemputan.show', $jemputanDua))
             ->assertSessionHas('success', 'Data Anggota Jemputan berhasil diperbarui.');
 
         $this->assertSame($jemputanDua->id, $siswa->fresh()->akademik_master_jemputan_id);
@@ -323,11 +323,11 @@ class AnggotaJemputanTest extends TestCase
 
         $destroyResponse = $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
-            ->delete(route('anggota-jemputan.destroy', $anggota->id), [
-                'redirect_to_jemputan' => $jemputanDua->id,
+            ->delete(route('anggota-jemputan.destroy', $anggota), [
+                'redirect_to_jemputan' => $jemputanDua->sqid,
             ]);
 
-        $destroyResponse->assertRedirect(route('jemputan.show', $jemputanDua->id))
+        $destroyResponse->assertRedirect(route('jemputan.show', $jemputanDua))
             ->assertSessionHas('success', 'Data Anggota Jemputan berhasil dihapus.');
 
         $this->assertNull($siswa->fresh()->akademik_master_jemputan_id);
@@ -336,4 +336,3 @@ class AnggotaJemputanTest extends TestCase
         ]);
     }
 }
-

@@ -35,7 +35,7 @@
                 Update Data
             </div>
             <div class="card-body">
-                <form method="post" action="{{ route('tahun-ajaran.update', $tahunAjaran->id) }}" id="editForm">
+                <form method="post" action="{{ route('tahun-ajaran.update', $tahunAjaran) }}" id="editForm">
                     @csrf
                     @method('PUT')
                     @include('admin.dataMaster.tahunAjaran._form')

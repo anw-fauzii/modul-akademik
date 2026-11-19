@@ -2,6 +2,7 @@
 
 namespace App\Models\Admin\T2q;
 
+use App\Models\Concerns\HasSqidRouteKey;
 use App\Models\Concerns\HasYaumiyahT2q;
 use Database\Factories\Admin\T2q\YaumiyahTahfizhFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -24,6 +25,7 @@ class YaumiyahTahfizh extends Model
     /** @use HasFactory<YaumiyahTahfizhFactory> */
     use HasFactory;
 
+    use HasSqidRouteKey;
     use HasYaumiyahT2q;
 
     /**
@@ -46,4 +48,3 @@ class YaumiyahTahfizh extends Model
         return $this->yaumiyahBaseCasts();
     }
 }
-

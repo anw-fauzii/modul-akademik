@@ -30,7 +30,7 @@ class PekerjaanRequest extends FormRequest
     {
         return [
             'nama_pekerjaan.required' => 'Nama Pekerjaan wajib diisi.',
-            'nama_pekerjaan.unique'   => 'Nama pekerjaan ini sudah ada dalam sistem.',
+            'nama_pekerjaan.unique' => 'Nama pekerjaan ini sudah ada dalam sistem.',
         ];
     }
 }

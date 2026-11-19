@@ -2,6 +2,7 @@
 
 namespace App\Models\Admin\DataMaster;
 
+use App\Models\Concerns\HasSqidRouteKey;
 use Database\Factories\Admin\DataMaster\SekolahFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -36,6 +37,8 @@ class Sekolah extends Model
 {
     /** @use HasFactory<SekolahFactory> */
     use HasFactory;
+
+    use HasSqidRouteKey;
 
     /**
      * Daftar jenjang pendidikan yang tersedia untuk master profil sekolah.
@@ -136,4 +139,3 @@ class Sekolah extends Model
         });
     }
 }
-

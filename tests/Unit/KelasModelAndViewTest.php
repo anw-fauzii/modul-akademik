@@ -119,8 +119,8 @@ class KelasModelAndViewTest extends TestCase
         $this->assertStringContainsString('Jumlah Siswa', $html);
         $this->assertStringContainsString('24 Siswa', $html);
         $this->assertStringContainsString('0 Siswa', $html);
-        $this->assertStringContainsString(route('kelas.show', 21), $html);
-        $this->assertStringContainsString(route('kelas.show', 22), $html);
+        $this->assertStringContainsString(route('kelas.show', sqidFor('kelas.show', 21)), $html);
+        $this->assertStringContainsString(route('kelas.show', sqidFor('kelas.show', 22)), $html);
         $this->assertStringNotContainsString(route('anggota-kelas.index'), $html);
         $this->assertStringNotContainsString(route('anggota-kelas.create'), $html);
     }
@@ -240,9 +240,9 @@ class KelasModelAndViewTest extends TestCase
         $this->assertStringContainsString('Ahmad Fauzi', $html);
         $this->assertStringContainsString('1 Abu Bakar', $html);
         $this->assertStringContainsString(route('anggota-kelas.store'), $html);
-        $this->assertStringContainsString('name="redirect_to_kelas" value="21"', $html);
-        $this->assertStringContainsString(route('anggota-kelas.edit', ['anggota_kelas' => 55, 'from_kelas' => 21]), $html);
-        $this->assertStringContainsString(route('anggota-kelas.destroy', 55), $html);
+        $this->assertStringContainsString('name="redirect_to_kelas" value="'.sqidParam('redirect_to_kelas', 21).'"', $html);
+        $this->assertStringContainsString(route('anggota-kelas.edit', ['anggota_kelas' => sqidFor('anggota-kelas.edit', 55), 'from_kelas' => sqidParam('from_kelas', 21)]), $html);
+        $this->assertStringContainsString(route('anggota-kelas.destroy', sqidFor('anggota-kelas.destroy', 55)), $html);
         $this->assertStringContainsString('id="openTambahAnggotaModalBtn"', $html);
         $this->assertStringContainsString('id="tambahAnggotaModal"', $html);
         $this->assertStringNotContainsString('ak-modal-overlay is-open', $html);
@@ -373,8 +373,8 @@ class KelasModelAndViewTest extends TestCase
             Model::preventLazyLoading(false);
         }
 
-        $this->assertStringContainsString(route('kelas.show', 21), $html);
-        $this->assertStringContainsString('name="redirect_to_kelas" value="21"', $html);
+        $this->assertStringContainsString(route('kelas.show', sqidFor('kelas.show', 21)), $html);
+        $this->assertStringContainsString('name="redirect_to_kelas" value="'.sqidParam('redirect_to_kelas', 21).'"', $html);
         $this->assertStringContainsString('Aisyah Putri', $html);
     }
 

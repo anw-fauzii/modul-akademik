@@ -459,7 +459,7 @@
             </div>
 
             <div class="wkjp-actions">
-                <a href="{{ route('wali-kelas.dashboard', $selectedKelas ? ['kelas_id' => $selectedKelas->id] : []) }}"
+                <a href="{{ route('wali-kelas.dashboard', $selectedKelas ? ['kelas_id' => $selectedKelas->sqid] : []) }}"
                     class="btn btn-sm btn-light border font-weight-semibold px-3"
                     style="border-radius: 9px; color: #334155;">
                     <i class="fa fa-arrow-left mr-1"></i> Dashboard
@@ -474,7 +474,7 @@
                     @php
                         $isCurrent = (int) $kelasOption->id === (int) ($selectedKelas?->id ?? 0);
                     @endphp
-                    <a href="{{ route('wali-kelas.jadwal-pelajaran.index', ['kelas_id' => $kelasOption->id]) }}"
+                    <a href="{{ route('wali-kelas.jadwal-pelajaran.index', ['kelas_id' => $kelasOption->sqid]) }}"
                         class="wkjp-class-chip {{ $isCurrent ? 'is-active' : '' }}">
                         <span>{{ $kelasOption->nama_kelas }}</span>
                     </a>

@@ -11,7 +11,7 @@
             : '-';
         $redirectEkstrakurikulerId = old('redirect_to_ekstrakurikuler', $fromEkstrakurikulerId ?? null);
         $backUrl = is_numeric($redirectEkstrakurikulerId) && (int) $redirectEkstrakurikulerId > 0
-            ? route('ekstrakurikuler.show', (int) $redirectEkstrakurikulerId)
+            ? route('ekstrakurikuler.show', \App\Support\Sqid::encodeFor(\App\Models\Admin\DataMaster\Ekstrakurikuler::class, (int) $redirectEkstrakurikulerId))
             : ($anggotaEkstrakurikuler->akademik_master_ekstrakuler_id
                 ? route('ekstrakurikuler.show', $anggotaEkstrakurikuler->akademik_master_ekstrakuler_id)
                 : route('ekstrakurikuler.index'));
@@ -44,11 +44,11 @@
 
         <div class="main-card card">
             <div class="card-body">
-                <form method="post" action="{{ route('anggota-ekstrakurikuler.update', $anggotaEkstrakurikuler->id) }}" id="editForm">
+                <form method="post" action="{{ route('anggota-ekstrakurikuler.update', $anggotaEkstrakurikuler) }}" id="editForm">
                     @csrf
                     @method('PUT')
                     @if (is_numeric($redirectEkstrakurikulerId) && (int) $redirectEkstrakurikulerId > 0)
-                        <input type="hidden" name="redirect_to_ekstrakurikuler" value="{{ (int) $redirectEkstrakurikulerId }}">
+                        <input type="hidden" name="redirect_to_ekstrakurikuler" value="{{ \App\Support\Sqid::encodeFor(\App\Models\Admin\DataMaster\Ekstrakurikuler::class, (int) $redirectEkstrakurikulerId) }}">
                     @endif
                     @include('admin.dataMaster.anggotaEkstrakurikuler._form')
                 </form>

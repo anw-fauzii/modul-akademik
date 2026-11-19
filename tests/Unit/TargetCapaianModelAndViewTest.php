@@ -259,7 +259,7 @@ class TargetCapaianModelAndViewTest extends TestCase
         $this->assertStringContainsString('An-Naba', $indexHtml);
         $this->assertStringContainsString('40 Ayat', $indexHtml);
         $this->assertStringContainsString('action-dropdown-item', $indexHtml);
-        $this->assertStringContainsString(route('target-capaian.edit', 10), $indexHtml);
+        $this->assertStringContainsString(route('target-capaian.edit', sqidFor('target-capaian.edit', 10)), $indexHtml);
 
         $this->assertStringContainsString('Tambah Target Capaian T2Q', $createHtml);
         $this->assertStringContainsString('type="hidden" name="akademik_master_tahun_ajaran_id" value="1"', $createHtml);
@@ -268,7 +268,7 @@ class TargetCapaianModelAndViewTest extends TestCase
 
         $this->assertStringContainsString('Edit Target Capaian T2Q', $editHtml);
         $this->assertStringContainsString('type="hidden" name="akademik_master_tahun_ajaran_id" value="1"', $editHtml);
-        $this->assertStringContainsString(route('target-capaian.update', 10), $editHtml);
+        $this->assertStringContainsString(route('target-capaian.update', sqidFor('target-capaian.update', 10)), $editHtml);
 
         $this->assertStringContainsString('Target Capaian', $sidebarHtml);
         $this->assertStringContainsString(route('target-capaian.index'), $sidebarHtml);

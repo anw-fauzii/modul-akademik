@@ -31,7 +31,7 @@
         </div>
 
         <div class="tp-form-card">
-            <form method="POST" action="{{ route('penilaian-kkm.update', $kkm->id) }}" id="kkmForm">
+            <form method="POST" action="{{ route('penilaian-kkm.update', $kkm) }}" id="kkmForm">
                 @csrf
                 @method('PUT')
                 @include('admin.penilaian.kkm._form')

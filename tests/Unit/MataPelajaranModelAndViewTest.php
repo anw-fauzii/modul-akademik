@@ -306,9 +306,9 @@ class MataPelajaranModelAndViewTest extends TestCase
         $this->assertStringContainsString('Kelompok A (Wajib)', $indexHtml);
         $this->assertStringContainsString('Wajib', $indexHtml);
         $this->assertStringContainsString('Aktif', $indexHtml);
-        $this->assertStringContainsString(route('mata-pelajaran.toggle-status', 33), $indexHtml);
-        $this->assertStringContainsString(route('mata-pelajaran.edit', 33), $indexHtml);
-        $this->assertStringContainsString(route('mata-pelajaran.destroy', 33), $indexHtml);
+        $this->assertStringContainsString(route('mata-pelajaran.toggle-status', sqidFor('mata-pelajaran.toggle-status', 33)), $indexHtml);
+        $this->assertStringContainsString(route('mata-pelajaran.edit', sqidFor('mata-pelajaran.edit', 33)), $indexHtml);
+        $this->assertStringContainsString(route('mata-pelajaran.destroy', sqidFor('mata-pelajaran.destroy', 33)), $indexHtml);
 
         $this->assertStringContainsString(route('mata-pelajaran.store'), $createHtml);
         $this->assertStringContainsString('name="singkatan"', $createHtml);
@@ -320,7 +320,7 @@ class MataPelajaranModelAndViewTest extends TestCase
         $this->assertStringContainsString('name="status"', $createHtml);
         $this->assertStringContainsString('value="5"', $createHtml);
 
-        $this->assertStringContainsString(route('mata-pelajaran.update', 33), $editHtml);
+        $this->assertStringContainsString(route('mata-pelajaran.update', sqidFor('mata-pelajaran.update', 33)), $editHtml);
         $this->assertStringContainsString('Matematika Wajib', $editHtml);
         $this->assertStringContainsString(route('mata-pelajaran.index'), view('layouts.sidebar')->render());
     }

@@ -64,19 +64,19 @@
                                     </td>
                                     <td class="text-center">
                                         <x-action-dropdown>
-                                            <form action="{{ route('tahun-ajaran.toggle-active', $item->id) }}" method="POST">
+                                            <form action="{{ route('tahun-ajaran.toggle-active', $item) }}" method="POST">
                                                 @csrf
                                                 <button type="submit" class="action-dropdown-item" role="menuitem">
                                                     <i class="fa {{ $item->is_active ? 'fa-check-circle text-success' : 'fa-power-off text-secondary' }} action-item-icon"></i>
                                                     <span>{{ $item->is_active ? 'Nonaktifkan Tahun Ajaran' : 'Jadikan Tahun Ajaran Aktif' }}</span>
                                                 </button>
                                             </form>
-                                            <a href="{{ route('tahun-ajaran.edit', $item->id) }}" class="action-dropdown-item" role="menuitem">
+                                            <a href="{{ route('tahun-ajaran.edit', $item) }}" class="action-dropdown-item" role="menuitem">
                                                 <i class="fa fa-edit text-primary action-item-icon"></i>
                                                 <span>Edit Data</span>
                                             </a>
                                             <div class="action-dropdown-divider"></div>
-                                            <form action="{{ route('tahun-ajaran.destroy', $item->id) }}" method="POST" class="delete-form">
+                                            <form action="{{ route('tahun-ajaran.destroy', $item) }}" method="POST" class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="button" class="action-dropdown-item action-dropdown-item--danger delete-button" role="menuitem">

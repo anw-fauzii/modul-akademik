@@ -16,6 +16,7 @@ class KkmController extends Controller
         protected KkmService $service
     ) {
         $this->middleware('role:super admin');
+        $this->authorizeResource(Kkm::class, 'kkm');
     }
 
     /**

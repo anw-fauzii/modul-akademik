@@ -5,6 +5,7 @@ namespace App\Models\Admin\Pelajaran;
 use App\Models\Admin\DataMaster\Karyawan;
 use App\Models\Admin\DataMaster\Kelas;
 use App\Models\Admin\DataMaster\TahunAjaran;
+use App\Models\Concerns\HasSqidRouteKey;
 use Database\Factories\Admin\Pelajaran\JadwalPelajaranFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -33,6 +34,8 @@ class JadwalPelajaran extends Model
 {
     /** @use HasFactory<JadwalPelajaranFactory> */
     use HasFactory;
+
+    use HasSqidRouteKey;
 
     public const int HARI_SENIN = 1;
 

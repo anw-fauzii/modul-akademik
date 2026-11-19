@@ -491,17 +491,17 @@
         ];
     };
 
-    $modeSwitchQuery = array_filter([
+    $modeSwitchQuery = \App\Support\Sqid::encodeQueryParams(array_filter([
         'tahun_ajaran_id' => $selectedTahunAjaranId,
         'kelas_id' => $selectedKelasId > 0 ? $selectedKelasId : null,
         'karyawan_nipy' => $selectedGuruNipy,
         'tingkat' => $selectedTingkat,
-    ]);
-    $workspaceQuery = array_filter([
+    ]));
+    $workspaceQuery = \App\Support\Sqid::encodeQueryParams(array_filter([
         'kelas_id' => ($selectedKelasId > 0 && ($selectedTahunAjaran?->is_active ?? false)) ? $selectedKelasId : null,
         'karyawan_nipy' => $selectedGuruNipy,
         'tingkat' => $selectedTingkat,
-    ]);
+    ]));
 @endphp
 
 <div class="app-main__inner">
@@ -598,7 +598,7 @@
                         <label for="st_filter_ta" class="filter-label">Tahun Ajaran</label>
                         <select name="tahun_ajaran_id" id="st_filter_ta" class="filter-control js-st-auto-submit">
                             @foreach ($tahunAjaranOptions as $ta)
-                                <option value="{{ $ta->id }}" @selected((int) $ta->id === $selectedTahunAjaranId)>
+                                <option value="{{ $ta->sqid }}" @selected((int) $ta->id === $selectedTahunAjaranId)>
                                     {{ $ta->full_label }}@if ($ta->is_active) (Aktif)@endif
                                 </option>
                             @endforeach
@@ -611,7 +611,7 @@
                             <select name="kelas_id" id="st_filter_kelas" class="filter-control js-st-auto-submit">
                                 <option value="">Semua Kelas Binaan ({{ $assignedClasses->count() }})</option>
                                 @foreach ($assignedClasses as $kelasItem)
-                                    <option value="{{ $kelasItem->id }}" @selected((int) $kelasItem->id === $selectedKelasId)>
+                                    <option value="{{ $kelasItem->sqid }}" @selected((int) $kelasItem->id === $selectedKelasId)>
                                         {{ $kelasItem->nama_kelas }}
                                     </option>
                                 @endforeach

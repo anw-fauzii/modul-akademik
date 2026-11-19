@@ -16,6 +16,8 @@ class TitimangsaController extends Controller
         protected TitimangsaService $service
     ) {
         $this->middleware('role:super admin');
+        $this->authorizeResource(Titimangsa::class, 'titimangsa');
+        $this->middleware('can:toggleStatus,titimangsa')->only(['toggleStatus']);
     }
 
     /**
@@ -92,4 +94,3 @@ class TitimangsaController extends Controller
             ->with('success', 'Status Titimangsa Rapor berhasil diperbarui.');
     }
 }
-

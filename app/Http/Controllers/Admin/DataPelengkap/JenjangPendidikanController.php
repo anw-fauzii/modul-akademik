@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin\DataPelengkap;
 
 use App\Http\Controllers\Controller;
-use App\Models\Admin\DataPelengkap\JenjangPendidikan;
 use App\Http\Requests\Admin\DataPelengkap\JenjangPendidikanRequest;
+use App\Models\Admin\DataPelengkap\JenjangPendidikan;
 use App\Services\Admin\DataPelengkap\JenjangPendidikanService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -15,12 +15,13 @@ class JenjangPendidikanController extends Controller
         protected JenjangPendidikanService $service
     ) {
         $this->middleware('role:super admin');
+        $this->authorizeResource(JenjangPendidikan::class, 'jenjang_pendidikan');
     }
 
     public function index(): View
     {
         return view('admin.dataPelengkap.jenjangPendidikan.index', [
-            'jenjangPendidikan' => $this->service->getAll()
+            'jenjangPendidikan' => $this->service->getAll(),
         ]);
     }
 

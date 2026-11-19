@@ -29,7 +29,7 @@
                 </div>
 
                 <div class="page-title-actions d-flex flex-wrap align-items-center" style="gap: 0.5rem;">
-                    <a href="{{ route('kelas.edit', $kelas->id) }}" class="btn btn-primary shadow-sm"
+                    <a href="{{ route('kelas.edit', $kelas) }}" class="btn btn-primary shadow-sm"
                         style="border-radius: 8px;">
                         <i class="fa fa-edit mr-1"></i> Edit Kelas
                     </a>
@@ -178,25 +178,25 @@
                                     </td>
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center align-items-center">
-                                            <a href="{{ route('siswa.show', $item->siswa_nis) }}"
+                                            <a href="{{ route('siswa.show', \App\Support\Sqid::encodeFor(\App\Models\Admin\DataMaster\Siswa::class, $item->siswa_nis)) }}"
                                                 class="btn btn-sm btn-info text-white shadow-sm mx-1"
                                                 style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
                                                 data-toggle="tooltip" data-placement="top" title="Detail Siswa">
                                                 <i class="fa fa-eye" style="font-size: 0.75rem;"></i>
                                             </a>
 
-                                            <a href="{{ route('anggota-kelas.edit', ['anggota_kelas' => $item->id, 'from_kelas' => $kelas->id]) }}"
+                                            <a href="{{ route('anggota-kelas.edit', ['anggota_kelas' => $item, 'from_kelas' => $kelas->sqid]) }}"
                                                 class="btn btn-sm btn-primary shadow-sm mx-1"
                                                 style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
                                                 data-toggle="tooltip" data-placement="top" title="Edit Anggota Kelas">
                                                 <i class="fa fa-edit" style="font-size: 0.75rem;"></i>
                                             </a>
 
-                                            <form action="{{ route('anggota-kelas.destroy', $item->id) }}" method="POST"
+                                            <form action="{{ route('anggota-kelas.destroy', $item) }}" method="POST"
                                                 class="delete-form d-inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <input type="hidden" name="redirect_to_kelas" value="{{ $kelas->id }}">
+                                                <input type="hidden" name="redirect_to_kelas" value="{{ $kelas->sqid }}">
                                                 <button type="button"
                                                     class="btn btn-sm btn-warning shadow-sm delete-button mx-1 p-0 text-white"
                                                     style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
@@ -226,7 +226,7 @@
                 @csrf
                 <input type="hidden" name="akademik_master_kelas_id" id="akademik_master_kelas_id"
                     value="{{ $kelas->id }}" data-tahun-ajaran-id="{{ $kelas->akademik_master_tahun_ajaran_id }}">
-                <input type="hidden" name="redirect_to_kelas" value="{{ $kelas->id }}">
+                <input type="hidden" name="redirect_to_kelas" value="{{ $kelas->sqid }}">
 
                 <div class="ak-modal-header">
                     <div>
@@ -306,7 +306,7 @@
                             'hiddenRegisteredCount' => $hiddenRegisteredCount,
                             'hiddenInactiveCount' => $hiddenInactiveCount,
                             'showHistoryFilter' => false,
-                            'createRedirectUrl' => route('kelas.show', $kelas->id),
+                            'createRedirectUrl' => route('kelas.show', $kelas),
                         ])
                     </div>
                 </div>

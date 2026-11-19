@@ -61,21 +61,21 @@
                 </div>
 
                 <div class="col-lg-4 d-flex flex-wrap justify-content-lg-end gap-2">
-                    <a href="{{ route('wali-kelas.rapor.identitas.siswa', $anggotaKelas->id) }}" target="_blank"
+                    <a href="{{ route('wali-kelas.rapor.identitas.siswa', $anggotaKelas) }}" target="_blank"
                         class="btn btn-sm btn-light font-weight-semibold shadow-sm" style="border-radius: 9px;">
                         <i class="fa fa-id-card text-primary mr-1"></i> PDF Identitas
                     </a>
                     @if ($isSd)
-                        <a href="{{ route('wali-kelas.rapor.nilai.siswa', ['anggota_kelas' => $anggotaKelas->id, 'periode' => $periode]) }}" target="_blank"
+                        <a href="{{ route('wali-kelas.rapor.nilai.siswa', ['anggota_kelas' => $anggotaKelas, 'periode' => $periode]) }}" target="_blank"
                             class="btn btn-sm btn-light font-weight-semibold shadow-sm" style="border-radius: 9px; color: #c2410c;">
                             <i class="fa fa-file-pdf mr-1"></i> PDF Nilai
                         </a>
                     @endif
-                    <a href="{{ route('wali-kelas.anggota-kelas.show', $anggotaKelas->id) }}"
+                    <a href="{{ route('wali-kelas.anggota-kelas.show', $anggotaKelas) }}"
                         class="btn btn-sm btn-light font-weight-semibold shadow-sm" style="border-radius: 9px;">
                         <i class="fa fa-user mr-1"></i> Biodata
                     </a>
-                    <a href="{{ route('wali-kelas.perkembangan-siswa.index', ['kelas_id' => $selectedKelas->id, 'periode' => $periode]) }}"
+                    <a href="{{ route('wali-kelas.perkembangan-siswa.index', ['kelas_id' => $selectedKelas->sqid, 'periode' => $periode]) }}"
                         class="btn btn-sm text-white font-weight-semibold shadow-sm"
                         style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 9px;">
                         <i class="fa fa-arrow-left mr-1"></i> Kembali ke Leger
@@ -90,12 +90,12 @@
                     Menampilkan rekap periode <strong>{{ $isMid ? 'Mid Semester' : 'Semester' }}</strong> (beserta perbandingan Mid vs Semester per mapel &amp; TP).
                 </div>
                 <div class="btn-group btn-group-sm shadow-sm">
-                    <a href="{{ route('wali-kelas.perkembangan-siswa.show', ['anggota_kelas' => $anggotaKelas->id, 'periode' => 'mid']) }}"
+                    <a href="{{ route('wali-kelas.perkembangan-siswa.show', ['anggota_kelas' => $anggotaKelas, 'periode' => 'mid']) }}"
                         class="btn {{ $isMid ? 'text-white font-weight-bold' : 'btn-light border text-slate-700' }}"
                         style="{{ $isMid ? 'background: linear-gradient(135deg, #ea580c 0%, #d97706 100%);' : '' }}">
                         Mid Semester
                     </a>
-                    <a href="{{ route('wali-kelas.perkembangan-siswa.show', ['anggota_kelas' => $anggotaKelas->id, 'periode' => 'semester']) }}"
+                    <a href="{{ route('wali-kelas.perkembangan-siswa.show', ['anggota_kelas' => $anggotaKelas, 'periode' => 'semester']) }}"
                         class="btn {{ ! $isMid ? 'text-white font-weight-bold' : 'btn-light border text-slate-700' }}"
                         style="{{ ! $isMid ? 'background: linear-gradient(135deg, #ea580c 0%, #d97706 100%);' : '' }}">
                         Semester
@@ -220,7 +220,7 @@
                             @endif
 
                             @if ($item['is_taught_by_user'])
-                                <a href="{{ route('wali-kelas.penilaian-tp.index', ['kelas_id' => $selectedKelas->id, 'mata_pelajaran_id' => $mp->id, 'periode' => $periode]) }}"
+                                <a href="{{ route('wali-kelas.penilaian-tp.index', ['kelas_id' => $selectedKelas->sqid, 'mata_pelajaran_id' => $mp->sqid, 'periode' => $periode]) }}"
                                     class="btn btn-sm btn-outline-primary font-weight-semibold" style="border-radius: 8px; font-size: 0.72rem;">
                                     <i class="fa fa-edit mr-1"></i> Kelola Nilai
                                 </a>

@@ -211,4 +211,3 @@ abstract class BaseYaumiyahT2qRequest extends FormRequest
         }
     }
 }
-

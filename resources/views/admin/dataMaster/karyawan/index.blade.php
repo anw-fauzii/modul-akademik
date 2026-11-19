@@ -88,7 +88,7 @@
                                     </td>
                                     <td class="text-center">
                                         <x-action-dropdown>
-                                            <a href="{{ route('karyawan.show', $item->nipy) }}" class="action-dropdown-item" role="menuitem">
+                                            <a href="{{ route('karyawan.show', $item) }}" class="action-dropdown-item" role="menuitem">
                                                 <i class="fa fa-eye text-info action-item-icon"></i>
                                                 <span>Detail Profil Guru</span>
                                             </a>

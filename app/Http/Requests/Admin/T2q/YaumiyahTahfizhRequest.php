@@ -9,4 +9,3 @@ class YaumiyahTahfizhRequest extends BaseYaumiyahT2qRequest
         return false;
     }
 }
-

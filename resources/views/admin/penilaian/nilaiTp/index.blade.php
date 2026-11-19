@@ -902,12 +902,14 @@
         ]));
         $bobotFormulaLabel = $bobotFormulaParts !== [] ? implode(' + ', $bobotFormulaParts) : '100% TP';
 
-        $contextParams = array_filter([
+        $selectedTaSqid = \App\Support\Sqid::encodeQueryValue('tahun_ajaran_id', $selectedTahunAjaranId ?? null);
+
+        $contextParams = \App\Support\Sqid::encodeQueryParams(array_filter([
             'tahun_ajaran_id' => $selectedTahunAjaranId ?? null,
-            'kelas_id' => $selectedKelas?->id ?? null,
-            'mata_pelajaran_id' => $selectedMapel?->id ?? null,
+            'kelas_id' => $selectedKelas?->sqid ?? null,
+            'mata_pelajaran_id' => $selectedMapel?->sqid ?? null,
             'periode' => $periode,
-        ], static fn ($v) => $v !== null && $v !== '');
+        ], static fn ($v) => $v !== null && $v !== ''));
 
         $predikatsForJs = $kkmPredikats->map(static fn ($p): array => [
             'predikat' => $p->predikat,
@@ -982,7 +984,7 @@
                         <label for="np_ta" class="small font-weight-semibold text-muted mb-1">Tahun Ajaran / Semester</label>
                         <select name="tahun_ajaran_id" id="np_ta" class="form-control form-control-sm" onchange="this.form.submit()">
                             @foreach ($tahunAjaranOptions as $ta)
-                                <option value="{{ $ta->id }}" @selected((int) $selectedTahunAjaranId === (int) $ta->id)>
+                                <option value="{{ $ta->sqid }}" @selected((int) $selectedTahunAjaranId === (int) $ta->id)>
                                     {{ $ta->full_label }}{{ $ta->is_active ? ' (Aktif)' : '' }}
                                 </option>
                             @endforeach
@@ -994,7 +996,7 @@
                         <select name="kelas_id" id="np_kelas" class="form-control form-control-sm"
                             onchange="@if ($isWaliKelasScope) const mapelEl = document.getElementById('np_mapel'); if (mapelEl) { mapelEl.disabled = true; } @endif this.form.submit()">
                             @forelse ($kelasOptions as $kls)
-                                <option value="{{ $kls->id }}" @selected($selectedKelas && (int) $selectedKelas->id === (int) $kls->id)>
+                                <option value="{{ $kls->sqid }}" @selected($selectedKelas && (int) $selectedKelas->id === (int) $kls->id)>
                                     {{ $kls->nama_kelas }} (Tingkat {{ $kls->tingkatan_kelas }})
                                 </option>
                             @empty
@@ -1007,7 +1009,7 @@
                         <label for="np_mapel" class="small font-weight-semibold text-muted mb-1">Mata Pelajaran (SD)</label>
                         <select name="mata_pelajaran_id" id="np_mapel" class="form-control form-control-sm" onchange="this.form.submit()">
                             @forelse ($mataPelajaranOptions as $mp)
-                                <option value="{{ $mp->id }}" @selected($selectedMapel && (int) $selectedMapel->id === (int) $mp->id)>
+                                <option value="{{ $mp->sqid }}" @selected($selectedMapel && (int) $selectedMapel->id === (int) $mp->id)>
                                     [{{ $mp->singkatan }}] {{ $mp->nama_mata_pelajaran }}
                                 </option>
                             @empty
@@ -1044,12 +1046,12 @@
                         </span>
                         @if (! $isWaliKelasScope)
                             @if (! $hasKkmConfig)
-                                <a href="{{ route('penilaian-kkm.create', ['tahun_ajaran_id' => $selectedTahunAjaranId, 'mata_pelajaran_id' => $selectedMapel->id, 'tingkatan_kelas' => $selectedKelas->tingkatan_kelas]) }}"
+                                <a href="{{ route('penilaian-kkm.create', ['tahun_ajaran_id' => $selectedTaSqid, 'mata_pelajaran_id' => $selectedMapel->sqid, 'tingkatan_kelas' => $selectedKelas->tingkatan_kelas]) }}"
                                     class="np-card-action">
                                     <i class="fa fa-sliders-h"></i> Atur KKM
                                 </a>
                             @else
-                                <a href="{{ route('penilaian-kkm.edit', $kkmModel->id) }}" class="np-card-action">
+                                <a href="{{ route('penilaian-kkm.edit', $kkmModel) }}" class="np-card-action">
                                     <i class="fa fa-cog"></i> Ubah KKM
                                 </a>
                             @endif
@@ -1171,9 +1173,9 @@
             <!-- Grid Nilai 2-Baris Header Ala Spreadsheet dengan Toolbar Terintegrasi -->
             <form method="POST" action="{{ route($tpRoutePrefix.'.store') }}" id="nilaiGridForm">
                 @csrf
-                <input type="hidden" name="tahun_ajaran_id" value="{{ $selectedTahunAjaranId }}">
-                <input type="hidden" name="kelas_id" value="{{ $selectedKelas->id }}">
-                <input type="hidden" name="mata_pelajaran_id" value="{{ $selectedMapel->id }}">
+                <input type="hidden" name="tahun_ajaran_id" value="{{ $selectedTaSqid }}">
+                <input type="hidden" name="kelas_id" value="{{ $selectedKelas->sqid }}">
+                <input type="hidden" name="mata_pelajaran_id" value="{{ $selectedMapel->sqid }}">
                 <input type="hidden" name="periode" value="{{ $periode }}">
 
                 <div class="np-matrix-wrap">
@@ -1209,7 +1211,7 @@
                                     @endif
                                     @if ($editableTpList->isNotEmpty())
                                         <button type="button" class="np-cluster-btn is-accent-orange btn-open-aspek-modal"
-                                            data-tp-id="{{ $editableTpList->first()?->id }}"
+                                            data-tp-id="{{ $editableTpList->first()?->sqid }}"
                                             data-tp-kode="{{ $editableTpList->first()?->kode_tp }}"
                                             title="Tambah aspek penilaian baru">
                                             <i class="fa fa-plus"></i> Aspek
@@ -1273,7 +1275,7 @@
                                                 @else
                                                     <button type="button"
                                                         class="np-th-mini-btn {{ $isIncluded ? 'is-rapor-on' : 'is-rapor-off' }} btn-toggle-rapor-tp"
-                                                        data-action="{{ route($tpRoutePrefix.'.toggle-masuk-rapor', $tp->id) }}"
+                                                        data-action="{{ route($tpRoutePrefix.'.toggle-masuk-rapor', $tp) }}"
                                                         data-next="{{ $isIncluded ? '0' : '1' }}"
                                                         title="{{ $isIncluded ? 'Masuk Rapor (klik untuk kecualikan)' : 'Tidak Masuk Rapor (klik untuk masukkan)' }}">
                                                         <i class="fa {{ $isIncluded ? 'fa-check' : 'fa-ban' }}"></i>
@@ -1281,7 +1283,7 @@
 
                                                     <button type="button"
                                                         class="np-th-mini-btn btn-open-aspek-modal"
-                                                        data-tp-id="{{ $tp->id }}"
+                                                        data-tp-id="{{ $tp->sqid }}"
                                                         data-tp-kode="{{ $tp->kode_tp }}"
                                                         title="Tambah aspek pada {{ $tp->kode_tp }}">
                                                         <i class="fa fa-plus"></i>
@@ -1333,8 +1335,8 @@
                                                         <span>{{ $aspek->nama_aspek }}</span>
                                                         <button type="button"
                                                             class="np-aspek-edit btn-edit-aspek-modal"
-                                                            data-action="{{ route($tpRoutePrefix.'.aspek.update', $aspek->id) }}"
-                                                            data-tp-id="{{ $tp->id }}"
+                                                            data-action="{{ route($tpRoutePrefix.'.aspek.update', $aspek) }}"
+                                                            data-tp-id="{{ $tp->sqid }}"
                                                             data-tp-kode="{{ $tp->kode_tp }}"
                                                             data-nama="{{ $aspek->nama_aspek }}"
                                                             data-teknik="{{ $aspek->teknik_penilaian ?? '' }}"
@@ -1347,7 +1349,7 @@
                                                         @if ($tpAspeks->count() > 1)
                                                             <button type="button"
                                                                 class="np-aspek-del btn-delete-aspek"
-                                                                data-action="{{ route($tpRoutePrefix.'.aspek.destroy', $aspek->id) }}"
+                                                                data-action="{{ route($tpRoutePrefix.'.aspek.destroy', $aspek) }}"
                                                                 data-label="{{ $tp->kode_tp }} - {{ $aspek->nama_aspek }}"
                                                                 title="Hapus aspek {{ $aspek->nama_aspek }}">
                                                                 &times;
@@ -1376,7 +1378,7 @@
                                                     <span>{{ $bab->nama_bab }}</span>
                                                     <button type="button"
                                                         class="np-sumatif-action-btn btn-edit-sumatif-modal"
-                                                        data-action="{{ route($tpRoutePrefix.'.sumatif-bab.update', $bab->id) }}"
+                                                        data-action="{{ route($tpRoutePrefix.'.sumatif-bab.update', $bab) }}"
                                                         data-nama="{{ $bab->nama_bab }}"
                                                         data-keterangan="{{ $bab->keterangan ?? '' }}"
                                                         data-urutan="{{ $bab->urutan }}"
@@ -1385,7 +1387,7 @@
                                                     </button>
                                                     <button type="button"
                                                         class="np-sumatif-action-btn is-danger btn-delete-sumatif"
-                                                        data-action="{{ route($tpRoutePrefix.'.sumatif-bab.destroy', $bab->id) }}"
+                                                        data-action="{{ route($tpRoutePrefix.'.sumatif-bab.destroy', $bab) }}"
                                                         data-label="{{ $bab->nama_bab }}"
                                                         title="Hapus {{ $bab->nama_bab }}">
                                                         &times;
@@ -1589,19 +1591,19 @@
     <form method="POST" id="deleteAspekForm" class="d-none">
         @csrf
         @method('DELETE')
-        <input type="hidden" name="kelas_id" value="{{ $selectedKelas?->id ?? '' }}">
+        <input type="hidden" name="kelas_id" value="{{ $selectedKelas?->sqid ?? '' }}">
     </form>
 
     <form method="POST" id="deleteSumatifForm" class="d-none">
         @csrf
         @method('DELETE')
-        <input type="hidden" name="kelas_id" value="{{ $selectedKelas?->id ?? '' }}">
+        <input type="hidden" name="kelas_id" value="{{ $selectedKelas?->sqid ?? '' }}">
     </form>
 
     <form method="POST" id="toggleMasukRaporForm" class="d-none">
         @csrf
         <input type="hidden" name="periode" value="{{ $periode }}">
-        <input type="hidden" name="kelas_id" value="{{ $selectedKelas?->id ?? '' }}">
+        <input type="hidden" name="kelas_id" value="{{ $selectedKelas?->sqid ?? '' }}">
         <input type="hidden" name="masuk_rapor" id="toggleMasukRaporValue" value="1">
     </form>
 
@@ -1668,8 +1670,8 @@
                                                 @foreach ($tpAspeks as $aspek)
                                                     <button type="button"
                                                         class="np-aspek-pill-btn btn-edit-aspek-modal"
-                                                        data-action="{{ route($tpRoutePrefix.'.aspek.update', $aspek->id) }}"
-                                                        data-tp-id="{{ $tp->id }}"
+                                                        data-action="{{ route($tpRoutePrefix.'.aspek.update', $aspek) }}"
+                                                        data-tp-id="{{ $tp->sqid }}"
                                                         data-tp-kode="{{ $tp->kode_tp }}"
                                                         data-nama="{{ $aspek->nama_aspek }}"
                                                         data-teknik="{{ $aspek->teknik_penilaian ?? '' }}"
@@ -1692,7 +1694,7 @@
                                         @else
                                             <button type="button"
                                                 class="btn btn-sm py-1 px-2 {{ $isIncluded ? 'btn-success' : 'btn-outline-secondary' }} btn-toggle-rapor-tp"
-                                                data-action="{{ route($tpRoutePrefix.'.toggle-masuk-rapor', $tp->id) }}"
+                                                data-action="{{ route($tpRoutePrefix.'.toggle-masuk-rapor', $tp) }}"
                                                 data-next="{{ $isIncluded ? '0' : '1' }}"
                                                 style="font-size: 0.7rem; border-radius: 999px;">
                                                 <i class="fa {{ $isIncluded ? 'fa-check-square' : 'fa-square' }} mr-1"></i>
@@ -1706,7 +1708,7 @@
                                         @else
                                             <button type="button"
                                                 class="btn btn-sm text-white py-1 px-2 btn-open-aspek-modal"
-                                                data-tp-id="{{ $tp->id }}"
+                                                data-tp-id="{{ $tp->sqid }}"
                                                 data-tp-kode="{{ $tp->kode_tp }}"
                                                 style="background: #ea580c; font-size: 0.72rem; border-radius: 7px;">
                                                 <i class="fa fa-plus mr-1"></i> Aspek
@@ -1740,8 +1742,8 @@
                 @csrf
                 <input type="hidden" name="_method" id="tpAspekMethod" value="POST">
                 <input type="hidden" name="periode" value="{{ $periode }}">
-                <input type="hidden" name="kelas_id" value="{{ $selectedKelas?->id ?? '' }}">
-                <input type="hidden" name="tujuan_pembelajaran_id" id="aspekModalTpHidden" value="{{ $editableTpList->first()?->id ?? '' }}">
+                <input type="hidden" name="kelas_id" value="{{ $selectedKelas?->sqid ?? '' }}">
+                <input type="hidden" name="tujuan_pembelajaran_id" id="aspekModalTpHidden" value="{{ $editableTpList->first()?->sqid ?? '' }}">
                 <input type="hidden" name="bobot" id="aspekModalBobot" value="100">
                 <input type="hidden" name="masuk_hitung_na_tp" id="aspekModalCountsNa" value="1">
                 <input type="hidden" name="urutan" id="aspekModalUrutan" value="">
@@ -1753,7 +1755,7 @@
                         <label for="aspekModalTpId" class="small font-weight-bold">Tujuan Pembelajaran (TP) <span class="text-danger">*</span></label>
                         <select id="aspekModalTpId" class="form-control">
                             @foreach ($editableTpList as $tpOption)
-                                <option value="{{ $tpOption->id }}"
+                                <option value="{{ $tpOption->sqid }}"
                                     data-kode="{{ $tpOption->kode_tp }}"
                                     data-teks="{{ $tpOption->tujuan_pembelajaran }}">
                                     [{{ $tpOption->kode_tp }}] {{ \Illuminate\Support\Str::limit($tpOption->lingkup_materi ?: $tpOption->tujuan_pembelajaran, 75) }}
@@ -1842,7 +1844,7 @@
                                     <td class="text-center align-middle pr-3">
                                         <button type="button"
                                             class="btn btn-sm btn-light py-1 px-2 btn-edit-sumatif-modal"
-                                            data-action="{{ route($tpRoutePrefix.'.sumatif-bab.update', $bab->id) }}"
+                                            data-action="{{ route($tpRoutePrefix.'.sumatif-bab.update', $bab) }}"
                                             data-nama="{{ $bab->nama_bab }}"
                                             data-keterangan="{{ $bab->keterangan ?? '' }}"
                                             data-urutan="{{ $bab->urutan }}"
@@ -1851,7 +1853,7 @@
                                         </button>
                                         <button type="button"
                                             class="btn btn-sm btn-light py-1 px-2 btn-delete-sumatif"
-                                            data-action="{{ route($tpRoutePrefix.'.sumatif-bab.destroy', $bab->id) }}"
+                                            data-action="{{ route($tpRoutePrefix.'.sumatif-bab.destroy', $bab) }}"
                                             data-label="{{ $bab->nama_bab }}"
                                             title="Hapus {{ $bab->nama_bab }}">
                                             <i class="fa fa-trash text-danger"></i>
@@ -1887,11 +1889,11 @@
                     data-store-action="{{ route($tpRoutePrefix.'.sumatif-bab.store') }}">
                     @csrf
                     <input type="hidden" name="_method" id="sumatifBabMethod" value="POST">
-                    <input type="hidden" name="tahun_ajaran_id" value="{{ $selectedTahunAjaranId }}">
-                    <input type="hidden" name="mata_pelajaran_id" value="{{ $selectedMapel->id }}">
+                    <input type="hidden" name="tahun_ajaran_id" value="{{ $selectedTaSqid }}">
+                    <input type="hidden" name="mata_pelajaran_id" value="{{ $selectedMapel->sqid }}">
                     <input type="hidden" name="tingkatan_kelas" value="{{ $selectedKelas->tingkatan_kelas }}">
                     <input type="hidden" name="periode" value="{{ $periode }}">
-                    <input type="hidden" name="kelas_id" value="{{ $selectedKelas->id }}">
+                    <input type="hidden" name="kelas_id" value="{{ $selectedKelas->sqid }}">
                     <div class="p-4">
                         <p class="small text-muted mb-3">
                             Kolom Sumatif Bab berlaku seragam untuk seluruh kelas paralel <strong>Kelas {{ $selectedKelas->tingkatan_kelas }} SD</strong> mapel <strong>{{ $selectedMapel->nama_mata_pelajaran }}</strong>.
@@ -1939,9 +1941,9 @@
                 </div>
                 <form method="POST" action="{{ route($tpRoutePrefix.'.bobot.update') }}">
                     @csrf
-                    <input type="hidden" name="tahun_ajaran_id" value="{{ $selectedTahunAjaranId }}">
-                    <input type="hidden" name="kelas_id" value="{{ $selectedKelas->id }}">
-                    <input type="hidden" name="mata_pelajaran_id" value="{{ $selectedMapel->id }}">
+                    <input type="hidden" name="tahun_ajaran_id" value="{{ $selectedTaSqid }}">
+                    <input type="hidden" name="kelas_id" value="{{ $selectedKelas->sqid }}">
+                    <input type="hidden" name="mata_pelajaran_id" value="{{ $selectedMapel->sqid }}">
                     <input type="hidden" name="periode" value="{{ $periode }}">
                     <div class="p-4">
                         <p class="small text-muted mb-3">
@@ -2010,9 +2012,9 @@
                 </div>
                 <form method="POST" action="{{ route($tpRoutePrefix.'.import') }}" enctype="multipart/form-data">
                     @csrf
-                    <input type="hidden" name="tahun_ajaran_id" value="{{ $selectedTahunAjaranId }}">
-                    <input type="hidden" name="kelas_id" value="{{ $selectedKelas->id }}">
-                    <input type="hidden" name="mata_pelajaran_id" value="{{ $selectedMapel->id }}">
+                    <input type="hidden" name="tahun_ajaran_id" value="{{ $selectedTaSqid }}">
+                    <input type="hidden" name="kelas_id" value="{{ $selectedKelas->sqid }}">
+                    <input type="hidden" name="mata_pelajaran_id" value="{{ $selectedMapel->sqid }}">
                     <input type="hidden" name="periode" value="{{ $periode }}">
                     <div class="p-4">
                         <p class="small text-muted mb-3">

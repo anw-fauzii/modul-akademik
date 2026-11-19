@@ -35,7 +35,7 @@
             'heroSubtitle' => $isEligible && $selectedKelas
                 ? "Pantauan menyeluruh capaian semua mata pelajaran dan kehadiran seluruh siswa kelas {$selectedKelas->nama_kelas} pada {$activeTahunAjaran->full_label}."
                 : null,
-            'heroActionUrl' => route('wali-kelas.dashboard', $selectedKelas ? ['kelas_id' => $selectedKelas->id] : []),
+            'heroActionUrl' => route('wali-kelas.dashboard', $selectedKelas ? ['kelas_id' => $selectedKelas->sqid] : []),
             'heroActionLabel' => 'Kembali ke Dashboard',
             'heroActionIcon' => 'fa-arrow-left',
         ])
@@ -57,12 +57,12 @@
 
                 @if ($isSd)
                     <div class="btn-group btn-group-sm shadow-sm" role="group" aria-label="Pilih Periode Perkembangan">
-                        <a href="{{ route('wali-kelas.perkembangan-siswa.index', ['kelas_id' => $selectedKelas->id, 'periode' => 'mid']) }}"
+                        <a href="{{ route('wali-kelas.perkembangan-siswa.index', ['kelas_id' => $selectedKelas->sqid, 'periode' => 'mid']) }}"
                             class="btn {{ $isMid ? 'text-white font-weight-bold' : 'btn-light border text-slate-700' }}"
                             style="{{ $isMid ? 'background: linear-gradient(135deg, #ea580c 0%, #d97706 100%);' : '' }}">
                             Mid Semester
                         </a>
-                        <a href="{{ route('wali-kelas.perkembangan-siswa.index', ['kelas_id' => $selectedKelas->id, 'periode' => 'semester']) }}"
+                        <a href="{{ route('wali-kelas.perkembangan-siswa.index', ['kelas_id' => $selectedKelas->sqid, 'periode' => 'semester']) }}"
                             class="btn {{ ! $isMid ? 'text-white font-weight-bold' : 'btn-light border text-slate-700' }}"
                             style="{{ ! $isMid ? 'background: linear-gradient(135deg, #ea580c 0%, #d97706 100%);' : '' }}">
                             Semester
@@ -204,7 +204,7 @@
                                                     {{ $ms['dinilai_count'] > 0 ? "{$ms['tuntas_count']}/{$ms['dinilai_count']} Tuntas" : 'Belum dinilai' }}
                                                 </span>
                                                 @if ($ms['is_taught_by_user'])
-                                                    <a href="{{ route('wali-kelas.penilaian-tp.index', ['kelas_id' => $selectedKelas->id, 'mata_pelajaran_id' => $mp->id, 'periode' => $periode]) }}"
+                                                    <a href="{{ route('wali-kelas.penilaian-tp.index', ['kelas_id' => $selectedKelas->sqid, 'mata_pelajaran_id' => $mp->sqid, 'periode' => $periode]) }}"
                                                         class="badge badge-primary text-decoration-none" style="font-size: 0.68rem;" title="Input nilai mapel yang Anda ampu">
                                                         Input
                                                     </a>
@@ -233,13 +233,13 @@
                     </div>
                     @if ($students->isNotEmpty())
                         <div class="d-flex flex-wrap align-items-center" style="gap: 0.45rem;">
-                            <a href="{{ route('wali-kelas.rapor.identitas.kelas', $selectedKelas->id) }}" target="_blank"
+                            <a href="{{ route('wali-kelas.rapor.identitas.kelas', $selectedKelas) }}" target="_blank"
                                 class="btn btn-sm btn-outline-primary font-weight-semibold"
                                 style="border-radius: 8px; font-size: 0.74rem;">
                                 <i class="fa fa-id-card mr-1"></i> Identitas (1 Kelas)
                             </a>
                             @if ($isSd)
-                                <a href="{{ route('wali-kelas.rapor.nilai.kelas', ['kelas' => $selectedKelas->id, 'periode' => $periode]) }}" target="_blank"
+                                <a href="{{ route('wali-kelas.rapor.nilai.kelas', ['kelas' => $selectedKelas, 'periode' => $periode]) }}" target="_blank"
                                     class="btn btn-sm text-white font-weight-semibold shadow-sm"
                                     style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%); border-radius: 8px; font-size: 0.74rem;">
                                     <i class="fa fa-file-pdf mr-1"></i> Nilai Rapor (1 Kelas)
@@ -278,7 +278,7 @@
                                         $siswa = $anggota->siswa;
                                         $siswaName = $siswa?->nama_lengkap ?? $anggota->siswa_nis;
                                         $presensi = $row['presensi'];
-                                        $detailUrl = route('wali-kelas.perkembangan-siswa.show', ['anggota_kelas' => $anggota->id, 'periode' => $periode]);
+                                        $detailUrl = route('wali-kelas.perkembangan-siswa.show', ['anggota_kelas' => $anggota, 'periode' => $periode]);
                                     @endphp
                                     <tr>
                                         <td class="text-center text-muted font-weight-semibold">{{ $idx + 1 }}</td>
@@ -349,12 +349,12 @@
                                                     <span>Detail Perkembangan</span>
                                                 </a>
                                                 <div class="action-dropdown-divider"></div>
-                                                <a href="{{ route('wali-kelas.rapor.identitas.siswa', $anggota->id) }}" target="_blank" class="action-dropdown-item" role="menuitem">
+                                                <a href="{{ route('wali-kelas.rapor.identitas.siswa', $anggota) }}" target="_blank" class="action-dropdown-item" role="menuitem">
                                                     <i class="fa fa-id-card text-info action-item-icon"></i>
                                                     <span>Cetak Identitas (PDF)</span>
                                                 </a>
                                                 @if ($isSd)
-                                                    <a href="{{ route('wali-kelas.rapor.nilai.siswa', ['anggota_kelas' => $anggota->id, 'periode' => $periode]) }}" target="_blank" class="action-dropdown-item" role="menuitem">
+                                                    <a href="{{ route('wali-kelas.rapor.nilai.siswa', ['anggota_kelas' => $anggota, 'periode' => $periode]) }}" target="_blank" class="action-dropdown-item" role="menuitem">
                                                         <i class="fa fa-file-pdf text-danger action-item-icon"></i>
                                                         <span>Cetak Nilai Rapor (PDF)</span>
                                                     </a>

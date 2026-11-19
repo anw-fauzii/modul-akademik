@@ -549,7 +549,10 @@
     $matrixDailyTotals = $matrix['daily_totals'] ?? [];
     $matrixSummary = $matrix['summary'] ?? [];
 
-    $kelasQueryParam = $selectedKelasId > 0 ? ['kelas_id' => $selectedKelasId] : [];
+    $selectedKelasSqid = $selectedKelasId > 0
+        ? \App\Support\Sqid::encodeFor(\App\Models\Admin\DataMaster\Kelas::class, $selectedKelasId)
+        : null;
+    $kelasQueryParam = $selectedKelasSqid !== null ? ['kelas_id' => $selectedKelasSqid] : [];
     $sharedQuery = array_filter([
         ...$kelasQueryParam,
         'tanggal' => $period['anchor_date'],
@@ -558,7 +561,7 @@
     ]);
     $statistikQuery = array_filter([
         ...$kelasQueryParam,
-        'tahun_ajaran_id' => $activeTahunAjaran?->id,
+        'tahun_ajaran_id' => $activeTahunAjaran?->sqid,
         'karyawan_nipy' => $selectedGuruNipy,
         'tingkat' => $selectedTingkat,
     ]);
@@ -681,7 +684,7 @@
                     class="t2q-mx-filter-grid {{ $showKelasSelector ? 't2q-mx-filter-grid--with-kelas' : '' }}">
                     <input type="hidden" name="tingkat" value="{{ $selectedTingkat }}">
                     @if (! $showKelasSelector && $selectedKelasId > 0)
-                        <input type="hidden" name="kelas_id" value="{{ $selectedKelasId }}">
+                        <input type="hidden" name="kelas_id" value="{{ $selectedKelasSqid }}">
                     @endif
 
                     @if ($showKelasSelector)
@@ -689,7 +692,7 @@
                             <label for="mx_filter_kelas" class="filter-label">Kelas Binaan</label>
                             <select name="kelas_id" id="mx_filter_kelas" class="filter-control js-mx-auto-submit">
                                 @foreach ($assignedClasses as $kelasItem)
-                                    <option value="{{ $kelasItem->id }}" @selected((int) $kelasItem->id === $selectedKelasId)>
+                                    <option value="{{ $kelasItem->sqid }}" @selected((int) $kelasItem->id === $selectedKelasId)>
                                         {{ $kelasItem->nama_kelas }}
                                     </option>
                                 @endforeach

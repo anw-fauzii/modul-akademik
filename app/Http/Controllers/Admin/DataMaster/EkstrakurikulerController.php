@@ -15,6 +15,7 @@ class EkstrakurikulerController extends Controller
         protected EkstrakurikulerService $service
     ) {
         $this->middleware('role:super admin');
+        $this->authorizeResource(Ekstrakurikuler::class, 'ekstrakurikuler');
     }
 
     /**

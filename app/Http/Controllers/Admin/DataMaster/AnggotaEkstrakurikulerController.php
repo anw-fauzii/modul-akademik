@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\DataMaster\AnggotaEkstrakurikulerRequest;
 use App\Models\Admin\DataMaster\AnggotaEkstrakurikuler;
 use App\Models\Admin\DataMaster\Ekstrakurikuler;
 use App\Services\Admin\DataMaster\AnggotaEkstrakurikulerService;
+use App\Support\Sqid;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -17,6 +18,7 @@ class AnggotaEkstrakurikulerController extends Controller
         protected AnggotaEkstrakurikulerService $service
     ) {
         $this->middleware('role:super admin');
+        $this->authorizeResource(AnggotaEkstrakurikuler::class, 'anggota_ekstrakurikuler');
     }
 
     /**
@@ -133,7 +135,7 @@ class AnggotaEkstrakurikulerController extends Controller
     private function redirectAfterMutation(?int $redirectEkstrakurikulerId): RedirectResponse
     {
         if ($redirectEkstrakurikulerId !== null) {
-            return redirect()->route('ekstrakurikuler.show', $redirectEkstrakurikulerId);
+            return redirect()->route('ekstrakurikuler.show', Sqid::encodeFor(Ekstrakurikuler::class, $redirectEkstrakurikulerId));
         }
 
         return redirect()->route('anggota-ekstrakurikuler.index');

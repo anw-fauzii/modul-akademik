@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin\DataPelengkap;
 
 use App\Http\Controllers\Controller;
-use App\Models\Admin\DataPelengkap\Transportasi;
 use App\Http\Requests\Admin\DataPelengkap\TransportasiRequest;
+use App\Models\Admin\DataPelengkap\Transportasi;
 use App\Services\Admin\DataPelengkap\TransportasiService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -15,12 +15,13 @@ class TransportasiController extends Controller
         protected TransportasiService $service
     ) {
         $this->middleware('role:super admin');
+        $this->authorizeResource(Transportasi::class, 'transportasi');
     }
 
     public function index(): View
     {
         return view('admin.dataPelengkap.transportasi.index', [
-            'transportasi' => $this->service->getAll()
+            'transportasi' => $this->service->getAll(),
         ]);
     }
 

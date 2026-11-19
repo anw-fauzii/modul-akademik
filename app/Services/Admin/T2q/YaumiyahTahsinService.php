@@ -45,4 +45,3 @@ class YaumiyahTahsinService extends BaseYaumiyahT2qService
         ];
     }
 }
-

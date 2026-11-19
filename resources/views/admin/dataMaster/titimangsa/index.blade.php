@@ -62,7 +62,7 @@
                         <select name="tahun_ajaran_id" id="filter_tahun_ajaran_id" class="form-control form-control-sm">
                             <option value="">Semua Tahun Ajaran</option>
                             @foreach ($tahunAjaranOptions as $ta)
-                                <option value="{{ $ta->id }}" @selected((string) ($filters['tahun_ajaran_id'] ?? '') === (string) $ta->id)>
+                                <option value="{{ $ta->sqid }}" @selected((string) ($filters['tahun_ajaran_id'] ?? '') === (string) $ta->id)>
                                     {{ $ta->full_label }}{{ $ta->is_active ? ' (Aktif)' : '' }}
                                 </option>
                             @endforeach
@@ -193,7 +193,7 @@
                                         </div>
                                     </td>
                                     <td class="text-center">
-                                        <form action="{{ route('titimangsa.toggle-status', $item->id) }}" method="POST" class="d-inline">
+                                        <form action="{{ route('titimangsa.toggle-status', $item) }}" method="POST" class="d-inline">
                                             @csrf
                                             <button type="submit"
                                                 class="btn btn-sm {{ $item->status ? 'btn-success' : 'btn-secondary' }} px-2 py-1"
@@ -205,12 +205,12 @@
                                     </td>
                                     <td class="text-center">
                                         <x-action-dropdown>
-                                            <a href="{{ route('titimangsa.edit', $item->id) }}" class="action-dropdown-item" role="menuitem">
+                                            <a href="{{ route('titimangsa.edit', $item) }}" class="action-dropdown-item" role="menuitem">
                                                 <i class="fa fa-edit text-primary action-item-icon"></i>
                                                 <span>Edit Data</span>
                                             </a>
                                             <div class="action-dropdown-divider"></div>
-                                            <form action="{{ route('titimangsa.destroy', $item->id) }}" method="POST" class="delete-form">
+                                            <form action="{{ route('titimangsa.destroy', $item) }}" method="POST" class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="button" class="action-dropdown-item action-dropdown-item--danger delete-button" role="menuitem">

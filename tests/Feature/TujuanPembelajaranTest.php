@@ -83,7 +83,7 @@ class TujuanPembelajaranTest extends TestCase
         DB::enableQueryLog();
 
         $response = $this->actingAs($user)->get(route('tujuan-pembelajaran.index', [
-            'tahun_ajaran_id' => $ta->id,
+            'tahun_ajaran_id' => $ta->sqid,
         ]));
 
         $queries = DB::getQueryLog();
@@ -160,11 +160,11 @@ class TujuanPembelajaranTest extends TestCase
         $this->assertSame(2, TujuanPembelajaran::count());
 
         // Toggle status & Delete
-        $this->actingAs($user)->post(route('tujuan-pembelajaran.toggle-status', $tpGanjil->id))
+        $this->actingAs($user)->post(route('tujuan-pembelajaran.toggle-status', $tpGanjil))
             ->assertRedirect(route('tujuan-pembelajaran.index'));
         $this->assertFalse($tpGanjil->fresh()->status);
 
-        $this->actingAs($user)->delete(route('tujuan-pembelajaran.destroy', $tpGanjil->id))
+        $this->actingAs($user)->delete(route('tujuan-pembelajaran.destroy', $tpGanjil))
             ->assertRedirect(route('tujuan-pembelajaran.index'));
         $this->assertDatabaseMissing('akademik_pelajaran_tujuan_pembelajaran', ['id' => $tpGanjil->id]);
     }
@@ -188,7 +188,7 @@ class TujuanPembelajaranTest extends TestCase
         ]);
 
         $mapel = MataPelajaran::create([
-            'kelompok_pelajaran_id' => $kelompok->id,
+            'kelompok_pelajaran_id' => $kelompok->sqid,
             'unit' => 'SD',
             'nama_mata_pelajaran' => 'Matematika',
             'singkatan' => 'MTK',

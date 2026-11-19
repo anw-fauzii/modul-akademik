@@ -55,4 +55,3 @@ class AngkaArab extends Model
         return filled($matched?->angka_arab) ? (string) $matched->angka_arab : $needle;
     }
 }
-

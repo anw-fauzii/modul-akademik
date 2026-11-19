@@ -59,6 +59,14 @@ class WaliKelasAnggotaKelasService
             ];
         }
 
+        if (
+            $requestedKelasId !== null
+            && $requestedKelasId > 0
+            && ! $scope['assignedClasses']->contains('id', $requestedKelasId)
+        ) {
+            abort(403, 'Anda tidak memiliki akses untuk melihat anggota kelas ini.');
+        }
+
         $students = $this->scopeService->sortAnggotaByStudentName(
             $this->anggotaKelasService
                 ->buildIndexQuery($scope['activeTahunAjaran']->id, $scope['selectedKelas']->id)

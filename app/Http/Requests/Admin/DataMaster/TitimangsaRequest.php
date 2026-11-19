@@ -145,4 +145,3 @@ class TitimangsaRequest extends FormRequest
         ];
     }
 }
-

@@ -338,22 +338,22 @@ class WaliKelasAnggotaKelasTest extends TestCase
         $this->assertStringContainsString('202601001', $indexHtml);
         $this->assertStringContainsString('Hendra Wijaya', $indexHtml);
         $this->assertStringContainsString('2 An-Naba', $indexHtml);
-        $this->assertStringContainsString(route('wali-kelas.anggota-kelas.show', 55), $indexHtml);
+        $this->assertStringContainsString(route('wali-kelas.anggota-kelas.show', sqidFor('wali-kelas.anggota-kelas.show', 55)), $indexHtml);
         $this->assertStringNotContainsString('Semua Gender', $indexHtml);
         $this->assertStringNotContainsString('Semua Pendaftaran', $indexHtml);
         $this->assertStringNotContainsString('Terapkan', $indexHtml);
         $this->assertStringNotContainsString('Cetak Identitas (PDF)', $indexHtml);
-        $this->assertStringNotContainsString(route('wali-kelas.rapor.identitas.kelas', 10), $indexHtml);
-        $this->assertStringNotContainsString(route('wali-kelas.rapor.identitas.siswa', 55), $indexHtml);
+        $this->assertStringNotContainsString(route('wali-kelas.rapor.identitas.kelas', sqidFor('wali-kelas.rapor.identitas.kelas', 10)), $indexHtml);
+        $this->assertStringNotContainsString(route('wali-kelas.rapor.identitas.siswa', sqidFor('wali-kelas.rapor.identitas.siswa', 55)), $indexHtml);
 
         // Reuse view detail siswa tanpa menampilkan tautan admin-only edit/kelas/ekskul/jemputan
         $this->assertStringContainsString('Ahmad Fauzi', $showHtml);
         $this->assertStringContainsString('Kembali ke Anggota Kelas', $showHtml);
-        $this->assertStringContainsString(route('wali-kelas.anggota-kelas.index', ['kelas_id' => 10]), $showHtml);
-        $this->assertStringNotContainsString(route('siswa.edit', '202601001'), $showHtml);
-        $this->assertStringNotContainsString(route('kelas.show', 10), $showHtml);
-        $this->assertStringNotContainsString(route('ekstrakurikuler.show', 3), $showHtml);
-        $this->assertStringNotContainsString(route('jemputan.show', 7), $showHtml);
+        $this->assertStringContainsString(route('wali-kelas.anggota-kelas.index', ['kelas_id' => sqidParam('kelas_id', 10)]), $showHtml);
+        $this->assertStringNotContainsString(route('siswa.edit', sqidFor('siswa.edit', 202601001)), $showHtml);
+        $this->assertStringNotContainsString(route('kelas.show', sqidFor('kelas.show', 10)), $showHtml);
+        $this->assertStringNotContainsString(route('ekstrakurikuler.show', sqidFor('ekstrakurikuler.show', 3)), $showHtml);
+        $this->assertStringNotContainsString(route('jemputan.show', sqidFor('jemputan.show', 7)), $showHtml);
 
         $this->assertStringContainsString('Belum Ada Penugasan Wali Kelas / Pendamping Aktif', $ineligibleHtml);
 

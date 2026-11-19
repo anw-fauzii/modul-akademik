@@ -32,7 +32,7 @@
 
         <div class="main-card card">
             <div class="card-body">
-                <form method="post" action="{{ route('mata-pelajaran.update', $mataPelajaran->id) }}" id="editForm">
+                <form method="post" action="{{ route('mata-pelajaran.update', $mataPelajaran) }}" id="editForm">
                     @csrf
                     @method('PUT')
                     @include('admin.pelajaran.mataPelajaran._form')

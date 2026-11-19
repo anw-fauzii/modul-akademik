@@ -195,7 +195,7 @@
                         style="border-radius: 10px; font-weight: 600;">
                         <i class="fa fa-th mr-1"></i> Input Nilai TP
                     </a>
-                    <a href="{{ route('penilaian-kkm.create', array_filter($filters)) }}"
+                    <a href="{{ route('penilaian-kkm.create', \App\Support\Sqid::encodeQueryParams(array_filter($filters))) }}"
                         class="btn text-white shadow-sm font-weight-bold"
                         style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 10px;">
                         <i class="fa fa-plus mr-1"></i> Tambah KKM
@@ -292,7 +292,7 @@
                         <select name="tahun_ajaran_id" id="filter_ta" class="filter-control">
                             <option value="all" @selected($filters['tahun_ajaran_id'] === '')>Semua Tahun Ajaran</option>
                             @foreach ($tahunAjaranOptions as $ta)
-                                <option value="{{ $ta->id }}" @selected((string) $filters['tahun_ajaran_id'] === (string) $ta->id)>
+                                <option value="{{ $ta->sqid }}" @selected((string) $filters['tahun_ajaran_id'] === (string) $ta->id)>
                                     {{ $ta->full_label }}{{ $ta->is_active ? ' (Aktif)' : '' }}
                                 </option>
                             @endforeach
@@ -304,7 +304,7 @@
                         <select name="mata_pelajaran_id" id="filter_mp" class="filter-control">
                             <option value="">Semua Mata Pelajaran SD</option>
                             @foreach ($mataPelajaranOptions as $mp)
-                                <option value="{{ $mp->id }}" @selected((string) $filters['mata_pelajaran_id'] === (string) $mp->id)>
+                                <option value="{{ $mp->sqid }}" @selected((string) $filters['mata_pelajaran_id'] === (string) $mp->id)>
                                     [{{ $mp->singkatan }}] {{ $mp->nama_mata_pelajaran }}
                                 </option>
                             @endforeach
@@ -410,12 +410,12 @@
                                     </td>
                                     <td class="text-center">
                                         <x-action-dropdown>
-                                            <a href="{{ route('penilaian-kkm.edit', $item->id) }}" class="action-dropdown-item" role="menuitem">
+                                            <a href="{{ route('penilaian-kkm.edit', $item) }}" class="action-dropdown-item" role="menuitem">
                                                 <i class="fa fa-edit text-primary action-item-icon"></i>
                                                 <span>Ubah KKM &amp; Rentang</span>
                                             </a>
                                             <div class="action-dropdown-divider"></div>
-                                            <form method="POST" action="{{ route('penilaian-kkm.destroy', $item->id) }}" class="delete-form">
+                                            <form method="POST" action="{{ route('penilaian-kkm.destroy', $item) }}" class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="button" class="action-dropdown-item action-dropdown-item--danger delete-button" role="menuitem">

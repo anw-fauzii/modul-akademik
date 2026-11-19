@@ -233,8 +233,8 @@ class AnggotaKelasModelAndViewTest extends TestCase
         $this->assertStringContainsString('2026/2027', $rendered);
         $this->assertStringContainsString('Budi Santoso, S.Pd', $rendered);
         $this->assertStringContainsString('badge-success', $rendered);
-        $this->assertStringContainsString(route('anggota-kelas.edit', 30), $rendered);
-        $this->assertStringContainsString(route('anggota-kelas.destroy', 30), $rendered);
+        $this->assertStringContainsString(route('anggota-kelas.edit', sqidFor('anggota-kelas.edit', 30)), $rendered);
+        $this->assertStringContainsString(route('anggota-kelas.destroy', sqidFor('anggota-kelas.destroy', 30)), $rendered);
         $sidebarHtml = view('layouts.sidebar')->render();
         $this->assertStringNotContainsString(route('anggota-kelas.index'), $sidebarHtml);
         $this->assertStringContainsString(route('kelas.index'), $sidebarHtml);
@@ -418,7 +418,7 @@ class AnggotaKelasModelAndViewTest extends TestCase
             Model::preventLazyLoading(false);
         }
 
-        $this->assertStringContainsString(route('anggota-kelas.update', 7), $editHtml);
+        $this->assertStringContainsString(route('anggota-kelas.update', sqidFor('anggota-kelas.update', 7)), $editHtml);
         $this->assertStringContainsString('name="_method" value="PUT"', $editHtml);
         $this->assertStringContainsString('name="siswa_nis"', $editHtml);
         $this->assertStringContainsString('Ahmad Fauzi — NIS: 20260001', $editHtml);

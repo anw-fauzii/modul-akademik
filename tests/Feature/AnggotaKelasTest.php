@@ -154,14 +154,14 @@ class AnggotaKelasTest extends TestCase
 
             $this->actingAs($user)
                 ->withSession(['access_token' => 'valid-token'])
-                ->get(route('anggota-kelas.index', ['tahun_ajaran_id' => $ta1->id]))
+                ->get(route('anggota-kelas.index', ['tahun_ajaran_id' => $ta1->sqid]))
                 ->assertOk()
                 ->assertSee('Siswa Ke-1')
                 ->assertDontSee('Siswa Ke-5');
 
             $this->actingAs($user)
                 ->withSession(['access_token' => 'valid-token'])
-                ->get(route('anggota-kelas.index', ['kelas_id' => $kelasTa2->id]))
+                ->get(route('anggota-kelas.index', ['kelas_id' => $kelasTa2->sqid]))
                 ->assertOk()
                 ->assertSee('Siswa Ke-3')
                 ->assertDontSee('Siswa Ke-1');
@@ -410,18 +410,18 @@ class AnggotaKelasTest extends TestCase
 
         $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
-            ->from(route('anggota-kelas.edit', $anggotaKelas->id))
-            ->put(route('anggota-kelas.update', $anggotaKelas->id), [
+            ->from(route('anggota-kelas.edit', $anggotaKelas))
+            ->put(route('anggota-kelas.update', $anggotaKelas), [
                 'siswa_nis' => $otherSiswaInTa->nis,
                 'akademik_master_kelas_id' => $kelasA->id,
                 'pendaftaran' => 'Pindahan',
             ])
-            ->assertRedirect(route('anggota-kelas.edit', $anggotaKelas->id))
+            ->assertRedirect(route('anggota-kelas.edit', $anggotaKelas))
             ->assertSessionHasErrors('siswa_nis');
 
         $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
-            ->put(route('anggota-kelas.update', $anggotaKelas->id), [
+            ->put(route('anggota-kelas.update', $anggotaKelas), [
                 'siswa_nis' => $siswa->nis,
                 'akademik_master_kelas_id' => $kelasB->id,
                 'pendaftaran' => 'Pindahan',
@@ -436,7 +436,7 @@ class AnggotaKelasTest extends TestCase
 
         $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
-            ->delete(route('anggota-kelas.destroy', $anggotaKelas->id))
+            ->delete(route('anggota-kelas.destroy', $anggotaKelas))
             ->assertRedirect(route('anggota-kelas.index'))
             ->assertSessionHas('success', 'Data Anggota Kelas berhasil dihapus.');
 
@@ -535,7 +535,7 @@ class AnggotaKelasTest extends TestCase
 
         $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
-            ->get(route('anggota-kelas.create', ['kelas_id' => $kelasLama->id]))
+            ->get(route('anggota-kelas.create', ['kelas_id' => $kelasLama->sqid]))
             ->assertOk()
             ->assertSee('Siswa Sudah Masuk TA Aktif')
             ->assertDontSee('Siswa Status Nonaktif')

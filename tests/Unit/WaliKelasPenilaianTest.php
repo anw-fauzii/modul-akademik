@@ -526,21 +526,21 @@ class WaliKelasPenilaianTest extends TestCase
         // Reuse view Nilai TP dengan seluruh action menunjuk route wali-kelas.*, bukan route admin/kkm/tp-create
         $this->assertStringContainsString('Mapel Diampu', $matrixHtml);
         $this->assertStringContainsString(route('wali-kelas.perkembangan-siswa.index', ['periode' => PeriodeTp::PERIODE_MID]), $matrixHtml);
-        $this->assertStringNotContainsString(route('wali-kelas.perkembangan-siswa.index', ['kelas_id' => 11, 'periode' => PeriodeTp::PERIODE_MID]), $matrixHtml);
+        $this->assertStringNotContainsString(route('wali-kelas.perkembangan-siswa.index', ['kelas_id' => sqidParam('kelas_id', 11), 'periode' => PeriodeTp::PERIODE_MID]), $matrixHtml);
         $this->assertStringContainsString(route('wali-kelas.penilaian-tp.store'), $matrixHtml);
         $this->assertStringContainsString(route('wali-kelas.penilaian-tp.bobot.update'), $matrixHtml);
-        $this->assertStringContainsString(route('wali-kelas.penilaian-tp.aspek.update', 201), $matrixHtml);
-        $this->assertStringContainsString(route('wali-kelas.penilaian-tp.sumatif-bab.update', 401), $matrixHtml);
+        $this->assertStringContainsString(route('wali-kelas.penilaian-tp.aspek.update', sqidFor('wali-kelas.penilaian-tp.aspek.update', 201)), $matrixHtml);
+        $this->assertStringContainsString(route('wali-kelas.penilaian-tp.sumatif-bab.update', sqidFor('wali-kelas.penilaian-tp.sumatif-bab.update', 401)), $matrixHtml);
         $this->assertStringContainsString(route('wali-kelas.penilaian-tp.import'), $matrixHtml);
         $this->assertStringContainsString(route('wali-kelas.penilaian-rekap.index'), $matrixHtml);
         $this->assertStringNotContainsString(route('penilaian-tp.store'), $matrixHtml);
-        $this->assertStringNotContainsString(route('penilaian-kkm.edit', 31), $matrixHtml);
+        $this->assertStringNotContainsString(route('penilaian-kkm.edit', sqidFor('penilaian-kkm.edit', 31)), $matrixHtml);
 
         // Reuse view Rekap dengan route wali-kelas.*
         $this->assertStringContainsString('Mapel Diampu', $rekapHtml);
         $this->assertStringContainsString(route('wali-kelas.perkembangan-siswa.index', ['periode' => PeriodeTp::PERIODE_MID]), $rekapHtml);
         $this->assertStringContainsString(route('wali-kelas.penilaian-tp.index'), $rekapHtml);
-        $this->assertStringContainsString(route('wali-kelas.penilaian-rekap.deskripsi.update', 501), $rekapHtml);
+        $this->assertStringContainsString(route('wali-kelas.penilaian-rekap.deskripsi.update', sqidFor('wali-kelas.penilaian-rekap.deskripsi.update', 501)), $rekapHtml);
         $this->assertStringContainsString(route('wali-kelas.penilaian-rekap.deskripsi.regenerate'), $rekapHtml);
         $this->assertStringNotContainsString(route('penilaian-rekap.deskripsi.regenerate'), $rekapHtml);
 

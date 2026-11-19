@@ -186,7 +186,7 @@ class JemputanModelAndViewTest extends TestCase
         $this->assertStringContainsString('12 Siswa', $rendered);
         $this->assertStringContainsString('0 Siswa', $rendered);
         $this->assertStringContainsString('Gratis', $rendered);
-        $this->assertStringContainsString(route('jemputan.show', 1), $rendered);
+        $this->assertStringContainsString(route('jemputan.show', sqidFor('jemputan.show', 1)), $rendered);
         $this->assertStringContainsString(route('jemputan.index'), view('layouts.sidebar')->render());
     }
 
@@ -261,7 +261,7 @@ class JemputanModelAndViewTest extends TestCase
             Model::preventLazyLoading(false);
         }
 
-        $this->assertStringContainsString(route('jemputan.update', 5), $editHtml);
+        $this->assertStringContainsString(route('jemputan.update', sqidFor('jemputan.update', 5)), $editHtml);
         $this->assertStringContainsString('name="_method" value="PUT"', $editHtml);
         $this->assertStringContainsString('250000', $editHtml);
         $this->assertStringContainsString('150000', $editHtml);
@@ -384,9 +384,9 @@ class JemputanModelAndViewTest extends TestCase
         $this->assertStringContainsString('Bagas Pratama', $html);
         $this->assertStringContainsString('name="anggota_kelas_id[]" value="71"', $html);
         $this->assertStringContainsString(route('anggota-jemputan.store'), $html);
-        $this->assertStringContainsString('name="redirect_to_jemputan" value="5"', $html);
-        $this->assertStringContainsString(route('anggota-jemputan.edit', ['anggota_jemputan' => 55, 'from_jemputan' => 5]), $html);
-        $this->assertStringContainsString(route('anggota-jemputan.destroy', 55), $html);
+        $this->assertStringContainsString('name="redirect_to_jemputan" value="'.sqidParam('redirect_to_jemputan', 5).'"', $html);
+        $this->assertStringContainsString(route('anggota-jemputan.edit', ['anggota_jemputan' => sqidFor('anggota-jemputan.edit', 55), 'from_jemputan' => sqidParam('from_jemputan', 5)]), $html);
+        $this->assertStringContainsString(route('anggota-jemputan.destroy', sqidFor('anggota-jemputan.destroy', 55)), $html);
         $this->assertStringContainsString('id="openTambahAnggotaModalBtn"', $html);
         $this->assertStringContainsString('id="tambahAnggotaModal"', $html);
         $this->assertStringNotContainsString('ak-modal-overlay is-open', $html);

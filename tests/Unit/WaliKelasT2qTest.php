@@ -312,7 +312,7 @@ class WaliKelasT2qTest extends TestCase
             $this->assertStringContainsString('5 Ibnu Sina', $matriksTahsinHtml);
             $this->assertStringContainsString('Lihat Saja', $matriksTahsinHtml);
             $this->assertStringContainsString('t2q-mx-empty is-readonly', $matriksTahsinHtml);
-            $this->assertStringContainsString(e(route('wali-kelas.t2q.yaumiyah-tahfizh.matriks', ['kelas_id' => 201, 'tanggal' => $period['anchor_date'], 'tingkat' => '4'])), $matriksTahsinHtml);
+            $this->assertStringContainsString(e(route('wali-kelas.t2q.yaumiyah-tahfizh.matriks', ['kelas_id' => sqidParam('kelas_id', 201), 'tanggal' => $period['anchor_date'], 'tingkat' => '4'])), $matriksTahsinHtml);
             $this->assertStringNotContainsString('Input Harian', $matriksTahsinHtml);
             $this->assertStringNotContainsString('Ubah di Input Harian', $matriksTahsinHtml);
             $this->assertStringNotContainsString('id="mxModalEditLink"', $matriksTahsinHtml);
@@ -348,7 +348,7 @@ class WaliKelasT2qTest extends TestCase
             $this->assertStringContainsString('Aisyah Zahra', $statistikTahsinHtml);
             $this->assertStringContainsString('Kelas Binaan', $statistikTahsinHtml);
             $this->assertStringContainsString('Lihat Saja', $statistikTahsinHtml);
-            $this->assertStringContainsString(e(route('wali-kelas.t2q.yaumiyah-tahsin.matriks', ['kelas_id' => 201])), $statistikTahsinHtml);
+            $this->assertStringContainsString(e(route('wali-kelas.t2q.yaumiyah-tahsin.matriks', ['kelas_id' => sqidParam('kelas_id', 201)])), $statistikTahsinHtml);
             $this->assertStringNotContainsString('Input Harian', $statistikTahsinHtml);
             $this->assertStringNotContainsString('/t2q/yaumiyah-tahsin"', $statistikTahsinHtml);
 

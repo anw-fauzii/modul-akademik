@@ -17,6 +17,9 @@ class RaporController extends Controller
         protected RaporPdfService $service
     ) {
         $this->middleware('role:super admin');
+        $this->middleware('can:viewAny,'.Kelas::class)->only(['index']);
+        $this->middleware('can:view,kelas')->only(['identitasKelas', 'nilaiKelas']);
+        $this->middleware('can:view,anggota_kelas')->only(['identitasSiswa', 'nilaiSiswa']);
     }
 
     /**
@@ -78,4 +81,3 @@ class RaporController extends Controller
         return $this->service->streamNilaiPdf($kelas, $periode, $anggotaKelas);
     }
 }
-

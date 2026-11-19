@@ -84,6 +84,14 @@ class WaliKelasDashboardService
         $activeTahunAjaran = $scope['activeTahunAjaran'];
         $selectedKelas = $scope['selectedKelas'];
 
+        if (
+            $requestedKelasId !== null
+            && $requestedKelasId > 0
+            && ! $scope['assignedClasses']->contains('id', $requestedKelasId)
+        ) {
+            abort(403, 'Anda tidak memiliki akses ke dashboard kelas ini.');
+        }
+
         $students = $this->scopeService->sortAnggotaByStudentName(
             AnggotaKelas::query()
                 ->select(['id', 'siswa_nis', 'akademik_master_kelas_id', 'pendaftaran'])

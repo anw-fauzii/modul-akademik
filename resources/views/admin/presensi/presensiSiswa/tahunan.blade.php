@@ -351,9 +351,9 @@
                     </div>
                 </div>
                 <div class="page-title-actions d-flex flex-wrap align-items-center" style="gap: 0.5rem;">
-                    <a href="{{ route($presensiRoutePrefix.'.bulk', array_filter([
+                    <a href="{{ route($presensiRoutePrefix.'.bulk', \App\Support\Sqid::encodeQueryParams(array_filter([
                         'kelas_id' => $filters['kelas_id'],
-                    ])) }}"
+                    ]))) }}"
                         class="btn text-white shadow-sm font-weight-bold"
                         style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 8px;">
                         <i class="fa fa-layer-group mr-1"></i> Input Data
@@ -551,7 +551,7 @@
                         <select id="tahunan_kelas_id" name="kelas_id" class="filter-control">
                             <option value="">Semua Kelas</option>
                             @foreach ($kelasOptions as $kelas)
-                                <option value="{{ $kelas->id }}"
+                                <option value="{{ $kelas->sqid }}"
                                     data-nama-tahun-ajaran="{{ trim((string) ($kelas->tahunAjaran?->nama_tahun_ajaran ?? '')) }}"
                                     data-semester="{{ strtolower(trim((string) ($kelas->tahunAjaran?->semester ?? ''))) }}"
                                     data-jenjang="{{ strtoupper(trim((string) $kelas->jenjang_kelas)) }}"
@@ -808,16 +808,16 @@
                             </div>
 
                             <div class="d-flex flex-wrap gap-2 pt-1 no-print">
-                                <a href="{{ route($presensiRoutePrefix.'.rekap', array_filter([
+                                <a href="{{ route($presensiRoutePrefix.'.rekap', \App\Support\Sqid::encodeQueryParams(array_filter([
                                     'tahun_ajaran_id' => $drillTahunAjaranId,
                                     'kelas_id' => $filters['kelas_id'],
-                                ])) }}"
+                                ]))) }}"
                                     class="btn btn-sm btn-light border shadow-sm flex-1 font-weight-bold" style="border-radius: 8px;">
                                     <i class="fa fa-chart-bar mr-1"></i> Rekap Bulanan
                                 </a>
-                                <a href="{{ route($presensiRoutePrefix.'.bulk', array_filter([
+                                <a href="{{ route($presensiRoutePrefix.'.bulk', \App\Support\Sqid::encodeQueryParams(array_filter([
                                     'kelas_id' => $filters['kelas_id'],
-                                ])) }}"
+                                ]))) }}"
                                     class="btn btn-sm text-white shadow-sm flex-1 font-weight-bold"
                                     style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 8px;">
                                     <i class="fa fa-layer-group mr-1"></i> Input Massal
@@ -1023,7 +1023,7 @@
                                                             'nama_tahun_ajaran' => $kelas->tahunAjaran?->nama_tahun_ajaran ?? $filters['nama_tahun_ajaran'],
                                                             'semester' => $kelas->tahunAjaran?->semester ?? ($selectedSemesterFilter !== '' ? $selectedSemesterFilter : null),
                                                             'jenjang' => $filters['jenjang'],
-                                                            'kelas_id' => $kelas->id,
+                                                            'kelas_id' => $kelas->sqid,
                                                         ], fn ($v): bool => $v !== null && $v !== '')) }}"
                                                             class="btn btn-sm btn-outline-primary" style="border-radius: 8px;">
                                                             Siswa
@@ -1124,11 +1124,11 @@
                                                                     return in_array(strtolower(trim((string) $ta->semester)), $mPreferredSemesters, true);
                                                                 })?->id ?? $drillTahunAjaranId));
                                                     @endphp
-                                                    <a href="{{ route($presensiRoutePrefix.'.rekap', array_filter([
+                                                    <a href="{{ route($presensiRoutePrefix.'.rekap', \App\Support\Sqid::encodeQueryParams(array_filter([
                                                         'tahun_ajaran_id' => $mTargetTaId,
                                                         'kelas_id' => $filters['kelas_id'],
                                                         'bulan' => $mRow['bulan'],
-                                                    ])) }}"
+                                                    ]))) }}"
                                                         class="btn btn-sm btn-outline-primary" style="border-radius: 8px;">
                                                         Detail
                                                     </a>

@@ -12,6 +12,7 @@ class DaftarJilidController extends Controller
     public function __construct()
     {
         $this->middleware('role:super admin');
+        $this->middleware('can:viewAny,'.DaftarJilid::class)->only(['index']);
     }
 
     /**

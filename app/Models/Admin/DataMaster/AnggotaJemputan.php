@@ -2,6 +2,7 @@
 
 namespace App\Models\Admin\DataMaster;
 
+use App\Models\Concerns\HasSqidRouteKey;
 use Database\Factories\Admin\DataMaster\AnggotaJemputanFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -25,6 +26,8 @@ class AnggotaJemputan extends Model
 {
     /** @use HasFactory<AnggotaJemputanFactory> */
     use HasFactory;
+
+    use HasSqidRouteKey;
 
     public const array PENDAFTARAN_OPTIONS = [
         'Baru',
@@ -126,4 +129,3 @@ class AnggotaJemputan extends Model
         return $this->belongsTo(Jemputan::class, 'akademik_master_jemputan_id');
     }
 }
-

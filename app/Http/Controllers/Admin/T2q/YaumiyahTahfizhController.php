@@ -19,6 +19,11 @@ class YaumiyahTahfizhController extends Controller
         protected YaumiyahTahfizhService $service
     ) {
         $this->middleware('role:super admin');
+        $this->middleware('can:viewAny,'.YaumiyahTahfizh::class)->only(['index']);
+        $this->middleware('can:viewMatriks,'.YaumiyahTahfizh::class)->only(['matriks']);
+        $this->middleware('can:viewStatistik,'.YaumiyahTahfizh::class)->only(['statistik']);
+        $this->middleware('can:create,'.YaumiyahTahfizh::class)->only(['store']);
+        $this->middleware('can:delete,yaumiyah_tahfizh')->only(['destroy']);
     }
 
     protected function yaumiyahService(): BaseYaumiyahT2qService

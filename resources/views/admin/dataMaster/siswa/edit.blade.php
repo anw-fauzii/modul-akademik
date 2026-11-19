@@ -32,7 +32,7 @@
 
         <div class="main-card card">
             <div class="card-body">
-                <form method="post" action="{{ route('siswa.update', $siswa->nis) }}" id="editForm" enctype="multipart/form-data">
+                <form method="post" action="{{ route('siswa.update', $siswa) }}" id="editForm" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
                     @include('admin.dataMaster.siswa._form')

@@ -3,6 +3,7 @@
 namespace App\Models\Admin\DataMaster;
 
 use App\Models\Admin\Presensi\PresensiSiswa;
+use App\Models\Concerns\HasSqidRouteKey;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -27,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 class Kelas extends Model
 {
     use HasFactory;
+    use HasSqidRouteKey;
 
     /**
      * Urutan standar jenjang pendidikan untuk pengurutan tampilan & statistik.

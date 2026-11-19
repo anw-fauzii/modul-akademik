@@ -7,6 +7,7 @@ use App\Models\Admin\DataPelengkap\JenjangPendidikan;
 use App\Models\Admin\DataPelengkap\Pekerjaan;
 use App\Models\Admin\DataPelengkap\Penghasilan;
 use App\Models\Admin\DataPelengkap\Transportasi;
+use App\Models\Concerns\HasSqidRouteKey;
 use App\Models\User;
 use Database\Factories\Admin\DataMaster\SiswaFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -93,6 +94,8 @@ class Siswa extends Model
 {
     /** @use HasFactory<SiswaFactory> */
     use HasFactory;
+
+    use HasSqidRouteKey;
 
     protected $primaryKey = 'nis';
 

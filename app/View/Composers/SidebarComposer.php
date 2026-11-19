@@ -25,8 +25,8 @@ class SidebarComposer
 
                 if (! isset($grouped[$unitName])) {
                     $grouped[$unitName] = [
-                        'nama'         => $unitName,
-                        'jumlah'       => 0,
+                        'nama' => $unitName,
+                        'jumlah' => 0,
                         'kategori_ids' => [],
                     ];
                 }
@@ -42,6 +42,7 @@ class SidebarComposer
     public static function extractUnitName(string $nama): string
     {
         $cleaned = preg_replace('/\s*[-–—]?\s*(?:pegawai\s+)?(?:tetap|kontrak|honor(?:er)?)\s*$/i', '', trim($nama));
+
         return $cleaned ?: trim($nama);
     }
 }

@@ -312,12 +312,12 @@ class WaliKelasJadwalPelajaranTest extends TestCase
         $this->assertStringContainsString('Matematika', $html);
         $this->assertStringContainsString('Ahmad Fauzi, M.Pd', $html);
         $this->assertStringContainsString('R.501', $html);
-        $this->assertStringContainsString(route('wali-kelas.dashboard', ['kelas_id' => 10]), $html);
+        $this->assertStringContainsString(route('wali-kelas.dashboard', ['kelas_id' => sqidParam('kelas_id', 10)]), $html);
         $this->assertStringNotContainsString('id="myTable3"', $html);
         $this->assertStringNotContainsString(route('jadwal-pelajaran.create'), $html);
-        $this->assertStringNotContainsString(route('jadwal-pelajaran.edit', 501), $html);
-        $this->assertStringNotContainsString(route('jadwal-pelajaran.destroy', 501), $html);
-        $this->assertStringNotContainsString(route('jadwal-pelajaran.toggle-status', 501), $html);
+        $this->assertStringNotContainsString(route('jadwal-pelajaran.edit', sqidFor('jadwal-pelajaran.edit', 501)), $html);
+        $this->assertStringNotContainsString(route('jadwal-pelajaran.destroy', sqidFor('jadwal-pelajaran.destroy', 501)), $html);
+        $this->assertStringNotContainsString(route('jadwal-pelajaran.toggle-status', sqidFor('jadwal-pelajaran.toggle-status', 501)), $html);
         $this->assertStringNotContainsString(route('jam-pelajaran.create'), $html);
 
         $this->assertStringContainsString('Belum Ada Penugasan Wali Kelas / Pendamping Aktif', $ineligibleHtml);

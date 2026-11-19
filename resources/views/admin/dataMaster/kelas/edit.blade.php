@@ -32,7 +32,7 @@
 
         <div class="main-card card">
             <div class="card-body">
-                <form method="post" action="{{ route('kelas.update', $kelas->id) }}" id="editForm">
+                <form method="post" action="{{ route('kelas.update', $kelas) }}" id="editForm">
                     @csrf
                     @method('PUT')
                     @include('admin.dataMaster.kelas._form')

@@ -38,7 +38,7 @@
 
         <div class="main-card card shadow-sm" style="border-radius: 16px; border: 1px solid #e2e8f0;">
             <div class="card-body" style="padding: 1.5rem;">
-                <form method="post" action="{{ route('anggota-t2q.update', $anggotaT2q->id) }}" id="editForm">
+                <form method="post" action="{{ route('anggota-t2q.update', $anggotaT2q) }}" id="editForm">
                     @csrf
                     @method('PUT')
                     @include('admin.dataMaster.anggotaT2q._form')

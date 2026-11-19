@@ -222,7 +222,7 @@
                         <i class="fa fa-th"></i>
                         <span>Matriks (Sen–Kam)</span>
                     </a>
-                    <a href="{{ route($statistikRoute, array_filter(['tahun_ajaran_id' => $activeTahunAjaran?->id, 'karyawan_nipy' => $selectedGuruNipy, 'tingkat' => $selectedTingkat])) }}" class="t2q-view-pill">
+                    <a href="{{ route($statistikRoute, array_filter(['tahun_ajaran_id' => $activeTahunAjaran?->sqid, 'karyawan_nipy' => $selectedGuruNipy, 'tingkat' => $selectedTingkat])) }}" class="t2q-view-pill">
                         <i class="fa fa-chart-bar"></i>
                         <span>Statistik</span>
                     </a>
@@ -516,7 +516,7 @@
                                             @if ($todayEntry)
                                                 <button type="button"
                                                     class="t2q-ghost-delete js-t2q-delete"
-                                                    data-delete-url="{{ route($destroyRoute, $todayEntry->id) }}"
+                                                    data-delete-url="{{ route($destroyRoute, $todayEntry) }}"
                                                     data-student-name="{{ $namaSiswa }}"
                                                     title="Hapus setoran tanggal {{ $tanggal }}">
                                                     <i class="fa fa-trash-alt"></i>

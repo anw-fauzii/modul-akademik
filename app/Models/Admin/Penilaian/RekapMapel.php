@@ -5,6 +5,7 @@ namespace App\Models\Admin\Penilaian;
 use App\Models\Admin\DataMaster\AnggotaKelas;
 use App\Models\Admin\DataMaster\TahunAjaran;
 use App\Models\Admin\Pelajaran\MataPelajaran;
+use App\Models\Concerns\HasSqidRouteKey;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Model;
@@ -32,6 +33,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Table('akademik_penilaian_rekap_mapel')]
 class RekapMapel extends Model
 {
+    use HasSqidRouteKey;
+
     /**
      * Atribut yang di-cast secara otomatis.
      *

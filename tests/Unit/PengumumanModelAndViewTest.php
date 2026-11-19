@@ -281,8 +281,8 @@ class PengumumanModelAndViewTest extends TestCase
         $this->assertStringContainsString('pengumuman-rich-content', $indexHtml);
         $this->assertStringContainsString('Siswa', $indexHtml);
         $this->assertStringContainsString('2026/2027', $indexHtml);
-        $this->assertStringContainsString(route('pengumuman.edit', 42), $indexHtml);
-        $this->assertStringContainsString(route('pengumuman.destroy', 42), $indexHtml);
+        $this->assertStringContainsString(route('pengumuman.edit', sqidFor('pengumuman.edit', 42)), $indexHtml);
+        $this->assertStringContainsString(route('pengumuman.destroy', sqidFor('pengumuman.destroy', 42)), $indexHtml);
 
         $this->assertStringContainsString(route('pengumuman.store'), $createHtml);
         $this->assertStringContainsString('name="judul"', $createHtml);
@@ -291,7 +291,7 @@ class PengumumanModelAndViewTest extends TestCase
         $this->assertStringContainsString('tinymce.min.js', $createHtml);
         $this->assertStringContainsString("license_key: 'gpl'", $createHtml);
 
-        $this->assertStringContainsString(route('pengumuman.update', 42), $editHtml);
+        $this->assertStringContainsString(route('pengumuman.update', sqidFor('pengumuman.update', 42)), $editHtml);
         $this->assertStringContainsString('Sosialisasi Ujian Sekolah', $editHtml);
         $this->assertStringContainsString('tinymce.min.js', $editHtml);
         $this->assertStringContainsString("license_key: 'gpl'", $editHtml);

@@ -113,9 +113,9 @@ class AnggotaEkstrakurikulerTest extends TestCase
         $response = $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
             ->get(route('anggota-ekstrakurikuler.index', [
-                'tahun_ajaran_id' => $ta1->id,
-                'ekstrakurikuler_id' => $panahan->id,
-                'kelas_id' => $kelasA->id,
+                'tahun_ajaran_id' => $ta1->sqid,
+                'ekstrakurikuler_id' => $panahan->sqid,
+                'kelas_id' => $kelasA->sqid,
             ]));
 
         $response->assertOk()
@@ -152,7 +152,7 @@ class AnggotaEkstrakurikulerTest extends TestCase
 
         $response = $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
-            ->get(route('anggota-ekstrakurikuler.create', ['ekstrakurikuler_id' => $panahan->id]));
+            ->get(route('anggota-ekstrakurikuler.create', ['ekstrakurikuler_id' => $panahan->sqid]));
 
         $response->assertOk()
             ->assertSee('Eligible Aktif')
@@ -184,10 +184,10 @@ class AnggotaEkstrakurikulerTest extends TestCase
                 'anggota_kelas_id' => [$ak1->id, $ak2->id],
                 'pendaftaran' => 'Baru',
                 'keterangan' => 'Gelombang 1',
-                'redirect_to_ekstrakurikuler' => $panahan->id,
+                'redirect_to_ekstrakurikuler' => $panahan->sqid,
             ]);
 
-        $response->assertRedirect(route('ekstrakurikuler.show', $panahan->id))
+        $response->assertRedirect(route('ekstrakurikuler.show', $panahan))
             ->assertSessionHas('success', '2 Anggota Ekstrakurikuler berhasil disimpan.');
 
         $this->assertDatabaseHas('akademik_master_anggota_ekstrakuler', [
@@ -228,14 +228,14 @@ class AnggotaEkstrakurikulerTest extends TestCase
         // Mismatch TA: akTa2 (ta2) masuk ekskul panahanTa1 (ta1) -> ditolak
         $mismatchResponse = $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
-            ->from(route('ekstrakurikuler.show', $panahanTa1->id))
+            ->from(route('ekstrakurikuler.show', $panahanTa1))
             ->post(route('anggota-ekstrakurikuler.store'), [
                 'akademik_master_ekstrakuler_id' => $panahanTa1->id,
                 'anggota_kelas_id' => [$akTa2->id],
                 'pendaftaran' => 'Baru',
             ]);
 
-        $mismatchResponse->assertRedirect(route('ekstrakurikuler.show', $panahanTa1->id))
+        $mismatchResponse->assertRedirect(route('ekstrakurikuler.show', $panahanTa1))
             ->assertSessionHasErrors('anggota_kelas_id');
 
         // Berhasil daftar pada TA1 (panahanTa1) dan TA2 (futsalTa2) karena berbeda tahun ajaran
@@ -262,14 +262,14 @@ class AnggotaEkstrakurikulerTest extends TestCase
         // Duplikat di TA1 (mencoba daftar robotikTa1 ketika sudah di panahanTa1) -> ditolak
         $duplicateResponse = $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
-            ->from(route('ekstrakurikuler.show', $robotikTa1->id))
+            ->from(route('ekstrakurikuler.show', $robotikTa1))
             ->post(route('anggota-ekstrakurikuler.store'), [
                 'akademik_master_ekstrakuler_id' => $robotikTa1->id,
                 'anggota_kelas_id' => [$akTa1->id],
                 'pendaftaran' => 'Baru',
             ]);
 
-        $duplicateResponse->assertRedirect(route('ekstrakurikuler.show', $robotikTa1->id))
+        $duplicateResponse->assertRedirect(route('ekstrakurikuler.show', $robotikTa1))
             ->assertSessionHasErrors('anggota_kelas_id');
     }
 
@@ -299,15 +299,15 @@ class AnggotaEkstrakurikulerTest extends TestCase
 
         $updateResponse = $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
-            ->put(route('anggota-ekstrakurikuler.update', $anggota->id), [
+            ->put(route('anggota-ekstrakurikuler.update', $anggota), [
                 'anggota_kelas_id' => $ak->id,
                 'akademik_master_ekstrakuler_id' => $robotik->id,
                 'pendaftaran' => 'Lanjutan',
                 'keterangan' => 'Pindah minat',
-                'redirect_to_ekstrakurikuler' => $robotik->id,
+                'redirect_to_ekstrakurikuler' => $robotik->sqid,
             ]);
 
-        $updateResponse->assertRedirect(route('ekstrakurikuler.show', $robotik->id))
+        $updateResponse->assertRedirect(route('ekstrakurikuler.show', $robotik))
             ->assertSessionHas('success', 'Data Anggota Ekstrakurikuler berhasil diperbarui.');
 
         $this->assertSame($robotik->id, $siswa->fresh()->akademik_master_ekstrakuler_id);
@@ -320,11 +320,11 @@ class AnggotaEkstrakurikulerTest extends TestCase
 
         $destroyResponse = $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
-            ->delete(route('anggota-ekstrakurikuler.destroy', $anggota->id), [
-                'redirect_to_ekstrakurikuler' => $robotik->id,
+            ->delete(route('anggota-ekstrakurikuler.destroy', $anggota), [
+                'redirect_to_ekstrakurikuler' => $robotik->sqid,
             ]);
 
-        $destroyResponse->assertRedirect(route('ekstrakurikuler.show', $robotik->id))
+        $destroyResponse->assertRedirect(route('ekstrakurikuler.show', $robotik))
             ->assertSessionHas('success', 'Data Anggota Ekstrakurikuler berhasil dihapus.');
 
         $this->assertNull($siswa->fresh()->akademik_master_ekstrakuler_id);

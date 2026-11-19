@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin\DataPelengkap;
 
 use App\Http\Controllers\Controller;
-use App\Models\Admin\DataPelengkap\BerkebutuhanKhusus;
 use App\Http\Requests\Admin\DataPelengkap\BerkebutuhanKhususRequest;
+use App\Models\Admin\DataPelengkap\BerkebutuhanKhusus;
 use App\Services\Admin\DataPelengkap\BerkebutuhanKhususService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -15,19 +15,20 @@ class BerkebutuhanKhususController extends Controller
         protected BerkebutuhanKhususService $service
     ) {
         $this->middleware('role:super admin');
+        $this->authorizeResource(BerkebutuhanKhusus::class, 'berkebutuhan_khusus');
     }
 
     public function index(): View
     {
         return view('admin.dataPelengkap.berkebutuhanKhusus.index', [
-            'berkebutuhanKhusus' => $this->service->getAll()
+            'berkebutuhanKhusus' => $this->service->getAll(),
         ]);
     }
 
     public function create(): View
     {
         return view('admin.dataPelengkap.berkebutuhanKhusus.create');
-    }   
+    }
 
     public function store(BerkebutuhanKhususRequest $request): RedirectResponse
     {

@@ -312,4 +312,3 @@ class AnggotaJemputanService
             ->get();
     }
 }
-

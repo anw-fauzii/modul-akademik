@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\DataMaster\AnggotaKelasRequest;
 use App\Models\Admin\DataMaster\AnggotaKelas;
 use App\Models\Admin\DataMaster\Kelas;
 use App\Services\Admin\DataMaster\AnggotaKelasService;
+use App\Support\Sqid;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -17,6 +18,7 @@ class AnggotaKelasController extends Controller
         protected AnggotaKelasService $service
     ) {
         $this->middleware('role:super admin');
+        $this->authorizeResource(AnggotaKelas::class, 'anggota_kelas');
     }
 
     /**
@@ -122,7 +124,7 @@ class AnggotaKelasController extends Controller
     private function redirectAfterMutation(?int $redirectKelasId): RedirectResponse
     {
         if ($redirectKelasId !== null) {
-            return redirect()->route('kelas.show', $redirectKelasId);
+            return redirect()->route('kelas.show', Sqid::encodeFor(Kelas::class, $redirectKelasId));
         }
 
         return redirect()->route('anggota-kelas.index');

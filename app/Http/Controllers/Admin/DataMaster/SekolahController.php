@@ -15,6 +15,8 @@ class SekolahController extends Controller
         protected SekolahService $service
     ) {
         $this->middleware('role:super admin');
+        $this->authorizeResource(Sekolah::class, 'sekolah');
+        $this->middleware('can:toggleStatus,sekolah')->only(['toggleStatus']);
     }
 
     /**
@@ -90,4 +92,3 @@ class SekolahController extends Controller
             ->with('success', 'Status Identitas Sekolah berhasil diperbarui.');
     }
 }
-

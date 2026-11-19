@@ -2,6 +2,7 @@
 
 namespace App\Models\Admin\Pelajaran;
 
+use App\Models\Concerns\HasSqidRouteKey;
 use App\Models\Concerns\HasUnitMetadata;
 use Database\Factories\Admin\Pelajaran\JamPelajaranFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -28,6 +29,7 @@ class JamPelajaran extends Model
     /** @use HasFactory<JamPelajaranFactory> */
     use HasFactory;
 
+    use HasSqidRouteKey;
     use HasUnitMetadata;
 
     /**

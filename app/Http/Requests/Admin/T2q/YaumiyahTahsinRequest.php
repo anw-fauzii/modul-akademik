@@ -9,4 +9,3 @@ class YaumiyahTahsinRequest extends BaseYaumiyahT2qRequest
         return true;
     }
 }
-

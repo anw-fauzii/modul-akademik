@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\DataMaster\AnggotaJemputanRequest;
 use App\Models\Admin\DataMaster\AnggotaJemputan;
 use App\Models\Admin\DataMaster\Jemputan;
 use App\Services\Admin\DataMaster\AnggotaJemputanService;
+use App\Support\Sqid;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -17,6 +18,7 @@ class AnggotaJemputanController extends Controller
         protected AnggotaJemputanService $service
     ) {
         $this->middleware('role:super admin');
+        $this->authorizeResource(AnggotaJemputan::class, 'anggota_jemputan');
     }
 
     /**
@@ -133,10 +135,9 @@ class AnggotaJemputanController extends Controller
     private function redirectAfterMutation(?int $redirectJemputanId): RedirectResponse
     {
         if ($redirectJemputanId !== null) {
-            return redirect()->route('jemputan.show', $redirectJemputanId);
+            return redirect()->route('jemputan.show', Sqid::encodeFor(Jemputan::class, $redirectJemputanId));
         }
 
         return redirect()->route('anggota-jemputan.index');
     }
 }
-

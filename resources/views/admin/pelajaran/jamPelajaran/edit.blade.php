@@ -32,7 +32,7 @@
 
         <div class="main-card card">
             <div class="card-body">
-                <form method="post" action="{{ route('jam-pelajaran.update', $jamPelajaran->id) }}" id="editForm">
+                <form method="post" action="{{ route('jam-pelajaran.update', $jamPelajaran) }}" id="editForm">
                     @csrf
                     @method('PUT')
                     @include('admin.pelajaran.jamPelajaran._form')

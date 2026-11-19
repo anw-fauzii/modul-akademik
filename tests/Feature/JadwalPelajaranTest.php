@@ -111,8 +111,8 @@ class JadwalPelajaranTest extends TestCase
         DB::enableQueryLog();
 
         $response = $this->actingAs($user)->get(route('jadwal-pelajaran.index', [
-            'tahun_ajaran_id' => $ta->id,
-            'kelas_id' => $kelas->id,
+            'tahun_ajaran_id' => $ta->sqid,
+            'kelas_id' => $kelas->sqid,
         ]));
 
         $queries = DB::getQueryLog();

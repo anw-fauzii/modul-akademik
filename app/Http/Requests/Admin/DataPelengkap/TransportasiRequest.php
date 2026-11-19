@@ -30,7 +30,7 @@ class TransportasiRequest extends FormRequest
     {
         return [
             'nama_transportasi.required' => 'Nama Transportasi wajib diisi.',
-            'nama_transportasi.unique'   => 'Nama transportasi ini sudah ada dalam sistem.',
+            'nama_transportasi.unique' => 'Nama transportasi ini sudah ada dalam sistem.',
         ];
     }
 }

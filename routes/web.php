@@ -55,7 +55,7 @@ Route::get('/sso/authuser', [SSOController::class, 'connectUser'])->name('sso.au
 
 Auth::routes();
 
-Route::middleware(['auth', 'sso.check', 'nocache'])->group(function () {
+Route::middleware(['auth', 'sso.check', 'nocache', 'sqid.decode'])->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('/wali-kelas/dashboard', [WaliKelasDashboardController::class, 'index'])
         ->name('wali-kelas.dashboard');
@@ -173,7 +173,8 @@ Route::middleware(['auth', 'sso.check', 'nocache'])->group(function () {
         ->parameters(['sekolah' => 'sekolah']);
 
     // Data Pelengkap
-    Route::resource('/data-pelengkap/berkebutuhan-khusus', BerkebutuhanKhususController::class);
+    Route::resource('/data-pelengkap/berkebutuhan-khusus', BerkebutuhanKhususController::class)
+        ->parameters(['berkebutuhan-khusus' => 'berkebutuhan_khusus']);
     Route::resource('/data-pelengkap/jenjang-pendidikan', JenjangPendidikanController::class);
     Route::resource('/data-pelengkap/pekerjaan', PekerjaanController::class);
     Route::resource('/data-pelengkap/penghasilan', PenghasilanController::class);

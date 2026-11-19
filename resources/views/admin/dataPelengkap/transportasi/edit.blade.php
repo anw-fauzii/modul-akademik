@@ -35,7 +35,7 @@
                 Update Data
             </div>
             <div class="card-body">
-                <form method="post" action="{{ route('transportasi.update', $transportasi->id) }}" id="editForm">
+                <form method="post" action="{{ route('transportasi.update', $transportasi) }}" id="editForm">
                     @csrf
                     @method('PUT')
                     @include('admin.dataPelengkap.transportasi._form')

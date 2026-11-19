@@ -30,7 +30,7 @@ class JenjangPendidikanRequest extends FormRequest
     {
         return [
             'nama_jenjang_pendidikan.required' => 'Nama Jenjang Pendidikan wajib diisi.',
-            'nama_jenjang_pendidikan.unique'   => 'Nama jenjang pendidikan ini sudah ada dalam sistem.',
+            'nama_jenjang_pendidikan.unique' => 'Nama jenjang pendidikan ini sudah ada dalam sistem.',
         ];
     }
 }

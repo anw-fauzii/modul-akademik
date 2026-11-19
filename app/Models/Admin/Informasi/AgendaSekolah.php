@@ -3,6 +3,7 @@
 namespace App\Models\Admin\Informasi;
 
 use App\Models\Admin\Informasi\Concerns\HasInformasiTahunAjaranAndJenis;
+use App\Models\Concerns\HasSqidRouteKey;
 use App\Models\Concerns\HasUnitMetadata;
 use Database\Factories\Admin\Informasi\AgendaSekolahFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -30,6 +31,7 @@ class AgendaSekolah extends Model
     use HasFactory;
 
     use HasInformasiTahunAjaranAndJenis;
+    use HasSqidRouteKey;
     use HasUnitMetadata;
 
     /**

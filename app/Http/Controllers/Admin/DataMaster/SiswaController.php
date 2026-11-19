@@ -17,6 +17,7 @@ class SiswaController extends Controller
         protected SiswaService $service
     ) {
         $this->middleware('role:super admin');
+        $this->authorizeResource(Siswa::class, 'siswa');
     }
 
     /**

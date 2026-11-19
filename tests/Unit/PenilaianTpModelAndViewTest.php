@@ -968,7 +968,7 @@ class PenilaianTpModelAndViewTest extends TestCase
             $this->assertStringContainsString('np-mid-col', $nilaiHtml);
             $this->assertStringContainsString('npSumatifGroupTh', $nilaiHtml);
             $this->assertStringContainsString('btn-edit-aspek-modal', $nilaiHtml);
-            $this->assertStringContainsString(route('penilaian-tp.aspek.update', 33), $nilaiHtml);
+            $this->assertStringContainsString(route('penilaian-tp.aspek.update', sqidFor('penilaian-tp.aspek.update', 33)), $nilaiHtml);
             $this->assertStringContainsString('Menghafal surat pendek pilihan.', $nilaiHtml);
 
             $nilaiMidHtml = view('admin.penilaian.nilaiTp.index', [

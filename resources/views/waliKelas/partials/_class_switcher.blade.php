@@ -9,7 +9,7 @@
             $isCurrentClass = (int) $kelasOption->id === (int) $selectedKelas->id;
             $optionRole = trim((string) $kelasOption->karyawan_nipy) === $nipy ? 'Wali Kelas' : 'Pendamping';
         @endphp
-        <a href="{{ route($switcherRoute, ['kelas_id' => $kelasOption->id]) }}"
+        <a href="{{ route($switcherRoute, ['kelas_id' => $kelasOption->sqid]) }}"
             class="wk-class-pill {{ $isCurrentClass ? 'is-active' : '' }}">
             <span>{{ $kelasOption->nama_kelas }}</span>
             <span style="opacity: 0.8; font-weight: 600;">({{ $optionRole }})</span>

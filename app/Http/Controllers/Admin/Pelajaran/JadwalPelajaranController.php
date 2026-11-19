@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Pelajaran\JadwalPelajaranRequest;
 use App\Models\Admin\Pelajaran\JadwalPelajaran;
 use App\Services\Admin\Pelajaran\JadwalPelajaranService;
+use App\Support\Sqid;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -16,6 +17,8 @@ class JadwalPelajaranController extends Controller
         protected JadwalPelajaranService $service
     ) {
         $this->middleware('role:super admin');
+        $this->authorizeResource(JadwalPelajaran::class, 'jadwal_pelajaran');
+        $this->middleware('can:toggleStatus,jadwal_pelajaran')->only(['toggleStatus']);
     }
 
     /**
@@ -60,10 +63,10 @@ class JadwalPelajaranController extends Controller
         $validated = $request->validated();
         $this->service->store($validated);
 
-        return redirect()->route('jadwal-pelajaran.index', array_filter([
+        return redirect()->route('jadwal-pelajaran.index', Sqid::encodeQueryParams(array_filter([
             'tahun_ajaran_id' => $validated['akademik_master_tahun_ajaran_id'] ?? null,
             'kelas_id' => $validated['akademik_master_kelas_id'] ?? null,
-        ]))->with('success', 'Data Jadwal Pelajaran berhasil disimpan.');
+        ])))->with('success', 'Data Jadwal Pelajaran berhasil disimpan.');
     }
 
     /**
@@ -85,10 +88,10 @@ class JadwalPelajaranController extends Controller
         $validated = $request->validated();
         $this->service->update($jadwalPelajaran, $validated);
 
-        return redirect()->route('jadwal-pelajaran.index', array_filter([
+        return redirect()->route('jadwal-pelajaran.index', Sqid::encodeQueryParams(array_filter([
             'tahun_ajaran_id' => $validated['akademik_master_tahun_ajaran_id'] ?? null,
             'kelas_id' => $validated['akademik_master_kelas_id'] ?? null,
-        ]))->with('success', 'Data Jadwal Pelajaran berhasil diperbarui.');
+        ])))->with('success', 'Data Jadwal Pelajaran berhasil diperbarui.');
     }
 
     /**

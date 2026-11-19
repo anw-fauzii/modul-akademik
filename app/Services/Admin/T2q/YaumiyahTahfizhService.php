@@ -42,4 +42,3 @@ class YaumiyahTahfizhService extends BaseYaumiyahT2qService
         ];
     }
 }
-

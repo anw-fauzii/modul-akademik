@@ -210,7 +210,7 @@
             <select name="tahun_ajaran_id" id="filter_tahun_ajaran_id"
                 class="form-control @error('tahun_ajaran_id') is-invalid @enderror" required>
                 @foreach ($tahunAjaran ?? [] as $ta)
-                    <option value="{{ $ta->id }}"
+                    <option value="{{ $ta->sqid }}"
                         data-tahun-ajaran-id="{{ $ta->id }}"
                         @selected((string) $val('tahun_ajaran_id', $selectedTahunAjaranId ?? null) === (string) $ta->id)>
                         {{ $ta->nama_tahun_ajaran }} - Semester {{ strtoupper((string) $ta->semester) }} {{ $ta->is_active ? '[Aktif]' : '' }}

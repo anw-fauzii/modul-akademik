@@ -4,6 +4,7 @@ namespace App\Models\Admin\DataMaster;
 
 use App\Models\Admin\T2q\YaumiyahTahfizh;
 use App\Models\Admin\T2q\YaumiyahTahsin;
+use App\Models\Concerns\HasSqidRouteKey;
 use Database\Factories\Admin\DataMaster\AnggotaT2qFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -29,6 +30,8 @@ class AnggotaT2q extends Model
 {
     /** @use HasFactory<AnggotaT2qFactory> */
     use HasFactory;
+
+    use HasSqidRouteKey;
 
     public const array PENDAFTARAN_OPTIONS = [
         'Baru',

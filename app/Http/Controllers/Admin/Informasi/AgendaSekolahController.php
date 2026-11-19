@@ -16,6 +16,7 @@ class AgendaSekolahController extends Controller
         protected AgendaSekolahService $service
     ) {
         $this->middleware('role:super admin');
+        $this->authorizeResource(AgendaSekolah::class, 'agenda_sekolah');
     }
 
     /**

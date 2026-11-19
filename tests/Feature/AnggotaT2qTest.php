@@ -117,10 +117,10 @@ class AnggotaT2qTest extends TestCase
         $response = $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
             ->get(route('anggota-t2q.index', [
-                'tahun_ajaran_id' => $taAktif->id,
+                'tahun_ajaran_id' => $taAktif->sqid,
                 'karyawan_nipy' => $guruSatu->nipy,
                 'tingkat' => '1',
-                'kelas_id' => $kelasSatu->id,
+                'kelas_id' => $kelasSatu->sqid,
             ]));
 
         $response->assertOk()
@@ -158,7 +158,7 @@ class AnggotaT2qTest extends TestCase
 
         $response = $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
-            ->get(route('anggota-t2q.create', ['tahun_ajaran_id' => $taAktif->id]));
+            ->get(route('anggota-t2q.create', ['tahun_ajaran_id' => $taAktif->sqid]));
 
         $response->assertOk()
             ->assertSee('Eligible T2Q')
@@ -192,7 +192,7 @@ class AnggotaT2qTest extends TestCase
         $autoResponse = $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
             ->post(route('anggota-t2q.store'), [
-                'tahun_ajaran_id' => $taAktif->id,
+                'tahun_ajaran_id' => $taAktif->sqid,
                 'karyawan_nipy' => $guruT2q->nipy,
                 'tingkat' => AnggotaT2q::TINGKAT_AUTO,
                 'pendaftaran' => 'Baru',
@@ -222,7 +222,7 @@ class AnggotaT2qTest extends TestCase
         $customResponse = $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
             ->post(route('anggota-t2q.store'), [
-                'tahun_ajaran_id' => $taAktif->id,
+                'tahun_ajaran_id' => $taAktif->sqid,
                 'karyawan_nipy' => $guruT2q->nipy,
                 'tingkat' => AnggotaT2q::TINGKAT_CUSTOM,
                 'tingkat_custom' => 'TK-A',
@@ -264,16 +264,16 @@ class AnggotaT2qTest extends TestCase
         // Mismatch TA: akTa2 (ta2) dikirim bersama tahun_ajaran_id = ta1 -> ditolak
         $mismatchResponse = $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
-            ->from(route('anggota-t2q.create', ['tahun_ajaran_id' => $ta1->id]))
+            ->from(route('anggota-t2q.create', ['tahun_ajaran_id' => $ta1->sqid]))
             ->post(route('anggota-t2q.store'), [
-                'tahun_ajaran_id' => $ta1->id,
+                'tahun_ajaran_id' => $ta1->sqid,
                 'karyawan_nipy' => $guruSatu->nipy,
                 'tingkat' => '1',
                 'pendaftaran' => 'Baru',
                 'anggota_kelas_id' => [$akTa2->id],
             ]);
 
-        $mismatchResponse->assertRedirect(route('anggota-t2q.create', ['tahun_ajaran_id' => $ta1->id]))
+        $mismatchResponse->assertRedirect(route('anggota-t2q.create', ['tahun_ajaran_id' => $ta1->sqid]))
             ->assertSessionHasErrors('anggota_kelas_id');
 
         // Berhasil daftar di TA1 & TA2 karena beda tahun ajaran
@@ -305,7 +305,7 @@ class AnggotaT2qTest extends TestCase
             ->withSession(['access_token' => 'valid-token'])
             ->from(route('anggota-t2q.create'))
             ->post(route('anggota-t2q.store'), [
-                'tahun_ajaran_id' => $ta1->id,
+                'tahun_ajaran_id' => $ta1->sqid,
                 'karyawan_nipy' => $guruDua->nipy,
                 'tingkat' => '2',
                 'pendaftaran' => 'Baru',
@@ -340,14 +340,14 @@ class AnggotaT2qTest extends TestCase
 
         $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
-            ->get(route('anggota-t2q.edit', $anggota->id))
+            ->get(route('anggota-t2q.edit', $anggota))
             ->assertOk()
             ->assertSee('Nadia Putri')
             ->assertSee('Samakan dg Kelas');
 
         $updateResponse = $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
-            ->put(route('anggota-t2q.update', $anggota->id), [
+            ->put(route('anggota-t2q.update', $anggota), [
                 'anggota_kelas_id' => $ak->id,
                 'karyawan_nipy' => $guruDua->nipy,
                 'tingkat' => 'A',
@@ -368,7 +368,7 @@ class AnggotaT2qTest extends TestCase
 
         $destroyResponse = $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
-            ->delete(route('anggota-t2q.destroy', $anggota->id));
+            ->delete(route('anggota-t2q.destroy', $anggota));
 
         $destroyResponse->assertRedirect(route('anggota-t2q.index'))
             ->assertSessionHas('success', 'Data Anggota T2Q berhasil dihapus.');

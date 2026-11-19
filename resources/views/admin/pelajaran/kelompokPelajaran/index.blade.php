@@ -111,12 +111,12 @@
                                     </td>
                                     <td class="text-center">
                                         <x-action-dropdown>
-                                            <a href="{{ route('kelompok-pelajaran.edit', $item->id) }}" class="action-dropdown-item" role="menuitem">
+                                            <a href="{{ route('kelompok-pelajaran.edit', $item) }}" class="action-dropdown-item" role="menuitem">
                                                 <i class="fa fa-edit text-primary action-item-icon"></i>
                                                 <span>Edit Data</span>
                                             </a>
                                             <div class="action-dropdown-divider"></div>
-                                            <form action="{{ route('kelompok-pelajaran.destroy', $item->id) }}" method="POST" class="delete-form">
+                                            <form action="{{ route('kelompok-pelajaran.destroy', $item) }}" method="POST" class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="button" class="action-dropdown-item action-dropdown-item--danger delete-button" role="menuitem">

@@ -9,6 +9,7 @@ use App\Http\Requests\Admin\Presensi\PresensiSiswaBulkRequest;
 use App\Http\Requests\Admin\Presensi\PresensiSiswaRequest;
 use App\Models\Admin\Presensi\PresensiSiswa;
 use App\Services\WaliKelas\WaliKelasPresensiService;
+use App\Support\Sqid;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,6 +23,11 @@ class PresensiSiswaController extends Controller
         private readonly WaliKelasPresensiService $service,
     ) {
         $this->middleware('role:super admin|wali kelas');
+        $this->middleware('can:viewAny,'.PresensiSiswa::class)->only(['index', 'rekap', 'tahunan']);
+        $this->middleware('can:create,'.PresensiSiswa::class)->only(['bulk', 'bulkStore']);
+        $this->middleware('can:bulkDestroy,'.PresensiSiswa::class)->only(['bulkDestroy']);
+        $this->middleware('can:update,presensi_siswa')->only(['edit', 'update']);
+        $this->middleware('can:delete,presensi_siswa')->only(['destroy']);
     }
 
     /**
@@ -63,10 +69,10 @@ class PresensiSiswaController extends Controller
         $bulan = Carbon::parse($validated['tanggal'])->format('Y-m');
 
         return redirect()
-            ->route('wali-kelas.presensi-siswa.index', [
+            ->route('wali-kelas.presensi-siswa.index', Sqid::encodeQueryParams([
                 'kelas_id' => $validated['kelas_id'],
                 'bulan' => $bulan,
-            ])
+            ]))
             ->with('success', "Berhasil menyimpan presensi untuk {$savedCount} siswa.");
     }
 
@@ -120,7 +126,7 @@ class PresensiSiswaController extends Controller
         $this->service->deleteForUser($request->user(), $presensi_siswa);
 
         return redirect()
-            ->route('wali-kelas.presensi-siswa.index', $this->extractIndexRedirectQuery($request))
+            ->route('wali-kelas.presensi-siswa.index', Sqid::encodeQueryParams($this->extractIndexRedirectQuery($request)))
             ->with('success', 'Data presensi siswa berhasil dihapus.');
     }
 

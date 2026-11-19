@@ -4,6 +4,7 @@ namespace App\Models\Admin\TujuanPembelajaran;
 
 use App\Models\Admin\DataMaster\TahunAjaran;
 use App\Models\Admin\Pelajaran\MataPelajaran;
+use App\Models\Concerns\HasSqidRouteKey;
 use Database\Factories\Admin\TujuanPembelajaran\TujuanPembelajaranFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -33,6 +34,8 @@ class TujuanPembelajaran extends Model
 {
     /** @use HasFactory<TujuanPembelajaranFactory> */
     use HasFactory;
+
+    use HasSqidRouteKey;
 
     /**
      * Pilihan Fase pada Kurikulum Merdeka sesuai jenjang sekolah.

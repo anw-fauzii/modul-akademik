@@ -60,6 +60,7 @@
                 <option value="" data-tahun-ajaran-id="">-- Pilih Layanan Jemputan --</option>
                 @foreach ($jemputan as $item)
                     <option value="{{ $item->id }}"
+                        data-sqid="{{ $item->sqid }}"
                         data-tahun-ajaran-id="{{ $item->akademik_master_tahun_ajaran_id }}"
                         @selected((string) $val('akademik_master_jemputan_id', $preselectedJemputanId ?? null) === (string) $item->id)>
                         {{ $item->petugas?->nama_gelar ?? ('Petugas #' . $item->karyawan_nipy) }}

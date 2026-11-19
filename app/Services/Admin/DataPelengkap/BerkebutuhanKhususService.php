@@ -12,7 +12,7 @@ class BerkebutuhanKhususService
         return BerkebutuhanKhusus::orderBy('nama_berkebutuhan_khusus')->get();
     }
 
-    public function store(array $data): BerkebutuhanKhusus  
+    public function store(array $data): BerkebutuhanKhusus
     {
         return BerkebutuhanKhusus::create($data);
     }

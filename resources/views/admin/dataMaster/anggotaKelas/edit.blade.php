@@ -24,7 +24,7 @@
 @php
     $redirectKelasId = old('redirect_to_kelas', $fromKelasId ?? null);
     $backUrl = is_numeric($redirectKelasId) && (int) $redirectKelasId > 0
-        ? route('kelas.show', (int) $redirectKelasId)
+        ? route('kelas.show', \App\Support\Sqid::encodeFor(\App\Models\Admin\DataMaster\Kelas::class, (int) $redirectKelasId))
         : ($anggotaKelas->akademik_master_kelas_id
             ? route('kelas.show', $anggotaKelas->akademik_master_kelas_id)
             : route('kelas.index'));
@@ -41,11 +41,11 @@
 
         <div class="main-card card">
             <div class="card-body">
-                <form method="post" action="{{ route('anggota-kelas.update', $anggotaKelas->id) }}" id="editForm">
+                <form method="post" action="{{ route('anggota-kelas.update', $anggotaKelas) }}" id="editForm">
                     @csrf
                     @method('PUT')
                     @if (is_numeric($redirectKelasId) && (int) $redirectKelasId > 0)
-                        <input type="hidden" name="redirect_to_kelas" value="{{ (int) $redirectKelasId }}">
+                        <input type="hidden" name="redirect_to_kelas" value="{{ \App\Support\Sqid::encodeFor(\App\Models\Admin\DataMaster\Kelas::class, (int) $redirectKelasId) }}">
                     @endif
                     @include('admin.dataMaster.anggotaKelas._form')
                 </form>

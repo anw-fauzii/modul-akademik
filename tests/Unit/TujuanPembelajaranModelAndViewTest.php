@@ -347,9 +347,9 @@ class TujuanPembelajaranModelAndViewTest extends TestCase
         $this->assertStringContainsString('Matematika', $indexHtml);
         $this->assertStringContainsString('Bilangan', $indexHtml);
         $this->assertStringContainsString('Bilangan Cacah 1-20', $indexHtml);
-        $this->assertStringContainsString(route('tujuan-pembelajaran.toggle-status', 25), $indexHtml);
-        $this->assertStringContainsString(route('tujuan-pembelajaran.edit', 25), $indexHtml);
-        $this->assertStringContainsString(route('tujuan-pembelajaran.destroy', 25), $indexHtml);
+        $this->assertStringContainsString(route('tujuan-pembelajaran.toggle-status', sqidFor('tujuan-pembelajaran.toggle-status', 25)), $indexHtml);
+        $this->assertStringContainsString(route('tujuan-pembelajaran.edit', sqidFor('tujuan-pembelajaran.edit', 25)), $indexHtml);
+        $this->assertStringContainsString(route('tujuan-pembelajaran.destroy', sqidFor('tujuan-pembelajaran.destroy', 25)), $indexHtml);
         $this->assertStringContainsString(route('tujuan-pembelajaran.export'), $indexHtml);
         $this->assertStringContainsString(route('tujuan-pembelajaran.template'), $indexHtml);
         $this->assertStringContainsString(route('tujuan-pembelajaran.import'), $indexHtml);
@@ -366,7 +366,7 @@ class TujuanPembelajaranModelAndViewTest extends TestCase
         $this->assertStringContainsString('name="kode_tp"', $createHtml);
         $this->assertStringContainsString('name="tujuan_pembelajaran"', $createHtml);
 
-        $this->assertStringContainsString(route('tujuan-pembelajaran.update', 25), $editHtml);
+        $this->assertStringContainsString(route('tujuan-pembelajaran.update', sqidFor('tujuan-pembelajaran.update', 25)), $editHtml);
         $this->assertStringContainsString('tp-form-shell', $editHtml);
         $this->assertStringContainsString('tp-grid-12', $editHtml);
         $this->assertStringNotContainsString('col-md-1', $editHtml);

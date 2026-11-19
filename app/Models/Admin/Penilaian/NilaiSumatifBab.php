@@ -41,4 +41,3 @@ class NilaiSumatifBab extends Model
         return $this->belongsTo(AnggotaKelas::class, 'anggota_kelas_id');
     }
 }
-

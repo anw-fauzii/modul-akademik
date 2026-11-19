@@ -81,9 +81,9 @@
                     </div>
                 </div>
                 <div class="page-title-actions d-flex flex-wrap align-items-center" style="gap: 0.5rem;">
-                    <a href="{{ route($presensiRoutePrefix.'.bulk', array_filter([
+                    <a href="{{ route($presensiRoutePrefix.'.bulk', \App\Support\Sqid::encodeQueryParams(array_filter([
                         'kelas_id' => $filters['kelas_id'],
-                    ])) }}"
+                    ]))) }}"
                         class="btn text-white shadow-sm font-weight-bold"
                         style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 8px;">
                         <i class="fa fa-layer-group mr-1"></i> Input Data
@@ -241,7 +241,7 @@
                         <select id="rekap_tahun_ajaran_id" name="tahun_ajaran_id" class="filter-control">
                             <option value="">Semua Tahun Ajaran</option>
                             @foreach ($tahunAjaranOptions as $tahunAjaran)
-                                <option value="{{ $tahunAjaran->id }}" @selected($filters['tahun_ajaran_id'] === $tahunAjaran->id)>
+                                <option value="{{ $tahunAjaran->sqid }}" @selected($filters['tahun_ajaran_id'] === $tahunAjaran->id)>
                                     {{ $tahunAjaran->nama_tahun_ajaran }} ({{ $tahunAjaran->semester }})@if ($tahunAjaran->is_active) (Aktif)@endif
                                 </option>
                             @endforeach
@@ -253,7 +253,7 @@
                         <select id="rekap_kelas_id" name="kelas_id" class="filter-control">
                             <option value="">Semua Kelas (Rekap Per Kelas)</option>
                             @foreach ($kelasOptions as $kelas)
-                                <option value="{{ $kelas->id }}"
+                                <option value="{{ $kelas->sqid }}"
                                     data-tahun-ajaran-id="{{ $kelas->akademik_master_tahun_ajaran_id }}"
                                     @selected($filters['kelas_id'] === $kelas->id)>
                                     {{ $kelas->jenjang_kelas }} - {{ $kelas->nama_kelas }}
@@ -495,17 +495,17 @@
                                                 </td>
                                                 <td class="text-center no-print">
                                                     <div class="d-inline-flex align-items-center gap-1">
-                                                        <a href="{{ route($presensiRoutePrefix.'.rekap', array_filter([
+                                                        <a href="{{ route($presensiRoutePrefix.'.rekap', \App\Support\Sqid::encodeQueryParams(array_filter([
                                                             'tahun_ajaran_id' => $filters['tahun_ajaran_id'],
-                                                            'kelas_id' => $kelas->id,
+                                                            'kelas_id' => $kelas->sqid,
                                                             'bulan' => $filters['bulan'],
                                                             'include_weekend' => $filters['include_weekend'] ? '1' : null,
-                                                        ])) }}"
+                                                        ]))) }}"
                                                             class="btn btn-sm btn-primary" style="border-radius: 7px;">
                                                             <i class="fa fa-users mr-1"></i> Siswa
                                                         </a>
                                                         <a href="{{ route($presensiRoutePrefix.'.index', [
-                                                            'kelas_id' => $kelas->id,
+                                                            'kelas_id' => $kelas->sqid,
                                                             'bulan' => $filters['bulan'],
                                                         ]) }}"
                                                             class="btn btn-sm btn-outline-secondary" style="border-radius: 7px;"

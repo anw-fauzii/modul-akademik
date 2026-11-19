@@ -18,6 +18,7 @@ class KelasController extends Controller
         protected KelasService $service
     ) {
         $this->middleware('role:super admin');
+        $this->authorizeResource(Kelas::class, 'kelas');
     }
 
     /**

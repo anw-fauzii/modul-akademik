@@ -98,7 +98,7 @@ class EkstrakurikulerModelAndViewTest extends TestCase
         $this->assertStringContainsString('Gratis', $rendered);
         $this->assertStringContainsString('0 Siswa', $rendered);
         $this->assertStringContainsString('Pembina belum ditentukan', $rendered);
-        $this->assertStringContainsString(route('ekstrakurikuler.show', 1), $rendered);
+        $this->assertStringContainsString(route('ekstrakurikuler.show', sqidFor('ekstrakurikuler.show', 1)), $rendered);
         $this->assertStringContainsString(route('ekstrakurikuler.index'), view('layouts.sidebar')->render());
     }
 
@@ -152,7 +152,7 @@ class EkstrakurikulerModelAndViewTest extends TestCase
             'karyawan' => new Collection([$pembina]),
         ])->render();
 
-        $this->assertStringContainsString(route('ekstrakurikuler.update', 5), $editHtml);
+        $this->assertStringContainsString(route('ekstrakurikuler.update', sqidFor('ekstrakurikuler.update', 5)), $editHtml);
         $this->assertStringContainsString('name="_method" value="PUT"', $editHtml);
         $this->assertStringContainsString('Robotik', $editHtml);
         $this->assertStringContainsString('120000', $editHtml);
@@ -284,9 +284,9 @@ class EkstrakurikulerModelAndViewTest extends TestCase
         $this->assertStringContainsString('Bagas Pratama', $html);
         $this->assertStringContainsString('name="anggota_kelas_id[]" value="71"', $html);
         $this->assertStringContainsString(route('anggota-ekstrakurikuler.store'), $html);
-        $this->assertStringContainsString('name="redirect_to_ekstrakurikuler" value="5"', $html);
-        $this->assertStringContainsString(route('anggota-ekstrakurikuler.edit', ['anggota_ekstrakurikuler' => 55, 'from_ekstrakurikuler' => 5]), $html);
-        $this->assertStringContainsString(route('anggota-ekstrakurikuler.destroy', 55), $html);
+        $this->assertStringContainsString('name="redirect_to_ekstrakurikuler" value="'.sqidParam('redirect_to_ekstrakurikuler', 5).'"', $html);
+        $this->assertStringContainsString(route('anggota-ekstrakurikuler.edit', ['anggota_ekstrakurikuler' => sqidFor('anggota-ekstrakurikuler.edit', 55), 'from_ekstrakurikuler' => sqidParam('from_ekstrakurikuler', 5)]), $html);
+        $this->assertStringContainsString(route('anggota-ekstrakurikuler.destroy', sqidFor('anggota-ekstrakurikuler.destroy', 55)), $html);
         $this->assertStringContainsString('id="openTambahAnggotaModalBtn"', $html);
         $this->assertStringContainsString('id="tambahAnggotaModal"', $html);
         $this->assertStringNotContainsString('ak-modal-overlay is-open', $html);

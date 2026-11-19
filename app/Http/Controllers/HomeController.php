@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Admin\DataMaster\Karyawan;
+use App\Models\Admin\DataMaster\Kelas;
 use App\Models\Admin\DataMaster\TahunAjaran;
 use App\Models\Admin\DataPelengkap\BerkebutuhanKhusus;
 use App\Models\Admin\DataPelengkap\JenjangPendidikan;
@@ -23,6 +24,7 @@ class HomeController extends Controller
     ) {
         $this->middleware('auth');
         $this->middleware('role:super admin|wali kelas');
+        $this->middleware('can:viewAny,'.Kelas::class)->only(['index']);
         $this->waliKelasDashboardService ??= app(WaliKelasDashboardService::class);
     }
 

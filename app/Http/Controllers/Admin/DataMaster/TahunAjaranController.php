@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin\DataMaster;
 
 use App\Http\Controllers\Controller;
-use App\Models\Admin\DataMaster\TahunAjaran;
 use App\Http\Requests\Admin\DataMaster\TahunAjaranRequest;
+use App\Models\Admin\DataMaster\TahunAjaran;
 use App\Services\Admin\DataMaster\TahunAjaranService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -15,12 +15,14 @@ class TahunAjaranController extends Controller
         protected TahunAjaranService $service
     ) {
         $this->middleware('role:super admin');
+        $this->authorizeResource(TahunAjaran::class, 'tahun_ajaran');
+        $this->middleware('can:toggleStatus,tahun_ajaran')->only(['toggleActive']);
     }
 
     public function index(): View
     {
         return view('admin.dataMaster.tahunAjaran.index', [
-            'tahunAjaran' => $this->service->getAll()
+            'tahunAjaran' => $this->service->getAll(),
         ]);
     }
 

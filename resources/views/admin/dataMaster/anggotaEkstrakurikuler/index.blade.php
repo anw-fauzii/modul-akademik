@@ -55,7 +55,7 @@
                         <select name="tahun_ajaran_id" id="filter_tahun_ajaran_id" class="filter-control">
                             <option value="">-- Semua Tahun Ajaran --</option>
                             @foreach ($tahunAjaran as $ta)
-                                <option value="{{ $ta->id }}" @selected((string) $selectedTahunAjaranId === (string) $ta->id)>
+                                <option value="{{ $ta->sqid }}" @selected((string) $selectedTahunAjaranId === (string) $ta->id)>
                                     {{ $ta->nama_tahun_ajaran }} - Semester {{ strtoupper($ta->semester) }} {{ $ta->is_active ? '(Aktif)' : '' }}
                                 </option>
                             @endforeach
@@ -69,7 +69,7 @@
                         <select name="ekstrakurikuler_id" id="filter_ekstrakurikuler_id" class="filter-control">
                             <option value="">-- Semua Ekstrakurikuler --</option>
                             @foreach ($ekstrakurikuler as $ekskul)
-                                <option value="{{ $ekskul->id }}" @selected((string) $selectedEkstrakurikulerId === (string) $ekskul->id)>
+                                <option value="{{ $ekskul->sqid }}" @selected((string) $selectedEkstrakurikulerId === (string) $ekskul->id)>
                                     {{ $ekskul->nama_ekstrakurikuler }} ({{ strtoupper($ekskul->unit) }})
                                     @if ($ekskul->tahunAjaran)
                                         — {{ $ekskul->tahunAjaran->nama_tahun_ajaran }} Smt {{ strtoupper($ekskul->tahunAjaran->semester) }}
@@ -86,7 +86,7 @@
                         <select name="kelas_id" id="filter_kelas_id" class="filter-control">
                             <option value="">-- Semua Kelas --</option>
                             @foreach ($kelas as $k)
-                                <option value="{{ $k->id }}" @selected((string) $selectedKelasId === (string) $k->id)>
+                                <option value="{{ $k->sqid }}" @selected((string) $selectedKelasId === (string) $k->id)>
                                     {{ $k->nama_kelas }} ({{ strtoupper($k->jenjang_kelas) }})
                                     @if ($k->tahunAjaran)
                                         — {{ $k->tahunAjaran->nama_tahun_ajaran }} Smt {{ strtoupper($k->tahunAjaran->semester) }}
@@ -164,7 +164,7 @@
                                     </td>
                                     <td>
                                         @if ($ekskul)
-                                            <a href="{{ route('ekstrakurikuler.show', $ekskul->id) }}"
+                                            <a href="{{ route('ekstrakurikuler.show', $ekskul) }}"
                                                 class="font-weight-bold text-slate-800 text-decoration-none">
                                                 {{ $ekskul->nama_ekstrakurikuler }}
                                             </a>
@@ -215,12 +215,12 @@
                                     </td>
                                     <td class="text-center">
                                         <x-action-dropdown>
-                                            <a href="{{ route('anggota-ekstrakurikuler.edit', $item->id) }}" class="action-dropdown-item" role="menuitem">
+                                            <a href="{{ route('anggota-ekstrakurikuler.edit', $item) }}" class="action-dropdown-item" role="menuitem">
                                                 <i class="fa fa-edit text-primary action-item-icon"></i>
                                                 <span>Edit Data</span>
                                             </a>
                                             <div class="action-dropdown-divider"></div>
-                                            <form action="{{ route('anggota-ekstrakurikuler.destroy', $item->id) }}" method="POST" class="delete-form">
+                                            <form action="{{ route('anggota-ekstrakurikuler.destroy', $item) }}" method="POST" class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="button" class="action-dropdown-item action-dropdown-item--danger delete-button" role="menuitem">

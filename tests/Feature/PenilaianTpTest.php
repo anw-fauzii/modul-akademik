@@ -109,7 +109,7 @@ class PenilaianTpTest extends TestCase
         $this->assertSame('5', $kkm->tingkatan_kelas);
         $this->assertCount(4, $kkm->predikats);
 
-        $indexResponse = $this->actingAsSso($user)->get(route('penilaian-kkm.index', ['tahun_ajaran_id' => $ta->id]));
+        $indexResponse = $this->actingAsSso($user)->get(route('penilaian-kkm.index', ['tahun_ajaran_id' => $ta->sqid]));
         $indexResponse->assertOk()->assertSeeText('Pendidikan Agama Islam');
 
         // Simpan banyak mata pelajaran & banyak tingkatan kelas sekaligus
@@ -222,26 +222,26 @@ class PenilaianTpTest extends TestCase
         $kkm->predikats()->createMany(Kkm::generateDefaultPredikats(75));
 
         // Konfigurasi aspek seragam jenjang pada periode Mid
-        $aspekPemahaman = AspekTp::create(['tujuan_pembelajaran_id' => $tp51->id, 'periode' => 'mid', 'nama_aspek' => 'Pemahaman', 'urutan' => 1]);
-        $aspekBacaan = AspekTp::create(['tujuan_pembelajaran_id' => $tp51->id, 'periode' => 'mid', 'nama_aspek' => 'Bacaan', 'urutan' => 2]);
-        $aspekMakhroj = AspekTp::create(['tujuan_pembelajaran_id' => $tp52->id, 'periode' => 'mid', 'nama_aspek' => 'Makhroj', 'urutan' => 1]);
-        $aspekHafalan = AspekTp::create(['tujuan_pembelajaran_id' => $tp52->id, 'periode' => 'mid', 'nama_aspek' => 'Hafalan', 'urutan' => 2]);
-        $aspekArtinya = AspekTp::create(['tujuan_pembelajaran_id' => $tp52->id, 'periode' => 'mid', 'nama_aspek' => 'Artinya', 'urutan' => 3]);
+        $aspekPemahaman = AspekTp::create(['tujuan_pembelajaran_id' => $tp51->sqid, 'periode' => 'mid', 'nama_aspek' => 'Pemahaman', 'urutan' => 1]);
+        $aspekBacaan = AspekTp::create(['tujuan_pembelajaran_id' => $tp51->sqid, 'periode' => 'mid', 'nama_aspek' => 'Bacaan', 'urutan' => 2]);
+        $aspekMakhroj = AspekTp::create(['tujuan_pembelajaran_id' => $tp52->sqid, 'periode' => 'mid', 'nama_aspek' => 'Makhroj', 'urutan' => 1]);
+        $aspekHafalan = AspekTp::create(['tujuan_pembelajaran_id' => $tp52->sqid, 'periode' => 'mid', 'nama_aspek' => 'Hafalan', 'urutan' => 2]);
+        $aspekArtinya = AspekTp::create(['tujuan_pembelajaran_id' => $tp52->sqid, 'periode' => 'mid', 'nama_aspek' => 'Artinya', 'urutan' => 3]);
 
         // Pada Mid Semester: TP 5.1 masuk rapor Mid, TP 5.2 dikecualikan dari rapor Mid
-        $this->actingAsSso($user)->post(route('penilaian-tp.toggle-masuk-rapor', $tp52->id), [
+        $this->actingAsSso($user)->post(route('penilaian-tp.toggle-masuk-rapor', $tp52), [
             'periode' => 'mid',
             'masuk_rapor' => 0,
-            'kelas_id' => $kelas->id,
+            'kelas_id' => $kelas->sqid,
         ])->assertRedirect();
 
         DB::flushQueryLog();
         DB::enableQueryLog();
 
         $this->actingAsSso($user)->post(route('penilaian-tp.store'), [
-            'tahun_ajaran_id' => $ta->id,
-            'kelas_id' => $kelas->id,
-            'mata_pelajaran_id' => $mapel->id,
+            'tahun_ajaran_id' => $ta->sqid,
+            'kelas_id' => $kelas->sqid,
+            'mata_pelajaran_id' => $mapel->sqid,
             'periode' => 'mid',
             'nilai' => [
                 $anggota1->id => [
@@ -275,16 +275,16 @@ class PenilaianTpTest extends TestCase
 
         // Input nilai di Semester hanya untuk TP 5.2 (siswa 1 mendapat perbaikan nilai 90), TP 5.1 diambil dari Mid (90 & 80)
         $aspekSem = AspekTp::create([
-            'tujuan_pembelajaran_id' => $tp52->id,
+            'tujuan_pembelajaran_id' => $tp52->sqid,
             'periode' => 'semester',
             'nama_aspek' => 'Nilai TP',
             'urutan' => 1,
         ]);
 
         $this->actingAsSso($user)->post(route('penilaian-tp.store'), [
-            'tahun_ajaran_id' => $ta->id,
-            'kelas_id' => $kelas->id,
-            'mata_pelajaran_id' => $mapel->id,
+            'tahun_ajaran_id' => $ta->sqid,
+            'kelas_id' => $kelas->sqid,
+            'mata_pelajaran_id' => $mapel->sqid,
             'periode' => 'semester',
             'nilai' => [
                 $anggota1->id => [$aspekSem->id => 94], // TP 5.1 (Mid=90) + TP 5.2 (Sem=94) => 92
@@ -308,9 +308,9 @@ class PenilaianTpTest extends TestCase
 
         // Uji Export -> Import Sheet 2-baris header kembali
         $exportRows = (new PenilaianTpExport([
-            'tahun_ajaran_id' => $ta->id,
-            'kelas_id' => $kelas->id,
-            'mata_pelajaran_id' => $mapel->id,
+            'tahun_ajaran_id' => $ta->sqid,
+            'kelas_id' => $kelas->sqid,
+            'mata_pelajaran_id' => $mapel->sqid,
             'periode' => 'mid',
         ]))->array();
 
@@ -329,9 +329,9 @@ class PenilaianTpTest extends TestCase
 
         // Aktifkan bobot 70% NA TP + 30% Nilai Ujian langsung dari halaman Input Nilai TP
         $this->actingAsSso($user)->post(route('penilaian-tp.bobot.update'), [
-            'tahun_ajaran_id' => $ta->id,
-            'kelas_id' => $kelas->id,
-            'mata_pelajaran_id' => $mapel->id,
+            'tahun_ajaran_id' => $ta->sqid,
+            'kelas_id' => $kelas->sqid,
+            'mata_pelajaran_id' => $mapel->sqid,
             'periode' => 'semester',
             'bobot_tp' => 70,
             'bobot_ujian' => 30,
@@ -339,9 +339,9 @@ class PenilaianTpTest extends TestCase
 
         // Simpan nilai STS di periode Mid dan nilai SAS di periode Semester (Mid tidak membocori Semester SAS)
         $this->actingAsSso($user)->post(route('penilaian-tp.store'), [
-            'tahun_ajaran_id' => $ta->id,
-            'kelas_id' => $kelas->id,
-            'mata_pelajaran_id' => $mapel->id,
+            'tahun_ajaran_id' => $ta->sqid,
+            'kelas_id' => $kelas->sqid,
+            'mata_pelajaran_id' => $mapel->sqid,
             'periode' => 'mid',
             'ujian' => [
                 $anggota1->id => 80, // TP 5.1 (Mid=100) * 70% + STS (80) * 30% = 94
@@ -349,9 +349,9 @@ class PenilaianTpTest extends TestCase
         ])->assertRedirect();
 
         $this->actingAsSso($user)->post(route('penilaian-tp.store'), [
-            'tahun_ajaran_id' => $ta->id,
-            'kelas_id' => $kelas->id,
-            'mata_pelajaran_id' => $mapel->id,
+            'tahun_ajaran_id' => $ta->sqid,
+            'kelas_id' => $kelas->sqid,
+            'mata_pelajaran_id' => $mapel->sqid,
             'periode' => 'semester',
             'ujian' => [
                 $anggota1->id => 70, // Rata TP Sem (100+94 => 97) * 70% + SAS (70) * 30% = 67.9 + 21 = 89
@@ -374,9 +374,9 @@ class PenilaianTpTest extends TestCase
 
         // Uji export & import ulang nilai PSTS pada kolom Ujian (PSTS)
         $exportWithSts = (new PenilaianTpExport([
-            'tahun_ajaran_id' => $ta->id,
-            'kelas_id' => $kelas->id,
-            'mata_pelajaran_id' => $mapel->id,
+            'tahun_ajaran_id' => $ta->sqid,
+            'kelas_id' => $kelas->sqid,
+            'mata_pelajaran_id' => $mapel->sqid,
             'periode' => 'mid',
         ]))->array();
         $stsColIdx = array_search('PSTS', $exportWithSts[0], true);
@@ -401,15 +401,15 @@ class PenilaianTpTest extends TestCase
             'status' => true,
         ]);
         $aspek53 = AspekTp::create([
-            'tujuan_pembelajaran_id' => $tp53->id,
+            'tujuan_pembelajaran_id' => $tp53->sqid,
             'periode' => 'semester',
             'nama_aspek' => 'Nilai TP',
             'urutan' => 1,
         ]);
         $this->actingAsSso($user)->post(route('penilaian-tp.store'), [
-            'tahun_ajaran_id' => $ta->id,
-            'kelas_id' => $kelas->id,
-            'mata_pelajaran_id' => $mapel->id,
+            'tahun_ajaran_id' => $ta->sqid,
+            'kelas_id' => $kelas->sqid,
+            'mata_pelajaran_id' => $mapel->sqid,
             'periode' => 'semester',
             'nilai' => [
                 $anggota1->id => [$aspek53->id => 96], // TP 5.1=100 (A), TP 5.2=94 (A), TP 5.3=96 (A) => A koma + dan
@@ -417,8 +417,8 @@ class PenilaianTpTest extends TestCase
         ])->assertRedirect();
 
         $this->actingAsSso($user)->post(route('penilaian-rekap.deskripsi.regenerate'), [
-            'kelas_id' => $kelas->id,
-            'mata_pelajaran_id' => $mapel->id,
+            'kelas_id' => $kelas->sqid,
+            'mata_pelajaran_id' => $mapel->sqid,
             'periode' => 'semester',
         ])->assertRedirect();
 
@@ -481,7 +481,7 @@ class PenilaianTpTest extends TestCase
             'status' => true,
         ]);
         $aspekMid = AspekTp::create([
-            'tujuan_pembelajaran_id' => $tp1->id,
+            'tujuan_pembelajaran_id' => $tp1->sqid,
             'periode' => 'mid',
             'nama_aspek' => 'Nilai TP',
             'urutan' => 1,
@@ -489,32 +489,32 @@ class PenilaianTpTest extends TestCase
 
         // Tambah 2 Sumatif Bab di Mid untuk Matematika & 1 Sumatif Bab di IPAS (beda jumlah antar mapel)
         $this->actingAsSso($user)->post(route('penilaian-tp.sumatif-bab.store'), [
-            'tahun_ajaran_id' => $ta->id,
-            'mata_pelajaran_id' => $mapelMat->id,
+            'tahun_ajaran_id' => $ta->sqid,
+            'mata_pelajaran_id' => $mapelMat->sqid,
             'tingkatan_kelas' => '4',
             'periode' => 'mid',
             'nama_bab' => 'Bab 1',
             'keterangan' => 'Bilangan Cacah',
-            'kelas_id' => $kelas->id,
+            'kelas_id' => $kelas->sqid,
         ])->assertRedirect();
 
         $this->actingAsSso($user)->post(route('penilaian-tp.sumatif-bab.store'), [
-            'tahun_ajaran_id' => $ta->id,
-            'mata_pelajaran_id' => $mapelMat->id,
+            'tahun_ajaran_id' => $ta->sqid,
+            'mata_pelajaran_id' => $mapelMat->sqid,
             'tingkatan_kelas' => '4',
             'periode' => 'mid',
             'nama_bab' => 'Bab 2',
             'keterangan' => 'Pecahan',
-            'kelas_id' => $kelas->id,
+            'kelas_id' => $kelas->sqid,
         ])->assertRedirect();
 
         $this->actingAsSso($user)->post(route('penilaian-tp.sumatif-bab.store'), [
-            'tahun_ajaran_id' => $ta->id,
-            'mata_pelajaran_id' => $mapelIpas->id,
+            'tahun_ajaran_id' => $ta->sqid,
+            'mata_pelajaran_id' => $mapelIpas->sqid,
             'tingkatan_kelas' => '4',
             'periode' => 'mid',
             'nama_bab' => 'Bab 1 IPA',
-            'kelas_id' => $kelas->id,
+            'kelas_id' => $kelas->sqid,
         ])->assertRedirect();
 
         $mtkMidBabs = SumatifBab::query()
@@ -527,9 +527,9 @@ class PenilaianTpTest extends TestCase
 
         // Set bobot 40% TP + 40% Sumatif Bab + 20% Ujian
         $this->actingAsSso($user)->post(route('penilaian-tp.bobot.update'), [
-            'tahun_ajaran_id' => $ta->id,
-            'kelas_id' => $kelas->id,
-            'mata_pelajaran_id' => $mapelMat->id,
+            'tahun_ajaran_id' => $ta->sqid,
+            'kelas_id' => $kelas->sqid,
+            'mata_pelajaran_id' => $mapelMat->sqid,
             'periode' => 'mid',
             'bobot_tp' => 40,
             'bobot_sumatif' => 40,
@@ -538,9 +538,9 @@ class PenilaianTpTest extends TestCase
 
         // Simpan nilai Mid: TP=80, Bab1=85, Bab2=95 (Rata=90), STS=100 => 0.4*80 + 0.4*90 + 0.2*100 = 32+36+20 = 88
         $this->actingAsSso($user)->post(route('penilaian-tp.store'), [
-            'tahun_ajaran_id' => $ta->id,
-            'kelas_id' => $kelas->id,
-            'mata_pelajaran_id' => $mapelMat->id,
+            'tahun_ajaran_id' => $ta->sqid,
+            'kelas_id' => $kelas->sqid,
+            'mata_pelajaran_id' => $mapelMat->sqid,
             'periode' => 'mid',
             'nilai' => [
                 $anggota->id => [$aspekMid->id => 80],
@@ -566,12 +566,12 @@ class PenilaianTpTest extends TestCase
 
         // Tambah Bab 3 di Semester dan simpan nilai 75 => gabungan Mid(85,95)+Sem(75) = 255/3 = 85
         $this->actingAsSso($user)->post(route('penilaian-tp.sumatif-bab.store'), [
-            'tahun_ajaran_id' => $ta->id,
-            'mata_pelajaran_id' => $mapelMat->id,
+            'tahun_ajaran_id' => $ta->sqid,
+            'mata_pelajaran_id' => $mapelMat->sqid,
             'tingkatan_kelas' => '4',
             'periode' => 'semester',
             'nama_bab' => 'Bab 3',
-            'kelas_id' => $kelas->id,
+            'kelas_id' => $kelas->sqid,
         ])->assertRedirect();
 
         $mtkSemBab = SumatifBab::query()
@@ -580,9 +580,9 @@ class PenilaianTpTest extends TestCase
             ->firstOrFail();
 
         $this->actingAsSso($user)->post(route('penilaian-tp.store'), [
-            'tahun_ajaran_id' => $ta->id,
-            'kelas_id' => $kelas->id,
-            'mata_pelajaran_id' => $mapelMat->id,
+            'tahun_ajaran_id' => $ta->sqid,
+            'kelas_id' => $kelas->sqid,
+            'mata_pelajaran_id' => $mapelMat->sqid,
             'periode' => 'semester',
             'sumatif' => [
                 $anggota->id => [$mtkSemBab->id => 75],
@@ -603,9 +603,9 @@ class PenilaianTpTest extends TestCase
 
         // Export & Re-import Semester Excel: kolom Bab 1 (Mid) & Bab 2 (Mid) diabaikan, Bab 3 berubah ke 90 -> rata sumatif (85+95+90)/3 = 90
         $exportRows = (new PenilaianTpExport([
-            'tahun_ajaran_id' => $ta->id,
-            'kelas_id' => $kelas->id,
-            'mata_pelajaran_id' => $mapelMat->id,
+            'tahun_ajaran_id' => $ta->sqid,
+            'kelas_id' => $kelas->sqid,
+            'mata_pelajaran_id' => $mapelMat->sqid,
             'periode' => 'semester',
         ]))->array();
         $bab3ColIdx = array_search('Bab 3', $exportRows[1], true);
@@ -619,8 +619,8 @@ class PenilaianTpTest extends TestCase
         $this->assertEquals(90.0, (float) $rekapSem->refresh()->rata_rata_sumatif);
 
         // Hapus Bab 3 -> otomatis menghitung ulang Rata Sumatif kembali ke gabungan Mid (90)
-        $this->actingAsSso($user)->delete(route('penilaian-tp.sumatif-bab.destroy', $mtkSemBab->id), [
-            'kelas_id' => $kelas->id,
+        $this->actingAsSso($user)->delete(route('penilaian-tp.sumatif-bab.destroy', $mtkSemBab), [
+            'kelas_id' => $kelas->sqid,
         ])->assertRedirect();
         $this->assertEquals(90.0, (float) $rekapSem->refresh()->rata_rata_sumatif);
     }

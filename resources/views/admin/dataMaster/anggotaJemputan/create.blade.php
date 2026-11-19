@@ -7,7 +7,7 @@
 @section('content')
     @php
         $backUrl = isset($preselectedJemputanId) && $preselectedJemputanId
-            ? route('jemputan.show', $preselectedJemputanId)
+            ? route('jemputan.show', \App\Support\Sqid::encodeFor(\App\Models\Admin\DataMaster\Jemputan::class, (int) $preselectedJemputanId))
             : route('anggota-jemputan.index');
     @endphp
 
@@ -41,7 +41,7 @@
                 <form method="post" action="{{ route('anggota-jemputan.store') }}" id="createForm">
                     @csrf
                     @if (isset($preselectedJemputanId) && $preselectedJemputanId)
-                        <input type="hidden" name="redirect_to_jemputan" value="{{ $preselectedJemputanId }}">
+                        <input type="hidden" name="redirect_to_jemputan" value="{{ \App\Support\Sqid::encodeFor(\App\Models\Admin\DataMaster\Jemputan::class, (int) $preselectedJemputanId) }}">
                     @endif
                     @include('admin.dataMaster.anggotaJemputan._form')
                 </form>

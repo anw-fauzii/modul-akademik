@@ -18,6 +18,8 @@ class RaporController extends Controller
         private readonly WaliKelasScopeService $scopeService
     ) {
         $this->middleware('role:super admin|wali kelas');
+        $this->middleware('can:view,kelas')->only(['identitasKelas', 'nilaiKelas']);
+        $this->middleware('can:view,anggota_kelas')->only(['identitasSiswa', 'nilaiSiswa']);
     }
 
     /**
@@ -62,4 +64,3 @@ class RaporController extends Controller
         return $this->raporPdfService->streamNilaiPdf($auth['selectedKelas'], $periode, $anggotaKelas);
     }
 }
-

@@ -392,7 +392,7 @@ class T2qYaumiyahTest extends TestCase
         $this->assertStringContainsString('akademik_master_t2q_daftar_jilid_id', $tahsinHtml);
         $this->assertStringContainsString('data-select2="true"', $tahsinHtml);
         $this->assertStringContainsString('window.PIONSelect.init', $tahsinHtml);
-        $this->assertStringContainsString(route('t2q.yaumiyah-tahsin.destroy', 88), $tahsinHtml);
+        $this->assertStringContainsString(route('t2q.yaumiyah-tahsin.destroy', sqidFor('t2q.yaumiyah-tahsin.destroy', 88)), $tahsinHtml);
 
         $this->assertStringContainsString('js-t2q-surah-wrap  mt-2', $tahsinQuranHtml);
         $this->assertStringNotContainsString('js-t2q-surah-wrap d-none', $tahsinQuranHtml);
@@ -878,7 +878,7 @@ class T2qYaumiyahTest extends TestCase
         $this->assertStringContainsString('t2q-st-donut-svg', $tahsinHtml);
         $this->assertStringContainsString('Zaid Al-Khair', $tahsinHtml);
         $this->assertStringContainsString('2025/2026 - Semester 2', $tahsinHtml);
-        $this->assertStringContainsString('value="2" selected> 2025/2026 - Semester 2', $normalizedTahsinHtml);
+        $this->assertStringContainsString('value="'.sqidParam('tahun_ajaran_id', 2).'" selected> 2025/2026 - Semester 2', $normalizedTahsinHtml);
         $this->assertStringContainsString('Jilid 2', $tahsinHtml);
         $this->assertStringContainsString('92', $tahsinHtml);
 

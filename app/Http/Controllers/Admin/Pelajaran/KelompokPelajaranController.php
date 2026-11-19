@@ -16,6 +16,7 @@ class KelompokPelajaranController extends Controller
         protected KelompokPelajaranService $service
     ) {
         $this->middleware('role:super admin');
+        $this->authorizeResource(KelompokPelajaran::class, 'kelompok_pelajaran');
     }
 
     /**

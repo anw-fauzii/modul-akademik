@@ -2,6 +2,7 @@
 
 namespace App\Models\Admin\DataMaster;
 
+use App\Models\Concerns\HasSqidRouteKey;
 use Database\Factories\Admin\DataMaster\AnggotaEkstrakurikulerFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -25,6 +26,8 @@ class AnggotaEkstrakurikuler extends Model
 {
     /** @use HasFactory<AnggotaEkstrakurikulerFactory> */
     use HasFactory;
+
+    use HasSqidRouteKey;
 
     public const array PENDAFTARAN_OPTIONS = [
         'Baru',

@@ -24,7 +24,7 @@
             'heroSubtitle' => $isEligible && $selectedKelas
                 ? "Daftar lengkap siswa binaan kelas {$selectedKelas->nama_kelas} ({$selectedKelas->jenjang_kelas} • Tingkat {$selectedKelas->tingkatan_kelas}) yang Anda kelola sebagai {$peranDiKelas}."
                 : null,
-            'heroActionUrl' => route('wali-kelas.dashboard', $selectedKelas ? ['kelas_id' => $selectedKelas->id] : []),
+            'heroActionUrl' => route('wali-kelas.dashboard', $selectedKelas ? ['kelas_id' => $selectedKelas->sqid] : []),
             'heroActionLabel' => 'Kembali ke Dashboard',
             'heroActionIcon' => 'fa-arrow-left',
         ])
@@ -150,7 +150,7 @@
                                         $birthInfo = collect([$siswa?->tempat_lahir, $birthDateFormatted])->filter()->implode(', ');
                                         $contactNumber = $siswa?->whatsapp ?: $siswa?->nomor_hp;
                                         $waDigits = $contactNumber ? preg_replace('/[^0-9]/', '', $contactNumber) : null;
-                                        $detailUrl = route('wali-kelas.anggota-kelas.show', $anggota->id);
+                                        $detailUrl = route('wali-kelas.anggota-kelas.show', $anggota);
                                     @endphp
                                     <tr>
                                         <td class="text-center text-muted font-weight-semibold">{{ $idx + 1 }}</td>

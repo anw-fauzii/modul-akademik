@@ -3,6 +3,7 @@
 namespace App\Models\Admin\T2q;
 
 use App\Models\Admin\DataMaster\DaftarJilid;
+use App\Models\Concerns\HasSqidRouteKey;
 use App\Models\Concerns\HasYaumiyahT2q;
 use Database\Factories\Admin\T2q\YaumiyahTahsinFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -27,6 +28,7 @@ class YaumiyahTahsin extends Model
     /** @use HasFactory<YaumiyahTahsinFactory> */
     use HasFactory;
 
+    use HasSqidRouteKey;
     use HasYaumiyahT2q;
 
     /**
@@ -63,4 +65,3 @@ class YaumiyahTahsin extends Model
         return $this->belongsTo(DaftarJilid::class, 'akademik_master_t2q_daftar_jilid_id');
     }
 }
-

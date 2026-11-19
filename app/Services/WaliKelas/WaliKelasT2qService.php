@@ -180,4 +180,3 @@ class WaliKelasT2qService
             : $this->tahsinService;
     }
 }
-

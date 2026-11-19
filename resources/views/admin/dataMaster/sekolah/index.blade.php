@@ -81,7 +81,7 @@
                                         @endif
                                     </td>
                                     <td class="text-center">
-                                        <form action="{{ route('sekolah.toggle-status', $item->id) }}" method="POST" class="d-inline">
+                                        <form action="{{ route('sekolah.toggle-status', $item) }}" method="POST" class="d-inline">
                                             @csrf
                                             <button type="submit"
                                                 class="btn btn-sm {{ $item->status ? 'btn-success' : 'btn-secondary' }} px-2 py-1"
@@ -93,12 +93,12 @@
                                     </td>
                                     <td class="text-center">
                                         <x-action-dropdown>
-                                            <a href="{{ route('sekolah.edit', $item->id) }}" class="action-dropdown-item" role="menuitem">
+                                            <a href="{{ route('sekolah.edit', $item) }}" class="action-dropdown-item" role="menuitem">
                                                 <i class="fa fa-edit text-primary action-item-icon"></i>
                                                 <span>Edit Data</span>
                                             </a>
                                             <div class="action-dropdown-divider"></div>
-                                            <form action="{{ route('sekolah.destroy', $item->id) }}" method="POST" class="delete-form">
+                                            <form action="{{ route('sekolah.destroy', $item) }}" method="POST" class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="button" class="action-dropdown-item action-dropdown-item--danger delete-button" role="menuitem">

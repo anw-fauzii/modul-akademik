@@ -273,8 +273,8 @@ class AgendaSekolahModelAndViewTest extends TestCase
         $this->assertStringContainsString('MPLS Tahun Ajaran Baru', $indexHtml);
         $this->assertStringContainsString('07:30 WIB', $indexHtml);
         $this->assertStringContainsString('2026/2027', $indexHtml);
-        $this->assertStringContainsString(route('agenda-sekolah.edit', 42), $indexHtml);
-        $this->assertStringContainsString(route('agenda-sekolah.destroy', 42), $indexHtml);
+        $this->assertStringContainsString(route('agenda-sekolah.edit', sqidFor('agenda-sekolah.edit', 42)), $indexHtml);
+        $this->assertStringContainsString(route('agenda-sekolah.destroy', sqidFor('agenda-sekolah.destroy', 42)), $indexHtml);
 
         $this->assertStringContainsString(route('agenda-sekolah.store'), $createHtml);
         $this->assertStringContainsString('name="nama_agenda"', $createHtml);
@@ -282,7 +282,7 @@ class AgendaSekolahModelAndViewTest extends TestCase
         $this->assertStringContainsString('name="jam"', $createHtml);
         $this->assertStringContainsString('name="unit"', $createHtml);
 
-        $this->assertStringContainsString(route('agenda-sekolah.update', 42), $editHtml);
+        $this->assertStringContainsString(route('agenda-sekolah.update', sqidFor('agenda-sekolah.update', 42)), $editHtml);
         $this->assertStringContainsString('value="2026-07-13"', $editHtml);
         $this->assertStringContainsString('value="07:30"', $editHtml);
         $this->assertStringContainsString(route('agenda-sekolah.index'), view('layouts.sidebar')->render());

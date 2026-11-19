@@ -249,7 +249,7 @@ class PresensiSiswaModelAndViewTest extends TestCase
         $this->assertStringContainsString('id="presensiBulkDeleteModal"', $html);
         $this->assertStringContainsString('id="presensiBulkDeleteForm"', $html);
         $this->assertStringContainsString(route('presensi-siswa.bulk.destroy'), $html);
-        $this->assertStringContainsString(e(route('presensi-siswa.bulk', ['kelas_id' => 10, 'tanggal' => '2026-11-12'])), $html);
+        $this->assertStringContainsString(e(route('presensi-siswa.bulk', ['kelas_id' => sqidParam('kelas_id', 10), 'tanggal' => '2026-11-12'])), $html);
         $this->assertStringContainsString('13 Jum', $html);
         $this->assertMatchesRegularExpression('/<span class="matrix-cell-empty"[^>]*>\s*-\s*<\/span>/', $html);
         $this->assertStringContainsString('Input massal tanggal 2026-11-12', $html);
@@ -1344,9 +1344,9 @@ class PresensiSiswaModelAndViewTest extends TestCase
 
         $indexResp = $controller->bulkDestroy($indexReq);
         $this->assertTrue($indexResp->isRedirect(route('presensi-siswa.index', [
-            'kelas_id' => 10,
+            'kelas_id' => sqidParam('kelas_id', 10),
             'bulan' => '2026-11',
-            'tahun_ajaran_id' => '2',
+            'tahun_ajaran_id' => sqidParam('tahun_ajaran_id', 2),
         ])));
         $this->assertStringContainsString('12 data presensi', (string) $indexResp->getSession()->get('success'));
 
@@ -1362,7 +1362,7 @@ class PresensiSiswaModelAndViewTest extends TestCase
 
         $bulkResp = $controller->bulkDestroy($bulkReq);
         $this->assertTrue($bulkResp->isRedirect(route('presensi-siswa.bulk', [
-            'kelas_id' => 10,
+            'kelas_id' => sqidParam('kelas_id', 10),
             'tanggal' => '2026-11-13',
         ])));
         $this->assertStringContainsString('Tidak ada data presensi', (string) $bulkResp->getSession()->get('warning'));

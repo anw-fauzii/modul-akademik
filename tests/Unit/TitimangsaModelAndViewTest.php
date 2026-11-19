@@ -239,18 +239,17 @@ class TitimangsaModelAndViewTest extends TestCase
         $this->assertStringContainsString('Khusus Tingkat 6', $indexHtml);
         $this->assertStringContainsString('H. Ahmad Fauzi, M.Pd', $indexHtml);
         $this->assertStringContainsString('Kepala SD Prima Insani', $indexHtml);
-        $this->assertStringContainsString(route('titimangsa.toggle-status', 10), $indexHtml);
-        $this->assertStringContainsString(route('titimangsa.edit', 10), $indexHtml);
+        $this->assertStringContainsString(route('titimangsa.toggle-status', sqidFor('titimangsa.toggle-status', 10)), $indexHtml);
+        $this->assertStringContainsString(route('titimangsa.edit', sqidFor('titimangsa.edit', 10)), $indexHtml);
 
         $this->assertStringContainsString('Tambah Titimangsa Rapor', $createHtml);
         $this->assertStringContainsString(route('titimangsa.store'), $createHtml);
         $this->assertStringContainsString('Tingkatan Tertentu', $createHtml);
 
         $this->assertStringContainsString('Edit Titimangsa Rapor', $editHtml);
-        $this->assertStringContainsString(route('titimangsa.update', 11), $editHtml);
+        $this->assertStringContainsString(route('titimangsa.update', sqidFor('titimangsa.update', 11)), $editHtml);
 
         $this->assertStringContainsString('Titimangsa Rapor', $sidebarHtml);
         $this->assertStringContainsString(route('titimangsa.index'), $sidebarHtml);
     }
 }
-

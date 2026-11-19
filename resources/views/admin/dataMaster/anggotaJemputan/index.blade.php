@@ -55,7 +55,7 @@
                         <select name="tahun_ajaran_id" id="filter_tahun_ajaran_id" class="filter-control">
                             <option value="">-- Semua Tahun Ajaran --</option>
                             @foreach ($tahunAjaran as $ta)
-                                <option value="{{ $ta->id }}" @selected((string) $selectedTahunAjaranId === (string) $ta->id)>
+                                <option value="{{ $ta->sqid }}" @selected((string) $selectedTahunAjaranId === (string) $ta->id)>
                                     {{ $ta->nama_tahun_ajaran }} - Semester {{ strtoupper($ta->semester) }} {{ $ta->is_active ? '(Aktif)' : '' }}
                                 </option>
                             @endforeach
@@ -69,7 +69,7 @@
                         <select name="jemputan_id" id="filter_jemputan_id" class="filter-control">
                             <option value="">-- Semua Layanan Jemputan --</option>
                             @foreach ($jemputan as $j)
-                                <option value="{{ $j->id }}" @selected((string) $selectedJemputanId === (string) $j->id)>
+                                <option value="{{ $j->sqid }}" @selected((string) $selectedJemputanId === (string) $j->id)>
                                     {{ $j->petugas?->nama_gelar ?? ('NIPY: ' . $j->karyawan_nipy) }}
                                     @if ($j->tahunAjaran)
                                         — {{ $j->tahunAjaran->nama_tahun_ajaran }} Smt {{ strtoupper($j->tahunAjaran->semester) }}
@@ -86,7 +86,7 @@
                         <select name="kelas_id" id="filter_kelas_id" class="filter-control">
                             <option value="">-- Semua Kelas --</option>
                             @foreach ($kelas as $k)
-                                <option value="{{ $k->id }}" @selected((string) $selectedKelasId === (string) $k->id)>
+                                <option value="{{ $k->sqid }}" @selected((string) $selectedKelasId === (string) $k->id)>
                                     {{ $k->nama_kelas }} ({{ strtoupper($k->jenjang_kelas) }})
                                     @if ($k->tahunAjaran)
                                         — {{ $k->tahunAjaran->nama_tahun_ajaran }} Smt {{ strtoupper($k->tahunAjaran->semester) }}
@@ -166,7 +166,7 @@
                                         @if ($jemputanRow)
                                             <div class="small">
                                                 <i class="fa fa-user-tie text-primary mr-1" title="Petugas / Driver Jemputan"></i>
-                                                <a href="{{ route('jemputan.show', $jemputanRow->id) }}"
+                                                <a href="{{ route('jemputan.show', $jemputanRow) }}"
                                                     class="font-weight-bold text-slate-800 text-decoration-none">
                                                     {{ $jemputanRow->petugas?->nama_gelar ?? ('Petugas #' . $jemputanRow->karyawan_nipy) }}
                                                 </a>
@@ -217,12 +217,12 @@
                                     </td>
                                     <td class="text-center">
                                         <x-action-dropdown>
-                                            <a href="{{ route('anggota-jemputan.edit', $item->id) }}" class="action-dropdown-item" role="menuitem">
+                                            <a href="{{ route('anggota-jemputan.edit', $item) }}" class="action-dropdown-item" role="menuitem">
                                                 <i class="fa fa-edit text-primary action-item-icon"></i>
                                                 <span>Edit Data</span>
                                             </a>
                                             <div class="action-dropdown-divider"></div>
-                                            <form action="{{ route('anggota-jemputan.destroy', $item->id) }}" method="POST" class="delete-form">
+                                            <form action="{{ route('anggota-jemputan.destroy', $item) }}" method="POST" class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="button" class="action-dropdown-item action-dropdown-item--danger delete-button" role="menuitem">

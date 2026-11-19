@@ -3,6 +3,7 @@
 namespace App\Models\Admin\Informasi;
 
 use App\Models\Admin\Informasi\Concerns\HasInformasiTahunAjaranAndJenis;
+use App\Models\Concerns\HasSqidRouteKey;
 use App\Support\HtmlSanitizer;
 use Database\Factories\Admin\Informasi\PengumumanFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -29,6 +30,7 @@ class Pengumuman extends Model
     use HasFactory;
 
     use HasInformasiTahunAjaranAndJenis;
+    use HasSqidRouteKey;
 
     /**
      * Atribut yang di-cast secara otomatis.

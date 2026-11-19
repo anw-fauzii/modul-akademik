@@ -189,6 +189,7 @@
                     $preservedRedirectFields["redirect_{$filterKey}"] = (string) $val;
                 }
             }
+            $preservedRedirectFields = \App\Support\Sqid::encodeQueryParams($preservedRedirectFields);
         }
 
         $recordedDates = [];
@@ -235,10 +236,10 @@
                     </div>
                 </div>
                 <div class="page-title-actions d-flex flex-wrap align-items-center" style="gap: 0.5rem;">
-                    <a href="{{ route($presensiRoutePrefix.'.bulk', array_filter([
+                    <a href="{{ route($presensiRoutePrefix.'.bulk', \App\Support\Sqid::encodeQueryParams(array_filter([
                         'kelas_id' => ($filters['kelas_id'] ?? 0) > 0 ? $filters['kelas_id'] : null,
                         'tanggal' => ($filters['tanggal'] ?? '') !== '' ? $filters['tanggal'] : null,
-                    ])) }}"
+                    ]))) }}"
                         class="btn text-white shadow-sm font-weight-bold"
                         style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 8px;">
                         <i class="fa fa-layer-group mr-1"></i> Input Data
@@ -366,7 +367,7 @@
                         <select id="filter_tahun_ajaran_id" name="tahun_ajaran_id" class="filter-control">
                             <option value="">Semua Tahun Ajaran</option>
                             @foreach ($tahunAjaranOptions as $tahunAjaran)
-                                <option value="{{ $tahunAjaran->id }}" @selected($filters['tahun_ajaran_id'] === $tahunAjaran->id)>
+                                <option value="{{ $tahunAjaran->sqid }}" @selected($filters['tahun_ajaran_id'] === $tahunAjaran->id)>
                                     {{ $tahunAjaran->nama_tahun_ajaran }} ({{ $tahunAjaran->semester }})@if ($tahunAjaran->is_active) (Aktif)@endif
                                 </option>
                             @endforeach
@@ -378,7 +379,7 @@
                         <select id="filter_kelas_id" name="kelas_id" class="filter-control">
                             <option value="">-- Pilih Kelas --</option>
                             @foreach ($kelasOptions as $kelas)
-                                <option value="{{ $kelas->id }}"
+                                <option value="{{ $kelas->sqid }}"
                                     data-tahun-ajaran-id="{{ $kelas->akademik_master_tahun_ajaran_id }}"
                                     @selected($filters['kelas_id'] === $kelas->id)>
                                     {{ $kelas->jenjang_kelas }} - {{ $kelas->nama_kelas }}
@@ -468,7 +469,7 @@
                                     </button>
                                 @endif
                                 <a href="{{ route($presensiRoutePrefix.'.rekap', [
-                                    'kelas_id' => $matrixKelas->id,
+                                    'kelas_id' => $matrixKelas->sqid,
                                     'bulan' => $matrix['bulan'],
                                 ]) }}"
                                     class="btn btn-sm btn-light border shadow-sm" style="border-radius: 8px;">
@@ -486,7 +487,7 @@
                                         </th>
                                         @foreach ($matrixDays as $dayInfo)
                                             <th class="{{ $dayInfo['is_today'] ? 'bg-orange-50 text-orange-700' : '' }}">
-                                                <a href="{{ route($presensiRoutePrefix.'.bulk', ['kelas_id' => $matrixKelas->id, 'tanggal' => $dayInfo['date']]) }}"
+                                                <a href="{{ route($presensiRoutePrefix.'.bulk', ['kelas_id' => $matrixKelas->sqid, 'tanggal' => $dayInfo['date']]) }}"
                                                     class="block rounded px-1 py-0.5 text-inherit hover:bg-orange-50 hover:text-orange-700 transition-colors"
                                                     style="text-decoration: none;"
                                                     title="Input massal tanggal {{ $dayInfo['date'] }}">
@@ -690,7 +691,7 @@
                         <select id="bulkDeleteKelasId" name="kelas_id" class="filter-control" required>
                             <option value="">-- Pilih Kelas --</option>
                             @foreach ($kelasOptions as $kelas)
-                                <option value="{{ $kelas->id }}" @selected((int) $defaultBulkDeleteKelasId === (int) $kelas->id)>
+                                <option value="{{ $kelas->sqid }}" @selected((int) $defaultBulkDeleteKelasId === (int) $kelas->id)>
                                     {{ $kelas->jenjang_kelas }} - {{ $kelas->nama_kelas }}
                                     @if ($kelas->tahunAjaran)
                                         ({{ $kelas->tahunAjaran->nama_tahun_ajaran }} - {{ $kelas->tahunAjaran->semester }})
@@ -715,7 +716,7 @@
                                 @foreach ($recordedDates as $recDate)
                                     <button type="button"
                                         class="js-bulk-delete-date-chip inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 transition cursor-pointer"
-                                        data-kelas-id="{{ $matrixKelas->id }}"
+                                        data-kelas-id="{{ $matrixKelas->sqid }}"
                                         data-tanggal="{{ $recDate['date'] }}">
                                         <span>{{ $recDate['short'] }}</span>
                                         <span class="px-1.5 py-0.2 rounded-full bg-white text-[10px] border border-slate-200 text-slate-500">

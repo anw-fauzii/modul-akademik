@@ -2,6 +2,7 @@
 
 namespace App\Models\Admin\DataMaster;
 
+use App\Models\Concerns\HasSqidRouteKey;
 use Database\Factories\Admin\DataMaster\EkstrakurikulerFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -27,6 +28,8 @@ class Ekstrakurikuler extends Model
 {
     /** @use HasFactory<EkstrakurikulerFactory> */
     use HasFactory;
+
+    use HasSqidRouteKey;
 
     /**
      * Daftar unit pendidikan yang tersedia untuk ekstrakurikuler.

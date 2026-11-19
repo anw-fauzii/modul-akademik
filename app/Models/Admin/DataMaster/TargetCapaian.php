@@ -2,6 +2,7 @@
 
 namespace App\Models\Admin\DataMaster;
 
+use App\Models\Concerns\HasSqidRouteKey;
 use Database\Factories\Admin\DataMaster\TargetCapaianFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -25,6 +26,8 @@ class TargetCapaian extends Model
 {
     /** @use HasFactory<TargetCapaianFactory> */
     use HasFactory;
+
+    use HasSqidRouteKey;
 
     /**
      * Relasi utama dengan kolom minimal untuk eager loading anti-N+1.

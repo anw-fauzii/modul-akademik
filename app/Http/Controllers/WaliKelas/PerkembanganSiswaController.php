@@ -15,6 +15,8 @@ class PerkembanganSiswaController extends Controller
         private readonly WaliKelasPerkembanganService $service
     ) {
         $this->middleware('role:super admin|wali kelas');
+        $this->middleware('can:viewAny,'.AnggotaKelas::class)->only(['index']);
+        $this->middleware('can:view,anggota_kelas')->only(['show']);
     }
 
     /**
@@ -44,4 +46,3 @@ class PerkembanganSiswaController extends Controller
         );
     }
 }
-

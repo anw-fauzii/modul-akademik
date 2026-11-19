@@ -3,6 +3,7 @@
 namespace App\Models\Admin\Penilaian;
 
 use App\Models\Admin\TujuanPembelajaran\TujuanPembelajaran;
+use App\Models\Concerns\HasSqidRouteKey;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Model;
@@ -21,6 +22,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Table('akademik_penilaian_aspek_tp')]
 class AspekTp extends Model
 {
+    use HasSqidRouteKey;
+
     public const string DEFAULT_NAMA_ASPEK = 'Nilai TP';
 
     /**

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Concerns;
 
 use App\Http\Requests\Admin\T2q\BaseYaumiyahT2qRequest;
 use App\Services\Admin\T2q\BaseYaumiyahT2qService;
+use App\Support\Sqid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -84,7 +85,7 @@ trait ManagesYaumiyahT2qActions
         );
 
         return redirect()
-            ->route($this->indexRouteName(), $this->extractRedirectQuery($request))
+            ->route($this->indexRouteName(), Sqid::encodeQueryParams($this->extractRedirectQuery($request)))
             ->with('success', "Berhasil menyimpan {$savedCount} setoran {$this->labelJudul()}.");
     }
 
@@ -96,7 +97,7 @@ trait ManagesYaumiyahT2qActions
         $this->yaumiyahService()->delete($entry);
 
         return redirect()
-            ->route($this->indexRouteName(), $this->extractRedirectQuery($request))
+            ->route($this->indexRouteName(), Sqid::encodeQueryParams($this->extractRedirectQuery($request)))
             ->with('success', "Catatan {$this->labelJudul()} berhasil dihapus.");
     }
 

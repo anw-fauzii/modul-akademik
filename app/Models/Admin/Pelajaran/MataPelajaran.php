@@ -3,6 +3,7 @@
 namespace App\Models\Admin\Pelajaran;
 
 use App\Models\Admin\TujuanPembelajaran\TujuanPembelajaran;
+use App\Models\Concerns\HasSqidRouteKey;
 use App\Models\Concerns\HasUnitMetadata;
 use Database\Factories\Admin\Pelajaran\MataPelajaranFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -33,6 +34,7 @@ class MataPelajaran extends Model
     /** @use HasFactory<MataPelajaranFactory> */
     use HasFactory;
 
+    use HasSqidRouteKey;
     use HasUnitMetadata;
 
     public const string SIFAT_WAJIB = 'wajib';

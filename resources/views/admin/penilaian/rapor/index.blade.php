@@ -37,13 +37,13 @@
 
                 @if ($selectedKelas && $students->isNotEmpty())
                     <div class="page-title-actions d-flex flex-wrap" style="gap: 0.5rem;">
-                        <a href="{{ route('penilaian-rapor.identitas.kelas', $selectedKelas->id) }}" target="_blank"
+                        <a href="{{ route('penilaian-rapor.identitas.kelas', $selectedKelas) }}" target="_blank"
                             class="btn btn-light border shadow-sm font-weight-semibold"
                             style="border-radius: 9px; color: #1e293b;">
                             <i class="fa fa-id-card text-primary mr-1"></i> Cetak Identitas (1 Kelas)
                         </a>
                         @if ($isSd)
-                            <a href="{{ route('penilaian-rapor.nilai.kelas', ['kelas' => $selectedKelas->id, 'periode' => $periode]) }}" target="_blank"
+                            <a href="{{ route('penilaian-rapor.nilai.kelas', ['kelas' => $selectedKelas, 'periode' => $periode]) }}" target="_blank"
                                 class="btn text-white shadow-sm font-weight-bold"
                                 style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 9px;">
                                 <i class="fa fa-file-pdf mr-1"></i> Cetak Nilai Rapor (1 Kelas)
@@ -62,7 +62,7 @@
                         <label for="rapor_ta" class="small font-weight-bold text-muted mb-1">Tahun Ajaran</label>
                         <select name="tahun_ajaran_id" id="rapor_ta" class="form-control form-control-sm" onchange="this.form.submit()">
                             @foreach ($tahunAjaranOptions as $ta)
-                                <option value="{{ $ta->id }}" @selected((int) $selectedTahunAjaranId === (int) $ta->id)>
+                                <option value="{{ $ta->sqid }}" @selected((int) $selectedTahunAjaranId === (int) $ta->id)>
                                     {{ $ta->full_label }}{{ $ta->is_active ? ' (Aktif)' : '' }}
                                 </option>
                             @endforeach
@@ -73,7 +73,7 @@
                         <label for="rapor_kelas" class="small font-weight-bold text-muted mb-1">Kelas</label>
                         <select name="kelas_id" id="rapor_kelas" class="form-control form-control-sm" onchange="this.form.submit()">
                             @forelse ($kelasOptions as $kls)
-                                <option value="{{ $kls->id }}" @selected($selectedKelas && (int) $selectedKelas->id === (int) $kls->id)>
+                                <option value="{{ $kls->sqid }}" @selected($selectedKelas && (int) $selectedKelas->id === (int) $kls->id)>
                                     [{{ strtoupper((string) $kls->jenjang_kelas) }}] {{ $kls->nama_kelas }}
                                 </option>
                             @empty
@@ -113,7 +113,7 @@
                                     </div>
                                 @endif
                             </div>
-                            <a href="{{ $sekolah ? route('sekolah.edit', $sekolah->id) : route('sekolah.create') }}"
+                            <a href="{{ $sekolah ? route('sekolah.edit', $sekolah) : route('sekolah.create') }}"
                                 class="btn btn-sm btn-outline-primary font-weight-semibold" style="border-radius: 8px;">
                                 {{ $sekolah ? 'Ubah' : 'Atur Sekolah' }}
                             </a>
@@ -139,7 +139,7 @@
                                     </div>
                                 @endif
                             </div>
-                            <a href="{{ $titimangsa ? route('titimangsa.edit', $titimangsa->id) : route('titimangsa.create') }}"
+                            <a href="{{ $titimangsa ? route('titimangsa.edit', $titimangsa) : route('titimangsa.create') }}"
                                 class="btn btn-sm btn-outline-primary font-weight-semibold" style="border-radius: 8px;">
                                 {{ $titimangsa ? 'Ubah' : 'Atur Titimangsa' }}
                             </a>
@@ -217,13 +217,13 @@
                                             A: <strong>{{ $absen['alpa'] }}</strong>
                                         </td>
                                         <td class="text-right text-nowrap">
-                                            <a href="{{ route('penilaian-rapor.identitas.siswa', $anggota->id) }}" target="_blank"
+                                            <a href="{{ route('penilaian-rapor.identitas.siswa', $anggota) }}" target="_blank"
                                                 class="btn btn-sm btn-outline-primary font-weight-semibold mr-1"
                                                 style="border-radius: 7px;" title="Cetak Cover, Data Sekolah &amp; Biodata Siswa">
                                                 <i class="fa fa-id-card mr-1"></i> Identitas
                                             </a>
                                             @if ($isSd)
-                                                <a href="{{ route('penilaian-rapor.nilai.siswa', ['anggota_kelas' => $anggota->id, 'periode' => $periode]) }}" target="_blank"
+                                                <a href="{{ route('penilaian-rapor.nilai.siswa', ['anggota_kelas' => $anggota, 'periode' => $periode]) }}" target="_blank"
                                                     class="btn btn-sm text-white font-weight-semibold"
                                                     style="background: #ea580c; border-radius: 7px;" title="Cetak Nilai Hasil Belajar">
                                                     <i class="fa fa-file-pdf mr-1"></i> Nilai

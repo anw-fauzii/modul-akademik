@@ -28,6 +28,8 @@ class KaryawanController extends Controller
     public function __construct()
     {
         $this->middleware('role:super admin');
+        $this->middleware('can:viewAny,'.Karyawan::class)->only(['index']);
+        $this->middleware('can:view,karyawan')->only(['show', 'foto']);
     }
 
     /**

@@ -868,7 +868,8 @@
 
                     if (createUrl && selectedYear !== '' && filteredYears.length > 0 && !filteredYears.includes(selectedYear)) {
                         const url = new URL(createUrl, window.location.origin);
-                        url.searchParams.set(redirectParam, groupControl.value);
+                        const selectedOption = groupControl.options[groupControl.selectedIndex];
+                        url.searchParams.set(redirectParam, selectedOption?.dataset.sqid || groupControl.value);
                         if (karyawanSelect?.value) {
                             url.searchParams.set('karyawan_nipy', karyawanSelect.value);
                         }

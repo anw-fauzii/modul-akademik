@@ -137,7 +137,7 @@
 
         <!-- RINGKASAN JUMLAH AGENDA PER UNIT -->
         <div class="agenda-summary-grid mb-3">
-            <a href="{{ route('agenda-sekolah.index', ['tahun_ajaran_id' => $activeFilters['tahun_ajaran_id']]) }}"
+            <a href="{{ route('agenda-sekolah.index', \App\Support\Sqid::encodeQueryParams(['tahun_ajaran_id' => $activeFilters['tahun_ajaran_id']])) }}"
                 class="agenda-stat-card {{ $activeFilters['unit'] === '' ? 'is-active-filter' : '' }}">
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
@@ -168,7 +168,7 @@
                         default => 'linear-gradient(135deg, #64748b 0%, #475569 100%)',
                     };
                 @endphp
-                <a href="{{ route('agenda-sekolah.index', ['tahun_ajaran_id' => $activeFilters['tahun_ajaran_id'], 'unit' => $unitKey]) }}"
+                <a href="{{ route('agenda-sekolah.index', \App\Support\Sqid::encodeQueryParams(['tahun_ajaran_id' => $activeFilters['tahun_ajaran_id'], 'unit' => $unitKey])) }}"
                     class="agenda-stat-card {{ strcasecmp($activeFilters['unit'], $unitKey) === 0 ? 'is-active-filter' : '' }}">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
@@ -216,7 +216,7 @@
                                     -- Semua Tahun Ajaran --
                                 </option>
                                 @foreach ($tahunAjaranList as $ta)
-                                    <option value="{{ $ta->id }}" @selected((string) $activeFilters['tahun_ajaran_id'] === (string) $ta->id)>
+                                    <option value="{{ $ta->sqid }}" @selected((string) $activeFilters['tahun_ajaran_id'] === (string) $ta->id)>
                                         {{ $ta->nama_tahun_ajaran }} - Semester {{ strtoupper((string) $ta->semester) }} {{ $ta->is_active ? '(Aktif)' : '' }}
                                     </option>
                                 @endforeach
@@ -338,12 +338,12 @@
                                     </td>
                                     <td class="text-center">
                                         <x-action-dropdown>
-                                            <a href="{{ route('agenda-sekolah.edit', $item->id) }}" class="action-dropdown-item" role="menuitem">
+                                            <a href="{{ route('agenda-sekolah.edit', $item) }}" class="action-dropdown-item" role="menuitem">
                                                 <i class="fa fa-edit text-primary action-item-icon"></i>
                                                 <span>Edit Agenda</span>
                                             </a>
                                             <div class="action-dropdown-divider"></div>
-                                            <form action="{{ route('agenda-sekolah.destroy', $item->id) }}" method="POST" class="delete-form">
+                                            <form action="{{ route('agenda-sekolah.destroy', $item) }}" method="POST" class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="button" class="action-dropdown-item action-dropdown-item--danger delete-button" role="menuitem">

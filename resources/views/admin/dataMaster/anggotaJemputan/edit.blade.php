@@ -11,7 +11,7 @@
             : '-';
         $redirectJemputanId = old('redirect_to_jemputan', $fromJemputanId ?? null);
         $backUrl = is_numeric($redirectJemputanId) && (int) $redirectJemputanId > 0
-            ? route('jemputan.show', (int) $redirectJemputanId)
+            ? route('jemputan.show', \App\Support\Sqid::encodeFor(\App\Models\Admin\DataMaster\Jemputan::class, (int) $redirectJemputanId))
             : ($anggotaJemputan->akademik_master_jemputan_id
                 ? route('jemputan.show', $anggotaJemputan->akademik_master_jemputan_id)
                 : route('jemputan.index'));
@@ -44,11 +44,11 @@
 
         <div class="main-card card">
             <div class="card-body">
-                <form method="post" action="{{ route('anggota-jemputan.update', $anggotaJemputan->id) }}" id="editForm">
+                <form method="post" action="{{ route('anggota-jemputan.update', $anggotaJemputan) }}" id="editForm">
                     @csrf
                     @method('PUT')
                     @if (is_numeric($redirectJemputanId) && (int) $redirectJemputanId > 0)
-                        <input type="hidden" name="redirect_to_jemputan" value="{{ (int) $redirectJemputanId }}">
+                        <input type="hidden" name="redirect_to_jemputan" value="{{ \App\Support\Sqid::encodeFor(\App\Models\Admin\DataMaster\Jemputan::class, (int) $redirectJemputanId) }}">
                     @endif
                     @include('admin.dataMaster.anggotaJemputan._form')
                 </form>

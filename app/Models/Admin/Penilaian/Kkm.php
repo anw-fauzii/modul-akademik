@@ -4,6 +4,7 @@ namespace App\Models\Admin\Penilaian;
 
 use App\Models\Admin\DataMaster\TahunAjaran;
 use App\Models\Admin\Pelajaran\MataPelajaran;
+use App\Models\Concerns\HasSqidRouteKey;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -26,6 +27,8 @@ use Illuminate\Support\Collection;
 #[Table('akademik_penilaian_kkm')]
 class Kkm extends Model
 {
+    use HasSqidRouteKey;
+
     public const float DEFAULT_KKM = 75.00;
 
     public const int DEFAULT_BOBOT_TP = 100;

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Concerns;
 
+use App\Support\Sqid;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -123,10 +124,10 @@ trait ManagesPresensiSiswaActions
 
         if ($request->input('redirect_to') === 'bulk') {
             return redirect()
-                ->route("{$routePrefix}.bulk", [
+                ->route("{$routePrefix}.bulk", Sqid::encodeQueryParams([
                     'kelas_id' => $kelasId,
                     'tanggal' => $tanggal,
-                ])
+                ]))
                 ->with($flashKey, $flashMessage);
         }
 
@@ -136,7 +137,7 @@ trait ManagesPresensiSiswaActions
         ]);
 
         return redirect()
-            ->route("{$routePrefix}.index", $redirectQuery)
+            ->route("{$routePrefix}.index", Sqid::encodeQueryParams($redirectQuery))
             ->with($flashKey, $flashMessage);
     }
 }

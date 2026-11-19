@@ -341,7 +341,7 @@
                                     Belum Ditempatkan di Kelas
                                 </option>
                                 @foreach ($kelasFilterOptions as $kelasOption)
-                                    <option value="{{ $kelasOption->id }}" @selected((string) $activeFilters['kelas_id'] === (string) $kelasOption->id)>
+                                    <option value="{{ $kelasOption->sqid }}" @selected((string) $activeFilters['kelas_id'] === (string) $kelasOption->id)>
                                         {{ $kelasOption->nama_kelas }} ({{ strtoupper($kelasOption->jenjang_kelas) }})
                                         @if ($kelasOption->tahunAjaran)
                                             — {{ $kelasOption->tahunAjaran->nama_tahun_ajaran }} Smt {{ strtoupper($kelasOption->tahunAjaran->semester) }}
@@ -483,16 +483,16 @@
                                         </td>
                                         <td class="text-center">
                                             <x-action-dropdown>
-                                                <a href="{{ route('siswa.show', $item->nis) }}" class="action-dropdown-item" role="menuitem">
+                                                <a href="{{ route('siswa.show', $item) }}" class="action-dropdown-item" role="menuitem">
                                                     <i class="fa fa-eye text-info action-item-icon"></i>
                                                     <span>Detail Data</span>
                                                 </a>
-                                                <a href="{{ route('siswa.edit', $item->nis) }}" class="action-dropdown-item" role="menuitem">
+                                                <a href="{{ route('siswa.edit', $item) }}" class="action-dropdown-item" role="menuitem">
                                                     <i class="fa fa-edit text-primary action-item-icon"></i>
                                                     <span>Edit Data</span>
                                                 </a>
                                                 <div class="action-dropdown-divider"></div>
-                                                <form action="{{ route('siswa.destroy', $item->nis) }}" method="POST" class="delete-form">
+                                                <form action="{{ route('siswa.destroy', $item) }}" method="POST" class="delete-form">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="button" class="action-dropdown-item action-dropdown-item--danger delete-button" role="menuitem">

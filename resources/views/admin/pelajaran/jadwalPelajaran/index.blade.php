@@ -537,19 +537,19 @@
             || (($filters['status'] ?? 'all') !== 'all')
             || (($filters['search'] ?? '') !== '');
 
-        $baseQueryParams = [
+        $baseQueryParams = \App\Support\Sqid::encodeQueryParams([
             'tahun_ajaran_id' => $filters['tahun_ajaran_id'] ?? 'all',
             'unit' => $filters['unit'] ?? '',
             'kelas_id' => $filters['kelas_id'] ?? '',
             'status' => ($filters['status'] ?? 'all') !== 'all' ? $filters['status'] : '',
             'search' => $filters['search'] ?? '',
-        ];
+        ]);
 
-        $createParams = array_filter([
+        $createParams = \App\Support\Sqid::encodeQueryParams(array_filter([
             'tahun_ajaran_id' => ($filters['tahun_ajaran_id'] ?? 'all') !== 'all' ? $filters['tahun_ajaran_id'] : null,
             'kelas_id' => ($filters['kelas_id'] ?? '') !== '' ? $filters['kelas_id'] : null,
             'hari' => $selectedHari !== '' ? $selectedHari : null,
-        ]);
+        ]));
 
         $matrixDayCounts = array_fill_keys(array_keys($hariOptions), 0);
         if ($weeklyMatrix) {
@@ -632,7 +632,7 @@
                             Semua Tahun Ajaran
                         </option>
                         @foreach ($tahunAjaranOptions as $ta)
-                            <option value="{{ $ta->id }}"
+                            <option value="{{ $ta->sqid }}"
                                 @selected((string) ($filters['tahun_ajaran_id'] ?? '') === (string) $ta->id)>
                                 {{ $ta->full_label }}{{ $ta->is_active ? ' (Aktif)' : '' }}
                             </option>
@@ -658,7 +658,7 @@
                     <select name="kelas_id" id="filter_kelas" class="filter-control js-filter-autosubmit">
                         <option value="">Semua Kelas</option>
                         @foreach ($kelasOptions as $kelasOption)
-                            <option value="{{ $kelasOption->id }}"
+                            <option value="{{ $kelasOption->sqid }}"
                                 @selected((string) ($filters['kelas_id'] ?? '') === (string) $kelasOption->id)>
                                 [{{ strtoupper((string) $kelasOption->jenjang_kelas) }}] {{ $kelasOption->nama_kelas }}
                             </option>
@@ -696,7 +696,7 @@
                             <i class="fa fa-search"></i>
                         </button>
                         @if ($hasActiveFilter)
-                            <a href="{{ route('jadwal-pelajaran.index', ['tahun_ajaran_id' => $filters['tahun_ajaran_id'] ?? 'all']) }}"
+                            <a href="{{ route('jadwal-pelajaran.index', \App\Support\Sqid::encodeQueryParams(['tahun_ajaran_id' => $filters['tahun_ajaran_id'] ?? 'all'])) }}"
                                 class="filter-btn filter-btn-secondary filter-btn-icon" title="Reset Filter">
                                 <i class="fa fa-undo"></i>
                             </a>
@@ -730,10 +730,10 @@
                             </span>
                         </div>
 
-                        <a href="{{ route('jadwal-pelajaran.index', array_filter([
+                        <a href="{{ route('jadwal-pelajaran.index', \App\Support\Sqid::encodeQueryParams(array_filter([
                             'tahun_ajaran_id' => $filters['tahun_ajaran_id'] ?? 'all',
                             'unit' => $filters['unit'] ?? '',
-                        ])) }}" class="text-xs font-weight-bold" style="color: #64748b; text-decoration: none;">
+                        ]))) }}" class="text-xs font-weight-bold" style="color: #64748b; text-decoration: none;">
                             Ganti Kelas &times;
                         </a>
                     </div>
@@ -798,7 +798,7 @@
                                                                     <span class="jp-slot-code">Mapel</span>
                                                                 @endif
 
-                                                                <a href="{{ route('jadwal-pelajaran.edit', $slotEntry->id) }}"
+                                                                <a href="{{ route('jadwal-pelajaran.edit', $slotEntry) }}"
                                                                     class="jp-slot-edit" title="Edit Jadwal">
                                                                     <i class="fa fa-pen"></i>
                                                                 </a>
@@ -824,12 +824,12 @@
                                                         @endif
                                                     </div>
                                                 @else
-                                                    <a href="{{ route('jadwal-pelajaran.create', [
+                                                    <a href="{{ route('jadwal-pelajaran.create', \App\Support\Sqid::encodeQueryParams([
                                                         'tahun_ajaran_id' => $selectedKelas->akademik_master_tahun_ajaran_id,
-                                                        'kelas_id' => $selectedKelas->id,
-                                                        'jam_pelajaran_id' => $jamSlot->id,
+                                                        'kelas_id' => $selectedKelas->sqid,
+                                                        'jam_pelajaran_id' => $jamSlot->sqid,
                                                         'hari' => $hariCode,
-                                                    ]) }}" class="jp-slot-empty">
+                                                    ])) }}" class="jp-slot-empty">
                                                         <i class="fa fa-plus" style="font-size: 0.65rem;"></i>
                                                         <span>Isi Slot</span>
                                                     </a>
@@ -859,7 +859,7 @@
                         <a href="{{ route('jadwal-pelajaran.index', array_filter([
                             ...$baseQueryParams,
                             'hari' => $selectedHari,
-                            'kelas_id' => $kelasOption->id,
+                            'kelas_id' => $kelasOption->sqid,
                         ])) }}" class="jp-class-chip">
                             <span class="jp-class-chip-unit">{{ strtoupper((string) $kelasOption->jenjang_kelas) }}</span>
                             <span>{{ $kelasOption->nama_kelas }}</span>
@@ -972,7 +972,7 @@
                                         @endif
                                     </td>
                                     <td class="text-center">
-                                        <form action="{{ route('jadwal-pelajaran.toggle-status', $item->id) }}" method="POST"
+                                        <form action="{{ route('jadwal-pelajaran.toggle-status', $item) }}" method="POST"
                                             class="d-inline">
                                             @csrf
                                             <button type="submit"
@@ -987,12 +987,12 @@
                                     </td>
                                     <td class="text-center">
                                         <x-action-dropdown>
-                                            <a href="{{ route('jadwal-pelajaran.edit', $item->id) }}" class="action-dropdown-item" role="menuitem">
+                                            <a href="{{ route('jadwal-pelajaran.edit', $item) }}" class="action-dropdown-item" role="menuitem">
                                                 <i class="fa fa-edit text-primary action-item-icon"></i>
                                                 <span>Edit Data</span>
                                             </a>
                                             <div class="action-dropdown-divider"></div>
-                                            <form action="{{ route('jadwal-pelajaran.destroy', $item->id) }}" method="POST" class="delete-form">
+                                            <form action="{{ route('jadwal-pelajaran.destroy', $item) }}" method="POST" class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="button" class="action-dropdown-item action-dropdown-item--danger delete-button" role="menuitem">

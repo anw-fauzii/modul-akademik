@@ -19,6 +19,11 @@ class YaumiyahTahsinController extends Controller
         protected YaumiyahTahsinService $service
     ) {
         $this->middleware('role:super admin');
+        $this->middleware('can:viewAny,'.YaumiyahTahsin::class)->only(['index']);
+        $this->middleware('can:viewMatriks,'.YaumiyahTahsin::class)->only(['matriks']);
+        $this->middleware('can:viewStatistik,'.YaumiyahTahsin::class)->only(['statistik']);
+        $this->middleware('can:create,'.YaumiyahTahsin::class)->only(['store']);
+        $this->middleware('can:delete,yaumiyah_tahsin')->only(['destroy']);
     }
 
     protected function yaumiyahService(): BaseYaumiyahT2qService

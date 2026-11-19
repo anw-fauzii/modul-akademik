@@ -3,6 +3,7 @@
 namespace App\Models\Admin\DataMaster;
 
 use App\Models\Admin\Penilaian\PeriodeTp;
+use App\Models\Concerns\HasSqidRouteKey;
 use Database\Factories\Admin\DataMaster\TitimangsaFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -33,6 +34,8 @@ class Titimangsa extends Model
 {
     /** @use HasFactory<TitimangsaFactory> */
     use HasFactory;
+
+    use HasSqidRouteKey;
 
     public const string TINGKATAN_SEMUA = '*';
 

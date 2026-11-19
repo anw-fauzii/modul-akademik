@@ -434,10 +434,10 @@ class WaliKelasPresensiTest extends TestCase
 
         // Memastikan seluruh action/link menunjuk route wali-kelas.presensi-siswa.*, bukan admin presensi-siswa.*
         $this->assertStringContainsString('Kelas Binaan Wali Kelas', $indexHtml);
-        $this->assertStringContainsString(route('wali-kelas.presensi-siswa.bulk', ['kelas_id' => 10]), $indexHtml);
+        $this->assertStringContainsString(route('wali-kelas.presensi-siswa.bulk', ['kelas_id' => sqidParam('kelas_id', 10)]), $indexHtml);
         $this->assertStringContainsString(route('wali-kelas.presensi-siswa.bulk.destroy'), $indexHtml);
         $this->assertStringContainsString(route('wali-kelas.presensi-siswa.edit', $presensi), $indexHtml);
-        $this->assertStringContainsString(e(route('wali-kelas.presensi-siswa.rekap', ['kelas_id' => 10, 'bulan' => '2026-11'])), $indexHtml);
+        $this->assertStringContainsString(e(route('wali-kelas.presensi-siswa.rekap', ['kelas_id' => sqidParam('kelas_id', 10), 'bulan' => '2026-11'])), $indexHtml);
         $this->assertStringNotContainsString(route('presensi-siswa.bulk'), $indexHtml);
 
         $this->assertStringContainsString(route('wali-kelas.presensi-siswa.bulk.store'), $bulkHtml);
@@ -450,11 +450,11 @@ class WaliKelasPresensiTest extends TestCase
         $this->assertStringContainsString('Belum Ada Penugasan Wali Kelas / Pendamping Aktif', $ineligibleHtml);
 
         $this->assertStringContainsString('Rekap Kehadiran', $rekapHtml);
-        $this->assertStringContainsString(route('wali-kelas.presensi-siswa.bulk', ['kelas_id' => 10]), $rekapHtml);
+        $this->assertStringContainsString(route('wali-kelas.presensi-siswa.bulk', ['kelas_id' => sqidParam('kelas_id', 10)]), $rekapHtml);
         $this->assertStringNotContainsString(route('presensi-siswa.rekap'), $rekapHtml);
 
         $this->assertStringContainsString('Statistik Presensi Tahunan', $tahunanHtml);
-        $this->assertStringContainsString(e(route('wali-kelas.presensi-siswa.rekap', ['tahun_ajaran_id' => 1, 'kelas_id' => 10])), $tahunanHtml);
+        $this->assertStringContainsString(e(route('wali-kelas.presensi-siswa.rekap', ['tahun_ajaran_id' => sqidParam('tahun_ajaran_id', 1), 'kelas_id' => sqidParam('kelas_id', 10)])), $tahunanHtml);
         $this->assertStringNotContainsString(route('presensi-siswa.tahunan'), $tahunanHtml);
 
         // Sidebar role wali kelas menampilkan dropdown presensi wali kelas

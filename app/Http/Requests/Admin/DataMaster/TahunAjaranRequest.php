@@ -36,9 +36,9 @@ class TahunAjaranRequest extends FormRequest
     {
         return [
             'nama_tahun_ajaran.required' => 'Nama Tahun Ajaran wajib diisi.',
-            'nama_tahun_ajaran.unique'   => 'Kombinasi tahun ajaran dan semester ini sudah ada dalam sistem.',
-            'semester.required'          => 'Semester wajib dipilih.',
-            'semester.in'                => 'Semester tidak valid.',
+            'nama_tahun_ajaran.unique' => 'Kombinasi tahun ajaran dan semester ini sudah ada dalam sistem.',
+            'semester.required' => 'Semester wajib dipilih.',
+            'semester.in' => 'Semester tidak valid.',
         ];
     }
 }

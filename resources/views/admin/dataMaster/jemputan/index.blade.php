@@ -55,7 +55,7 @@
                                         <div class="small">
                                             <i class="fa fa-user-tie text-primary mr-1" title="Petugas / Driver Jemputan"></i>
                                             @if ($item->petugas)
-                                                <a href="{{ route('jemputan.show', $item->id) }}"
+                                                <a href="{{ route('jemputan.show', $item) }}"
                                                     class="font-weight-bold text-slate-800 text-decoration-none"
                                                     title="Detail &amp; Anggota Jemputan {{ $item->petugas->nama_gelar }}">
                                                     {{ $item->petugas->nama_gelar }}
@@ -64,7 +64,7 @@
                                                     NIPY: {{ $item->karyawan_nipy }}
                                                 </div>
                                             @else
-                                                <a href="{{ route('jemputan.show', $item->id) }}"
+                                                <a href="{{ route('jemputan.show', $item) }}"
                                                     class="text-muted font-italic text-decoration-none"
                                                     title="Detail &amp; Anggota Jemputan">
                                                     NIPY: {{ $item->karyawan_nipy }}
@@ -105,7 +105,7 @@
                                             $jumlahSiswa = (int) ($item->anggota_jemputan_count ?? 0);
                                             $petugasTitle = $item->petugas?->nama_gelar ?? ('NIPY: ' . $item->karyawan_nipy);
                                         @endphp
-                                        <a href="{{ route('jemputan.show', $item->id) }}"
+                                        <a href="{{ route('jemputan.show', $item) }}"
                                             class="badge {{ $jumlahSiswa > 0 ? 'badge-primary' : 'badge-secondary' }} px-2 py-1 text-decoration-none"
                                             style="font-size: 0.78rem;"
                                             data-toggle="tooltip" data-placement="top"
@@ -116,16 +116,16 @@
                                     </td>
                                     <td class="text-center">
                                         <x-action-dropdown>
-                                            <a href="{{ route('jemputan.show', $item->id) }}" class="action-dropdown-item" role="menuitem">
+                                            <a href="{{ route('jemputan.show', $item) }}" class="action-dropdown-item" role="menuitem">
                                                 <i class="fa fa-eye text-info action-item-icon"></i>
                                                 <span>Detail &amp; Anggota Jemputan</span>
                                             </a>
-                                            <a href="{{ route('jemputan.edit', $item->id) }}" class="action-dropdown-item" role="menuitem">
+                                            <a href="{{ route('jemputan.edit', $item) }}" class="action-dropdown-item" role="menuitem">
                                                 <i class="fa fa-edit text-primary action-item-icon"></i>
                                                 <span>Edit Data</span>
                                             </a>
                                             <div class="action-dropdown-divider"></div>
-                                            <form action="{{ route('jemputan.destroy', $item->id) }}" method="POST" class="delete-form">
+                                            <form action="{{ route('jemputan.destroy', $item) }}" method="POST" class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="button" class="action-dropdown-item action-dropdown-item--danger delete-button" role="menuitem">

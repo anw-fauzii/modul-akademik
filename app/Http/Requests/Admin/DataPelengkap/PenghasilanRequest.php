@@ -30,7 +30,7 @@ class PenghasilanRequest extends FormRequest
     {
         return [
             'nama_penghasilan.required' => 'Nama Penghasilan wajib diisi.',
-            'nama_penghasilan.unique'   => 'Nama penghasilan ini sudah ada dalam sistem.',
+            'nama_penghasilan.unique' => 'Nama penghasilan ini sudah ada dalam sistem.',
         ];
     }
 }

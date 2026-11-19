@@ -145,7 +145,7 @@
 
         <!-- RINGKASAN PER UNIT -->
         <div class="mp-summary-grid mb-3">
-            <a href="{{ route('mata-pelajaran.index', array_filter(['kelompok_pelajaran_id' => $filters['kelompok_pelajaran_id'], 'sifat' => $filters['sifat'], 'status' => $filters['status'] !== 'all' ? $filters['status'] : null, 'search' => $filters['search']])) }}"
+            <a href="{{ route('mata-pelajaran.index', \App\Support\Sqid::encodeQueryParams(array_filter(['kelompok_pelajaran_id' => $filters['kelompok_pelajaran_id'], 'sifat' => $filters['sifat'], 'status' => $filters['status'] !== 'all' ? $filters['status'] : null, 'search' => $filters['search']]))) }}"
                 class="mp-stat-card {{ $selectedUnit === '' ? 'is-active-filter' : '' }}">
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
@@ -171,7 +171,7 @@
                         default => 'linear-gradient(135deg, #64748b 0%, #475569 100%)',
                     };
                 @endphp
-                <a href="{{ route('mata-pelajaran.index', array_filter(['unit' => $unitName, 'kelompok_pelajaran_id' => $filters['kelompok_pelajaran_id'], 'sifat' => $filters['sifat'], 'status' => $filters['status'] !== 'all' ? $filters['status'] : null, 'search' => $filters['search']])) }}"
+                <a href="{{ route('mata-pelajaran.index', \App\Support\Sqid::encodeQueryParams(array_filter(['unit' => $unitName, 'kelompok_pelajaran_id' => $filters['kelompok_pelajaran_id'], 'sifat' => $filters['sifat'], 'status' => $filters['status'] !== 'all' ? $filters['status'] : null, 'search' => $filters['search']]))) }}"
                     class="mp-stat-card {{ $selectedUnit === $unitName ? 'is-active-filter' : '' }}">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
@@ -237,7 +237,7 @@
                         <select name="kelompok_pelajaran_id" id="filter_kelompok" class="filter-control">
                             <option value="">Semua Kelompok</option>
                             @foreach ($kelompokPelajaranOptions as $kelompokOption)
-                                <option value="{{ $kelompokOption->id }}"
+                                <option value="{{ $kelompokOption->sqid }}"
                                     @selected((string) ($filters['kelompok_pelajaran_id'] ?? '') === (string) $kelompokOption->id)>
                                     [{{ $kelompokOption->kode }}] {{ $kelompokOption->kelompok }}
                                 </option>
@@ -348,7 +348,7 @@
                                         </span>
                                     </td>
                                     <td class="text-center">
-                                        <form action="{{ route('mata-pelajaran.toggle-status', $item->id) }}" method="POST"
+                                        <form action="{{ route('mata-pelajaran.toggle-status', $item) }}" method="POST"
                                             class="d-inline">
                                             @csrf
                                             <button type="submit"
@@ -363,12 +363,12 @@
                                     </td>
                                     <td class="text-center">
                                         <x-action-dropdown>
-                                            <a href="{{ route('mata-pelajaran.edit', $item->id) }}" class="action-dropdown-item" role="menuitem">
+                                            <a href="{{ route('mata-pelajaran.edit', $item) }}" class="action-dropdown-item" role="menuitem">
                                                 <i class="fa fa-edit text-primary action-item-icon"></i>
                                                 <span>Edit Data</span>
                                             </a>
                                             <div class="action-dropdown-divider"></div>
-                                            <form action="{{ route('mata-pelajaran.destroy', $item->id) }}" method="POST" class="delete-form">
+                                            <form action="{{ route('mata-pelajaran.destroy', $item) }}" method="POST" class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="button" class="action-dropdown-item action-dropdown-item--danger delete-button" role="menuitem">

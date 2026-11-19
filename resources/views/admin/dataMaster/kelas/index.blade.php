@@ -148,7 +148,7 @@
 
         <!-- RINGKASAN JUMLAH TIAP JENJANG (KLIK UNTUK FILTER) -->
         <div class="kelas-summary-grid mb-3">
-            <a href="{{ route('kelas.index', ['tahun_ajaran_id' => $activeFilters['tahun_ajaran_id']]) }}"
+            <a href="{{ route('kelas.index', \App\Support\Sqid::encodeQueryParams(['tahun_ajaran_id' => $activeFilters['tahun_ajaran_id']])) }}"
                 class="kelas-stat-card {{ $activeFilters['jenjang'] === '' ? 'is-active-filter' : '' }}">
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
@@ -178,7 +178,7 @@
                         default => ['linear-gradient(135deg, #64748b 0%, #475569 100%)', 'fa-school'],
                     };
                 @endphp
-                <a href="{{ route('kelas.index', ['tahun_ajaran_id' => $activeFilters['tahun_ajaran_id'], 'jenjang' => $jenjangKey]) }}"
+                <a href="{{ route('kelas.index', \App\Support\Sqid::encodeQueryParams(['tahun_ajaran_id' => $activeFilters['tahun_ajaran_id'], 'jenjang' => $jenjangKey])) }}"
                     class="kelas-stat-card {{ $activeFilters['jenjang'] === $jenjangKey ? 'is-active-filter' : '' }}">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
@@ -226,7 +226,7 @@
                                     -- Semua Tahun Ajaran --
                                 </option>
                                 @foreach ($tahunAjaranList as $ta)
-                                    <option value="{{ $ta->id }}" @selected((string) $activeFilters['tahun_ajaran_id'] === (string) $ta->id)>
+                                    <option value="{{ $ta->sqid }}" @selected((string) $activeFilters['tahun_ajaran_id'] === (string) $ta->id)>
                                         {{ $ta->nama_tahun_ajaran }} - Semester {{ strtoupper((string) $ta->semester) }} {{ $ta->is_active ? '(Aktif)' : '' }}
                                     </option>
                                 @endforeach
@@ -304,7 +304,7 @@
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
                                     <td>
-                                        <a href="{{ route('kelas.show', $item->id) }}"
+                                        <a href="{{ route('kelas.show', $item) }}"
                                             class="font-weight-bold text-slate-800 text-decoration-none"
                                             style="font-size: 0.95rem;"
                                             title="Detail & Anggota Kelas {{ $item->nama_kelas }}">
@@ -359,7 +359,7 @@
                                         @php
                                             $jumlahSiswa = (int) ($item->anggota_kelas_count ?? 0);
                                         @endphp
-                                        <a href="{{ route('kelas.show', $item->id) }}"
+                                        <a href="{{ route('kelas.show', $item) }}"
                                             class="badge {{ $jumlahSiswa > 0 ? 'badge-primary' : 'badge-secondary' }} px-2 py-1 text-decoration-none"
                                             style="font-size: 0.78rem;"
                                             data-toggle="tooltip" data-placement="top"
@@ -370,16 +370,16 @@
                                     </td>
                                     <td class="text-center">
                                         <x-action-dropdown>
-                                            <a href="{{ route('kelas.show', $item->id) }}" class="action-dropdown-item" role="menuitem">
+                                            <a href="{{ route('kelas.show', $item) }}" class="action-dropdown-item" role="menuitem">
                                                 <i class="fa fa-eye text-info action-item-icon"></i>
                                                 <span>Detail &amp; Anggota Kelas</span>
                                             </a>
-                                            <a href="{{ route('kelas.edit', $item->id) }}" class="action-dropdown-item" role="menuitem">
+                                            <a href="{{ route('kelas.edit', $item) }}" class="action-dropdown-item" role="menuitem">
                                                 <i class="fa fa-edit text-primary action-item-icon"></i>
                                                 <span>Edit Data</span>
                                             </a>
                                             <div class="action-dropdown-divider"></div>
-                                            <form action="{{ route('kelas.destroy', $item->id) }}" method="POST" class="delete-form">
+                                            <form action="{{ route('kelas.destroy', $item) }}" method="POST" class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="button" class="action-dropdown-item action-dropdown-item--danger delete-button" role="menuitem">

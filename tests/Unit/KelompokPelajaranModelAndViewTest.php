@@ -172,8 +172,8 @@ class KelompokPelajaranModelAndViewTest extends TestCase
         $this->assertStringContainsString('#1', $indexHtml);
         $this->assertStringContainsString('A', $indexHtml);
         $this->assertStringContainsString('Kelompok A (Umum)', $indexHtml);
-        $this->assertStringContainsString(route('kelompok-pelajaran.edit', 15), $indexHtml);
-        $this->assertStringContainsString(route('kelompok-pelajaran.destroy', 15), $indexHtml);
+        $this->assertStringContainsString(route('kelompok-pelajaran.edit', sqidFor('kelompok-pelajaran.edit', 15)), $indexHtml);
+        $this->assertStringContainsString(route('kelompok-pelajaran.destroy', sqidFor('kelompok-pelajaran.destroy', 15)), $indexHtml);
 
         $this->assertStringContainsString(route('kelompok-pelajaran.store'), $createHtml);
         $this->assertStringContainsString('name="kode"', $createHtml);
@@ -181,7 +181,7 @@ class KelompokPelajaranModelAndViewTest extends TestCase
         $this->assertStringContainsString('name="urutan"', $createHtml);
         $this->assertStringContainsString('value="4"', $createHtml);
 
-        $this->assertStringContainsString(route('kelompok-pelajaran.update', 15), $editHtml);
+        $this->assertStringContainsString(route('kelompok-pelajaran.update', sqidFor('kelompok-pelajaran.update', 15)), $editHtml);
         $this->assertStringContainsString('Kelompok A (Umum)', $editHtml);
         $this->assertStringContainsString(route('kelompok-pelajaran.index'), view('layouts.sidebar')->render());
     }

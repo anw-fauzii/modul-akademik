@@ -305,8 +305,8 @@ class JamPelajaranModelAndViewTest extends TestCase
         $this->assertStringContainsString('07:35 - 08:10', $indexHtml);
         $this->assertStringContainsString('35 menit', $indexHtml);
         $this->assertStringContainsString('Matematika &amp; Literasi', $indexHtml);
-        $this->assertStringContainsString(route('jam-pelajaran.edit', 44), $indexHtml);
-        $this->assertStringContainsString(route('jam-pelajaran.destroy', 44), $indexHtml);
+        $this->assertStringContainsString(route('jam-pelajaran.edit', sqidFor('jam-pelajaran.edit', 44)), $indexHtml);
+        $this->assertStringContainsString(route('jam-pelajaran.destroy', sqidFor('jam-pelajaran.destroy', 44)), $indexHtml);
 
         $this->assertStringContainsString(route('jam-pelajaran.store'), $createHtml);
         $this->assertStringContainsString('name="unit"', $createHtml);
@@ -319,7 +319,7 @@ class JamPelajaranModelAndViewTest extends TestCase
         $this->assertStringContainsString('name="keterangan"', $createHtml);
         $this->assertStringContainsString('value="1"', $createHtml);
 
-        $this->assertStringContainsString(route('jam-pelajaran.update', 44), $editHtml);
+        $this->assertStringContainsString(route('jam-pelajaran.update', sqidFor('jam-pelajaran.update', 44)), $editHtml);
         $this->assertStringContainsString('value="07:35"', $editHtml);
         $this->assertStringContainsString('value="08:10"', $editHtml);
         $this->assertStringNotContainsString('type="time"', $editHtml);

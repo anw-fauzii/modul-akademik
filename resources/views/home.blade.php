@@ -427,7 +427,7 @@
                                             @endif
                                         </td>
                                         <td class="text-center">
-                                            <a href="{{ route('tahun-ajaran.edit', $item->id) }}"
+                                            <a href="{{ route('tahun-ajaran.edit', $item) }}"
                                                 class="btn btn-xs btn-primary shadow-sm"
                                                 style="border-radius: 4px; padding: 3px 8px;"
                                                 title="Edit">

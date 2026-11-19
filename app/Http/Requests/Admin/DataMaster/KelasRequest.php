@@ -56,14 +56,14 @@ class KelasRequest extends FormRequest
     {
         return [
             'akademik_master_tahun_ajaran_id.required' => 'Tahun Ajaran wajib dipilih.',
-            'akademik_master_tahun_ajaran_id.exists'   => 'Tahun Ajaran yang dipilih tidak valid.',
-            'karyawan_nipy.exists'                     => 'Guru Wali Kelas tidak ditemukan dalam database.',
-            'pendamping_nipy.exists'                   => 'Guru Pendamping tidak ditemukan dalam database.',
-            'pendamping_nipy.different'                => 'Guru Pendamping tidak boleh sama dengan Guru Wali Kelas.',
-            'tingkatan_kelas.required'                 => 'Tingkatan Kelas wajib diisi.',
-            'nama_kelas.required'                      => 'Nama Kelas wajib diisi.',
-            'jenjang_kelas.required'                   => 'Jenjang Kelas wajib diisi.',
-            'romawi.required'                          => 'Format Romawi kelas wajib diisi.',
+            'akademik_master_tahun_ajaran_id.exists' => 'Tahun Ajaran yang dipilih tidak valid.',
+            'karyawan_nipy.exists' => 'Guru Wali Kelas tidak ditemukan dalam database.',
+            'pendamping_nipy.exists' => 'Guru Pendamping tidak ditemukan dalam database.',
+            'pendamping_nipy.different' => 'Guru Pendamping tidak boleh sama dengan Guru Wali Kelas.',
+            'tingkatan_kelas.required' => 'Tingkatan Kelas wajib diisi.',
+            'nama_kelas.required' => 'Nama Kelas wajib diisi.',
+            'jenjang_kelas.required' => 'Jenjang Kelas wajib diisi.',
+            'romawi.required' => 'Format Romawi kelas wajib diisi.',
         ];
     }
 }

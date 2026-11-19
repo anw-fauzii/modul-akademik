@@ -32,6 +32,16 @@ class PenilaianTpController extends Controller
         protected PenilaianTpService $service
     ) {
         $this->middleware('role:super admin');
+        $this->middleware('can:viewAny,'.RekapMapel::class)->only(['index', 'rekap', 'export']);
+        $this->middleware('can:create,'.SumatifBab::class)->only(['store', 'updateBobot', 'storeSumatifBab', 'import']);
+        $this->middleware('can:update,sumatif_bab')->only(['updateSumatifBab']);
+        $this->middleware('can:delete,sumatif_bab')->only(['destroySumatifBab']);
+        $this->middleware('can:toggleMasukRapor,tujuan_pembelajaran')->only(['toggleMasukRapor']);
+        $this->middleware('can:create,'.AspekTp::class)->only(['storeAspek']);
+        $this->middleware('can:update,aspek_tp')->only(['updateAspek']);
+        $this->middleware('can:delete,aspek_tp')->only(['destroyAspek']);
+        $this->middleware('can:updateDeskripsi,rekap_mapel')->only(['updateDeskripsi']);
+        $this->middleware('can:regenerateDeskripsi,'.RekapMapel::class)->only(['regenerateDeskripsi']);
     }
 
     /**

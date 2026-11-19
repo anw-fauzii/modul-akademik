@@ -273,4 +273,3 @@ class TahunAjaranTest extends TestCase
         ]);
     }
 }
-

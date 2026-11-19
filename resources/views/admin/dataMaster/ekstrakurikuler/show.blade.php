@@ -31,7 +31,7 @@
                 </div>
 
                 <div class="page-title-actions d-flex flex-wrap align-items-center" style="gap: 0.5rem;">
-                    <a href="{{ route('ekstrakurikuler.edit', $ekstrakurikuler->id) }}" class="btn btn-primary shadow-sm"
+                    <a href="{{ route('ekstrakurikuler.edit', $ekstrakurikuler) }}" class="btn btn-primary shadow-sm"
                         style="border-radius: 8px;">
                         <i class="fa fa-edit mr-1"></i> Edit Ekstrakurikuler
                     </a>
@@ -165,7 +165,7 @@
                                     <td>
                                         @if ($kelasModel)
                                             @if (Route::has('kelas.show') && $kelasModel->id)
-                                                <a href="{{ route('kelas.show', $kelasModel->id) }}"
+                                                <a href="{{ route('kelas.show', $kelasModel) }}"
                                                     class="font-weight-bold text-slate-700 text-decoration-none">
                                                     {{ $kelasModel->nama_kelas }}
                                                 </a>
@@ -212,7 +212,7 @@
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center align-items-center">
                                             @if ($akModel?->siswa_nis)
-                                                <a href="{{ route('siswa.show', $akModel->siswa_nis) }}"
+                                                <a href="{{ route('siswa.show', \App\Support\Sqid::encodeFor(\App\Models\Admin\DataMaster\Siswa::class, $akModel->siswa_nis)) }}"
                                                     class="btn btn-sm btn-info text-white shadow-sm mx-1"
                                                     style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
                                                     data-toggle="tooltip" data-placement="top" title="Detail Siswa">
@@ -220,18 +220,18 @@
                                                 </a>
                                             @endif
 
-                                            <a href="{{ route('anggota-ekstrakurikuler.edit', ['anggota_ekstrakurikuler' => $item->id, 'from_ekstrakurikuler' => $ekstrakurikuler->id]) }}"
+                                            <a href="{{ route('anggota-ekstrakurikuler.edit', ['anggota_ekstrakurikuler' => $item, 'from_ekstrakurikuler' => $ekstrakurikuler->sqid]) }}"
                                                 class="btn btn-sm btn-primary shadow-sm mx-1"
                                                 style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
                                                 data-toggle="tooltip" data-placement="top" title="Edit Anggota Ekstrakurikuler">
                                                 <i class="fa fa-edit" style="font-size: 0.75rem;"></i>
                                             </a>
 
-                                            <form action="{{ route('anggota-ekstrakurikuler.destroy', $item->id) }}" method="POST"
+                                            <form action="{{ route('anggota-ekstrakurikuler.destroy', $item) }}" method="POST"
                                                 class="delete-form d-inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <input type="hidden" name="redirect_to_ekstrakurikuler" value="{{ $ekstrakurikuler->id }}">
+                                                <input type="hidden" name="redirect_to_ekstrakurikuler" value="{{ $ekstrakurikuler->sqid }}">
                                                 <button type="button"
                                                     class="btn btn-sm btn-warning shadow-sm delete-button mx-1 p-0 text-white"
                                                     style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
@@ -261,7 +261,7 @@
                 @csrf
                 <input type="hidden" name="akademik_master_ekstrakuler_id" id="akademik_master_ekstrakuler_id"
                     value="{{ $ekstrakurikuler->id }}" data-tahun-ajaran-id="{{ $ekstrakurikuler->akademik_master_tahun_ajaran_id }}">
-                <input type="hidden" name="redirect_to_ekstrakurikuler" value="{{ $ekstrakurikuler->id }}">
+                <input type="hidden" name="redirect_to_ekstrakurikuler" value="{{ $ekstrakurikuler->sqid }}">
 
                 <div class="ak-modal-header">
                     <div>
@@ -359,7 +359,7 @@
                             'hiddenInactiveCount' => $hiddenInactiveCount,
                             'hiddenWithoutKelasCount' => $hiddenWithoutKelasCount ?? 0,
                             'showHistoryFilter' => false,
-                            'createRedirectUrl' => route('ekstrakurikuler.show', $ekstrakurikuler->id),
+                            'createRedirectUrl' => route('ekstrakurikuler.show', $ekstrakurikuler),
                         ])
                     </div>
                 </div>

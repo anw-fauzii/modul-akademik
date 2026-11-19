@@ -4,6 +4,7 @@ namespace App\Models\Admin\Presensi;
 
 use App\Models\Admin\DataMaster\AnggotaKelas;
 use App\Models\Admin\DataMaster\Kelas;
+use App\Models\Concerns\HasSqidRouteKey;
 use Database\Factories\Admin\Presensi\PresensiSiswaFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -29,6 +30,8 @@ class PresensiSiswa extends Model
 {
     /** @use HasFactory<PresensiSiswaFactory> */
     use HasFactory;
+
+    use HasSqidRouteKey;
 
     /**
      * Batas maksimal jam masuk tepat waktu (JJ:MM).

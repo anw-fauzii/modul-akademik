@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\WaliKelas;
 
 use App\Http\Controllers\Controller;
+use App\Models\Admin\DataMaster\Kelas;
 use App\Services\WaliKelas\WaliKelasDashboardService;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
@@ -13,6 +14,7 @@ class DashboardController extends Controller
         protected WaliKelasDashboardService $service
     ) {
         $this->middleware('role:super admin|wali kelas');
+        $this->middleware('can:viewAny,'.Kelas::class)->only(['index']);
     }
 
     /**

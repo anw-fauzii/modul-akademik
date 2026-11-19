@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\WaliKelas;
 
 use App\Http\Controllers\Controller;
+use App\Models\Admin\T2q\YaumiyahTahsin;
 use App\Services\WaliKelas\WaliKelasT2qService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -13,6 +14,8 @@ class YaumiyahT2qController extends Controller
         private readonly WaliKelasT2qService $service,
     ) {
         $this->middleware('role:super admin|wali kelas');
+        $this->middleware('can:viewMatriks,'.YaumiyahTahsin::class)->only(['matriksTahsin', 'matriksTahfizh']);
+        $this->middleware('can:viewStatistik,'.YaumiyahTahsin::class)->only(['statistikTahsin', 'statistikTahfizh']);
     }
 
     /**
@@ -115,4 +118,3 @@ class YaumiyahT2qController extends Controller
         return view($view, $data);
     }
 }
-

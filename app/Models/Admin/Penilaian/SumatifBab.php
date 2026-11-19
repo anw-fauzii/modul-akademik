@@ -4,6 +4,7 @@ namespace App\Models\Admin\Penilaian;
 
 use App\Models\Admin\DataMaster\TahunAjaran;
 use App\Models\Admin\Pelajaran\MataPelajaran;
+use App\Models\Concerns\HasSqidRouteKey;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Model;
@@ -22,6 +23,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Table('akademik_penilaian_sumatif_bab')]
 class SumatifBab extends Model
 {
+    use HasSqidRouteKey;
+
     /**
      * Atribut yang di-cast secara otomatis.
      *
@@ -51,4 +54,3 @@ class SumatifBab extends Model
         return $this->hasMany(NilaiSumatifBab::class, 'sumatif_bab_id');
     }
 }
-

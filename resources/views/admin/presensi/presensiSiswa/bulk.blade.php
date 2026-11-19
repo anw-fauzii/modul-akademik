@@ -373,10 +373,10 @@
                     </div>
                 </div>
                 <div class="page-title-actions d-flex flex-wrap align-items-center" style="gap: 0.5rem;">
-                    <a href="{{ route($presensiRoutePrefix.'.index', array_filter([
+                    <a href="{{ route($presensiRoutePrefix.'.index', \App\Support\Sqid::encodeQueryParams(array_filter([
                         'kelas_id' => $selectedKelasId > 0 ? $selectedKelasId : null,
                         'bulan' => \Carbon\Carbon::parse($tanggal)->format('Y-m'),
-                    ])) }}"
+                    ]))) }}"
                         class="btn text-white shadow-sm font-weight-bold"
                         style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 8px;">
                         <i class="fa fa-reply mr-1"></i> Kembali ke Matriks
@@ -425,7 +425,7 @@
                             <form id="bulkDestroyCurrentForm" action="{{ route($presensiRoutePrefix.'.bulk.destroy') }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('DELETE')
-                                <input type="hidden" name="kelas_id" value="{{ $selectedKelas->id }}">
+                                <input type="hidden" name="kelas_id" value="{{ $selectedKelas->sqid }}">
                                 <input type="hidden" name="tanggal" value="{{ $tanggal }}">
                                 <input type="hidden" name="redirect_to" value="bulk">
                                 <button type="button"
@@ -447,7 +447,7 @@
                         <select id="bulk_kelas_id" name="kelas_id" class="filter-control" required>
                             <option value="">-- Pilih Kelas --</option>
                             @foreach ($kelasOptions as $kelas)
-                                <option value="{{ $kelas->id }}" @selected($selectedKelasId === (int) $kelas->id)>
+                                <option value="{{ $kelas->sqid }}" @selected($selectedKelasId === (int) $kelas->id)>
                                     {{ $kelas->jenjang_kelas }} - {{ $kelas->nama_kelas }}
                                     @if ($kelas->tahunAjaran)
                                         ({{ $kelas->tahunAjaran->nama_tahun_ajaran }} - {{ $kelas->tahunAjaran->semester }})
@@ -525,7 +525,7 @@
 
             <form method="POST" action="{{ route($presensiRoutePrefix.'.bulk.store') }}" id="bulkAttendanceForm">
                 @csrf
-                <input type="hidden" name="kelas_id" value="{{ $selectedKelas->id }}">
+                <input type="hidden" name="kelas_id" value="{{ $selectedKelas->sqid }}">
                 <input type="hidden" name="tanggal" value="{{ $tanggal }}">
 
                 <div class="card border-0 shadow-sm mb-4 overflow-hidden" style="border-radius: 16px;">
@@ -725,7 +725,7 @@
                         </div>
                         <div class="d-flex align-items-center" style="gap: 0.5rem;">
                             <a href="{{ route($presensiRoutePrefix.'.index', [
-                                'kelas_id' => $selectedKelas->id,
+                                'kelas_id' => $selectedKelas->sqid,
                                 'bulan' => \Carbon\Carbon::parse($tanggal)->format('Y-m'),
                             ]) }}"
                                 class="btn btn-light border" style="border-radius: 8px;">

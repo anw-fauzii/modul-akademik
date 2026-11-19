@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin\DataPelengkap;
 
 use App\Http\Controllers\Controller;
-use App\Models\Admin\DataPelengkap\Pekerjaan;
 use App\Http\Requests\Admin\DataPelengkap\PekerjaanRequest;
+use App\Models\Admin\DataPelengkap\Pekerjaan;
 use App\Services\Admin\DataPelengkap\PekerjaanService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -15,12 +15,13 @@ class PekerjaanController extends Controller
         protected PekerjaanService $service
     ) {
         $this->middleware('role:super admin');
+        $this->authorizeResource(Pekerjaan::class, 'pekerjaan');
     }
 
     public function index(): View
     {
         return view('admin.dataPelengkap.pekerjaan.index', [
-            'pekerjaan' => $this->service->getAll()
+            'pekerjaan' => $this->service->getAll(),
         ]);
     }
 

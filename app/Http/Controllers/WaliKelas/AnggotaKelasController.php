@@ -14,6 +14,8 @@ class AnggotaKelasController extends Controller
         protected WaliKelasAnggotaKelasService $service
     ) {
         $this->middleware('role:super admin|wali kelas');
+        $this->middleware('can:viewAny,'.AnggotaKelas::class)->only(['index']);
+        $this->middleware('can:view,anggota_kelas')->only(['show']);
     }
 
     /**
@@ -39,7 +41,7 @@ class AnggotaKelasController extends Controller
         return view('admin.dataMaster.siswa.show', [
             ...$data,
             'showAdminLinks' => false,
-            'backUrl' => route('wali-kelas.anggota-kelas.index', ['kelas_id' => $data['selectedKelas']->id]),
+            'backUrl' => route('wali-kelas.anggota-kelas.index', ['kelas_id' => $data['selectedKelas']->sqid]),
             'backLabel' => 'Kembali ke Anggota Kelas',
         ]);
     }

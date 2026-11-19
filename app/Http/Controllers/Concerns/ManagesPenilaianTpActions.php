@@ -9,6 +9,7 @@ use App\Models\Admin\Penilaian\PeriodeTp;
 use App\Models\Admin\Penilaian\RekapMapel;
 use App\Models\Admin\Penilaian\SumatifBab;
 use App\Models\Admin\TujuanPembelajaran\TujuanPembelajaran;
+use App\Support\Sqid;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -51,12 +52,12 @@ trait ManagesPenilaianTpActions
         mixed $mapelId,
         string $periode
     ): array {
-        return array_filter([
+        return Sqid::encodeQueryParams(array_filter([
             'tahun_ajaran_id' => $tahunAjaranId,
             'kelas_id' => $kelasId,
             'mata_pelajaran_id' => $mapelId,
             'periode' => $periode,
-        ], static fn (mixed $v): bool => $v !== null && $v !== '');
+        ], static fn (mixed $v): bool => $v !== null && $v !== ''));
     }
 
     /**

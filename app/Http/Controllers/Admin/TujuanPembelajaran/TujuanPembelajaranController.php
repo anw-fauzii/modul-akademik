@@ -10,6 +10,7 @@ use App\Http\Requests\Admin\TujuanPembelajaran\TujuanPembelajaranRequest;
 use App\Imports\Admin\TujuanPembelajaran\TujuanPembelajaranImport;
 use App\Models\Admin\TujuanPembelajaran\TujuanPembelajaran;
 use App\Services\Admin\TujuanPembelajaran\TujuanPembelajaranService;
+use App\Support\Sqid;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -22,6 +23,10 @@ class TujuanPembelajaranController extends Controller
         protected TujuanPembelajaranService $service
     ) {
         $this->middleware('role:super admin');
+        $this->authorizeResource(TujuanPembelajaran::class, 'tujuan_pembelajaran');
+        $this->middleware('can:toggleStatus,tujuan_pembelajaran')->only(['toggleStatus']);
+        $this->middleware('can:viewAny,'.TujuanPembelajaran::class)->only(['export', 'template']);
+        $this->middleware('can:create,'.TujuanPembelajaran::class)->only(['import']);
     }
 
     /**
@@ -66,11 +71,11 @@ class TujuanPembelajaranController extends Controller
         $validated = $request->validated();
         $this->service->store($validated);
 
-        return redirect()->route('tujuan-pembelajaran.index', array_filter([
+        return redirect()->route('tujuan-pembelajaran.index', Sqid::encodeQueryParams(array_filter([
             'tahun_ajaran_id' => $validated['akademik_master_tahun_ajaran_id'] ?? null,
             'mata_pelajaran_id' => $validated['akademik_pelajaran_mata_pelajaran_id'] ?? null,
             'tingkatan_kelas' => $validated['tingkatan_kelas'] ?? null,
-        ]))->with('success', 'Data Tujuan Pembelajaran berhasil disimpan.');
+        ])))->with('success', 'Data Tujuan Pembelajaran berhasil disimpan.');
     }
 
     /**
@@ -92,11 +97,11 @@ class TujuanPembelajaranController extends Controller
         $validated = $request->validated();
         $this->service->update($tujuanPembelajaran, $validated);
 
-        return redirect()->route('tujuan-pembelajaran.index', array_filter([
+        return redirect()->route('tujuan-pembelajaran.index', Sqid::encodeQueryParams(array_filter([
             'tahun_ajaran_id' => $validated['akademik_master_tahun_ajaran_id'] ?? null,
             'mata_pelajaran_id' => $validated['akademik_pelajaran_mata_pelajaran_id'] ?? null,
             'tingkatan_kelas' => $validated['tingkatan_kelas'] ?? null,
-        ]))->with('success', 'Data Tujuan Pembelajaran berhasil diperbarui.');
+        ])))->with('success', 'Data Tujuan Pembelajaran berhasil diperbarui.');
     }
 
     /**

@@ -15,6 +15,7 @@ class JemputanController extends Controller
         protected JemputanService $service
     ) {
         $this->middleware('role:super admin');
+        $this->authorizeResource(Jemputan::class, 'jemputan');
     }
 
     /**

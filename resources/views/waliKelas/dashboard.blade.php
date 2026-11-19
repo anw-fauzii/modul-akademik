@@ -29,7 +29,7 @@
         @include('waliKelas.partials._hero', [
             'heroBadgeText' => $isEligible ? strtoupper((string) $peranDiKelas) : 'DASHBOARD WALI KELAS',
             'heroTitle' => "{$salam}, {$displayName}!",
-            'heroActionUrl' => $isEligible && $selectedKelas ? route('wali-kelas.anggota-kelas.index', ['kelas_id' => $selectedKelas->id]) : null,
+            'heroActionUrl' => $isEligible && $selectedKelas ? route('wali-kelas.anggota-kelas.index', ['kelas_id' => $selectedKelas->sqid]) : null,
             'heroActionLabel' => $isEligible && $selectedKelas ? 'Lihat Anggota Kelas' : null,
             'heroActionIcon' => 'fa-users',
         ])
@@ -151,17 +151,17 @@
                                     <input type="search" id="wkStudentSearch" class="wk-search-input"
                                         placeholder="Cari nama / NIS siswa...">
                                 </div>
-                                <a href="{{ route('wali-kelas.anggota-kelas.index', ['kelas_id' => $selectedKelas->id]) }}"
+                                <a href="{{ route('wali-kelas.anggota-kelas.index', ['kelas_id' => $selectedKelas->sqid]) }}"
                                     class="btn btn-sm btn-light border font-weight-semibold text-primary"
                                     style="border-radius: 9px; font-size: 0.74rem; white-space: nowrap;">
                                     <i class="fa fa-id-card mr-1"></i> Anggota Kelas
                                 </a>
-                                <a href="{{ route('wali-kelas.perkembangan-siswa.index', ['kelas_id' => $selectedKelas->id]) }}"
+                                <a href="{{ route('wali-kelas.perkembangan-siswa.index', ['kelas_id' => $selectedKelas->sqid]) }}"
                                     class="btn btn-sm btn-light border font-weight-semibold"
                                     style="border-radius: 9px; font-size: 0.74rem; white-space: nowrap; color: #c2410c; border-color: #fed7aa; background: #fff7ed;">
                                     <i class="fa fa-chart-line mr-1"></i> Perkembangan
                                 </a>
-                                <a href="{{ route('wali-kelas.presensi-siswa.bulk', ['kelas_id' => $selectedKelas->id]) }}"
+                                <a href="{{ route('wali-kelas.presensi-siswa.bulk', ['kelas_id' => $selectedKelas->sqid]) }}"
                                     class="btn btn-sm text-white font-weight-semibold shadow-sm"
                                     style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 9px; font-size: 0.74rem; white-space: nowrap;">
                                     <i class="fa fa-clipboard-check mr-1"></i> Input Presensi
@@ -202,7 +202,7 @@
                                             data-search="{{ mb_strtolower($siswaName.' '.$anggota->siswa_nis.' '.($siswa?->nisn ?? '')) }}">
                                             <td class="text-center text-muted">{{ $idx + 1 }}</td>
                                             <td>
-                                                <a href="{{ route('wali-kelas.anggota-kelas.show', $anggota->id) }}"
+                                                <a href="{{ route('wali-kelas.anggota-kelas.show', $anggota) }}"
                                                     class="font-weight-semibold text-dark text-decoration-none">
                                                     {{ $siswaName }}
                                                 </a>
@@ -259,7 +259,7 @@
                                     <span class="badge badge-light" style="font-weight: 700;">
                                         {{ $penilaianSummary['assessed_mapel'] }}/{{ $penilaianSummary['total_mapel'] }} Mapel Terisi
                                     </span>
-                                    <a href="{{ route('wali-kelas.penilaian-tp.index', ['kelas_id' => $selectedKelas->id]) }}"
+                                    <a href="{{ route('wali-kelas.penilaian-tp.index', ['kelas_id' => $selectedKelas->sqid]) }}"
                                         class="btn btn-sm btn-light border font-weight-semibold text-primary"
                                         style="border-radius: 9px; font-size: 0.72rem; white-space: nowrap;">
                                         <i class="fa fa-edit mr-1"></i> Kelola Nilai TP
@@ -337,7 +337,7 @@
                                 <span class="badge badge-light" style="font-weight: 700;">
                                     {{ $jadwalHariIni->count() }} Slot
                                 </span>
-                                <a href="{{ route('wali-kelas.jadwal-pelajaran.index', ['kelas_id' => $selectedKelas->id]) }}"
+                                <a href="{{ route('wali-kelas.jadwal-pelajaran.index', ['kelas_id' => $selectedKelas->sqid]) }}"
                                     class="btn btn-xs btn-light border font-weight-semibold px-2 py-1"
                                     style="font-size: 0.72rem; border-radius: 7px;">
                                     Lihat Mingguan

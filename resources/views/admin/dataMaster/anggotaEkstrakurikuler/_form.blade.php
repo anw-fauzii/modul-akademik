@@ -60,6 +60,7 @@
                 <option value="" data-tahun-ajaran-id="">-- Pilih Ekstrakurikuler --</option>
                 @foreach ($ekstrakurikuler as $ekskul)
                     <option value="{{ $ekskul->id }}"
+                        data-sqid="{{ $ekskul->sqid }}"
                         data-tahun-ajaran-id="{{ $ekskul->akademik_master_tahun_ajaran_id }}"
                         @selected((string) $val('akademik_master_ekstrakuler_id', $preselectedEkstrakurikulerId ?? null) === (string) $ekskul->id)>
                         {{ $ekskul->nama_ekstrakurikuler }} ({{ strtoupper((string) $ekskul->unit) }})

@@ -30,7 +30,7 @@ class BerkebutuhanKhususRequest extends FormRequest
     {
         return [
             'nama_berkebutuhan_khusus.required' => 'Nama Kebutuhan Khusus wajib diisi.',
-            'nama_berkebutuhan_khusus.unique'   => 'Nama kebutuhan khusus ini sudah ada dalam sistem.',
+            'nama_berkebutuhan_khusus.unique' => 'Nama kebutuhan khusus ini sudah ada dalam sistem.',
         ];
     }
 }

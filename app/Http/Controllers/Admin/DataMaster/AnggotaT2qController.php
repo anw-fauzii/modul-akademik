@@ -16,6 +16,7 @@ class AnggotaT2qController extends Controller
         protected AnggotaT2qService $service
     ) {
         $this->middleware('role:super admin');
+        $this->authorizeResource(AnggotaT2q::class, 'anggota_t2q');
     }
 
     /**

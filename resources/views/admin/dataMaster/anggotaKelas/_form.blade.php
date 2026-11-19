@@ -59,6 +59,7 @@
                 <option value="" data-tahun-ajaran-id="">-- Pilih Kelas --</option>
                 @foreach ($kelas as $k)
                     <option value="{{ $k->id }}"
+                        data-sqid="{{ $k->sqid }}"
                         data-tahun-ajaran-id="{{ $k->akademik_master_tahun_ajaran_id }}"
                         @selected((string) $val('akademik_master_kelas_id', $preselectedKelasId ?? null) === (string) $k->id)>
                         {{ $k->nama_kelas }} ({{ strtoupper($k->jenjang_kelas) }} - Tingkat {{ $k->tingkatan_kelas }})

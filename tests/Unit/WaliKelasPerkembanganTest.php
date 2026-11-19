@@ -251,14 +251,14 @@ class WaliKelasPerkembanganTest extends TestCase
         $this->assertStringContainsString('Ustadz Ahmad', $indexHtml);
         $this->assertStringContainsString('Mapel Anda', $indexHtml);
         $this->assertStringContainsString('id="wkPerkembanganTable"', $indexHtml);
-        $this->assertStringContainsString(route('wali-kelas.perkembangan-siswa.show', ['anggota_kelas' => 301, 'periode' => 'mid']), $indexHtml);
+        $this->assertStringContainsString(route('wali-kelas.perkembangan-siswa.show', ['anggota_kelas' => sqidFor('wali-kelas.perkembangan-siswa.show', 301), 'periode' => 'mid']), $indexHtml);
         $this->assertStringContainsString('fa-ellipsis-v', $indexHtml);
         $this->assertStringContainsString('action-dropdown-item', $indexHtml);
         $this->assertStringContainsString('Detail Perkembangan', $indexHtml);
         $this->assertStringContainsString('Cetak Identitas (PDF)', $indexHtml);
         $this->assertStringContainsString('Cetak Nilai Rapor (PDF)', $indexHtml);
-        $this->assertStringContainsString(route('wali-kelas.rapor.identitas.siswa', 301), $indexHtml);
-        $this->assertStringContainsString(route('wali-kelas.rapor.nilai.siswa', ['anggota_kelas' => 301, 'periode' => 'mid']), $indexHtml);
+        $this->assertStringContainsString(route('wali-kelas.rapor.identitas.siswa', sqidFor('wali-kelas.rapor.identitas.siswa', 301)), $indexHtml);
+        $this->assertStringContainsString(route('wali-kelas.rapor.nilai.siswa', ['anggota_kelas' => sqidFor('wali-kelas.rapor.nilai.siswa', 301), 'periode' => 'mid']), $indexHtml);
 
         // Detail menampilkan progres seluruh mapel + deskripsi + TP
         $this->assertStringContainsString('Ahmad Fauzi', $showHtml);

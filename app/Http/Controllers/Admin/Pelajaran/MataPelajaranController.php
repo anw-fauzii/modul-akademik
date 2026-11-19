@@ -16,6 +16,8 @@ class MataPelajaranController extends Controller
         protected MataPelajaranService $service
     ) {
         $this->middleware('role:super admin');
+        $this->authorizeResource(MataPelajaran::class, 'mata_pelajaran');
+        $this->middleware('can:toggleStatus,mata_pelajaran')->only(['toggleStatus']);
     }
 
     /**

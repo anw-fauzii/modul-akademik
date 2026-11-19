@@ -32,7 +32,7 @@
 
         <div class="main-card card">
             <div class="card-body">
-                <form method="post" action="{{ route('target-capaian.update', $targetCapaian->id) }}" id="editForm">
+                <form method="post" action="{{ route('target-capaian.update', $targetCapaian) }}" id="editForm">
                     @csrf
                     @method('PUT')
                     @include('admin.dataMaster.targetCapaian._form')

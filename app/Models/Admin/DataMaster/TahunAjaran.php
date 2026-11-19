@@ -2,6 +2,7 @@
 
 namespace App\Models\Admin\DataMaster;
 
+use App\Models\Concerns\HasSqidRouteKey;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -17,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 class TahunAjaran extends Model
 {
     use HasFactory;
+    use HasSqidRouteKey;
 
     /**
      * Pilihan label semester pada tahun ajaran.

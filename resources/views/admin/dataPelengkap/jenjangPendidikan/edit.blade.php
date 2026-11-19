@@ -35,7 +35,7 @@
                 Update Data
             </div>
             <div class="card-body">
-                <form method="post" action="{{ route('jenjang-pendidikan.update', $jenjangPendidikan->id) }}" id="editForm">
+                <form method="post" action="{{ route('jenjang-pendidikan.update', $jenjangPendidikan) }}" id="editForm">
                     @csrf
                     @method('PUT')
                     @include('admin.dataPelengkap.jenjangPendidikan._form')

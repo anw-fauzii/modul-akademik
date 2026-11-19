@@ -16,6 +16,7 @@ class PengumumanController extends Controller
         protected PengumumanService $service
     ) {
         $this->middleware('role:super admin');
+        $this->authorizeResource(Pengumuman::class, 'pengumuman');
     }
 
     /**

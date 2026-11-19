@@ -192,7 +192,7 @@ class KelasTest extends TestCase
         try {
             $this->actingAs($user)
                 ->withSession(['access_token' => 'valid-token'])
-                ->get(route('kelas.show', $kelas->id))
+                ->get(route('kelas.show', $kelas))
                 ->assertOk()
                 ->assertSee('1 Al-Fatihah')
                 ->assertSee('Calon Anggota Baru')
@@ -206,11 +206,11 @@ class KelasTest extends TestCase
             ->withSession(['access_token' => 'valid-token'])
             ->post(route('anggota-kelas.store'), [
                 'akademik_master_kelas_id' => $kelas->id,
-                'redirect_to_kelas' => $kelas->id,
+                'redirect_to_kelas' => $kelas->sqid,
                 'pendaftaran' => 'Siswa Baru',
                 'siswa_nis' => [$siswaKandidat->nis],
             ])
-            ->assertRedirect(route('kelas.show', $kelas->id));
+            ->assertRedirect(route('kelas.show', $kelas));
 
         $createdMember = AnggotaKelas::query()
             ->where('siswa_nis', $siswaKandidat->nis)
@@ -219,10 +219,10 @@ class KelasTest extends TestCase
 
         $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
-            ->delete(route('anggota-kelas.destroy', $createdMember->id), [
-                'redirect_to_kelas' => $kelas->id,
+            ->delete(route('anggota-kelas.destroy', $createdMember), [
+                'redirect_to_kelas' => $kelas->sqid,
             ])
-            ->assertRedirect(route('kelas.show', $kelas->id));
+            ->assertRedirect(route('kelas.show', $kelas));
 
         $this->assertDatabaseMissing('akademik_master_anggota_kelas', [
             'id' => $createdMember->id,
@@ -302,7 +302,7 @@ class KelasTest extends TestCase
         // Filter jenjang=SD pada TA aktif menyaring tabel ke SD namun kartu statistik TK & SD tetap terlihat
         $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
-            ->get(route('kelas.index', ['tahun_ajaran_id' => $taAktif->id, 'jenjang' => 'SD']))
+            ->get(route('kelas.index', ['tahun_ajaran_id' => $taAktif->sqid, 'jenjang' => 'SD']))
             ->assertOk()
             ->assertSee($kelasSd->nama_kelas)
             ->assertDontSee($kelasTk->nama_kelas)

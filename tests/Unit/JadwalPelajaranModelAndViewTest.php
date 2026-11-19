@@ -463,9 +463,9 @@ class JadwalPelajaranModelAndViewTest extends TestCase
         $this->assertStringContainsString('Budi Santoso, S.Pd', $indexHtml);
         $this->assertStringContainsString('Isi Slot', $indexHtml);
         $this->assertStringContainsString('jp-matrix-table', $indexHtml);
-        $this->assertStringContainsString(route('jadwal-pelajaran.toggle-status', 101), $indexHtml);
-        $this->assertStringContainsString(route('jadwal-pelajaran.edit', 101), $indexHtml);
-        $this->assertStringContainsString(route('jadwal-pelajaran.destroy', 101), $indexHtml);
+        $this->assertStringContainsString(route('jadwal-pelajaran.toggle-status', sqidFor('jadwal-pelajaran.toggle-status', 101)), $indexHtml);
+        $this->assertStringContainsString(route('jadwal-pelajaran.edit', sqidFor('jadwal-pelajaran.edit', 101)), $indexHtml);
+        $this->assertStringContainsString(route('jadwal-pelajaran.destroy', sqidFor('jadwal-pelajaran.destroy', 101)), $indexHtml);
         $this->assertStringContainsString('Pilih kelas untuk menampilkan tampilan grid Senin', $classPickerHtml);
         $this->assertStringContainsString('1A', $classPickerHtml);
 
@@ -478,7 +478,7 @@ class JadwalPelajaranModelAndViewTest extends TestCase
         $this->assertStringContainsString('name="hari"', $createHtml);
         $this->assertStringContainsString('Istirahat', $createHtml);
 
-        $this->assertStringContainsString(route('jadwal-pelajaran.update', 101), $editHtml);
+        $this->assertStringContainsString(route('jadwal-pelajaran.update', sqidFor('jadwal-pelajaran.update', 101)), $editHtml);
         $this->assertStringContainsString('R. 1A', $editHtml);
         $this->assertStringContainsString(route('jadwal-pelajaran.index'), view('layouts.sidebar')->render());
     }

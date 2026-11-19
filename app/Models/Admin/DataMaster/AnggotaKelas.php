@@ -3,6 +3,7 @@
 namespace App\Models\Admin\DataMaster;
 
 use App\Models\Admin\Presensi\PresensiSiswa;
+use App\Models\Concerns\HasSqidRouteKey;
 use Database\Factories\Admin\DataMaster\AnggotaKelasFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -26,6 +27,8 @@ class AnggotaKelas extends Model
 {
     /** @use HasFactory<AnggotaKelasFactory> */
     use HasFactory;
+
+    use HasSqidRouteKey;
 
     /**
      * Pilihan jenis pendaftaran anggota kelas.

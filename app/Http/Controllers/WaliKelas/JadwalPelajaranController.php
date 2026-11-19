@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\WaliKelas;
 
 use App\Http\Controllers\Controller;
+use App\Models\Admin\Pelajaran\JadwalPelajaran;
 use App\Services\WaliKelas\WaliKelasJadwalPelajaranService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -13,6 +14,7 @@ class JadwalPelajaranController extends Controller
         private readonly WaliKelasJadwalPelajaranService $service
     ) {
         $this->middleware('role:super admin|wali kelas');
+        $this->middleware('can:viewAny,'.JadwalPelajaran::class)->only(['index']);
     }
 
     /**

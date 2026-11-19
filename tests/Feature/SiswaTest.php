@@ -283,7 +283,7 @@ class SiswaTest extends TestCase
 
         $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
-            ->put(route('siswa.update', $siswa->nis), [
+            ->put(route('siswa.update', $siswa), [
                 'nis' => '202601009',
                 'nama_lengkap' => 'Nama Baru',
                 'jenis_kelamin' => 'P',
@@ -303,7 +303,7 @@ class SiswaTest extends TestCase
 
         $this->actingAs($user)
             ->withSession(['access_token' => 'valid-token'])
-            ->delete(route('siswa.destroy', $siswa->nis))
+            ->delete(route('siswa.destroy', $siswa))
             ->assertRedirect(route('siswa.index'))
             ->assertSessionHas('success', 'Data Siswa berhasil dihapus.');
 

@@ -7,7 +7,7 @@
 @section('content')
     @php
         $backUrl = isset($preselectedEkstrakurikulerId) && $preselectedEkstrakurikulerId
-            ? route('ekstrakurikuler.show', $preselectedEkstrakurikulerId)
+            ? route('ekstrakurikuler.show', \App\Support\Sqid::encodeFor(\App\Models\Admin\DataMaster\Ekstrakurikuler::class, (int) $preselectedEkstrakurikulerId))
             : route('anggota-ekstrakurikuler.index');
     @endphp
 
@@ -41,7 +41,7 @@
                 <form method="post" action="{{ route('anggota-ekstrakurikuler.store') }}" id="createForm">
                     @csrf
                     @if (isset($preselectedEkstrakurikulerId) && $preselectedEkstrakurikulerId)
-                        <input type="hidden" name="redirect_to_ekstrakurikuler" value="{{ $preselectedEkstrakurikulerId }}">
+                        <input type="hidden" name="redirect_to_ekstrakurikuler" value="{{ \App\Support\Sqid::encodeFor(\App\Models\Admin\DataMaster\Ekstrakurikuler::class, (int) $preselectedEkstrakurikulerId) }}">
                     @endif
                     @include('admin.dataMaster.anggotaEkstrakurikuler._form')
                 </form>

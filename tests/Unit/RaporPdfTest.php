@@ -339,9 +339,9 @@ class RaporPdfTest extends TestCase
         }
 
         $this->assertStringContainsString('Cetak PDF Rapor Hasil Pembelajaran', $adminIndexHtml);
-        $this->assertStringContainsString(route('penilaian-rapor.identitas.kelas', 10), $adminIndexHtml);
-        $this->assertStringContainsString(e(route('penilaian-rapor.nilai.kelas', ['kelas' => 10, 'periode' => 'semester'])), $adminIndexHtml);
-        $this->assertStringContainsString(route('penilaian-rapor.identitas.siswa', 301), $adminIndexHtml);
+        $this->assertStringContainsString(route('penilaian-rapor.identitas.kelas', sqidFor('penilaian-rapor.identitas.kelas', 10)), $adminIndexHtml);
+        $this->assertStringContainsString(e(route('penilaian-rapor.nilai.kelas', ['kelas' => sqidFor('penilaian-rapor.nilai.kelas', 10), 'periode' => 'semester'])), $adminIndexHtml);
+        $this->assertStringContainsString(route('penilaian-rapor.identitas.siswa', sqidFor('penilaian-rapor.identitas.siswa', 301)), $adminIndexHtml);
         $this->assertStringContainsString('Cetak Rapor PDF', $adminSidebarHtml);
         $this->assertStringContainsString(route('penilaian-rapor.index'), $adminSidebarHtml);
 

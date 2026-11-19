@@ -3,6 +3,7 @@
 namespace App\Models\Admin\DataMaster;
 
 use App\Models\Admin\DataPelengkap\JenjangPendidikan;
+use App\Models\Concerns\HasSqidRouteKey;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -44,6 +45,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Karyawan extends Model
 {
     use HasFactory;
+    use HasSqidRouteKey;
 
     protected $primaryKey = 'nipy';
 

@@ -16,6 +16,7 @@ class JamPelajaranController extends Controller
         protected JamPelajaranService $service
     ) {
         $this->middleware('role:super admin');
+        $this->authorizeResource(JamPelajaran::class, 'jam_pelajaran');
     }
 
     /**

@@ -254,8 +254,8 @@ class AnggotaJemputanModelAndViewTest extends TestCase
         $this->assertStringContainsString('2026/2027', $rendered);
         $this->assertStringContainsString('Antar Jemput PP', $rendered);
         $this->assertStringContainsString('badge-success', $rendered);
-        $this->assertStringContainsString(route('anggota-jemputan.edit', 30), $rendered);
-        $this->assertStringContainsString(route('anggota-jemputan.destroy', 30), $rendered);
+        $this->assertStringContainsString(route('anggota-jemputan.edit', sqidFor('anggota-jemputan.edit', 30)), $rendered);
+        $this->assertStringContainsString(route('anggota-jemputan.destroy', sqidFor('anggota-jemputan.destroy', 30)), $rendered);
 
         $this->assertStringNotContainsString(route('anggota-jemputan.index'), $sidebarHtml);
         $this->assertStringContainsString(route('jemputan.index'), $sidebarHtml);
@@ -467,11 +467,11 @@ class AnggotaJemputanModelAndViewTest extends TestCase
         $this->assertStringContainsString('Seluruh siswa aktif dengan kelas aktif (5)', $allEnrolledCreateHtml);
         $this->assertStringContainsString('6 siswa aktif belum memiliki Anggota Kelas', $withoutKelasCreateHtml);
 
-        $this->assertStringContainsString(route('anggota-jemputan.update', 30), $editHtml);
+        $this->assertStringContainsString(route('anggota-jemputan.update', sqidFor('anggota-jemputan.update', 30)), $editHtml);
         $this->assertStringContainsString('name="_method" value="PUT"', $editHtml);
         $this->assertStringContainsString('name="anggota_kelas_id"', $editHtml);
-        $this->assertStringContainsString('name="redirect_to_jemputan" value="7"', $editHtml);
-        $this->assertStringContainsString(route('jemputan.show', 7), $editHtml);
+        $this->assertStringContainsString('name="redirect_to_jemputan" value="'.sqidParam('redirect_to_jemputan', 7).'"', $editHtml);
+        $this->assertStringContainsString(route('jemputan.show', sqidFor('jemputan.show', 7)), $editHtml);
         $this->assertStringContainsString('Pulang saja', $editHtml);
     }
 
@@ -502,4 +502,3 @@ class AnggotaJemputanModelAndViewTest extends TestCase
         $this->assertSame([], $reflection->invoke($service, new Collection, null));
     }
 }
-

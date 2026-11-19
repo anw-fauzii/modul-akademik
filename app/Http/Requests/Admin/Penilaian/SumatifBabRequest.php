@@ -72,4 +72,3 @@ class SumatifBabRequest extends FormRequest
         ];
     }
 }
-

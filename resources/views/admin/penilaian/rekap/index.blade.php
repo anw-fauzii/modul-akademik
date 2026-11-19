@@ -565,12 +565,12 @@
         $avgRaporKelas = $scoredCount > 0 ? round($raporSum / $scoredCount, 1) : null;
         $tuntasPct = $scoredCount > 0 ? round(($tuntasCount / $scoredCount) * 100) : 0;
 
-        $contextParams = array_filter([
+        $contextParams = \App\Support\Sqid::encodeQueryParams(array_filter([
             'tahun_ajaran_id' => $selectedTahunAjaranId ?? null,
-            'kelas_id' => $selectedKelas?->id ?? null,
-            'mata_pelajaran_id' => $selectedMapel?->id ?? null,
+            'kelas_id' => $selectedKelas?->sqid ?? null,
+            'mata_pelajaran_id' => $selectedMapel?->sqid ?? null,
             'periode' => $periode,
-        ], static fn ($v) => $v !== null && $v !== '');
+        ], static fn ($v) => $v !== null && $v !== ''));
     @endphp
 
     <div class="app-main__inner">
@@ -603,7 +603,7 @@
                             <i class="fa fa-chart-line mr-1"></i> Perkembangan Semua Mapel
                         </a>
                     @elseif ($selectedKelas)
-                        <a href="{{ route('penilaian-rapor.index', array_filter(['tahun_ajaran_id' => $selectedTahunAjaranId, 'kelas_id' => $selectedKelas->id, 'periode' => $periode])) }}"
+                        <a href="{{ route('penilaian-rapor.index', \App\Support\Sqid::encodeQueryParams(array_filter(['tahun_ajaran_id' => $selectedTahunAjaranId, 'kelas_id' => $selectedKelas->sqid, 'periode' => $periode]))) }}"
                             class="btn btn-light shadow-sm"
                             style="border-radius: 10px; font-weight: 600; color: #1d4ed8; border-color: #bfdbfe; background: #eff6ff;">
                             <i class="fa fa-file-pdf mr-1"></i> Cetak Rapor PDF
@@ -617,8 +617,8 @@
                     @if ($selectedKelas && $selectedMapel && $students->isNotEmpty())
                         <form method="POST" action="{{ route($rekapRoutePrefix.'.deskripsi.regenerate') }}" class="d-inline">
                             @csrf
-                            <input type="hidden" name="kelas_id" value="{{ $selectedKelas->id }}">
-                            <input type="hidden" name="mata_pelajaran_id" value="{{ $selectedMapel->id }}">
+                            <input type="hidden" name="kelas_id" value="{{ $selectedKelas->sqid }}">
+                            <input type="hidden" name="mata_pelajaran_id" value="{{ $selectedMapel->sqid }}">
                             <input type="hidden" name="periode" value="{{ $periode }}">
                             <button type="submit" class="btn text-white shadow-sm"
                                 title="Susun deskripsi otomatis untuk seluruh TP yang bernilai NA TP berdasarkan kelompok predikat KKM"
@@ -639,7 +639,7 @@
                         <label for="rk_ta" class="small font-weight-semibold text-muted mb-1">Tahun Ajaran / Semester</label>
                         <select name="tahun_ajaran_id" id="rk_ta" class="form-control form-control-sm" onchange="this.form.submit()">
                             @foreach ($tahunAjaranOptions as $ta)
-                                <option value="{{ $ta->id }}" @selected((int) $selectedTahunAjaranId === (int) $ta->id)>
+                                <option value="{{ $ta->sqid }}" @selected((int) $selectedTahunAjaranId === (int) $ta->id)>
                                     {{ $ta->full_label }}{{ $ta->is_active ? ' (Aktif)' : '' }}
                                 </option>
                             @endforeach
@@ -651,7 +651,7 @@
                         <select name="kelas_id" id="rk_kelas" class="form-control form-control-sm"
                             onchange="@if ($isWaliKelasScope) const mapelEl = document.getElementById('rk_mapel'); if (mapelEl) { mapelEl.disabled = true; } @endif this.form.submit()">
                             @forelse ($kelasOptions as $kls)
-                                <option value="{{ $kls->id }}" @selected($selectedKelas && (int) $selectedKelas->id === (int) $kls->id)>
+                                <option value="{{ $kls->sqid }}" @selected($selectedKelas && (int) $selectedKelas->id === (int) $kls->id)>
                                     {{ $kls->nama_kelas }} (Tingkat {{ $kls->tingkatan_kelas }})
                                 </option>
                             @empty
@@ -664,7 +664,7 @@
                         <label for="rk_mapel" class="small font-weight-semibold text-muted mb-1">Mata Pelajaran (SD)</label>
                         <select name="mata_pelajaran_id" id="rk_mapel" class="form-control form-control-sm" onchange="this.form.submit()">
                             @forelse ($mataPelajaranOptions as $mp)
-                                <option value="{{ $mp->id }}" @selected($selectedMapel && (int) $selectedMapel->id === (int) $mp->id)>
+                                <option value="{{ $mp->sqid }}" @selected($selectedMapel && (int) $selectedMapel->id === (int) $mp->id)>
                                     [{{ $mp->singkatan }}] {{ $mp->nama_mata_pelajaran }}
                                 </option>
                             @empty
@@ -1009,7 +1009,7 @@
                                                 @if ($rekapMapel !== null)
                                                     <button type="button"
                                                         class="rk-desc-edit-btn btn-edit-deskripsi"
-                                                        data-action="{{ route($rekapRoutePrefix.'.deskripsi.update', $rekapMapel->id) }}"
+                                                        data-action="{{ route($rekapRoutePrefix.'.deskripsi.update', $rekapMapel) }}"
                                                         data-student="{{ $studentName }}"
                                                         data-rapor="{{ $rekapMapel->nilai_akhir_rapor !== null ? (int) round((float) $rekapMapel->nilai_akhir_rapor) : '-' }}"
                                                         data-predikat="{{ $rekapMapel->predikat_rapor ?? '-' }}"
@@ -1051,7 +1051,7 @@
             <form method="POST" id="editDeskripsiForm">
                 @csrf
                 @method('PUT')
-                <input type="hidden" name="kelas_id" value="{{ $selectedKelas?->id ?? '' }}">
+                <input type="hidden" name="kelas_id" value="{{ $selectedKelas?->sqid ?? '' }}">
                 <div class="p-4">
                     <div class="form-group mb-0">
                         <div class="d-flex align-items-center justify-content-between mb-1">

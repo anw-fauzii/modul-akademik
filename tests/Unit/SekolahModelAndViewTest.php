@@ -158,17 +158,16 @@ class SekolahModelAndViewTest extends TestCase
         $this->assertStringContainsString('TK Prima Insani', $indexHtml);
         $this->assertStringContainsString('SD Prima Insani', $indexHtml);
         $this->assertStringContainsString('20209000', $indexHtml);
-        $this->assertStringContainsString(route('sekolah.toggle-status', 2), $indexHtml);
-        $this->assertStringContainsString(route('sekolah.edit', 2), $indexHtml);
+        $this->assertStringContainsString(route('sekolah.toggle-status', sqidFor('sekolah.toggle-status', 2)), $indexHtml);
+        $this->assertStringContainsString(route('sekolah.edit', sqidFor('sekolah.edit', 2)), $indexHtml);
 
         $this->assertStringContainsString('Tambah Identitas Sekolah', $createHtml);
         $this->assertStringContainsString(route('sekolah.store'), $createHtml);
 
         $this->assertStringContainsString('Edit Identitas Sekolah', $editHtml);
-        $this->assertStringContainsString(route('sekolah.update', 2), $editHtml);
+        $this->assertStringContainsString(route('sekolah.update', sqidFor('sekolah.update', 2)), $editHtml);
 
         $this->assertStringContainsString('Identitas Sekolah', $sidebarHtml);
         $this->assertStringContainsString(route('sekolah.index'), $sidebarHtml);
     }
 }
-

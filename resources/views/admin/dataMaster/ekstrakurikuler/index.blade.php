@@ -53,7 +53,7 @@
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
                                     <td>
-                                        <a href="{{ route('ekstrakurikuler.show', $item->id) }}"
+                                        <a href="{{ route('ekstrakurikuler.show', $item) }}"
                                             class="font-weight-bold text-slate-800 text-decoration-none"
                                             style="font-size: 0.95rem;"
                                             title="Detail &amp; Anggota Ekstrakurikuler {{ $item->nama_ekstrakurikuler }}">
@@ -105,7 +105,7 @@
                                         @php
                                             $jumlahSiswa = (int) ($item->anggota_ekstrakurikuler_count ?? 0);
                                         @endphp
-                                        <a href="{{ route('ekstrakurikuler.show', $item->id) }}"
+                                        <a href="{{ route('ekstrakurikuler.show', $item) }}"
                                             class="badge {{ $jumlahSiswa > 0 ? 'badge-primary' : 'badge-secondary' }} px-2 py-1 text-decoration-none"
                                             style="font-size: 0.78rem;"
                                             data-toggle="tooltip" data-placement="top"
@@ -116,16 +116,16 @@
                                     </td>
                                     <td class="text-center">
                                         <x-action-dropdown>
-                                            <a href="{{ route('ekstrakurikuler.show', $item->id) }}" class="action-dropdown-item" role="menuitem">
+                                            <a href="{{ route('ekstrakurikuler.show', $item) }}" class="action-dropdown-item" role="menuitem">
                                                 <i class="fa fa-eye text-info action-item-icon"></i>
                                                 <span>Detail &amp; Anggota Ekskul</span>
                                             </a>
-                                            <a href="{{ route('ekstrakurikuler.edit', $item->id) }}" class="action-dropdown-item" role="menuitem">
+                                            <a href="{{ route('ekstrakurikuler.edit', $item) }}" class="action-dropdown-item" role="menuitem">
                                                 <i class="fa fa-edit text-primary action-item-icon"></i>
                                                 <span>Edit Data</span>
                                             </a>
                                             <div class="action-dropdown-divider"></div>
-                                            <form action="{{ route('ekstrakurikuler.destroy', $item->id) }}" method="POST" class="delete-form">
+                                            <form action="{{ route('ekstrakurikuler.destroy', $item) }}" method="POST" class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="button" class="action-dropdown-item action-dropdown-item--danger delete-button" role="menuitem">

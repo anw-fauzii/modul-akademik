@@ -2,6 +2,7 @@
 
 namespace App\Models\Admin\DataMaster;
 
+use App\Models\Concerns\HasSqidRouteKey;
 use Database\Factories\Admin\DataMaster\JemputanFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -26,6 +27,8 @@ class Jemputan extends Model
 {
     /** @use HasFactory<JemputanFactory> */
     use HasFactory;
+
+    use HasSqidRouteKey;
 
     /**
      * Atribut yang di-cast secara otomatis.

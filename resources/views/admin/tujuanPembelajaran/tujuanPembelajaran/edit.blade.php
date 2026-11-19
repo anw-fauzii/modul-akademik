@@ -31,7 +31,7 @@
         </div>
 
         <div class="tp-form-card">
-            <form method="post" action="{{ route('tujuan-pembelajaran.update', $tujuanPembelajaran->id) }}" id="editForm">
+            <form method="post" action="{{ route('tujuan-pembelajaran.update', $tujuanPembelajaran) }}" id="editForm">
                 @csrf
                 @method('PUT')
                 @include('admin.tujuanPembelajaran.tujuanPembelajaran._form')

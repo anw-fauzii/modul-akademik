@@ -23,7 +23,6 @@ class LoginController extends Controller
 
     use AuthenticatesUsers;
 
-
     /**
      * Where to redirect users after login.
      *
@@ -61,9 +60,9 @@ class LoginController extends Controller
             return new JsonResponse(['message' => 'Client logged out'], 204);
         }
 
-        $ssoServerLogoutUrl = config('auth.host') . '/logout-sso';
-        $returnUrl = url('/'); 
+        $ssoServerLogoutUrl = config('auth.host').'/logout-sso';
+        $returnUrl = url('/');
 
-        return redirect()->away($ssoServerLogoutUrl . '?redirect_to=' . urlencode($returnUrl));
+        return redirect()->away($ssoServerLogoutUrl.'?redirect_to='.urlencode($returnUrl));
     }
 }

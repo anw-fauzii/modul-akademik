@@ -2,6 +2,7 @@
 
 namespace App\Models\Admin\Pelajaran;
 
+use App\Models\Concerns\HasSqidRouteKey;
 use Database\Factories\Admin\Pelajaran\KelompokPelajaranFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -23,6 +24,8 @@ class KelompokPelajaran extends Model
 {
     /** @use HasFactory<KelompokPelajaranFactory> */
     use HasFactory;
+
+    use HasSqidRouteKey;
 
     /**
      * Atribut yang di-cast secara otomatis.
