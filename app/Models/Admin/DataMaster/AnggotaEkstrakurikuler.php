@@ -18,6 +18,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'anggota_kelas_id',
     'akademik_master_ekstrakuler_id',
     'pendaftaran',
+    'nilai',
+    'predikat',
     'keterangan',
 ])]
 #[Table('akademik_master_anggota_ekstrakuler')]
@@ -43,7 +45,7 @@ class AnggotaEkstrakurikuler extends Model
         'anggotaKelas:id,siswa_nis,akademik_master_kelas_id,pendaftaran',
         'anggotaKelas.siswa:nis,nama_lengkap,nisn,jenis_kelamin,status',
         'anggotaKelas.kelas:id,akademik_master_tahun_ajaran_id,karyawan_nipy,nama_kelas,jenjang_kelas,tingkatan_kelas',
-        'ekstrakurikuler:id,akademik_master_tahun_ajaran_id,karyawan_nipy,nama_ekstrakurikuler,biaya,unit',
+        'ekstrakurikuler:id,akademik_master_tahun_ajaran_id,karyawan_nipy,nama_ekstrakurikuler,biaya,unit,kkm,materi',
         'ekstrakurikuler.tahunAjaran:id,nama_tahun_ajaran,semester,is_active',
         'ekstrakurikuler.pembina:nipy,nama_lengkap,gelar',
     ];
@@ -58,6 +60,7 @@ class AnggotaEkstrakurikuler extends Model
         return [
             'anggota_kelas_id' => 'integer',
             'akademik_master_ekstrakuler_id' => 'integer',
+            'nilai' => 'integer',
         ];
     }
 
@@ -111,6 +114,52 @@ class AnggotaEkstrakurikuler extends Model
             'Lanjutan' => 'badge-primary',
             default => 'badge-secondary',
         });
+    }
+
+    /**
+     * Kelas badge Bootstrap untuk predikat nilai ekstrakurikuler (SAB, BSH, SB, MB).
+     */
+    protected function predikatBadgeClass(): Attribute
+    {
+        return Attribute::get(fn (): string => match (strtoupper((string) $this->predikat)) {
+            'SAB' => 'badge-success',
+            'BSH' => 'badge-primary',
+            'SB' => 'badge-info',
+            'MB' => 'badge-warning text-dark',
+            default => 'badge-secondary',
+        });
+    }
+
+    /**
+     * Label kepanjangan predikat ekstrakurikuler.
+     */
+    protected function predikatLabel(): Attribute
+    {
+        return Attribute::get(function (): ?string {
+            $code = strtoupper(trim((string) $this->predikat));
+
+            return Ekstrakurikuler::PREDIKAT_LABELS[$code] ?? null;
+        });
+    }
+
+    /**
+     * Deskripsi capaian ekstrakurikuler untuk rapor (prioritas keterangan manual/tersimpan, fallback otomatis dari predikat + materi).
+     */
+    public function resolvedDeskripsiRapor(): string
+    {
+        $manual = trim((string) $this->keterangan);
+        if ($manual !== '') {
+            return $manual;
+        }
+
+        $ekskul = $this->relationLoaded('ekstrakurikuler') ? $this->getRelation('ekstrakurikuler') : null;
+        $auto = Ekstrakurikuler::buildAutoDeskripsi(
+            $this->predikat,
+            $ekskul?->materi,
+            $ekskul?->nama_ekstrakurikuler
+        );
+
+        return $auto ?? 'Mengikuti kegiatan dengan baik.';
     }
 
     /**

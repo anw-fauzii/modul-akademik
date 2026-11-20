@@ -132,14 +132,19 @@
                             <tr>
                                 <th style="width: 5%;">No</th>
                                 <th>Siswa</th>
-                                <th class="text-center" style="width: 14%;">Jenis Kelamin</th>
-                                <th class="text-center" style="width: 16%;">Pendaftaran</th>
-                                <th class="text-center" style="width: 14%;">Status Siswa</th>
-                                <th style="width: 16%; text-align: center;">Aksi</th>
+                                <th class="text-center" style="width: 13%;">Jenis Kelamin</th>
+                                <th style="width: 22%;">Pendamping T2Q</th>
+                                <th class="text-center" style="width: 14%;">Pendaftaran</th>
+                                <th class="text-center" style="width: 13%;">Status Siswa</th>
+                                <th style="width: 72px; text-align: center;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($anggotaKelas as $item)
+                                @php
+                                    $pendampingT2qNama = $item->loadedPendampingT2qNama();
+                                    $tingkatT2q = $item->loadedTingkatT2q();
+                                @endphp
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
                                     <td>
@@ -162,6 +167,20 @@
                                             <span class="text-muted">-</span>
                                         @endif
                                     </td>
+                                    <td>
+                                        @if ($pendampingT2qNama)
+                                            <div class="font-weight-semibold text-slate-800" style="font-size: 0.85rem;">
+                                                {{ $pendampingT2qNama }}
+                                            </div>
+                                            @if ($tingkatT2q)
+                                                <div class="small text-muted" style="font-size: 11px;">
+                                                    Tingkat: {{ $tingkatT2q }}
+                                                </div>
+                                            @endif
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
                                     <td class="text-center">
                                         <span class="badge {{ $item->pendaftaran_badge_class }} px-2 py-1" style="font-size: 0.75rem;">
                                             {{ $item->pendaftaran }}
@@ -177,34 +196,31 @@
                                         @endif
                                     </td>
                                     <td class="text-center">
-                                        <div class="d-flex justify-content-center align-items-center">
+                                        <x-action-dropdown>
                                             <a href="{{ route('siswa.show', \App\Support\Sqid::encodeFor(\App\Models\Admin\DataMaster\Siswa::class, $item->siswa_nis)) }}"
-                                                class="btn btn-sm btn-info text-white shadow-sm mx-1"
-                                                style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
-                                                data-toggle="tooltip" data-placement="top" title="Detail Siswa">
-                                                <i class="fa fa-eye" style="font-size: 0.75rem;"></i>
+                                                class="action-dropdown-item" role="menuitem">
+                                                <i class="fa fa-eye text-info action-item-icon"></i>
+                                                <span>Detail Siswa</span>
                                             </a>
-
                                             <a href="{{ route('anggota-kelas.edit', ['anggota_kelas' => $item, 'from_kelas' => $kelas->sqid]) }}"
-                                                class="btn btn-sm btn-primary shadow-sm mx-1"
-                                                style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
-                                                data-toggle="tooltip" data-placement="top" title="Edit Anggota Kelas">
-                                                <i class="fa fa-edit" style="font-size: 0.75rem;"></i>
+                                                class="action-dropdown-item" role="menuitem">
+                                                <i class="fa fa-edit text-primary action-item-icon"></i>
+                                                <span>Edit Anggota Kelas</span>
                                             </a>
-
+                                            <div class="action-dropdown-divider"></div>
                                             <form action="{{ route('anggota-kelas.destroy', $item) }}" method="POST"
-                                                class="delete-form d-inline">
+                                                class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
                                                 <input type="hidden" name="redirect_to_kelas" value="{{ $kelas->sqid }}">
                                                 <button type="button"
-                                                    class="btn btn-sm btn-warning shadow-sm delete-button mx-1 p-0 text-white"
-                                                    style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
-                                                    data-toggle="tooltip" data-placement="top" title="Keluarkan dari Kelas">
-                                                    <i class="fa fa-trash" style="font-size: 0.75rem;"></i>
+                                                    class="action-dropdown-item action-dropdown-item--danger delete-button"
+                                                    role="menuitem">
+                                                    <i class="fa fa-trash action-item-icon"></i>
+                                                    <span>Keluarkan dari Kelas</span>
                                                 </button>
                                             </form>
-                                        </div>
+                                        </x-action-dropdown>
                                     </td>
                                 </tr>
                             @endforeach

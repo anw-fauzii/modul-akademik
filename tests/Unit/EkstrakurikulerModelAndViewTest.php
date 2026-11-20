@@ -339,7 +339,7 @@ class EkstrakurikulerModelAndViewTest extends TestCase
         $this->assertNotFalse($headerCells);
         $this->assertNotFalse($bodyRows);
         $this->assertNotFalse($colspanCells);
-        $this->assertSame(8, $headerCells->length);
+        $this->assertSame(9, $headerCells->length);
         $this->assertSame(0, $bodyRows->length);
         $this->assertSame(0, $colspanCells->length);
     }

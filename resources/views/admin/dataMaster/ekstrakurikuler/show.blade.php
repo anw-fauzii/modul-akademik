@@ -135,8 +135,9 @@
                                 <th style="width: 5%;">No</th>
                                 <th>Siswa</th>
                                 <th>Kelas</th>
-                                <th class="text-center" style="width: 12%;">Jenis Kelamin</th>
-                                <th class="text-center" style="width: 12%;">Pendaftaran</th>
+                                <th class="text-center" style="width: 11%;">Jenis Kelamin</th>
+                                <th class="text-center" style="width: 11%;">Pendaftaran</th>
+                                <th class="text-center" style="width: 10%;">Predikat</th>
                                 <th>Keterangan</th>
                                 <th class="text-center" style="width: 11%;">Status Siswa</th>
                                 <th style="width: 15%; text-align: center;">Aksi</th>
@@ -192,6 +193,20 @@
                                         <span class="badge {{ $item->pendaftaran_badge_class }} px-2 py-1" style="font-size: 0.75rem;">
                                             {{ $item->pendaftaran }}
                                         </span>
+                                    </td>
+                                    <td class="text-center">
+                                        @if ($item->predikat)
+                                            <span class="badge {{ $item->predikat_badge_class }} px-2 py-1" style="font-size: 0.75rem;">
+                                                {{ $item->predikat }}
+                                            </span>
+                                            @if ($item->nilai !== null)
+                                                <div class="small text-muted" style="font-size: 10px;">
+                                                    Nilai: {{ $item->nilai }}
+                                                </div>
+                                            @endif
+                                        @else
+                                            <span class="text-muted small">-</span>
+                                        @endif
                                     </td>
                                     <td>
                                         @if ($item->keterangan)

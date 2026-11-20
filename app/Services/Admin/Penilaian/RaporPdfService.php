@@ -355,8 +355,8 @@ class RaporPdfService
             }
 
             $ekskulByAnggota = AnggotaEkstrakurikuler::query()
-                ->select(['id', 'anggota_kelas_id', 'akademik_master_ekstrakuler_id', 'keterangan'])
-                ->with(['ekstrakurikuler:id,nama_ekstrakurikuler'])
+                ->select(['id', 'anggota_kelas_id', 'akademik_master_ekstrakuler_id', 'nilai', 'predikat', 'keterangan'])
+                ->with(['ekstrakurikuler:id,nama_ekstrakurikuler,kkm,materi'])
                 ->whereIn('anggota_kelas_id', $anggotaIds)
                 ->get()
                 ->groupBy('anggota_kelas_id');

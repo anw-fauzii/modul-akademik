@@ -38,6 +38,7 @@ use App\Http\Controllers\SSOController;
 use App\Http\Controllers\WaliKelas\AnggotaKelasController as WaliKelasAnggotaKelasController;
 use App\Http\Controllers\WaliKelas\DashboardController as WaliKelasDashboardController;
 use App\Http\Controllers\WaliKelas\JadwalPelajaranController as WaliKelasJadwalPelajaranController;
+use App\Http\Controllers\WaliKelas\PenilaianEkstrakurikulerController as WaliKelasPenilaianEkstrakurikulerController;
 use App\Http\Controllers\WaliKelas\PenilaianTpController as WaliKelasPenilaianTpController;
 use App\Http\Controllers\WaliKelas\PerkembanganSiswaController as WaliKelasPerkembanganSiswaController;
 use App\Http\Controllers\WaliKelas\PresensiSiswaController as WaliKelasPresensiSiswaController;
@@ -133,6 +134,10 @@ Route::middleware(['auth', 'sso.check', 'nocache', 'sqid.decode'])->group(functi
         ->name('wali-kelas.t2q.yaumiyah-tahsin.statistik');
     Route::get('/wali-kelas/t2q/yaumiyah-tahfizh/statistik', [WaliKelasYaumiyahT2qController::class, 'statistikTahfizh'])
         ->name('wali-kelas.t2q.yaumiyah-tahfizh.statistik');
+    Route::get('/wali-kelas/ekstrakurikuler', [WaliKelasPenilaianEkstrakurikulerController::class, 'index'])
+        ->name('wali-kelas.ekstrakurikuler.index');
+    Route::post('/wali-kelas/ekstrakurikuler/{ekstrakurikuler}/penilaian', [WaliKelasPenilaianEkstrakurikulerController::class, 'store'])
+        ->name('wali-kelas.ekstrakurikuler.penilaian.store');
     Route::post('/data-master/tahun-ajaran/{tahun_ajaran}/toggle-active', [TahunAjaranController::class, 'toggleActive'])->name('tahun-ajaran.toggle-active');
     Route::resource('/data-master/tahun-ajaran', TahunAjaranController::class);
     Route::resource('/data-master/kelas', KelasController::class)->parameters(

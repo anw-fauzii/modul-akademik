@@ -70,7 +70,11 @@ class WaliKelasAnggotaKelasService
         $students = $this->scopeService->sortAnggotaByStudentName(
             $this->anggotaKelasService
                 ->buildIndexQuery($scope['activeTahunAjaran']->id, $scope['selectedKelas']->id)
-                ->with(['siswa:'.implode(',', self::ROSTER_SISWA_COLUMNS)])
+                ->with([
+                    'siswa:'.implode(',', self::ROSTER_SISWA_COLUMNS),
+                    'anggotaT2q:id,anggota_kelas_id,karyawan_nipy,tingkat',
+                    'anggotaT2q.guruT2q:nipy,nama_lengkap,gelar',
+                ])
                 ->get()
         );
 

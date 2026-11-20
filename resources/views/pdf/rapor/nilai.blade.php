@@ -63,7 +63,7 @@
                         <td class="font-bold" style="width: 38%;">{{ $siswa?->nama_lengkap ?? $anggota->siswa_nis }}</td>
                         <td class="meta-label" style="width: 17%;">Kelas / Fase</td>
                         <td style="width: 2%;">:</td>
-                        <td class="font-bold" style="width: 20%;">{{ $kelas->nama_kelas }} / Fase {{ $fase }}</td>
+                        <td class="font-bold" style="width: 20%;">{{ $kelas->romawi }} / Fase {{ $fase }}</td>
                     </tr>
                     <tr>
                         <td class="meta-label">Nomor Induk/NISN</td>
@@ -105,9 +105,9 @@
                     <thead>
                         <tr>
                             <th style="width: 6%;">NO</th>
-                            <th class="text-left" style="width: 26%;">MATA PELAJARAN</th>
-                            <th style="width: 10%;">NILAI</th>
-                            <th class="text-left" style="width: 58%;">DESKRIPSI</th>
+                            <th style="width: 24%;">MATA PELAJARAN</th>
+                            <th style="width: 12%;">CAPAIAN</th>
+                            <th style="width: 58%;">DESKRIPSI</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -141,29 +141,47 @@
 
             <!-- EKSTRAKURIKULER -->
             <div class="section-heading uppercase">{{ $nextSectionLetter($sectionIdx++) }}. EKSTRAKURIKULER</div>
-            <table class="rapor-table">
+            <table class="rapor-table rapor-table--mapel">
                 <thead>
                     <tr>
                         <th style="width: 6%;">NO</th>
-                        <th class="text-left" style="width: 34%;">KEGIATAN EKSTRAKURIKULER</th>
-                        <th class="text-left" style="width: 60%;">KETERANGAN</th>
+                        <th style="width: 24%;">EKSTRAKURIKULER</th>
+                        <th style="width: 12%;">CAPAIAN</th>
+                        <th style="width: 58%;">DESKRIPSI</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($ekskulRows as $ekskulItem)
                         @php
                             $ekskul = $ekskulItem->relationLoaded('ekstrakurikuler') ? $ekskulItem->ekstrakurikuler : null;
+                            $predikatEkskul = trim((string) ($ekskulItem->predikat ?? ''));
+                            if ($predikatEkskul === '' && $ekskulItem->nilai !== null) {
+                                $resolvedRange = \App\Models\Admin\DataMaster\Ekstrakurikuler::resolvePredikatForNilai(
+                                    $ekskulItem->nilai,
+                                    $ekskul?->kkm
+                                );
+                                $predikatEkskul = $resolvedRange['predikat'] ?? '';
+                            }
+                            $deskripsiEkskul = $ekskulItem->resolvedDeskripsiRapor();
                         @endphp
                         <tr>
-                            <td class="text-center muted font-bold">{{ $loop->iteration }}</td>
-                            <td class="font-bold">{{ $ekskul?->nama_ekstrakurikuler ?? '-' }}</td>
-                            <td>{{ $ekskulItem->keterangan ?: 'Mengikuti kegiatan dengan baik.' }}</td>
+                            <td class="text-center muted font-bold" style="vertical-align: middle;">{{ $loop->iteration }}</td>
+                            <td class="font-bold" style="vertical-align: middle;">{{ $ekskul?->nama_ekstrakurikuler ?? '-' }}</td>
+                            <td class="text-center font-bold" style="vertical-align: middle; font-size: 8.5pt;">{{ $predikatEkskul !== '' ? $predikatEkskul : '-' }}</td>
+                            <td>
+                                <div class="desc-text">
+                                    {{ $deskripsiEkskul }}
+                                </div>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td class="text-center muted">1</td>
-                            <td class="muted">-</td>
-                            <td class="muted">-</td>
+                            <td class="text-center muted" style="vertical-align: middle;">1</td>
+                            <td class="muted" style="vertical-align: middle;">-</td>
+                            <td class="text-center muted" style="vertical-align: middle;">-</td>
+                            <td>
+                                <div class="desc-text muted">-</div>
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -174,7 +192,7 @@
                     $guruT2q = $t2q->relationLoaded('guruT2q') ? $t2q->guruT2q : null;
                 @endphp
                 <div class="section-heading uppercase">{{ $nextSectionLetter($sectionIdx++) }}. PROGRAM TAHSIN &amp; TAHFIDZ AL-QUR'AN (T2Q)</div>
-                <table class="rapor-table">
+                <table class="rapor-table rapor-table--mapel">
                     <thead>
                         <tr>
                             <th style="width: 24%;">TINGKAT / JILID</th>
@@ -184,9 +202,13 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td class="text-center font-bold">{{ $t2q->tingkat ?: '-' }}</td>
-                            <td>{{ $guruT2q?->nama_gelar ?? ($t2q->karyawan_nipy ?: '-') }}</td>
-                            <td>{{ $t2q->keterangan ?: '-' }}</td>
+                            <td class="text-center font-bold" style="vertical-align: middle;">{{ $t2q->tingkat ?: '-' }}</td>
+                            <td style="vertical-align: middle;">{{ $guruT2q?->nama_gelar ?? ($t2q->karyawan_nipy ?: '-') }}</td>
+                            <td>
+                                <div class="desc-text">
+                                    {{ $t2q->keterangan ?: '-' }}
+                                </div>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -234,7 +256,7 @@
                         <td style="width: 40%;">
                             <div>Mengetahui,</div>
                             <div>Orang Tua / Wali Siswa</div>
-                            <div class="ttd-space"></div>
+                            <div class="ttd-space"></div><br>
                             <div class="ttd-blank"></div>
                         </td>
                         <td style="width: 20%;"></td>

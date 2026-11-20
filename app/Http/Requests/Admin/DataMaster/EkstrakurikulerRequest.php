@@ -58,6 +58,17 @@ class EkstrakurikulerRequest extends FormRequest
                 'string',
                 'max:100',
             ],
+            'kkm' => [
+                'nullable',
+                'integer',
+                'min:1',
+                'max:100',
+            ],
+            'materi' => [
+                'nullable',
+                'string',
+                'max:500',
+            ],
         ];
     }
 

@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Models\Admin\DataMaster\AnggotaKelas;
+use App\Models\Admin\DataMaster\AnggotaT2q;
 use App\Models\Admin\DataMaster\Karyawan;
 use App\Models\Admin\DataMaster\Kelas;
 use App\Models\Admin\DataMaster\Siswa;
@@ -195,6 +196,18 @@ class KelasModelAndViewTest extends TestCase
         $anggota->id = 55;
         $anggota->setRelation('siswa', $siswaAnggota);
         $anggota->setRelation('kelas', $kelas);
+        $guruT2q = Karyawan::make([
+            'nipy' => '19880202',
+            'nama_lengkap' => 'Ustadz Hasan',
+            'gelar' => 'Lc',
+        ]);
+        $anggotaT2q = AnggotaT2q::make([
+            'anggota_kelas_id' => 55,
+            'karyawan_nipy' => '19880202',
+            'tingkat' => 'Al-Quran',
+        ]);
+        $anggotaT2q->setRelation('guruT2q', $guruT2q);
+        $anggota->setRelation('anggotaT2q', new Collection([$anggotaT2q]));
 
         $riwayatLama = AnggotaKelas::make([
             'siswa_nis' => '20260002',
@@ -237,6 +250,9 @@ class KelasModelAndViewTest extends TestCase
         $this->assertStringContainsString('2 Al-Fatihah', $html);
         $this->assertStringContainsString('Budi Santoso, S.Pd', $html);
         $this->assertStringContainsString('Aisyah Putri', $html);
+        $this->assertStringContainsString('Pendamping T2Q', $html);
+        $this->assertStringContainsString('Ustadz Hasan, Lc', $html);
+        $this->assertStringContainsString('Tingkat: Al-Quran', $html);
         $this->assertStringContainsString('Ahmad Fauzi', $html);
         $this->assertStringContainsString('1 Abu Bakar', $html);
         $this->assertStringContainsString(route('anggota-kelas.store'), $html);
@@ -317,7 +333,7 @@ class KelasModelAndViewTest extends TestCase
         $bodyRows = $xpath->query('//table[@id="myTable3"]/tbody/tr');
         $colspanCells = $xpath->query('//table[@id="myTable3"]/tbody//*[@colspan]');
 
-        $this->assertSame(6, $headerCells->length);
+        $this->assertSame(7, $headerCells->length);
         $this->assertSame(0, $bodyRows->length);
         $this->assertSame(0, $colspanCells->length);
     }

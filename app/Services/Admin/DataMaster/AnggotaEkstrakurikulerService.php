@@ -39,6 +39,8 @@ class AnggotaEkstrakurikulerService
                 'anggota_kelas_id',
                 self::GROUP_FOREIGN_KEY,
                 'pendaftaran',
+                'nilai',
+                'predikat',
                 'keterangan',
             ])
             ->withMasterRelations()

@@ -45,6 +45,7 @@
                 $isWaliPerkembanganActive = request()->routeIs('wali-kelas.perkembangan-siswa.*');
                 $isWaliPresensiActive = request()->routeIs('wali-kelas.presensi-siswa.*');
                 $isWaliPenilaianActive = request()->routeIs('wali-kelas.penilaian-tp.*', 'wali-kelas.penilaian-rekap.*');
+                $isWaliEkskulActive = request()->routeIs('wali-kelas.ekstrakurikuler.*');
                 $isWaliT2qActive = request()->routeIs('wali-kelas.t2q.*');
                 $isMasterSekolahActive = request()->is('data-master/sekolah*', 'data-master/tahun-ajaran*', 'data-master/titimangsa*');
                 $isMasterSdmActive = request()->is('data-master/siswa*', 'data-master/karyawan*');
@@ -106,6 +107,12 @@
                                 'route' => 'wali-kelas.perkembangan-siswa.index',
                                 'active' => $isWaliPerkembanganActive,
                                 'icon' => 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
+                            ],
+                            [
+                                'label' => 'Penilaian Ekstrakurikuler',
+                                'route' => 'wali-kelas.ekstrakurikuler.index',
+                                'active' => $isWaliEkskulActive,
+                                'icon' => 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z',
                             ],
                         ];
                         $waliDropdownGroups = [

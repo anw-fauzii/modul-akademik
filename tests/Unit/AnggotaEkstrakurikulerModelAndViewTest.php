@@ -34,6 +34,8 @@ class AnggotaEkstrakurikulerModelAndViewTest extends TestCase
             'anggota_kelas_id',
             'akademik_master_ekstrakuler_id',
             'pendaftaran',
+            'nilai',
+            'predikat',
             'keterangan',
         ], $model->getFillable());
         $this->assertSame(['Baru', 'Lanjutan'], AnggotaEkstrakurikuler::PENDAFTARAN_OPTIONS);
@@ -41,6 +43,7 @@ class AnggotaEkstrakurikulerModelAndViewTest extends TestCase
             'id' => 'int',
             'anggota_kelas_id' => 'integer',
             'akademik_master_ekstrakuler_id' => 'integer',
+            'nilai' => 'integer',
         ], $model->getCasts());
 
         $anggotaKelasRelation = $model->anggotaKelas();

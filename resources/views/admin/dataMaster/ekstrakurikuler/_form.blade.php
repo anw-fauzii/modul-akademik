@@ -106,7 +106,7 @@
     </div>
 
     <!-- Biaya -->
-    <div class="col-md-6">
+    <div class="col-md-3">
         <div class="position-relative form-group">
             <label for="biaya" class="font-weight-bold">
                 Biaya (Rp) <span class="text-danger">*</span>
@@ -115,9 +115,51 @@
                 class="form-control @error('biaya') is-invalid @enderror"
                 value="{{ $val('biaya', 0) }}" required>
             <small class="form-text text-muted" style="font-size: 0.75rem;">
-                Masukkan nominal biaya dalam Rupiah. Isi <strong>0</strong> jika kegiatan gratis.
+                Isi <strong>0</strong> jika kegiatan gratis.
             </small>
             @error('biaya')
+                <div class="invalid-feedback" style="font-style: italic; font-size: 0.75rem;">
+                    {{ $message }}
+                </div>
+            @enderror
+        </div>
+    </div>
+
+    <!-- KKM Ekstrakurikuler -->
+    <div class="col-md-3">
+        <div class="position-relative form-group">
+            <label for="kkm" class="font-weight-bold">
+                KKM Penilaian (1-100)
+            </label>
+            <input name="kkm" id="kkm" placeholder="75" type="number" min="1" max="100" step="1"
+                class="form-control @error('kkm') is-invalid @enderror"
+                value="{{ $val('kkm', \App\Models\Admin\DataMaster\Ekstrakurikuler::DEFAULT_KKM) }}">
+            <small class="form-text text-muted" style="font-size: 0.75rem;">
+                Acuan rentang predikat otomatis (SAB, BSH, SB, MB).
+            </small>
+            @error('kkm')
+                <div class="invalid-feedback" style="font-style: italic; font-size: 0.75rem;">
+                    {{ $message }}
+                </div>
+            @enderror
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Materi Ekstrakurikuler -->
+    <div class="col-md-12">
+        <div class="position-relative form-group">
+            <label for="materi" class="font-weight-bold">
+                Materi / Kompetensi Ekstrakurikuler
+            </label>
+            <textarea name="materi" id="materi" rows="2"
+                placeholder="Contoh: teknik dasar memanah, fokus bidikan, dan keselamatan panahan"
+                class="form-control @error('materi') is-invalid @enderror">{{ $val('materi') }}</textarea>
+            <small class="form-text text-muted" style="font-size: 0.75rem;">
+                Materi ini berlaku sama untuk seluruh peserta ekstrakurikuler dan digunakan untuk membentuk kalimat deskripsi rapor otomatis.
+            </small>
+            @error('materi')
                 <div class="invalid-feedback" style="font-style: italic; font-size: 0.75rem;">
                     {{ $message }}
                 </div>

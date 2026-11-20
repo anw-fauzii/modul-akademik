@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 #[Fillable([
     'siswa_nis',
@@ -160,6 +161,56 @@ class AnggotaKelas extends Model
     public function anggotaT2q(): HasMany
     {
         return $this->hasMany(AnggotaT2q::class, 'anggota_kelas_id');
+    }
+
+    /**
+     * Mengambil entitas keanggotaan T2Q pertama yang sudah di-eager-load tanpa memicu lazy loading.
+     */
+    public function loadedAnggotaT2q(): ?AnggotaT2q
+    {
+        if (! $this->relationLoaded('anggotaT2q')) {
+            return null;
+        }
+
+        $related = $this->getRelation('anggotaT2q');
+
+        if ($related instanceof AnggotaT2q) {
+            return $related;
+        }
+
+        if ($related instanceof Collection) {
+            $first = $related->first();
+
+            return $first instanceof AnggotaT2q ? $first : null;
+        }
+
+        return null;
+    }
+
+    /**
+     * Mengambil nama pendamping/guru T2Q beserta gelar dari relasi yang sudah di-eager-load tanpa N+1.
+     */
+    public function loadedPendampingT2qNama(): ?string
+    {
+        $t2q = $this->loadedAnggotaT2q();
+
+        if (! $t2q || ! $t2q->relationLoaded('guruT2q')) {
+            return null;
+        }
+
+        $guru = $t2q->getRelation('guruT2q');
+
+        return $guru?->nama_gelar ?: $guru?->nama_lengkap ?: $t2q->karyawan_nipy ?: null;
+    }
+
+    /**
+     * Mengambil tingkat T2Q dari relasi yang sudah di-eager-load tanpa N+1.
+     */
+    public function loadedTingkatT2q(): ?string
+    {
+        $tingkat = trim((string) ($this->loadedAnggotaT2q()?->tingkat ?? ''));
+
+        return $tingkat !== '' ? $tingkat : null;
     }
 
     /**

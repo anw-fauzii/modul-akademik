@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Http\Controllers\WaliKelas\AnggotaKelasController;
 use App\Models\Admin\DataMaster\AnggotaKelas;
+use App\Models\Admin\DataMaster\AnggotaT2q;
 use App\Models\Admin\DataMaster\Ekstrakurikuler;
 use App\Models\Admin\DataMaster\Jemputan;
 use App\Models\Admin\DataMaster\Karyawan;
@@ -259,6 +260,14 @@ class WaliKelasAnggotaKelasTest extends TestCase
         $anggota->id = 55;
         $anggota->setRelation('siswa', $siswa);
         $anggota->setRelation('kelas', $kelasA);
+        $guruT2q = Karyawan::make(['nipy' => 'NIPY-010', 'nama_lengkap' => 'Ustadzah Fatimah', 'gelar' => 'S.Pd.I']);
+        $anggotaT2q = AnggotaT2q::make([
+            'anggota_kelas_id' => 55,
+            'karyawan_nipy' => 'NIPY-010',
+            'tingkat' => 'Jilid 4',
+        ]);
+        $anggotaT2q->setRelation('guruT2q', $guruT2q);
+        $anggota->setRelation('anggotaT2q', new EloquentCollection([$anggotaT2q]));
 
         $user = $this->makeUserWithRole('Ustadzah Sari', 'sari@primainsani.sch.id', 'NIPY-001', 'wali kelas');
         $user->setRelation('karyawan', $wali);
@@ -337,6 +346,11 @@ class WaliKelasAnggotaKelasTest extends TestCase
         $this->assertStringContainsString('Ahmad Fauzi', $indexHtml);
         $this->assertStringContainsString('202601001', $indexHtml);
         $this->assertStringContainsString('Hendra Wijaya', $indexHtml);
+        $this->assertStringContainsString('Pendamping T2Q', $indexHtml);
+        $this->assertStringContainsString('Ustadzah Fatimah, S.Pd.I', $indexHtml);
+        $this->assertStringContainsString('Tingkat: Jilid 4', $indexHtml);
+        $this->assertStringNotContainsString('Tempat, Tgl Lahir', $indexHtml);
+        $this->assertStringNotContainsString('>Status<', $indexHtml);
         $this->assertStringContainsString('2 An-Naba', $indexHtml);
         $this->assertStringContainsString(route('wali-kelas.anggota-kelas.show', sqidFor('wali-kelas.anggota-kelas.show', 55)), $indexHtml);
         $this->assertStringNotContainsString('Semua Gender', $indexHtml);

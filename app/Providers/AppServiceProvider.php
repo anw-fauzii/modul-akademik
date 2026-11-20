@@ -38,6 +38,7 @@ use App\Models\Admin\TujuanPembelajaran\TujuanPembelajaran;
 use App\Policies\AdminOnlyPolicy;
 use App\Policies\AnggotaKelasPolicy;
 use App\Policies\AspekTpPolicy;
+use App\Policies\EkstrakurikulerPolicy;
 use App\Policies\JadwalPelajaranPolicy;
 use App\Policies\KelasPolicy;
 use App\Policies\PresensiSiswaPolicy;
@@ -61,7 +62,7 @@ class AppServiceProvider extends ServiceProvider
         AnggotaKelas::class => AnggotaKelasPolicy::class,
         AnggotaT2q::class => AdminOnlyPolicy::class,
         DaftarJilid::class => AdminOnlyPolicy::class,
-        Ekstrakurikuler::class => AdminOnlyPolicy::class,
+        Ekstrakurikuler::class => EkstrakurikulerPolicy::class,
         Jemputan::class => AdminOnlyPolicy::class,
         Karyawan::class => AdminOnlyPolicy::class,
         Kelas::class => KelasPolicy::class,

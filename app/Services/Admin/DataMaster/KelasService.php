@@ -271,6 +271,8 @@ class KelasService
             ])
             ->with([
                 'siswa:nis,nama_lengkap,nisn,jenis_kelamin,status',
+                'anggotaT2q:id,anggota_kelas_id,karyawan_nipy,tingkat',
+                'anggotaT2q.guruT2q:nipy,nama_lengkap,gelar',
             ])
             ->forKelas((int) $kelas->id)
             ->orderBy('siswa_nis')

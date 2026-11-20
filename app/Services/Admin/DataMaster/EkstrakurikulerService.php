@@ -31,6 +31,8 @@ class EkstrakurikulerService
                 'nama_ekstrakurikuler',
                 'biaya',
                 'unit',
+                'kkm',
+                'materi',
             ])
             ->withMasterRelations()
             ->withCount('anggotaEkstrakurikuler')
@@ -76,6 +78,8 @@ class EkstrakurikulerService
                 'anggota_kelas_id',
                 'akademik_master_ekstrakuler_id',
                 'pendaftaran',
+                'nilai',
+                'predikat',
                 'keterangan',
             ])
             ->with([

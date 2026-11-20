@@ -131,10 +131,9 @@
                                     <th class="text-center" style="width: 52px;" data-orderable="false" data-searchable="false">No</th>
                                     <th>Siswa</th>
                                     <th class="text-center" style="width: 110px;" data-searchable="false">Gender</th>
-                                    <th data-searchable="false">Tempat, Tgl Lahir</th>
+                                    <th>Pendamping T2Q</th>
                                     <th data-searchable="false">Kontak &amp; Orang Tua</th>
                                     <th class="text-center" style="width: 120px;" data-searchable="false">Pendaftaran</th>
-                                    <th class="text-center" style="width: 100px;" data-searchable="false">Status</th>
                                     <th class="text-center" style="width: 96px;" data-orderable="false" data-searchable="false">Aksi</th>
                                 </tr>
                             </thead>
@@ -146,8 +145,8 @@
                                         $genderLabel = $siswa?->jenis_kelamin_label ?? '-';
                                         $isMale = $genderLabel === 'Laki-laki';
                                         $isFemale = $genderLabel === 'Perempuan';
-                                        $birthDateFormatted = $siswa?->tanggal_lahir?->copy()->locale('id')->translatedFormat('d M Y');
-                                        $birthInfo = collect([$siswa?->tempat_lahir, $birthDateFormatted])->filter()->implode(', ');
+                                        $pendampingT2qNama = $anggota->loadedPendampingT2qNama();
+                                        $tingkatT2q = $anggota->loadedTingkatT2q();
                                         $contactNumber = $siswa?->whatsapp ?: $siswa?->nomor_hp;
                                         $waDigits = $contactNumber ? preg_replace('/[^0-9]/', '', $contactNumber) : null;
                                         $detailUrl = route('wali-kelas.anggota-kelas.show', $anggota);
@@ -183,8 +182,19 @@
                                                 {{ $genderLabel }}
                                             </span>
                                         </td>
-                                        <td class="small text-slate-700">
-                                            {{ $birthInfo !== '' ? $birthInfo : '-' }}
+                                        <td>
+                                            @if ($pendampingT2qNama)
+                                                <div class="font-weight-semibold text-dark" style="font-size: 0.82rem;">
+                                                    {{ $pendampingT2qNama }}
+                                                </div>
+                                                @if ($tingkatT2q)
+                                                    <div class="small text-muted" style="font-size: 0.71rem;">
+                                                        Tingkat: {{ $tingkatT2q }}
+                                                    </div>
+                                                @endif
+                                            @else
+                                                <span class="small text-muted">-</span>
+                                            @endif
                                         </td>
                                         <td>
                                             @if ($contactNumber)
@@ -212,11 +222,6 @@
                                         <td class="text-center">
                                             <span class="badge badge-light border px-2 py-1" style="font-size: 0.71rem;">
                                                 {{ $anggota->pendaftaran ?: '-' }}
-                                            </span>
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="badge {{ $siswa?->status_badge_class ?? 'badge-secondary' }} px-2 py-1" style="font-size: 0.71rem;">
-                                                {{ $siswa?->status ?? '-' }}
                                             </span>
                                         </td>
                                         <td class="text-center">

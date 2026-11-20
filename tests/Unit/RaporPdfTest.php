@@ -244,7 +244,7 @@ class RaporPdfTest extends TestCase
         // PDF Nilai Semester memuat Nilai angka & Deskripsi rata kanan-kiri tanpa kop serta tanpa keterangan SAB/BSH
         $this->assertStringContainsString('PENCAPAIAN KOMPETENSI PESERTA DIDIK', $nilaiHtml);
         $this->assertStringContainsString('text-align: justify;', $nilaiHtml);
-        $this->assertStringContainsString('<th style="width: 10%;">NILAI</th>', $nilaiHtml);
+        $this->assertStringContainsString('<th style="width: 12%;">NILAI</th>', $nilaiHtml);
         $this->assertStringContainsString('Fase C', $nilaiHtml);
         $this->assertStringContainsString('Ganjil (Semester)', $nilaiHtml);
         $this->assertStringContainsString('Matematika', $nilaiHtml);
@@ -265,7 +265,7 @@ class RaporPdfTest extends TestCase
 
         // PDF Mid Semester juga menampilkan kolom NILAI angka & DESKRIPSI tanpa predikat/keterangan SAB, BSH dll
         $this->assertStringContainsString('Ganjil (Mid Semester)', $midHtml);
-        $this->assertStringContainsString('<th style="width: 10%;">NILAI</th>', $midHtml);
+        $this->assertStringContainsString('<th style="width: 12%;">NILAI</th>', $midHtml);
         $this->assertStringContainsString('>89<', str_replace(["\n", ' '], '', $midHtml));
         $this->assertStringContainsString('Menunjukkan penguasaan baik pada operasi hitung pecahan.', $midHtml);
         $this->assertStringNotContainsString('>CAPAIAN<', $midHtml);
@@ -581,13 +581,25 @@ class RaporPdfTest extends TestCase
         $this->assertNotFalse($secEkskulStart);
         $sectionMapelHtml = substr($html, $secStart, $secEkskulStart - $secStart);
 
+        $midSecStart = strpos($midHtml, 'PENCAPAIAN KOMPETENSI PESERTA DIDIK');
+        $midEkskulStart = strpos($midHtml, '<!-- EKSTRAKURIKULER -->');
+        $this->assertNotFalse($midSecStart);
+        $this->assertNotFalse($midEkskulStart);
+        $midSectionMapelHtml = substr($midHtml, $midSecStart, $midEkskulStart - $midSecStart);
+
+        $fallbackSecStart = strpos($fallbackHtml, 'PENCAPAIAN KOMPETENSI PESERTA DIDIK');
+        $fallbackEkskulStart = strpos($fallbackHtml, '<!-- EKSTRAKURIKULER -->');
+        $this->assertNotFalse($fallbackSecStart);
+        $this->assertNotFalse($fallbackEkskulStart);
+        $fallbackSectionMapelHtml = substr($fallbackHtml, $fallbackSecStart, $fallbackEkskulStart - $fallbackSecStart);
+
         $this->assertSame(3, substr_count($sectionMapelHtml, 'class="rapor-table rapor-table--mapel"'));
-        $this->assertSame(3, substr_count($midHtml, 'class="rapor-table rapor-table--mapel"'));
-        $this->assertSame(3, substr_count($fallbackHtml, 'class="rapor-table rapor-table--mapel"'));
+        $this->assertSame(3, substr_count($midSectionMapelHtml, 'class="rapor-table rapor-table--mapel"'));
+        $this->assertSame(3, substr_count($fallbackSectionMapelHtml, 'class="rapor-table rapor-table--mapel"'));
         $this->assertSame(3, substr_count($sectionMapelHtml, 'class="section-heading uppercase"'));
         $this->assertSame(3, substr_count($sectionMapelHtml, '>1</td>'));
-        $this->assertSame(3, substr_count($sectionMapelHtml, '<th style="width: 10%;">NILAI</th>'));
-        $this->assertSame(3, substr_count($midHtml, '<th style="width: 10%;">NILAI</th>'));
+        $this->assertSame(3, substr_count($sectionMapelHtml, '<th style="width: 12%;">NILAI</th>'));
+        $this->assertSame(3, substr_count($midSectionMapelHtml, '<th style="width: 12%;">NILAI</th>'));
         $this->assertStringContainsString('>89<', str_replace(["\n", ' '], '', $midHtml));
         $this->assertStringNotContainsString('>CAPAIAN<', $sectionMapelHtml);
         $this->assertStringNotContainsString('>CAPAIAN<', $midHtml);
