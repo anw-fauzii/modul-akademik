@@ -6,6 +6,7 @@ use App\Models\Admin\DataMaster\AnggotaEkstrakurikuler;
 use App\Models\Admin\DataMaster\AnggotaKelas;
 use App\Models\Admin\DataMaster\Ekstrakurikuler;
 use App\Models\Admin\DataMaster\Kelas;
+use App\Models\Admin\DataMaster\Siswa;
 use App\Models\Admin\DataMaster\TahunAjaran;
 use App\Services\Admin\DataMaster\Concerns\ManagesTahunAjaranMembership;
 use Illuminate\Database\Eloquent\Builder;
@@ -155,12 +156,68 @@ class AnggotaEkstrakurikulerService
         $targetTahunAjaranIds = $ekstrakurikuler->akademik_master_tahun_ajaran_id !== null
             ? [(int) $ekstrakurikuler->akademik_master_tahun_ajaran_id]
             : [];
+        $targetSifat = $ekstrakurikuler->sifat ?: Ekstrakurikuler::SIFAT_PILIHAN;
 
-        return $this->buildCandidateAnggotaKelasPayloadFor(
-            $targetTahunAjaranIds,
-            $this->buildCreateAnggotaKelasQuery($targetTahunAjaranIds),
-            self::NESTED_SISWA_MEMBERSHIP_RELATION
-        );
+        $candidateQuery = $this->baseAnggotaKelasFormQuery()
+            ->whereHas('siswa', fn (Builder $siswaQuery) => $siswaQuery->active())
+            ->when(
+                $targetTahunAjaranIds !== [],
+                fn (Builder $query) => $query
+                    ->whereHas(
+                        'kelas',
+                        fn (Builder $kelasQuery) => $kelasQuery->whereIn('akademik_master_tahun_ajaran_id', $targetTahunAjaranIds)
+                    )
+                    ->whereDoesntHave(
+                        'siswa.'.self::NESTED_SISWA_MEMBERSHIP_RELATION,
+                        fn (Builder $groupQuery) => $groupQuery
+                            ->whereIn($groupQuery->qualifyColumn('akademik_master_tahun_ajaran_id'), $targetTahunAjaranIds)
+                            ->where($groupQuery->qualifyColumn('sifat'), $targetSifat)
+                    )
+            );
+
+        $anggotaKelas = $candidateQuery->get();
+
+        $hiddenRegisteredCount = $targetTahunAjaranIds === []
+            ? 0
+            : AnggotaKelas::query()
+                ->whereHas('siswa', fn (Builder $siswaQuery) => $siswaQuery->active())
+                ->whereHas('kelas', fn (Builder $kelasQuery) => $kelasQuery->whereIn('akademik_master_tahun_ajaran_id', $targetTahunAjaranIds))
+                ->whereHas(
+                    'siswa.'.self::NESTED_SISWA_MEMBERSHIP_RELATION,
+                    fn (Builder $groupQuery) => $groupQuery
+                        ->whereIn($groupQuery->qualifyColumn('akademik_master_tahun_ajaran_id'), $targetTahunAjaranIds)
+                        ->where($groupQuery->qualifyColumn('sifat'), $targetSifat)
+                )
+                ->count();
+
+        $hiddenInactiveCount = AnggotaKelas::query()
+            ->whereHas('siswa', fn (Builder $siswaQuery) => $siswaQuery->inactive())
+            ->when(
+                $targetTahunAjaranIds !== [],
+                fn (Builder $query) => $query->whereHas(
+                    'kelas',
+                    fn (Builder $kelasQuery) => $kelasQuery->whereIn('akademik_master_tahun_ajaran_id', $targetTahunAjaranIds)
+                )
+            )
+            ->count();
+
+        $hiddenWithoutKelasCount = $targetTahunAjaranIds === []
+            ? 0
+            : Siswa::query()
+                ->active()
+                ->whereDoesntHave(
+                    'anggotaKelas.kelas',
+                    fn (Builder $kelasQuery) => $kelasQuery->whereIn('akademik_master_tahun_ajaran_id', $targetTahunAjaranIds)
+                )
+                ->count();
+
+        return [
+            'anggotaKelas' => $anggotaKelas,
+            'excludedTahunAjaranIds' => $targetTahunAjaranIds,
+            'hiddenRegisteredCount' => $hiddenRegisteredCount,
+            'hiddenInactiveCount' => $hiddenInactiveCount,
+            'hiddenWithoutKelasCount' => $hiddenWithoutKelasCount,
+        ];
     }
 
     /**
@@ -200,14 +257,16 @@ class AnggotaEkstrakurikulerService
         array $anggotaKelasIds,
         int $tahunAjaranId,
         ?int $ignoreAnggotaEkstrakurikulerId = null,
-        bool $lockForUpdate = false
+        bool $lockForUpdate = false,
+        ?string $sifat = null
     ): array {
         return $this->findConflictingMemberNisInTahunAjaran(
             AnggotaEkstrakurikuler::class,
             $anggotaKelasIds,
             $tahunAjaranId,
             $ignoreAnggotaEkstrakurikulerId,
-            $lockForUpdate
+            $lockForUpdate,
+            $sifat
         );
     }
 
@@ -274,10 +333,10 @@ class AnggotaEkstrakurikulerService
             ])
             ->with([
                 'siswa:nis,akademik_master_ekstrakuler_id,nama_lengkap,jenis_kelamin,nisn,status',
-                'siswa.ekstrakurikuler:id,akademik_master_tahun_ajaran_id,nama_ekstrakurikuler,unit',
+                'siswa.ekstrakurikuler:id,akademik_master_tahun_ajaran_id,nama_ekstrakurikuler,unit,sifat',
                 'siswa.ekstrakurikuler.tahunAjaran:id,nama_tahun_ajaran,semester,is_active',
                 'siswa.anggotaEkstrakurikuler:akademik_master_anggota_ekstrakuler.id,akademik_master_anggota_ekstrakuler.anggota_kelas_id,akademik_master_anggota_ekstrakuler.akademik_master_ekstrakuler_id,akademik_master_anggota_ekstrakuler.pendaftaran',
-                'siswa.anggotaEkstrakurikuler.ekstrakurikuler:id,akademik_master_tahun_ajaran_id,nama_ekstrakurikuler,unit',
+                'siswa.anggotaEkstrakurikuler.ekstrakurikuler:id,akademik_master_tahun_ajaran_id,nama_ekstrakurikuler,unit,sifat',
                 'siswa.anggotaEkstrakurikuler.ekstrakurikuler.tahunAjaran:id,nama_tahun_ajaran,semester,is_active',
                 'kelas:id,akademik_master_tahun_ajaran_id,nama_kelas,jenjang_kelas,tingkatan_kelas',
                 'kelas.tahunAjaran:id,nama_tahun_ajaran,semester,is_active',
@@ -302,6 +361,7 @@ class AnggotaEkstrakurikulerService
                 'nama_ekstrakurikuler',
                 'biaya',
                 'unit',
+                'sifat',
             ])
             ->with([
                 'tahunAjaran:id,nama_tahun_ajaran,semester,is_active',

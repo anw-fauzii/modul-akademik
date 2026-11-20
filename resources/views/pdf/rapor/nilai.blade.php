@@ -140,6 +140,14 @@
             @endforeach
 
             <!-- EKSTRAKURIKULER -->
+            @php
+                $sortedEkskulRows = collect($ekskulRows)->sortBy(static function ($ekskulItem): string {
+                    $ekskul = $ekskulItem->relationLoaded('ekstrakurikuler') ? $ekskulItem->ekstrakurikuler : null;
+                    $isWajib = $ekskul?->isWajib() ?? false;
+
+                    return ($isWajib ? '0_' : '1_').mb_strtolower((string) ($ekskul?->nama_ekstrakurikuler ?? ''));
+                })->values();
+            @endphp
             <div class="section-heading uppercase">{{ $nextSectionLetter($sectionIdx++) }}. EKSTRAKURIKULER</div>
             <table class="rapor-table rapor-table--mapel">
                 <thead>
@@ -151,7 +159,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse ($ekskulRows as $ekskulItem)
+                    @forelse ($sortedEkskulRows as $ekskulItem)
                         @php
                             $ekskul = $ekskulItem->relationLoaded('ekstrakurikuler') ? $ekskulItem->ekstrakurikuler : null;
                             $predikatEkskul = trim((string) ($ekskulItem->predikat ?? ''));

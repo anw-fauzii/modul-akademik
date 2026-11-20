@@ -3,6 +3,7 @@
 namespace App\Services\Admin\DataMaster\Concerns;
 
 use App\Models\Admin\DataMaster\AnggotaKelas;
+use App\Models\Admin\DataMaster\Ekstrakurikuler;
 use App\Models\Admin\DataMaster\Kelas;
 use App\Models\Admin\DataMaster\Siswa;
 use App\Models\Admin\DataMaster\TahunAjaran;
@@ -247,7 +248,8 @@ trait ManagesTahunAjaranMembership
         array $anggotaKelasIds,
         int $tahunAjaranId,
         ?int $ignoreMembershipId = null,
-        bool $lockForUpdate = false
+        bool $lockForUpdate = false,
+        ?string $ekstrakurikulerSifat = null
     ): array {
         if ($anggotaKelasIds === []) {
             return [];
@@ -265,6 +267,13 @@ trait ManagesTahunAjaranMembership
         $conflicts = $membershipModelClass::query()
             ->with(['anggotaKelas:id,siswa_nis'])
             ->forTahunAjaran($tahunAjaranId)
+            ->when(
+                $ekstrakurikulerSifat !== null && trim($ekstrakurikulerSifat) !== '',
+                fn (Builder $query) => $query->whereHas(
+                    'ekstrakurikuler',
+                    fn (Builder $ekskulQuery) => $ekskulQuery->where('sifat', trim($ekstrakurikulerSifat))
+                )
+            )
             ->where(static function (Builder $query) use ($anggotaKelasIds, $selectedNis): void {
                 $query->whereIn('anggota_kelas_id', $anggotaKelasIds);
                 if ($selectedNis !== []) {
@@ -303,7 +312,8 @@ trait ManagesTahunAjaranMembership
         array $anggotaKelasIds,
         Collection $anggotaKelasRows,
         int $tahunAjaranId,
-        ?int $ignoreMembershipId = null
+        ?int $ignoreMembershipId = null,
+        ?string $ekstrakurikulerSifat = null
     ): void {
         $hasMismatch = $anggotaKelasRows->contains(
             static fn (AnggotaKelas $item): bool => (int) ($item->kelas?->akademik_master_tahun_ajaran_id ?? 0) !== $tahunAjaranId
@@ -320,7 +330,8 @@ trait ManagesTahunAjaranMembership
             $anggotaKelasIds,
             $tahunAjaranId,
             $ignoreMembershipId,
-            lockForUpdate: true
+            lockForUpdate: true,
+            ekstrakurikulerSifat: $ekstrakurikulerSifat
         );
 
         if ($conflicts !== []) {
@@ -367,7 +378,6 @@ trait ManagesTahunAjaranMembership
             $keterangan
         ): Collection {
             $group = $groupModelClass::query()
-                ->select(['id', 'akademik_master_tahun_ajaran_id'])
                 ->with(['tahunAjaran:id,is_active'])
                 ->findOrFail($groupId);
 
@@ -378,12 +388,18 @@ trait ManagesTahunAjaranMembership
                 ->get()
                 ->keyBy('id');
 
+            $ekstrakurikulerSifat = $group instanceof Ekstrakurikuler
+                ? ($group->sifat ?: Ekstrakurikuler::SIFAT_PILIHAN)
+                : null;
+
             $this->assertValidAnggotaKelasTahunAjaranAndNoConflict(
                 $membershipModelClass,
                 $entityLabel,
                 $anggotaKelasIds,
                 $anggotaKelasRows,
-                (int) $group->getAttribute('akademik_master_tahun_ajaran_id')
+                (int) $group->getAttribute('akademik_master_tahun_ajaran_id'),
+                null,
+                $ekstrakurikulerSifat
             );
 
             $created = new Collection;
@@ -456,7 +472,6 @@ trait ManagesTahunAjaranMembership
             ]);
 
             $targetGroup = $groupModelClass::query()
-                ->select(['id', 'akademik_master_tahun_ajaran_id'])
                 ->with(['tahunAjaran:id,is_active'])
                 ->findOrFail($newGroupId);
 
@@ -465,13 +480,18 @@ trait ManagesTahunAjaranMembership
                 ->with(['kelas:id,akademik_master_tahun_ajaran_id'])
                 ->findOrFail($newAnggotaKelasId);
 
+            $ekstrakurikulerSifat = $targetGroup instanceof Ekstrakurikuler
+                ? ($targetGroup->sifat ?: Ekstrakurikuler::SIFAT_PILIHAN)
+                : null;
+
             $this->assertValidAnggotaKelasTahunAjaranAndNoConflict(
                 $membershipModelClass,
                 $entityLabel,
                 [$newAnggotaKelasId],
                 new Collection([$targetAnggotaKelas->id => $targetAnggotaKelas]),
                 (int) $targetGroup->getAttribute('akademik_master_tahun_ajaran_id'),
-                (int) $membership->getKey()
+                (int) $membership->getKey(),
+                $ekstrakurikulerSifat
             );
 
             $oldNis = $membership->getRelationValue('anggotaKelas')?->siswa_nis;

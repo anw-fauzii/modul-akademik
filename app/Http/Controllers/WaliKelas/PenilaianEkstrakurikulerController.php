@@ -4,6 +4,7 @@ namespace App\Http\Controllers\WaliKelas;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin\DataMaster\Ekstrakurikuler;
+use App\Models\Admin\DataMaster\Kelas;
 use App\Services\WaliKelas\WaliKelasEkstrakurikulerService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,21 +18,29 @@ class PenilaianEkstrakurikulerController extends Controller
         $this->middleware('role:super admin|wali kelas');
         $this->middleware('can:viewPenilaian,'.Ekstrakurikuler::class)->only(['index']);
         $this->middleware('can:inputNilai,ekstrakurikuler')->only(['store']);
+        $this->middleware('can:view,kelas')->only(['storeWajib']);
     }
 
     /**
-     * Menampilkan halaman Penilaian Ekstrakurikuler untuk Pembimbing (atau alert jika tidak membimbing ekskul).
+     * Menampilkan halaman Penilaian Ekstrakurikuler:
+     * - Tab Pramuka (Wajib) untuk Wali Kelas / Guru Pendamping sesuai kelas binaannya.
+     * - Tab Ekskul Pilihan (Minat) untuk Pembimbing Ekstrakurikuler.
      */
     public function index(Request $request): View
     {
         $ekskulId = $request->integer('ekstrakurikuler_id') ?: null;
-        $data = $this->service->getPageData($request->user(), $ekskulId);
+        $kelasId = $request->integer('kelas_id') ?: null;
+        $mode = $request->string('mode')->toString() ?: null;
+
+        $data = ($kelasId !== null || $mode !== null)
+            ? $this->service->getPageData($request->user(), $ekskulId, $kelasId, $mode)
+            : $this->service->getPageData($request->user(), $ekskulId);
 
         return view('waliKelas.ekstrakurikuler.index', $data);
     }
 
     /**
-     * Menyimpan pengaturan KKM & Materi beserta nilai angka seluruh anggota ekstrakurikuler yang dibimbing.
+     * Menyimpan nilai angka seluruh anggota Ekstrakurikuler Pilihan yang dibimbing.
      */
     public function store(Request $request, Ekstrakurikuler $ekstrakurikuler): RedirectResponse
     {
@@ -65,7 +74,36 @@ class PenilaianEkstrakurikulerController extends Controller
         }
 
         return redirect()
-            ->route('wali-kelas.ekstrakurikuler.index', ['ekstrakurikuler_id' => $ekstrakurikuler->sqid])
+            ->route('wali-kelas.ekstrakurikuler.index', [
+                'mode' => 'pilihan',
+                'ekstrakurikuler_id' => $ekstrakurikuler->sqid,
+            ])
             ->with('success', 'Nilai, Predikat (SAB/BSH/SB/MB), dan Deskripsi Rapor Ekstrakurikuler berhasil disimpan.');
+    }
+
+    /**
+     * Menyimpan nilai Pramuka (Ekstrakurikuler Wajib) untuk seluruh siswa kelas binaan Wali Kelas.
+     */
+    public function storeWajib(Request $request, Kelas $kelas): RedirectResponse
+    {
+        $this->service->authorizeWajibKelasForUser($request->user(), $kelas);
+
+        $validated = $request->validate([
+            'nilai' => ['nullable', 'array'],
+            'nilai.*' => ['nullable', 'numeric', 'min:0', 'max:100'],
+        ], [
+            'nilai.*.numeric' => 'Nilai Pramuka siswa harus berupa angka.',
+            'nilai.*.min' => 'Nilai Pramuka siswa minimal 0.',
+            'nilai.*.max' => 'Nilai Pramuka siswa maksimal 100.',
+        ]);
+
+        $this->service->savePenilaianWajibKelas($kelas, $validated);
+
+        return redirect()
+            ->route('wali-kelas.ekstrakurikuler.index', [
+                'mode' => 'wajib',
+                'kelas_id' => $kelas->sqid,
+            ])
+            ->with('success', 'Nilai Pramuka (Wajib), Predikat (SAB/BSH/SB/MB), dan Deskripsi Rapor berhasil disimpan.');
     }
 }

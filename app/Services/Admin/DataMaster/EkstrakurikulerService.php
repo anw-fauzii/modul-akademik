@@ -31,6 +31,7 @@ class EkstrakurikulerService
                 'nama_ekstrakurikuler',
                 'biaya',
                 'unit',
+                'sifat',
                 'kkm',
                 'materi',
             ])
@@ -150,13 +151,39 @@ class EkstrakurikulerService
     }
 
     /**
-     * Memperbarui data ekstrakurikuler.
+     * Memperbarui data ekstrakurikuler dan menyinkronkan ulang predikat serta deskripsi rapor
+     * anggota yang sudah memiliki nilai apabila KKM atau Materi berubah.
      *
      * @param  array<string, mixed>  $data
      */
     public function update(Ekstrakurikuler $ekstrakurikuler, array $data): bool
     {
-        return $ekstrakurikuler->update($data);
+        $updated = $ekstrakurikuler->update($data);
+
+        if ($updated) {
+            $kkm = (int) ($ekstrakurikuler->kkm ?: Ekstrakurikuler::DEFAULT_KKM);
+            $materi = $ekstrakurikuler->materi;
+            $nama = $ekstrakurikuler->nama_ekstrakurikuler;
+
+            $scoredMembers = $ekstrakurikuler->anggotaEkstrakurikuler()
+                ->whereNotNull('nilai')
+                ->get();
+
+            foreach ($scoredMembers as $member) {
+                $range = Ekstrakurikuler::resolvePredikatForNilai($member->nilai, $kkm);
+                $newPredikat = $range['predikat'] ?? null;
+                $newKeterangan = Ekstrakurikuler::buildAutoDeskripsi($newPredikat, $materi, $nama);
+
+                if ($member->predikat !== $newPredikat || $member->keterangan !== $newKeterangan) {
+                    $member->update([
+                        'predikat' => $newPredikat,
+                        'keterangan' => $newKeterangan,
+                    ]);
+                }
+            }
+        }
+
+        return $updated;
     }
 
     /**

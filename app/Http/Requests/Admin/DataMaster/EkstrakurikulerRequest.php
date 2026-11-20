@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin\DataMaster;
 
+use App\Models\Admin\DataMaster\Ekstrakurikuler;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -57,6 +58,11 @@ class EkstrakurikulerRequest extends FormRequest
                 'required',
                 'string',
                 'max:100',
+            ],
+            'sifat' => [
+                'nullable',
+                'string',
+                Rule::in(Ekstrakurikuler::SIFAT_OPTIONS),
             ],
             'kkm' => [
                 'nullable',

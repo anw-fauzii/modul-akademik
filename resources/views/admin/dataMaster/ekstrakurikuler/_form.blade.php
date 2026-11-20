@@ -60,7 +60,7 @@
 
 <div class="row">
     <!-- Nama Ekstrakurikuler -->
-    <div class="col-md-12">
+    <div class="col-md-8">
         <div class="position-relative form-group">
             <label for="nama_ekstrakurikuler" class="font-weight-bold">
                 Nama Ekstrakurikuler <span class="text-danger">*</span>
@@ -70,6 +70,28 @@
                 class="form-control @error('nama_ekstrakurikuler') is-invalid @enderror"
                 value="{{ $val('nama_ekstrakurikuler') }}" required>
             @error('nama_ekstrakurikuler')
+                <div class="invalid-feedback" style="font-style: italic; font-size: 0.75rem;">
+                    {{ $message }}
+                </div>
+            @enderror
+        </div>
+    </div>
+
+    <!-- Sifat Ekstrakurikuler -->
+    <div class="col-md-4">
+        <div class="position-relative form-group">
+            <label for="sifat" class="font-weight-bold">
+                Sifat Ekstrakurikuler <span class="text-danger">*</span>
+            </label>
+            @php
+                $currentSifat = $val('sifat', \App\Models\Admin\DataMaster\Ekstrakurikuler::SIFAT_PILIHAN);
+            @endphp
+            <select name="sifat" id="sifat"
+                class="form-control @error('sifat') is-invalid @enderror">
+                <option value="Pilihan" @selected($currentSifat === 'Pilihan')>Pilihan / Minat (Diisi Pembina)</option>
+                <option value="Wajib" @selected($currentSifat === 'Wajib')>Wajib - Pramuka (Diisi Wali Kelas)</option>
+            </select>
+            @error('sifat')
                 <div class="invalid-feedback" style="font-style: italic; font-size: 0.75rem;">
                     {{ $message }}
                 </div>

@@ -45,7 +45,10 @@
 
     @php
         $heroDate = \Carbon\Carbon::now();
-        $displayName = $karyawanProfile?->nama_gelar ?? Auth::user()?->name ?? 'Pembina Ekstrakurikuler';
+        $displayName = $karyawanProfile?->nama_gelar ?? Auth::user()?->name ?? 'Guru / Wali Kelas';
+        $mode = $mode ?? 'pilihan';
+        $isWajibMode = $mode === 'wajib' && isset($selectedKelas) && $selectedKelas !== null;
+        $assignedClasses = $assignedClasses ?? collect();
         $assignedEkskuls = $assignedEkskuls ?? collect();
         $members = $members ?? collect();
         $totalMembers = (int) ($stats['total'] ?? $members->count());
@@ -53,6 +56,7 @@
         $belumDinilaiCount = (int) ($stats['belum_dinilai'] ?? max(0, $totalMembers - $dinilaiCount));
         $progressPercent = $totalMembers > 0 ? round(($dinilaiCount / $totalMembers) * 100) : 0;
         $tuntasCount = $members->filter(static fn ($m): bool => in_array($m->predikat, ['SAB', 'BSH', 'SB'], true))->count();
+        $totalSwitcherItems = $assignedClasses->count() + $assignedEkskuls->count();
     @endphp
 
     <div class="app-main__inner">
@@ -66,7 +70,7 @@
                         <span class="badge text-white px-2 py-1 font-weight-bold"
                             style="background: rgba(234, 88, 12, 0.92); font-size: 11px; border-radius: 6px;">
                             <i class="fa fa-medal mr-1"></i>
-                            PEMBIMBING EKSTRAKURIKULER
+                            {{ $isWajibMode ? 'EKSKUL WAJIB (PRAMUKA) • '.strtoupper((string) ($peranDiKelas ?? 'WALI KELAS')) : 'PEMBIMBING EKSTRAKURIKULER' }}
                         </span>
                         <span class="small" style="color: rgba(255, 255, 255, 0.72);">
                             <i class="fa fa-calendar-alt mr-1"></i>
@@ -75,13 +79,24 @@
                     </div>
 
                     <h3 class="font-weight-bold text-white mb-2">
-                        {{ $isEligible && $selectedEkskul ? 'Penilaian Ekstrakurikuler '.$selectedEkskul->nama_ekstrakurikuler : 'Penilaian Ekstrakurikuler' }}
+                        @if ($isEligible && $isWajibMode && $selectedKelas)
+                            Penilaian Ekstrakurikuler Pramuka (Wajib) — Kelas {{ $selectedKelas->nama_kelas }}
+                        @elseif ($isEligible && $selectedEkskul)
+                            Penilaian Ekstrakurikuler {{ $selectedEkskul->nama_ekstrakurikuler }}
+                        @else
+                            Penilaian Ekstrakurikuler
+                        @endif
                     </h3>
 
                     @if ($isEligible && $selectedEkskul)
                         <p class="mb-3" style="color: rgba(255, 255, 255, 0.78); max-width: 680px; font-size: 0.86rem; line-height: 1.5;">
-                            Cukup input <strong>nilai angka (0–100)</strong> untuk peserta <strong>{{ $selectedEkskul->nama_ekstrakurikuler }}</strong>.
-                            Predikat rapor (<strong>SAB, BSH, SB, MB</strong>) dan deskripsi capaian rapor akan terbentuk otomatis.
+                            @if ($isWajibMode && $selectedKelas)
+                                Input <strong>nilai angka (0–100)</strong> ekstrakurikuler wajib <strong>{{ $selectedEkskul->nama_ekstrakurikuler }}</strong> untuk seluruh siswa kelas <strong>{{ $selectedKelas->nama_kelas }}</strong>.
+                                Di rapor hanya akan ditampilkan <strong>Predikat (SAB, BSH, SB, MB)</strong> beserta deskripsi otomatis.
+                            @else
+                                Cukup input <strong>nilai angka (0–100)</strong> untuk peserta <strong>{{ $selectedEkskul->nama_ekstrakurikuler }}</strong>.
+                                Predikat rapor (<strong>SAB, BSH, SB, MB</strong>) dan deskripsi capaian rapor akan terbentuk otomatis.
+                            @endif
                         </p>
 
                         <div class="d-flex flex-wrap align-items-center gap-2">
@@ -92,15 +107,23 @@
                                     {{ $activeTahunAjaran->full_label }}
                                 </span>
                             @endif
-                            <span class="badge px-3 py-2"
-                                style="background: rgba(16, 185, 129, 0.22); border: 1px solid rgba(52, 211, 153, 0.35); color: #ecfdf5; font-size: 0.74rem;">
-                                <i class="fa fa-school mr-1"></i>
-                                Unit {{ strtoupper((string) $selectedEkskul->unit) }}
-                            </span>
+                            @if ($isWajibMode && $selectedKelas)
+                                <span class="badge px-3 py-2"
+                                    style="background: rgba(245, 158, 11, 0.24); border: 1px solid rgba(251, 191, 36, 0.4); color: #fef3c7; font-size: 0.74rem;">
+                                    <i class="fa fa-campground mr-1"></i>
+                                    Ekskul Wajib • Kelas {{ $selectedKelas->nama_kelas }}
+                                </span>
+                            @else
+                                <span class="badge px-3 py-2"
+                                    style="background: rgba(16, 185, 129, 0.22); border: 1px solid rgba(52, 211, 153, 0.35); color: #ecfdf5; font-size: 0.74rem;">
+                                    <i class="fa fa-school mr-1"></i>
+                                    Unit {{ strtoupper((string) $selectedEkskul->unit) }} • {{ $selectedEkskul->isWajib() ? 'Wajib' : 'Pilihan / Minat' }}
+                                </span>
+                            @endif
                         </div>
                     @else
                         <p class="mb-2" style="color: rgba(255, 255, 255, 0.76); max-width: 640px; font-size: 0.86rem;">
-                            Halo {{ $displayName }}, halaman ini digunakan oleh Pembina / Pelatih untuk menginput nilai dan materi rapor ekstrakurikuler yang dibimbing pada Tahun Ajaran aktif.
+                            Halo {{ $displayName }}, halaman ini digunakan oleh Wali Kelas (untuk menilai Pramuka Wajib kelas binaannya) dan Pembina Ekstrakurikuler (untuk menilai Ekskul Pilihan/Minat).
                         </p>
                         @if ($activeTahunAjaran)
                             <span class="badge px-3 py-2"
@@ -117,12 +140,14 @@
                         <div class="wk-team-card">
                             <div class="text-uppercase font-weight-bold mb-2"
                                 style="font-size: 0.68rem; letter-spacing: 0.05em; color: #fb923c;">
-                                Tim Pembina Ekstrakurikuler
+                                {{ $isWajibMode && $selectedKelas ? 'Wali Kelas Penilai Pramuka' : 'Tim Pembina Ekstrakurikuler' }}
                             </div>
                             <div class="mb-2">
-                                <div style="font-size: 0.68rem; color: rgba(255, 255, 255, 0.62);">Pembina / Pelatih</div>
+                                <div style="font-size: 0.68rem; color: rgba(255, 255, 255, 0.62);">
+                                    {{ $isWajibMode ? ($peranDiKelas ?? 'Wali Kelas') : 'Pembina / Pelatih' }}
+                                </div>
                                 <div class="font-weight-bold text-white" style="font-size: 0.86rem;">
-                                    {{ $selectedEkskul->pembina?->nama_gelar ?? $displayName }}
+                                    {{ $isWajibMode ? $displayName : ($selectedEkskul->pembina?->nama_gelar ?? $displayName) }}
                                 </div>
                             </div>
                             <div class="pt-2" style="border-top: 1px solid rgba(255, 255, 255, 0.12);">
@@ -151,12 +176,12 @@
                         Tidak Ada Ekstrakurikuler yang Anda Dampingi
                     </h5>
                     <p class="small text-muted mb-3">
-                        Pada Tahun Ajaran aktif (<strong>{{ $activeTahunAjaran?->full_label }}</strong>), NIPY Anda (<code>{{ $nipy ?: '-' }}</code>) belum tercatat sebagai <strong>Pembina / Pelatih Ekstrakurikuler</strong> mana pun.
+                        Pada Tahun Ajaran aktif (<strong>{{ $activeTahunAjaran?->full_label }}</strong>), NIPY Anda (<code>{{ $nipy ?: '-' }}</code>) belum tercatat sebagai <strong>Wali Kelas</strong> (penilai Pramuka Wajib) maupun <strong>Pembina Ekstrakurikuler Pilihan</strong>.
                     </p>
                     <div class="small text-muted px-3 py-2 rounded d-inline-block mb-3"
                         style="background: #f8fafc; border: 1px solid #e2e8f0;">
                         <i class="fa fa-info-circle text-warning mr-1"></i>
-                        Hubungi Admin Akademik apabila Anda bertugas membimbing ekstrakurikuler pada semester ini.
+                        Hubungi Admin Akademik apabila Anda bertugas sebagai Wali Kelas atau Pembina Ekstrakurikuler pada semester ini.
                     </div>
                     <div>
                         <a href="{{ route('wali-kelas.dashboard') }}" class="btn btn-sm text-white font-weight-semibold px-3"
@@ -169,20 +194,35 @@
                 @include('waliKelas.partials._ineligible_guard')
             @endif
         @else
-            <!-- SWITCHER EKSTRAKURIKULER JIKA MEMBIMBING > 1 -->
-            @if ($assignedEkskuls->count() > 1)
+            <!-- SWITCHER ANTARA PRAMUKA (WAJIB - KELAS BINAAN) & EKSKUL PILIHAN (PEMBIMBING) -->
+            @if ($totalSwitcherItems > 1 || ($assignedClasses->isNotEmpty() && $assignedEkskuls->isNotEmpty()))
                 <div class="wk-class-switcher">
                     <span class="small font-weight-bold text-muted mr-1">
-                        <i class="fa fa-layer-group mr-1"></i> Ekstrakurikuler Diampu:
+                        <i class="fa fa-layer-group mr-1"></i> Pilih Penilaian Ekskul:
                     </span>
+
+                    @foreach ($assignedClasses as $kelasOption)
+                        @php
+                            $isActiveKelas = $isWajibMode && isset($selectedKelas) && (int) $kelasOption->id === (int) $selectedKelas->id;
+                        @endphp
+                        <a href="{{ route('wali-kelas.ekstrakurikuler.index', ['mode' => 'wajib', 'kelas_id' => $kelasOption->sqid]) }}"
+                            class="wk-class-pill {{ $isActiveKelas ? 'is-active' : '' }}">
+                            <i class="fa fa-campground"></i>
+                            <span>Pramuka (Wajib) • Kelas {{ $kelasOption->nama_kelas }}</span>
+                            <span class="badge badge-pill {{ $isActiveKelas ? 'badge-light text-dark' : 'badge-secondary' }}">
+                                {{ $kelasOption->anggota_kelas_count ?? 0 }}
+                            </span>
+                        </a>
+                    @endforeach
+
                     @foreach ($assignedEkskuls as $ekskulOption)
                         @php
-                            $isActiveOption = (int) $ekskulOption->id === (int) $selectedEkskul->id;
+                            $isActiveOption = ! $isWajibMode && isset($selectedEkskul) && (int) $ekskulOption->id === (int) $selectedEkskul->id;
                         @endphp
-                        <a href="{{ route('wali-kelas.ekstrakurikuler.index', ['ekstrakurikuler_id' => $ekskulOption->sqid]) }}"
+                        <a href="{{ route('wali-kelas.ekstrakurikuler.index', ['mode' => 'pilihan', 'ekstrakurikuler_id' => $ekskulOption->sqid]) }}"
                             class="wk-class-pill {{ $isActiveOption ? 'is-active' : '' }}">
                             <i class="fa fa-medal"></i>
-                            <span>{{ $ekskulOption->nama_ekstrakurikuler }} ({{ strtoupper((string) $ekskulOption->unit) }})</span>
+                            <span>{{ $ekskulOption->nama_ekstrakurikuler }} (Pilihan • {{ strtoupper((string) $ekskulOption->unit) }})</span>
                             <span class="badge badge-pill {{ $isActiveOption ? 'badge-light text-dark' : 'badge-secondary' }}">
                                 {{ $ekskulOption->anggota_ekstrakurikuler_count ?? 0 }}
                             </span>
@@ -200,7 +240,7 @@
                         </div>
                         <div class="wk-kpi-value">{{ $totalMembers }}</div>
                         <div class="wk-kpi-sub">
-                            Siswa terdaftar aktif
+                            {{ $isWajibMode && $selectedKelas ? 'Seluruh siswa Kelas '.$selectedKelas->nama_kelas : 'Siswa terdaftar aktif' }}
                         </div>
                     </div>
                     <span class="wk-kpi-icon" style="background: #eff6ff; color: #2563eb;">
@@ -277,7 +317,11 @@
                 'ekstrakurikuler' => $selectedEkskul,
                 'members' => $members,
                 'predikatRanges' => $predikatRanges,
-                'formAction' => route('wali-kelas.ekstrakurikuler.penilaian.store', $selectedEkskul),
+                'isWajibMode' => $isWajibMode,
+                'selectedKelas' => $selectedKelas ?? null,
+                'formAction' => $isWajibMode && isset($selectedKelas)
+                    ? route('wali-kelas.ekstrakurikuler.wajib.store', $selectedKelas)
+                    : route('wali-kelas.ekstrakurikuler.penilaian.store', $selectedEkskul),
                 'fromAdminShow' => false,
             ])
         @endif

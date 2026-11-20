@@ -73,6 +73,7 @@ if (! function_exists('sqidFor')) {
             'tahun-ajaran' => TahunAjaran::class,
             'target-capaian' => TargetCapaian::class,
             'titimangsa' => Titimangsa::class,
+            'ekstrakurikuler.wajib' => Kelas::class,
             'ekstrakurikuler' => Ekstrakurikuler::class,
             'jemputan' => Jemputan::class,
             'karyawan' => Karyawan::class,

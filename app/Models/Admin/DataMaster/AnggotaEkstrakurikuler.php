@@ -45,7 +45,7 @@ class AnggotaEkstrakurikuler extends Model
         'anggotaKelas:id,siswa_nis,akademik_master_kelas_id,pendaftaran',
         'anggotaKelas.siswa:nis,nama_lengkap,nisn,jenis_kelamin,status',
         'anggotaKelas.kelas:id,akademik_master_tahun_ajaran_id,karyawan_nipy,nama_kelas,jenjang_kelas,tingkatan_kelas',
-        'ekstrakurikuler:id,akademik_master_tahun_ajaran_id,karyawan_nipy,nama_ekstrakurikuler,biaya,unit,kkm,materi',
+        'ekstrakurikuler:id,akademik_master_tahun_ajaran_id,karyawan_nipy,nama_ekstrakurikuler,biaya,unit,sifat,kkm,materi',
         'ekstrakurikuler.tahunAjaran:id,nama_tahun_ajaran,semester,is_active',
         'ekstrakurikuler.pembina:nipy,nama_lengkap,gelar',
     ];

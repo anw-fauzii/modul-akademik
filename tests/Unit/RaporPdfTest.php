@@ -244,13 +244,12 @@ class RaporPdfTest extends TestCase
         // PDF Nilai Semester memuat Nilai angka & Deskripsi rata kanan-kiri tanpa kop serta tanpa keterangan SAB/BSH
         $this->assertStringContainsString('PENCAPAIAN KOMPETENSI PESERTA DIDIK', $nilaiHtml);
         $this->assertStringContainsString('text-align: justify;', $nilaiHtml);
-        $this->assertStringContainsString('<th style="width: 12%;">NILAI</th>', $nilaiHtml);
+        $this->assertStringContainsString('<th style="width: 12%;">CAPAIAN</th>', $nilaiHtml);
         $this->assertStringContainsString('Fase C', $nilaiHtml);
         $this->assertStringContainsString('Ganjil (Semester)', $nilaiHtml);
         $this->assertStringContainsString('Matematika', $nilaiHtml);
         $this->assertStringContainsString('>89<', str_replace(["\n", ' '], '', $nilaiHtml));
         $this->assertStringContainsString('Menunjukkan penguasaan baik pada operasi hitung pecahan.', $nilaiHtml);
-        $this->assertStringNotContainsString('>CAPAIAN<', $nilaiHtml);
         $this->assertStringNotContainsString('(BSH)', $nilaiHtml);
         $this->assertStringContainsString('Pramuka', $nilaiHtml);
         $this->assertStringContainsString('Jilid 4', $nilaiHtml);
@@ -263,12 +262,11 @@ class RaporPdfTest extends TestCase
         $this->assertStringNotContainsString('KETERANGAN TENTANG DIRI PESERTA DIDIK', $nilaiHtml);
         $this->assertStringNotContainsString('IDENTITAS SATUAN PENDIDIKAN', $nilaiHtml);
 
-        // PDF Mid Semester juga menampilkan kolom NILAI angka & DESKRIPSI tanpa predikat/keterangan SAB, BSH dll
+        // PDF Mid Semester juga menampilkan kolom CAPAIAN angka & DESKRIPSI tanpa predikat/keterangan SAB, BSH dll
         $this->assertStringContainsString('Ganjil (Mid Semester)', $midHtml);
-        $this->assertStringContainsString('<th style="width: 12%;">NILAI</th>', $midHtml);
+        $this->assertStringContainsString('<th style="width: 12%;">CAPAIAN</th>', $midHtml);
         $this->assertStringContainsString('>89<', str_replace(["\n", ' '], '', $midHtml));
         $this->assertStringContainsString('Menunjukkan penguasaan baik pada operasi hitung pecahan.', $midHtml);
-        $this->assertStringNotContainsString('>CAPAIAN<', $midHtml);
         $this->assertStringNotContainsString('(BSH)', $midHtml);
 
         // Pastikan DomPDF benar-benar bisa merender PDF Identitas, Semester, dan Mid menjadi binary valid (%PDF-)
@@ -598,11 +596,9 @@ class RaporPdfTest extends TestCase
         $this->assertSame(3, substr_count($fallbackSectionMapelHtml, 'class="rapor-table rapor-table--mapel"'));
         $this->assertSame(3, substr_count($sectionMapelHtml, 'class="section-heading uppercase"'));
         $this->assertSame(3, substr_count($sectionMapelHtml, '>1</td>'));
-        $this->assertSame(3, substr_count($sectionMapelHtml, '<th style="width: 12%;">NILAI</th>'));
-        $this->assertSame(3, substr_count($midSectionMapelHtml, '<th style="width: 12%;">NILAI</th>'));
+        $this->assertSame(3, substr_count($sectionMapelHtml, '<th style="width: 12%;">CAPAIAN</th>'));
+        $this->assertSame(3, substr_count($midSectionMapelHtml, '<th style="width: 12%;">CAPAIAN</th>'));
         $this->assertStringContainsString('>89<', str_replace(["\n", ' '], '', $midHtml));
-        $this->assertStringNotContainsString('>CAPAIAN<', $sectionMapelHtml);
-        $this->assertStringNotContainsString('>CAPAIAN<', $midHtml);
         $this->assertStringNotContainsString('(BSH)', $midHtml);
 
         $posA = strpos($sectionMapelHtml, 'A. Kelompok A (Umum)');

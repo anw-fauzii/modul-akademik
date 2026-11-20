@@ -356,10 +356,18 @@ class RaporPdfService
 
             $ekskulByAnggota = AnggotaEkstrakurikuler::query()
                 ->select(['id', 'anggota_kelas_id', 'akademik_master_ekstrakuler_id', 'nilai', 'predikat', 'keterangan'])
-                ->with(['ekstrakurikuler:id,nama_ekstrakurikuler,kkm,materi'])
+                ->with(['ekstrakurikuler:id,nama_ekstrakurikuler,sifat,kkm,materi'])
                 ->whereIn('anggota_kelas_id', $anggotaIds)
                 ->get()
-                ->groupBy('anggota_kelas_id');
+                ->groupBy('anggota_kelas_id')
+                ->map(static function ($items) {
+                    return $items->sortBy(static function (AnggotaEkstrakurikuler $item): string {
+                        $ekskul = $item->relationLoaded('ekstrakurikuler') ? $item->ekstrakurikuler : null;
+                        $isWajib = $ekskul?->isWajib() ?? false;
+
+                        return ($isWajib ? '0_' : '1_').mb_strtolower((string) ($ekskul?->nama_ekstrakurikuler ?? ''));
+                    })->values();
+                });
 
             $t2qByAnggota = AnggotaT2q::query()
                 ->select(['id', 'anggota_kelas_id', 'karyawan_nipy', 'tingkat', 'keterangan'])

@@ -59,6 +59,9 @@
                                             title="Detail &amp; Anggota Ekstrakurikuler {{ $item->nama_ekstrakurikuler }}">
                                             {{ $item->nama_ekstrakurikuler }}
                                         </a>
+                                        <span class="badge {{ $item->sifat_badge_class }} ml-1 px-2 py-0" style="font-size: 0.68rem;">
+                                            {{ $item->isWajib() ? 'Wajib' : 'Pilihan' }}
+                                        </span>
                                     </td>
                                     <td class="text-center">
                                         <span class="badge {{ $item->unit_badge_class }} px-2 py-1" style="font-size: 0.75rem;">

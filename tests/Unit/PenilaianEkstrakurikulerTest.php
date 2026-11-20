@@ -96,18 +96,33 @@ class PenilaianEkstrakurikulerTest extends TestCase
         Auth::shouldUse('web');
         Auth::setUser($user);
 
-        $ekskul = Ekstrakurikuler::make([
+        $ekskulPilihan = Ekstrakurikuler::make([
             'akademik_master_tahun_ajaran_id' => 1,
             'karyawan_nipy' => 'NIPY-EKS-01',
             'nama_ekstrakurikuler' => 'Panahan',
             'biaya' => 0,
             'unit' => 'SD',
+            'sifat' => Ekstrakurikuler::SIFAT_PILIHAN,
             'kkm' => 75,
             'materi' => 'teknik dasar memanah dan fokus bidikan',
         ]);
-        $ekskul->id = 12;
-        $ekskul->setRelation('tahunAjaran', $ta);
-        $ekskul->setRelation('pembina', $pembina);
+        $ekskulPilihan->id = 12;
+        $ekskulPilihan->setRelation('tahunAjaran', $ta);
+        $ekskulPilihan->setRelation('pembina', $pembina);
+
+        $ekskulWajib = Ekstrakurikuler::make([
+            'akademik_master_tahun_ajaran_id' => 1,
+            'karyawan_nipy' => null,
+            'nama_ekstrakurikuler' => 'Pramuka',
+            'biaya' => 0,
+            'unit' => 'SD',
+            'sifat' => Ekstrakurikuler::SIFAT_WAJIB,
+            'kkm' => 75,
+            'materi' => 'baris-berbaris, tali-temali, dan kemandirian pramuka',
+        ]);
+        $ekskulWajib->id = 11;
+        $ekskulWajib->setRelation('tahunAjaran', $ta);
+        $ekskulWajib->setRelation('pembina', null);
 
         $kelas = Kelas::make([
             'akademik_master_tahun_ajaran_id' => 1,
@@ -133,7 +148,7 @@ class PenilaianEkstrakurikulerTest extends TestCase
         $anggotaKelas->setRelation('siswa', $siswa);
         $anggotaKelas->setRelation('kelas', $kelas);
 
-        $anggotaEkskul = AnggotaEkstrakurikuler::make([
+        $anggotaEkskulPilihan = AnggotaEkstrakurikuler::make([
             'anggota_kelas_id' => 88,
             'akademik_master_ekstrakuler_id' => 12,
             'pendaftaran' => 'Baru',
@@ -141,21 +156,37 @@ class PenilaianEkstrakurikulerTest extends TestCase
             'predikat' => 'SAB',
             'keterangan' => null,
         ]);
-        $anggotaEkskul->id = 101;
-        $anggotaEkskul->setRelation('anggotaKelas', $anggotaKelas);
-        $anggotaEkskul->setRelation('ekstrakurikuler', $ekskul);
+        $anggotaEkskulPilihan->id = 101;
+        $anggotaEkskulPilihan->setRelation('anggotaKelas', $anggotaKelas);
+        $anggotaEkskulPilihan->setRelation('ekstrakurikuler', $ekskulPilihan);
+
+        $anggotaEkskulWajib = AnggotaEkstrakurikuler::make([
+            'anggota_kelas_id' => 88,
+            'akademik_master_ekstrakuler_id' => 11,
+            'pendaftaran' => 'Baru',
+            'nilai' => 88,
+            'predikat' => 'BSH',
+            'keterangan' => null,
+        ]);
+        $anggotaEkskulWajib->id = 102;
+        $anggotaEkskulWajib->setRelation('anggotaKelas', $anggotaKelas);
+        $anggotaEkskulWajib->setRelation('ekstrakurikuler', $ekskulWajib);
 
         $service = $this->createMock(WaliKelasEkstrakurikulerService::class);
-        $service->expects($this->exactly(2))
+        $service->expects($this->exactly(3))
             ->method('getPageData')
             ->willReturnOnConsecutiveCalls(
                 [
                     'isEligible' => false,
+                    'mode' => 'pilihan',
                     'guardReason' => 'no_assigned_ekskul',
                     'ineligibleReason' => 'no_assigned_ekskul',
                     'nipy' => 'NIPY-EKS-01',
                     'karyawanProfile' => $pembina,
                     'activeTahunAjaran' => $ta,
+                    'assignedClasses' => new EloquentCollection,
+                    'selectedKelas' => null,
+                    'peranDiKelas' => null,
                     'assignedEkskuls' => new EloquentCollection,
                     'selectedEkskul' => null,
                     'members' => new EloquentCollection,
@@ -164,15 +195,36 @@ class PenilaianEkstrakurikulerTest extends TestCase
                 ],
                 [
                     'isEligible' => true,
+                    'mode' => 'pilihan',
                     'guardReason' => null,
                     'ineligibleReason' => null,
                     'nipy' => 'NIPY-EKS-01',
                     'karyawanProfile' => $pembina,
                     'activeTahunAjaran' => $ta,
-                    'assignedEkskuls' => new EloquentCollection([$ekskul]),
-                    'selectedEkskul' => $ekskul,
-                    'members' => new EloquentCollection([$anggotaEkskul]),
-                    'predikatRanges' => $ekskul->predikatRanges(),
+                    'assignedClasses' => new EloquentCollection([$kelas]),
+                    'selectedKelas' => null,
+                    'peranDiKelas' => null,
+                    'assignedEkskuls' => new EloquentCollection([$ekskulPilihan]),
+                    'selectedEkskul' => $ekskulPilihan,
+                    'members' => new EloquentCollection([$anggotaEkskulPilihan]),
+                    'predikatRanges' => $ekskulPilihan->predikatRanges(),
+                    'stats' => ['total' => 1, 'dinilai' => 1, 'belum_dinilai' => 0],
+                ],
+                [
+                    'isEligible' => true,
+                    'mode' => 'wajib',
+                    'guardReason' => null,
+                    'ineligibleReason' => null,
+                    'nipy' => 'NIPY-EKS-01',
+                    'karyawanProfile' => $pembina,
+                    'activeTahunAjaran' => $ta,
+                    'assignedClasses' => new EloquentCollection([$kelas]),
+                    'selectedKelas' => $kelas,
+                    'peranDiKelas' => 'Wali Kelas',
+                    'assignedEkskuls' => new EloquentCollection([$ekskulPilihan]),
+                    'selectedEkskul' => $ekskulWajib,
+                    'members' => new EloquentCollection([$anggotaEkskulWajib]),
+                    'predikatRanges' => $ekskulWajib->predikatRanges(),
                     'stats' => ['total' => 1, 'dinilai' => 1, 'belum_dinilai' => 0],
                 ]
             );
@@ -185,6 +237,7 @@ class PenilaianEkstrakurikulerTest extends TestCase
         try {
             $ineligibleHtml = $controller->index($request)->render();
             $eligibleHtml = $controller->index($request)->render();
+            $wajibHtml = $controller->index($request)->render();
             $raporHtml = view('pdf.rapor.nilai', [
                 'kelas' => $kelas,
                 'tahunAjaran' => $ta,
@@ -200,7 +253,7 @@ class PenilaianEkstrakurikulerTest extends TestCase
                         'siswa' => $siswa,
                         'mapelRows' => [],
                         'mapelGroups' => [],
-                        'ekskulRows' => [$anggotaEkskul],
+                        'ekskulRows' => [$anggotaEkskulPilihan, $anggotaEkskulWajib],
                         't2q' => null,
                         'presensi' => ['sakit' => 0, 'izin' => 0, 'alpa' => 0],
                     ],
@@ -227,9 +280,23 @@ class PenilaianEkstrakurikulerTest extends TestCase
         );
         $this->assertSame(1, substr_count($eligibleHtml, 'Simpan Nilai'));
 
-        // Di PDF Rapor hanya menampilkan predikat (SAB/BSH/SB/MB), bukan nilai angka 94
-        $this->assertStringContainsString('PREDIKAT', $raporHtml);
-        $this->assertStringContainsString('Panahan', $raporHtml);
+        // Mode Wajib (Pramuka) untuk Wali Kelas
+        $this->assertStringContainsString('Penilaian Ekstrakurikuler Pramuka (Wajib) — Kelas 3 Al-Mulk', $wajibHtml);
+        $this->assertStringContainsString('BSH', $wajibHtml);
+        $this->assertStringContainsString(
+            'Mengikuti kegiatan dengan baik dan berkembang sesuai harapan dalam baris-berbaris, tali-temali, dan kemandirian pramuka.',
+            $wajibHtml
+        );
+        $this->assertStringContainsString(route('wali-kelas.ekstrakurikuler.wajib.store', sqidFor('wali-kelas.ekstrakurikuler.wajib.store', 7)), $wajibHtml);
+
+        // Di PDF Rapor: Pramuka (Wajib) otomatis urut pertama diikuti Panahan (Pilihan), dan hanya menampilkan predikat (BSH & SAB)
+        $this->assertStringContainsString('CAPAIAN', $raporHtml);
+        $posPramuka = strpos($raporHtml, 'Pramuka');
+        $posPanahan = strpos($raporHtml, 'Panahan');
+        $this->assertNotFalse($posPramuka);
+        $this->assertNotFalse($posPanahan);
+        $this->assertLessThan($posPanahan, $posPramuka);
+        $this->assertStringContainsString('>BSH<', $raporHtml);
         $this->assertStringContainsString('>SAB<', $raporHtml);
         $this->assertStringContainsString(
             'Mengikuti kegiatan dengan sangat baik serta mahir dalam teknik dasar memanah dan fokus bidikan.',

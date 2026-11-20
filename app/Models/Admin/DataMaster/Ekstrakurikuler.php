@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'nama_ekstrakurikuler',
     'biaya',
     'unit',
+    'sifat',
     'kkm',
     'materi',
 ])]
@@ -40,6 +41,20 @@ class Ekstrakurikuler extends Model
      * @var list<string>
      */
     public const UNIT_OPTIONS = ['PG', 'TK', 'SD'];
+
+    public const string SIFAT_WAJIB = 'Wajib';
+
+    public const string SIFAT_PILIHAN = 'Pilihan';
+
+    /**
+     * Daftar opsi sifat ekstrakurikuler (1 Wajib Pramuka + 1 Pilihan/Minat per siswa).
+     *
+     * @var list<string>
+     */
+    public const array SIFAT_OPTIONS = [
+        self::SIFAT_PILIHAN,
+        self::SIFAT_WAJIB,
+    ];
 
     public const int DEFAULT_KKM = 75;
 
@@ -210,6 +225,27 @@ class Ekstrakurikuler extends Model
 
             return 'Rp '.number_format((int) $this->biaya, 0, ',', '.');
         });
+    }
+
+    /**
+     * Apakah ekstrakurikuler ini bersifat Wajib (misal Pramuka).
+     */
+    public function isWajib(): bool
+    {
+        if (strcasecmp(trim((string) $this->sifat), self::SIFAT_WAJIB) === 0) {
+            return true;
+        }
+
+        return trim((string) $this->sifat) === ''
+            && stripos((string) $this->nama_ekstrakurikuler, 'pramuka') !== false;
+    }
+
+    /**
+     * Kelas badge Bootstrap untuk sifat ekstrakurikuler (Wajib / Pilihan).
+     */
+    protected function sifatBadgeClass(): Attribute
+    {
+        return Attribute::get(fn (): string => $this->isWajib() ? 'badge-warning text-dark' : 'badge-info');
     }
 
     /**

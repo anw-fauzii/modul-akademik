@@ -136,6 +136,8 @@ Route::middleware(['auth', 'sso.check', 'nocache', 'sqid.decode'])->group(functi
         ->name('wali-kelas.t2q.yaumiyah-tahfizh.statistik');
     Route::get('/wali-kelas/ekstrakurikuler', [WaliKelasPenilaianEkstrakurikulerController::class, 'index'])
         ->name('wali-kelas.ekstrakurikuler.index');
+    Route::post('/wali-kelas/ekstrakurikuler/wajib/{kelas}/penilaian', [WaliKelasPenilaianEkstrakurikulerController::class, 'storeWajib'])
+        ->name('wali-kelas.ekstrakurikuler.wajib.store');
     Route::post('/wali-kelas/ekstrakurikuler/{ekstrakurikuler}/penilaian', [WaliKelasPenilaianEkstrakurikulerController::class, 'store'])
         ->name('wali-kelas.ekstrakurikuler.penilaian.store');
     Route::post('/data-master/tahun-ajaran/{tahun_ajaran}/toggle-active', [TahunAjaranController::class, 'toggleActive'])->name('tahun-ajaran.toggle-active');

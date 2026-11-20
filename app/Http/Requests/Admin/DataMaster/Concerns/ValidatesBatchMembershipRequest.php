@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin\DataMaster\Concerns;
 
+use App\Models\Admin\DataMaster\Ekstrakurikuler;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Validator;
 
@@ -63,13 +64,19 @@ trait ValidatesBatchMembershipRequest
             return;
         }
 
-        $tahunAjaranId = $groupModelClass::query()
+        $groupRecord = $groupModelClass::query()
             ->whereKey($this->integer($groupField))
-            ->value('akademik_master_tahun_ajaran_id');
+            ->first();
+
+        $tahunAjaranId = $groupRecord?->getAttribute('akademik_master_tahun_ajaran_id');
 
         if ($tahunAjaranId === null) {
             return;
         }
+
+        $ekstrakurikulerSifat = $groupRecord instanceof Ekstrakurikuler
+            ? ($groupRecord->sifat ?: Ekstrakurikuler::SIFAT_PILIHAN)
+            : null;
 
         $anggotaKelasIds = array_values(array_unique(array_map(
             'intval',
@@ -82,7 +89,8 @@ trait ValidatesBatchMembershipRequest
             (int) $tahunAjaranId,
             $membershipService,
             $routeParamName,
-            $entityLabel
+            $entityLabel,
+            $ekstrakurikulerSifat
         );
     }
 
@@ -97,7 +105,8 @@ trait ValidatesBatchMembershipRequest
         int $tahunAjaranId,
         object $membershipService,
         string $routeParamName,
-        string $entityLabel
+        string $entityLabel,
+        ?string $ekstrakurikulerSifat = null
     ): bool {
         $mismatchedIds = $membershipService->findMismatchedTahunAjaranAnggotaKelas(
             $anggotaKelasIds,
@@ -118,11 +127,19 @@ trait ValidatesBatchMembershipRequest
             ? (int) $currentRecord->getKey()
             : null;
 
-        $conflicts = $membershipService->findConflictingAnggotaKelasInTahunAjaran(
-            $anggotaKelasIds,
-            $tahunAjaranId,
-            $ignoreId
-        );
+        $conflicts = $ekstrakurikulerSifat !== null
+            ? $membershipService->findConflictingAnggotaKelasInTahunAjaran(
+                $anggotaKelasIds,
+                $tahunAjaranId,
+                $ignoreId,
+                false,
+                $ekstrakurikulerSifat
+            )
+            : $membershipService->findConflictingAnggotaKelasInTahunAjaran(
+                $anggotaKelasIds,
+                $tahunAjaranId,
+                $ignoreId
+            );
 
         if ($conflicts !== []) {
             $validator->errors()->add(

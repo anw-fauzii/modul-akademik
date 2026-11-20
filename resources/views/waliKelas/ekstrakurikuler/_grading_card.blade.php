@@ -2,6 +2,7 @@
     $kkmValue = (int) ($ekstrakurikuler->kkm ?: \App\Models\Admin\DataMaster\Ekstrakurikuler::DEFAULT_KKM);
     $materiValue = trim((string) ($ekstrakurikuler->materi ?? ''));
     $fromAdminShow = $fromAdminShow ?? false;
+    $isWajibMode = $isWajibMode ?? false;
 @endphp
 
 <form action="{{ $formAction }}" method="POST" id="ekskulGradingForm">
@@ -16,10 +17,14 @@
             <div>
                 <h6 class="wk-surface-title">
                     <i class="fa fa-clipboard-check text-primary mr-1"></i>
-                    Input Nilai Peserta {{ $ekstrakurikuler->nama_ekstrakurikuler }}
+                    @if ($isWajibMode && isset($selectedKelas) && $selectedKelas)
+                        Input Nilai Pramuka (Wajib) — Kelas {{ $selectedKelas->nama_kelas }}
+                    @else
+                        Input Nilai Peserta {{ $ekstrakurikuler->nama_ekstrakurikuler }}
+                    @endif
                 </h6>
                 <div class="small text-muted">
-                    Total <strong>{{ $members->count() }}</strong> siswa terdaftar &bull; Rapor menampilkan <strong>Predikat (SAB, BSH, SB, MB)</strong>
+                    Total <strong>{{ $members->count() }}</strong> siswa &bull; Rapor hanya menampilkan <strong>Predikat (SAB, BSH, SB, MB)</strong>
                     @if ($materiValue !== '')
                         &bull; Materi: <em>{{ \Illuminate\Support\Str::limit($materiValue, 85) }}</em>
                     @endif
@@ -63,17 +68,17 @@
                                 $ak = $member->anggotaKelas;
                                 $siswa = $ak?->siswa;
                                 $kelas = $ak?->kelas;
+                                $inputKey = $isWajibMode && $ak?->id ? $ak->id : $member->id;
                                 $siswaName = $siswa?->nama_lengkap ?? ($ak?->siswa_nis ?? '-');
-                                $currentNilai = old("nilai.{$member->id}", $member->nilai);
+                                $currentNilai = old("nilai.{$inputKey}", $member->nilai);
                                 $currentPredikat = $member->predikat;
-                                $displayDeskripsi = trim((string) $member->keterangan);
-                                if ($displayDeskripsi === '' && $currentPredikat) {
-                                    $displayDeskripsi = (string) \App\Models\Admin\DataMaster\Ekstrakurikuler::buildAutoDeskripsi(
+                                $displayDeskripsi = $currentPredikat
+                                    ? (string) \App\Models\Admin\DataMaster\Ekstrakurikuler::buildAutoDeskripsi(
                                         $currentPredikat,
                                         $materiValue,
                                         $ekstrakurikuler->nama_ekstrakurikuler
-                                    );
-                                }
+                                    )
+                                    : trim((string) $member->keterangan);
                                 $predikatPillStyle = match (strtoupper((string) $currentPredikat)) {
                                     'SAB' => 'background: #ecfdf5; color: #047857;',
                                     'BSH' => 'background: #eff6ff; color: #1d4ed8;',
@@ -88,7 +93,7 @@
                                     $currentPredikat,
                                 ])));
                             @endphp
-                            <tr data-member-row="{{ $member->id }}" data-search-text="{{ $searchIndex }}">
+                            <tr data-member-row="{{ $inputKey }}" data-search-text="{{ $searchIndex }}">
                                 <td class="text-center text-muted font-weight-semibold">{{ $idx + 1 }}</td>
                                 <td>
                                     <div class="d-flex align-items-center" style="gap: 0.7rem;">
@@ -126,28 +131,28 @@
                                 </td>
                                 <td class="text-center">
                                     <input type="number"
-                                        name="nilai[{{ $member->id }}]"
+                                        name="nilai[{{ $inputKey }}]"
                                         min="0" max="100" step="1"
                                         class="ekskul-nilai-input"
-                                        data-member-id="{{ $member->id }}"
+                                        data-member-id="{{ $inputKey }}"
                                         placeholder="-"
                                         value="{{ $currentNilai }}">
                                 </td>
                                 <td class="text-center">
                                     <span class="wk-badge-status ekskul-predikat-badge"
-                                        data-predikat-for="{{ $member->id }}"
+                                        data-predikat-for="{{ $inputKey }}"
                                         style="{{ $predikatPillStyle }} font-size: 0.76rem; padding: 0.25rem 0.7rem;">
                                         {{ $currentPredikat ?: '-' }}
                                     </span>
                                     <div class="small text-muted mt-1 ekskul-predikat-label"
-                                        data-predikat-label-for="{{ $member->id }}"
+                                        data-predikat-label-for="{{ $inputKey }}"
                                         style="font-size: 0.69rem;">
                                         {{ $member->predikat_label ?? 'Belum dinilai' }}
                                     </div>
                                 </td>
                                 <td>
                                     <div class="small {{ $displayDeskripsi !== '' ? 'text-dark' : 'text-muted font-italic' }}"
-                                        data-keterangan-text-for="{{ $member->id }}"
+                                        data-keterangan-text-for="{{ $inputKey }}"
                                         style="font-size: 0.79rem; line-height: 1.45;">
                                         {{ $displayDeskripsi !== '' ? $displayDeskripsi : 'Deskripsi otomatis tampil setelah nilai diisi.' }}
                                     </div>
