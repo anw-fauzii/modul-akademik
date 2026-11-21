@@ -910,14 +910,14 @@
                                             $info = $studentTpScores[$tp->id] ?? ['included' => true, 'nilai' => null, 'source' => null];
                                             $isMidTpCol = isset($midTpIds[$tp->id]);
                                         @endphp
-                                        <td class="text-center rk-detail-col {{ $isMidTpCol ? 'rk-mid-col' : '' }}" style="{{ ! $info['included'] ? 'color: #94a3b8;' : '' }}">
+                                        <td class="text-center rk-detail-col {{ $isMidTpCol ? 'rk-mid-col' : '' }}">
                                             @if ($info['nilai'] !== null)
-                                                <span class="rk-score-num" style="{{ ! $info['included'] ? 'color: #94a3b8; font-weight: 600;' : '' }}">
+                                                <span class="rk-score-num">
                                                     {{ (int) round((float) $info['nilai']) }}
                                                 </span>
                                                 @if ($info['source'])
                                                     <div class="rk-source-sub">
-                                                        {{ $info['included'] ? $info['source'] : 'Non-Rapor' }}
+                                                        {{ $info['source'] }}
                                                     </div>
                                                 @endif
                                             @else

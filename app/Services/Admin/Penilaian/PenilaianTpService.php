@@ -496,13 +496,7 @@ class PenilaianTpService
             }
         }
 
-        $includedCount = 0;
-        foreach ($tpList as $tpItem) {
-            $setting = $periodeSettingsByTp->get($tpItem->id);
-            if ($setting === null || $setting->masuk_rapor) {
-                $includedCount++;
-            }
-        }
+        $includedCount = $tpList->count();
 
         return [
             'tahunAjaranOptions' => $tahunAjaranOptions,
@@ -576,7 +570,6 @@ class PenilaianTpService
         }
 
         $tpList = $matrix['tpList'];
-        $periodeSettingsByTp = $matrix['periodeSettingsByTp'];
         $rekapTpLookup = $matrix['rekapTpLookup'];
         $sumatifNilaiLookup = $matrix['sumatifNilaiLookup'] ?? [];
 
@@ -586,8 +579,7 @@ class PenilaianTpService
         foreach ($matrix['students'] as $student) {
             $perTp = [];
             foreach ($tpList as $tp) {
-                $setting = $periodeSettingsByTp->get($tp->id);
-                $isIncluded = $setting === null ? true : (bool) $setting->masuk_rapor;
+                $isIncluded = true;
 
                 $rekapSem = $rekapTpLookup["{$student->id}:{$tp->id}:".PeriodeTp::PERIODE_SEMESTER] ?? null;
                 $rekapMid = $rekapTpLookup["{$student->id}:{$tp->id}:".PeriodeTp::PERIODE_MID] ?? null;
@@ -632,41 +624,6 @@ class PenilaianTpService
         $matrix['combinedSumatifSummaries'] = $combinedSumatifSummaries;
 
         return $matrix;
-    }
-
-    /**
-     * Mengatur status masuk rapor per TP pada periode tertentu (terutama Mid) & menyegarkan rekap rapor.
-     */
-    public function toggleMasukRapor(TujuanPembelajaran $tp, string $periode, bool $masukRapor): PeriodeTp
-    {
-        $periode = $this->normalizePeriode($periode);
-        $this->finalisasiService->assertMapelStructureEditable(
-            (int) $tp->akademik_master_tahun_ajaran_id,
-            (int) $tp->akademik_pelajaran_mata_pelajaran_id,
-            (string) $tp->tingkatan_kelas,
-            $periode
-        );
-
-        return DB::transaction(function () use ($tp, $periode, $masukRapor): PeriodeTp {
-            $setting = PeriodeTp::query()->updateOrCreate(
-                [
-                    'tujuan_pembelajaran_id' => $tp->id,
-                    'periode' => $periode,
-                ],
-                [
-                    'masuk_rapor' => $masukRapor,
-                    'urutan' => $tp->urutan ?? 1,
-                ]
-            );
-
-            $this->recalculateScope(
-                $tp->akademik_master_tahun_ajaran_id,
-                $tp->akademik_pelajaran_mata_pelajaran_id,
-                (string) $tp->tingkatan_kelas
-            );
-
-            return $setting;
-        });
     }
 
     /**
@@ -1356,18 +1313,15 @@ class PenilaianTpService
         $updatedRekapCount = 0;
 
         foreach ($anggotaIds as $anggotaId) {
-            // 1. Periode Mid: hanya TP yang dicentang masuk_rapor pada periode mid
+            // 1. Periode Mid: seluruh TP yang memiliki nilai pada periode mid
             $midTpEntries = [];
             // 2. Periode Semester: menggabungkan seluruh NA TP dari mid + semester (prioritas nilai semester bila diisi ulang)
             $semesterTpEntries = [];
 
             foreach ($tpList as $tp) {
-                /** @var PeriodeTp|null $midSetting */
-                $midSetting = $periodeSettings->get("{$tp->id}:".PeriodeTp::PERIODE_MID);
-                $includeInMid = $midSetting === null ? true : (bool) $midSetting->masuk_rapor;
                 $midScore = $computedTpMap["{$anggotaId}:{$tp->id}:".PeriodeTp::PERIODE_MID] ?? null;
 
-                if ($includeInMid && $midScore !== null) {
+                if ($midScore !== null) {
                     $midTpEntries[] = [
                         'kode_tp' => $tp->kode_tp,
                         'tujuan_pembelajaran' => $tp->tujuan_pembelajaran,
@@ -1376,13 +1330,10 @@ class PenilaianTpService
                     ];
                 }
 
-                /** @var PeriodeTp|null $semSetting */
-                $semSetting = $periodeSettings->get("{$tp->id}:".PeriodeTp::PERIODE_SEMESTER);
-                $includeInSemester = $semSetting === null ? true : (bool) $semSetting->masuk_rapor;
                 $semScore = $computedTpMap["{$anggotaId}:{$tp->id}:".PeriodeTp::PERIODE_SEMESTER] ?? null;
                 $combinedScore = $semScore ?? $midScore;
 
-                if ($includeInSemester && $combinedScore !== null) {
+                if ($combinedScore !== null) {
                     $semesterTpEntries[] = [
                         'kode_tp' => $tp->kode_tp,
                         'tujuan_pembelajaran' => $tp->tujuan_pembelajaran,

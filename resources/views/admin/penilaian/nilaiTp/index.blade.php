@@ -414,18 +414,6 @@
                 color: #c2410c;
             }
 
-            .np-th-mini-btn.is-rapor-on {
-                background: #16a34a;
-                border-color: #15803d;
-                color: #ffffff;
-            }
-
-            .np-th-mini-btn.is-rapor-off {
-                background: #cbd5e1;
-                border-color: #94a3b8;
-                color: #334155;
-            }
-
             .np-tp-tooltip-popover {
                 position: fixed;
                 z-index: 2100;
@@ -501,19 +489,9 @@
                 white-space: nowrap;
             }
 
-            .np-th-tp.is-excluded {
-                background: #e2e8f0;
-                color: #64748b;
-            }
-
             .np-th-tp.is-mid-readonly {
                 background: #e2e8f0;
                 color: #334155;
-            }
-
-            .np-th-tp.is-mid-readonly.is-excluded {
-                background: #f1f5f9;
-                color: #64748b;
             }
 
             .np-mid-readonly-pill {
@@ -1198,11 +1176,6 @@
         $visibleSumatifCount = $visibleMidSumatifBabs->count() + $displaySumatifBabs->count();
         $readOnlyMidItemsCount = $readOnlyMidTpCount + $visibleMidSumatifBabs->count();
         $hasSumatifCols = $visibleSumatifCount > 0;
-        $includedTpTotal = $displayTpList->filter(static function ($tpItem) use ($periodeSettingsByTp): bool {
-            $setting = $periodeSettingsByTp->get($tpItem->id);
-
-            return $setting === null ? true : (bool) $setting->masuk_rapor;
-        })->count();
         $kkmDisplay = rtrim(rtrim(number_format((float) $kkmNilai, 2, '.', ''), '0'), '.');
 
         $bobotFormulaParts = array_values(array_filter([
@@ -1550,7 +1523,7 @@
                         <span style="color: #0f766e;">{{ $visibleSumatifCount }} Sumatif Bab</span>
                     </div>
                     <div class="np-card-sub">
-                        <span><strong>{{ $includedTpTotal }}</strong> masuk rapor {{ $isMid ? 'Mid' : 'Semester' }}</span>
+                        <span>Seluruh TP bernilai otomatis masuk rapor {{ $isMid ? 'Mid' : 'Semester' }}</span>
                         @if ($isMid && $hiddenSemTpCount > 0)
                             <span class="np-status-pill"
                                 title="TP yang sudah memiliki nilai Semester disembunyikan pada tab Mid Semester.">
@@ -1788,8 +1761,6 @@
                                             $isReadOnlyMidTp = ! $isMid && isset($readOnlyMidTpIds[$tp->id]);
                                             $tpAspeks = $aspeksByTp->get($tp->id, collect());
                                             $colspan = $isReadOnlyMidTp ? 1 : ($tpAspeks->count() + 1);
-                                            $setting = $periodeSettingsByTp->get($tp->id);
-                                            $isIncluded = $setting === null ? true : (bool) $setting->masuk_rapor;
                                             $tpProg = $progressByCol["tp:{$tp->id}"] ?? ['filled' => 0, 'total' => $totalStudentCount];
                                             $tpProgClass = $tpProg['filled'] === 0 ? 'is-empty' : ($tpProg['filled'] >= $tpProg['total'] ? 'is-done' : 'is-partial');
                                         @endphp
@@ -1798,7 +1769,7 @@
                                                 data-progress-th="tp:{{ $tp->id }}"
                                                 data-progress-label="{{ $tp->kode_tp }}"
                                             @endif
-                                            class="np-th-tp {{ $isReadOnlyMidTp ? 'is-mid-readonly np-mid-col' : '' }} {{ ! $isIncluded ? 'is-excluded' : '' }}">
+                                            class="np-th-tp {{ $isReadOnlyMidTp ? 'is-mid-readonly np-mid-col' : '' }}">
                                             <div class="np-th-tp-inner">
                                                 <button type="button"
                                                     class="np-tp-tooltip-trigger"
@@ -1819,27 +1790,12 @@
                                                     </span>
                                                 @endif
 
-                                                @if ($isReadOnlyMidTp || $isLocked)
-                                                    @if ($isReadOnlyMidTp)
-                                                        <span class="np-mid-readonly-pill"
-                                                            title="Sudah dinilai pada Mid Semester (read-only). Ubah melalui tab Mid Semester.">
-                                                            <i class="fa fa-lock mr-1"></i>Mid
-                                                        </span>
-                                                    @endif
-                                                    <span class="np-th-mini-btn {{ $isIncluded ? 'is-rapor-on' : 'is-rapor-off' }}"
-                                                        title="{{ $isIncluded ? 'Masuk Rapor' : 'Tidak Masuk Rapor' }}"
-                                                        style="cursor: default; opacity: 0.8;">
-                                                        <i class="fa {{ $isIncluded ? 'fa-check' : 'fa-ban' }}"></i>
+                                                @if ($isReadOnlyMidTp)
+                                                    <span class="np-mid-readonly-pill"
+                                                        title="Sudah dinilai pada Mid Semester (read-only). Ubah melalui tab Mid Semester.">
+                                                        <i class="fa fa-lock mr-1"></i>Mid
                                                     </span>
-                                                @else
-                                                    <button type="button"
-                                                        class="np-th-mini-btn {{ $isIncluded ? 'is-rapor-on' : 'is-rapor-off' }} btn-toggle-rapor-tp"
-                                                        data-action="{{ route($tpRoutePrefix.'.toggle-masuk-rapor', $tp) }}"
-                                                        data-next="{{ $isIncluded ? '0' : '1' }}"
-                                                        title="{{ $isIncluded ? 'Masuk Rapor (klik untuk kecualikan)' : 'Tidak Masuk Rapor (klik untuk masukkan)' }}">
-                                                        <i class="fa {{ $isIncluded ? 'fa-check' : 'fa-ban' }}"></i>
-                                                    </button>
-
+                                                @elseif (! $isLocked)
                                                     <button type="button"
                                                         class="np-th-mini-btn btn-open-aspek-modal"
                                                         data-tp-id="{{ $tp->sqid }}"
@@ -2010,8 +1966,6 @@
                                             @php
                                                 $isReadOnlyMidTp = ! $isMid && isset($readOnlyMidTpIds[$tp->id]);
                                                 $tpAspeks = $aspeksByTp->get($tp->id, collect());
-                                                $setting = $periodeSettingsByTp->get($tp->id);
-                                                $isIncluded = $setting === null ? true : (bool) $setting->masuk_rapor;
                                                 $rekapTpMid = $rekapTpLookup["{$student->id}:{$tp->id}:".\App\Models\Admin\Penilaian\PeriodeTp::PERIODE_MID] ?? null;
                                                 $rekapTpCurrent = $rekapTpLookup["{$student->id}:{$tp->id}:{$periode}"] ?? null;
                                                 $naTpValue = $rekapTpCurrent?->nilai_akhir_tp;
@@ -2022,7 +1976,6 @@
                                                 <td class="np-natp-cell np-natp-readonly-cell np-mid-col {{ ($midNaTpValue !== null && (float) $midNaTpValue < (float) $kkmNilai) ? 'is-below-kkm' : '' }}"
                                                     data-readonly-mid-tp-cell="{{ $student->id }}:{{ $tp->id }}"
                                                     data-mid-score="{{ $midNaTpValue !== null ? (int) round((float) $midNaTpValue) : '' }}"
-                                                    data-included-rapor="{{ $isIncluded ? '1' : '0' }}"
                                                     title="Nilai TP dari Mid Semester (Read-Only)">
                                                     <span class="np-readonly-chip">
                                                         {{ $midNaTpValue !== null ? (int) round((float) $midNaTpValue) : '-' }}
@@ -2056,8 +2009,7 @@
                                                 @endforeach
 
                                                 <td class="np-natp-cell {{ ($naTpValue !== null && (float) $naTpValue < (float) $kkmNilai) ? 'is-below-kkm' : '' }}"
-                                                    data-natp-cell="{{ $student->id }}:{{ $tp->id }}"
-                                                    data-included-rapor="{{ $isIncluded ? '1' : '0' }}">
+                                                    data-natp-cell="{{ $student->id }}:{{ $tp->id }}">
                                                     <span class="js-natp-value">
                                                         {{ $naTpValue !== null ? (int) round((float) $naTpValue) : '-' }}
                                                     </span>
@@ -2182,7 +2134,7 @@
         @endif
     </div>
 
-    <!-- Form Terpisah Hapus Aspek, Hapus Sumatif Bab & Toggle Masuk Rapor -->
+    <!-- Form Terpisah Hapus Aspek & Hapus Sumatif Bab -->
     <form method="POST" id="deleteAspekForm" class="d-none">
         @csrf
         @method('DELETE')
@@ -2195,13 +2147,6 @@
         <input type="hidden" name="kelas_id" value="{{ $selectedKelas?->sqid ?? '' }}">
     </form>
 
-    <form method="POST" id="toggleMasukRaporForm" class="d-none">
-        @csrf
-        <input type="hidden" name="periode" value="{{ $periode }}">
-        <input type="hidden" name="kelas_id" value="{{ $selectedKelas?->sqid ?? '' }}">
-        <input type="hidden" name="masuk_rapor" id="toggleMasukRaporValue" value="1">
-    </form>
-
     <!-- Tooltip Instan Kode Tujuan Pembelajaran -->
     <div id="npTpTooltip" class="np-tp-tooltip-popover" role="tooltip" aria-hidden="true"></div>
 
@@ -2212,7 +2157,7 @@
                 <div class="d-flex align-items-center justify-content-between px-4 py-3"
                     style="border-bottom: 1px solid #e2e8f0;">
                     <h5 class="mb-0 font-weight-bold" style="font-size: 0.95rem;">
-                        Kelola Masuk Rapor &amp; Aspek ({{ $displayTpList->count() }} TP — Kelas {{ $selectedKelas->tingkatan_kelas }})
+                        Kelola TP &amp; Aspek ({{ $displayTpList->count() }} TP — Kelas {{ $selectedKelas->tingkatan_kelas }})
                     </h5>
                     <button type="button" class="btn btn-sm btn-light" data-close-modal="tpManagerModal">&times;</button>
                 </div>
@@ -2226,7 +2171,6 @@
                             <tr>
                                 <th class="pl-3" style="width: 90px;">Kode TP</th>
                                 <th>Tujuan Pembelajaran &amp; Aspek</th>
-                                <th class="text-center" style="width: 145px;">Rapor {{ $isMid ? 'Mid' : 'Semester' }}</th>
                                 <th class="text-center pr-3" style="width: 105px;">Aksi</th>
                             </tr>
                         </thead>
@@ -2234,8 +2178,6 @@
                             @foreach ($displayTpList as $tp)
                                 @php
                                     $isReadOnlyMidTp = ! $isMid && isset($readOnlyMidTpIds[$tp->id]);
-                                    $setting = $periodeSettingsByTp->get($tp->id);
-                                    $isIncluded = $setting === null ? true : (bool) $setting->masuk_rapor;
                                     $tpAspeks = $aspeksByTp->get($tp->id, collect());
                                     $searchHaystack = mb_strtolower($tp->kode_tp.' '.($tp->lingkup_materi ?? '').' '.$tp->tujuan_pembelajaran);
                                 @endphp
@@ -2278,23 +2220,6 @@
                                                     </button>
                                                 @endforeach
                                             </div>
-                                        @endif
-                                    </td>
-                                    <td class="text-center align-middle">
-                                        @if ($isReadOnlyMidTp)
-                                            <span class="badge {{ $isIncluded ? 'badge-success' : 'badge-secondary' }}" style="font-size: 0.7rem; border-radius: 999px;">
-                                                <i class="fa {{ $isIncluded ? 'fa-check' : 'fa-ban' }} mr-1"></i>
-                                                {{ $isIncluded ? 'Masuk Rapor' : 'Non-Rapor' }}
-                                            </span>
-                                        @else
-                                            <button type="button"
-                                                class="btn btn-sm py-1 px-2 {{ $isIncluded ? 'btn-success' : 'btn-outline-secondary' }} btn-toggle-rapor-tp"
-                                                data-action="{{ route($tpRoutePrefix.'.toggle-masuk-rapor', $tp) }}"
-                                                data-next="{{ $isIncluded ? '0' : '1' }}"
-                                                style="font-size: 0.7rem; border-radius: 999px;">
-                                                <i class="fa {{ $isIncluded ? 'fa-check-square' : 'fa-square' }} mr-1"></i>
-                                                {{ $isIncluded ? 'Masuk Rapor' : 'Non-Rapor' }}
-                                            </button>
                                         @endif
                                     </td>
                                     <td class="text-center align-middle pr-3">
@@ -2780,17 +2705,6 @@
                 });
             }
 
-            const toggleRaporForm = document.getElementById('toggleMasukRaporForm');
-            const toggleRaporVal = document.getElementById('toggleMasukRaporValue');
-            document.querySelectorAll('.btn-toggle-rapor-tp').forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    if (!toggleRaporForm || !toggleRaporVal) return;
-                    toggleRaporForm.action = btn.dataset.action;
-                    toggleRaporVal.value = btn.dataset.next;
-                    toggleRaporForm.submit();
-                });
-            });
-
             // Tooltip Instan Tujuan Pembelajaran saat hover / fokus / klik pada kode TP
             const tpTooltip = document.getElementById('npTpTooltip');
             let activeTooltipTrigger = null;
@@ -3025,9 +2939,6 @@
                 const includedScores = [];
 
                 tr.querySelectorAll('[data-readonly-mid-tp-cell]').forEach(function (roCell) {
-                    if (roCell.dataset.includedRapor !== '1') {
-                        return;
-                    }
                     const rawMid = (roCell.dataset.midScore || '').trim();
                     if (rawMid !== '' && !isNaN(Number(rawMid))) {
                         includedScores.push(Number(rawMid));
@@ -3039,7 +2950,6 @@
                 naCells.forEach(function (naCell) {
                     const parts = naCell.dataset.natpCell.split(':');
                     const tpId = parts[1];
-                    const isIncluded = naCell.dataset.includedRapor === '1';
 
                     const inputs = tr.querySelectorAll('input.np-score-input[data-tp-id="' + tpId + '"]');
                     let sum = 0;
@@ -3075,7 +2985,7 @@
                         naCell.classList.remove('is-below-kkm');
                     }
 
-                    if (isIncluded && currentTpScore !== null) {
+                    if (currentTpScore !== null) {
                         includedScores.push(currentTpScore);
                     }
                 });

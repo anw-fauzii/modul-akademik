@@ -54,7 +54,6 @@ if (! function_exists('sqidFor')) {
             'presensi-siswa' => PresensiSiswa::class,
             'aspek' => AspekTp::class,
             'sumatif-bab' => SumatifBab::class,
-            'toggle-masuk-rapor' => TujuanPembelajaran::class,
             'tujuan-pembelajaran' => TujuanPembelajaran::class,
             'deskripsi' => RekapMapel::class,
             'penilaian-kkm' => Kkm::class,

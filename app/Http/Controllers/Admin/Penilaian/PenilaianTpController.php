@@ -36,7 +36,6 @@ class PenilaianTpController extends Controller
         $this->middleware('can:create,'.SumatifBab::class)->only(['store', 'updateBobot', 'storeSumatifBab', 'import']);
         $this->middleware('can:update,sumatif_bab')->only(['updateSumatifBab']);
         $this->middleware('can:delete,sumatif_bab')->only(['destroySumatifBab']);
-        $this->middleware('can:toggleMasukRapor,tujuan_pembelajaran')->only(['toggleMasukRapor']);
         $this->middleware('can:create,'.AspekTp::class)->only(['storeAspek']);
         $this->middleware('can:update,aspek_tp')->only(['updateAspek']);
         $this->middleware('can:delete,aspek_tp')->only(['destroyAspek']);
@@ -157,25 +156,6 @@ class PenilaianTpController extends Controller
             $mapelId,
             $periode,
             "Kolom Sumatif Bab \"{$namaBab}\" berhasil dihapus dan NA Rapor disinkronkan ulang.",
-            'penilaian-tp'
-        );
-    }
-
-    /**
-     * Mengubah pilihan apakah TP dimasukkan ke dalam Rapor Mid / Semester.
-     */
-    public function toggleMasukRapor(Request $request, TujuanPembelajaran $tujuanPembelajaran): RedirectResponse
-    {
-        $periode = $this->normalizePeriodeInput($request);
-        $masukRapor = filter_var($request->input('masuk_rapor', false), FILTER_VALIDATE_BOOLEAN);
-
-        $this->service->toggleMasukRapor($tujuanPembelajaran, $periode, $masukRapor);
-
-        return $this->buildToggleMasukRaporResponse(
-            $tujuanPembelajaran,
-            $request->input('kelas_id'),
-            $periode,
-            $masukRapor,
             'penilaian-tp'
         );
     }

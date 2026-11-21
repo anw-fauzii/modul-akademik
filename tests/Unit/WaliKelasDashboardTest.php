@@ -188,6 +188,23 @@ class WaliKelasDashboardTest extends TestCase
                     'total_mapel' => 1,
                     'assessed_mapel' => 1,
                 ],
+                'raporReadiness' => [
+                    'is_sd' => true,
+                    'periode' => 'mid',
+                    'is_ready' => false,
+                    'finalized_count' => 1,
+                    'total_components' => 4,
+                    'pending_count' => 3,
+                    'progress_pct' => 25,
+                    'components' => [],
+                    'pending_components' => [[
+                        'jenis_komponen' => 'ekskul_wajib',
+                        'jenis_label' => 'Ekskul Wajib',
+                        'nama' => 'Pramuka (Wajib)',
+                        'owner_label' => 'Ahmad Fauzi, S.Pd',
+                        'is_owned_by_user' => true,
+                    ]],
+                ],
                 'upcomingAgendas' => new EloquentCollection([$agenda]),
                 'latestPengumuman' => new EloquentCollection([$pengumuman]),
             ])->render();
@@ -197,6 +214,12 @@ class WaliKelasDashboardTest extends TestCase
             $this->assertStringContainsString('Rina Kartika, S.Pd.I', $eligibleHtml);
             $this->assertStringContainsString('Budi Pratama', $eligibleHtml);
             $this->assertStringContainsString('Matematika', $eligibleHtml);
+            $this->assertStringContainsString('Ekstrakurikuler', $eligibleHtml);
+            $this->assertStringContainsString('Yaumiyah T2Q', $eligibleHtml);
+            $this->assertStringContainsString('wkDashPanelSiswa', $eligibleHtml);
+            $this->assertStringContainsString('wkDashPanelMapel', $eligibleHtml);
+            $this->assertStringContainsString('Kesiapan &amp; Finalisasi Rapor', $eligibleHtml);
+            $this->assertStringContainsString('Pramuka (Wajib)', $eligibleHtml);
             $this->assertStringContainsString('Pekan P5 Kelas 5', $eligibleHtml);
             $this->assertStringContainsString('Jadwal PSTS Semester 1', $eligibleHtml);
             $this->assertStringContainsString('Dashboard Wali Kelas', $eligibleHtml);

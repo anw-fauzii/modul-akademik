@@ -233,27 +233,6 @@ class WaliKelasPenilaianService
     }
 
     /**
-     * Mengubah status masuk rapor per TP untuk kelas/tingkatan & mapel yang diampu.
-     */
-    public function toggleMasukRaporForUser(
-        User $user,
-        TujuanPembelajaran $tp,
-        string $periode,
-        bool $masukRapor,
-        ?int $kelasId = null
-    ): PeriodeTp {
-        $this->scopeService->authorizeSdMapelScope(
-            $user,
-            $kelasId,
-            (int) $tp->akademik_pelajaran_mata_pelajaran_id,
-            (int) $tp->akademik_master_tahun_ajaran_id,
-            (string) $tp->tingkatan_kelas
-        );
-
-        return $this->penilaianTpService->toggleMasukRapor($tp, $periode, $masukRapor);
-    }
-
-    /**
      * Menambahkan atau memperbarui aspek TP untuk tingkatan & mapel yang diampu.
      *
      * @param  array<string, mixed>  $validated

@@ -32,7 +32,6 @@ class PenilaianTpController extends Controller
         $this->middleware('can:create,'.SumatifBab::class)->only(['store', 'updateBobot', 'storeSumatifBab', 'import']);
         $this->middleware('can:update,sumatif_bab')->only(['updateSumatifBab']);
         $this->middleware('can:delete,sumatif_bab')->only(['destroySumatifBab']);
-        $this->middleware('can:toggleMasukRapor,tujuan_pembelajaran')->only(['toggleMasukRapor']);
         $this->middleware('can:create,'.AspekTp::class)->only(['storeAspek']);
         $this->middleware('can:update,aspek_tp')->only(['updateAspek']);
         $this->middleware('can:delete,aspek_tp')->only(['destroyAspek']);
@@ -144,26 +143,6 @@ class PenilaianTpController extends Controller
             $mapelId,
             $periode,
             "Kolom Sumatif Bab \"{$namaBab}\" berhasil dihapus dan NA Rapor disinkronkan ulang.",
-            'wali-kelas.penilaian-tp'
-        );
-    }
-
-    /**
-     * Mengubah status masuk rapor per TP untuk kelas/tingkatan SD binaan aktif.
-     */
-    public function toggleMasukRapor(Request $request, TujuanPembelajaran $tujuanPembelajaran): RedirectResponse
-    {
-        $periode = $this->normalizePeriodeInput($request);
-        $masukRapor = filter_var($request->input('masuk_rapor', false), FILTER_VALIDATE_BOOLEAN);
-        $kelasId = $request->filled('kelas_id') ? (int) $request->input('kelas_id') : null;
-
-        $this->service->toggleMasukRaporForUser($request->user(), $tujuanPembelajaran, $periode, $masukRapor, $kelasId);
-
-        return $this->buildToggleMasukRaporResponse(
-            $tujuanPembelajaran,
-            $request->input('kelas_id'),
-            $periode,
-            $masukRapor,
             'wali-kelas.penilaian-tp'
         );
     }

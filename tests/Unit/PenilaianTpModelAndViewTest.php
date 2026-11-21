@@ -571,7 +571,6 @@ class PenilaianTpModelAndViewTest extends TestCase
         $penilaianService = $this->createMock(PenilaianTpService::class);
         $penilaianService->expects($this->once())->method('getMatrixData')->willReturn([]);
         $penilaianService->expects($this->once())->method('getRekapData')->willReturn([]);
-        $penilaianService->expects($this->once())->method('toggleMasukRapor')->with($tp, 'mid', false)->willReturn(new PeriodeTp);
         $penilaianService->expects($this->once())->method('deleteAspek')->with($aspek);
         $penilaianService->expects($this->once())->method('deleteSumatifBab')->with($sumatifBab);
         $penilaianService->expects($this->once())->method('updateDeskripsi')->with($rekapMapel, 'Bagus sekali')->willReturn($rekapMapel);
@@ -579,10 +578,6 @@ class PenilaianTpModelAndViewTest extends TestCase
         $penilaianController = new PenilaianTpController($penilaianService);
         $this->assertSame('admin.penilaian.nilaiTp.index', $penilaianController->index(Request::create('/penilaian/nilai-tp', 'GET'))->name());
         $this->assertSame('admin.penilaian.rekap.index', $penilaianController->rekap(Request::create('/penilaian/rekap', 'GET'))->name());
-        $this->assertStringContainsString(
-            route('penilaian-tp.index'),
-            $penilaianController->toggleMasukRapor(Request::create('/penilaian/nilai-tp/tp/30/toggle-masuk-rapor', 'POST', ['periode' => 'mid', 'masuk_rapor' => '0']), $tp)->getTargetUrl()
-        );
         $this->assertStringContainsString(
             route('penilaian-tp.index'),
             $penilaianController->destroyAspek(Request::create('/penilaian/nilai-tp/aspek/40', 'DELETE'), $aspek)->getTargetUrl()

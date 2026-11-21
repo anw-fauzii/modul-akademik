@@ -95,8 +95,6 @@ Route::middleware(['auth', 'sso.check', 'nocache', 'sqid.decode'])->group(functi
         ->name('wali-kelas.penilaian-tp.store');
     Route::post('/wali-kelas/penilaian/nilai-tp/bobot', [WaliKelasPenilaianTpController::class, 'updateBobot'])
         ->name('wali-kelas.penilaian-tp.bobot.update');
-    Route::post('/wali-kelas/penilaian/nilai-tp/tp/{tujuan_pembelajaran}/toggle-masuk-rapor', [WaliKelasPenilaianTpController::class, 'toggleMasukRapor'])
-        ->name('wali-kelas.penilaian-tp.toggle-masuk-rapor');
     Route::post('/wali-kelas/penilaian/nilai-tp/aspek', [WaliKelasPenilaianTpController::class, 'storeAspek'])
         ->name('wali-kelas.penilaian-tp.aspek.store');
     Route::put('/wali-kelas/penilaian/nilai-tp/aspek/{aspek_tp}', [WaliKelasPenilaianTpController::class, 'updateAspek'])
@@ -243,8 +241,6 @@ Route::middleware(['auth', 'sso.check', 'nocache', 'sqid.decode'])->group(functi
         ->name('penilaian-tp.store');
     Route::post('/penilaian/nilai-tp/bobot', [PenilaianTpController::class, 'updateBobot'])
         ->name('penilaian-tp.bobot.update');
-    Route::post('/penilaian/nilai-tp/tp/{tujuan_pembelajaran}/toggle-masuk-rapor', [PenilaianTpController::class, 'toggleMasukRapor'])
-        ->name('penilaian-tp.toggle-masuk-rapor');
     Route::post('/penilaian/nilai-tp/aspek', [PenilaianTpController::class, 'storeAspek'])
         ->name('penilaian-tp.aspek.store');
     Route::put('/penilaian/nilai-tp/aspek/{aspek_tp}', [PenilaianTpController::class, 'updateAspek'])

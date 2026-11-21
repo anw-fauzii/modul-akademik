@@ -228,13 +228,7 @@ class PenilaianTpTest extends TestCase
         $aspekHafalan = AspekTp::create(['tujuan_pembelajaran_id' => $tp52->sqid, 'periode' => 'mid', 'nama_aspek' => 'Hafalan', 'urutan' => 2]);
         $aspekArtinya = AspekTp::create(['tujuan_pembelajaran_id' => $tp52->sqid, 'periode' => 'mid', 'nama_aspek' => 'Artinya', 'urutan' => 3]);
 
-        // Pada Mid Semester: TP 5.1 masuk rapor Mid, TP 5.2 dikecualikan dari rapor Mid
-        $this->actingAsSso($user)->post(route('penilaian-tp.toggle-masuk-rapor', $tp52), [
-            'periode' => 'mid',
-            'masuk_rapor' => 0,
-            'kelas_id' => $kelas->sqid,
-        ])->assertRedirect();
-
+        // Seluruh TP yang sudah memiliki nilai pada Mid Semester otomatis masuk ke Rapor Mid
         DB::flushQueryLog();
         DB::enableQueryLog();
 
@@ -265,12 +259,12 @@ class PenilaianTpTest extends TestCase
         DB::disableQueryLog();
         $this->assertLessThanOrEqual(30, count($saveQueries));
 
-        // Pada Mid Rapor, hanya TP 5.1 yang dihitung -> NA Rapor Mid = 90 (siswa 1) dan 80 (siswa 2)
+        // Pada Mid Rapor, seluruh TP bernilai dihitung -> (90 + 78) / 2 = 84 (siswa 1)
         $rekapMid1 = RekapMapel::query()
             ->where('anggota_kelas_id', $anggota1->id)
             ->where('periode', 'mid')
             ->firstOrFail();
-        $this->assertEquals(90.0, $rekapMid1->nilai_akhir_rapor);
+        $this->assertEquals(84.0, $rekapMid1->nilai_akhir_rapor);
         $this->assertSame('B', $rekapMid1->predikat_rapor);
 
         // Input nilai di Semester hanya untuk TP 5.2 (siswa 1 mendapat perbaikan nilai 90), TP 5.1 diambil dari Mid (90 & 80)

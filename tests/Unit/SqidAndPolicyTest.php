@@ -308,7 +308,6 @@ class SqidAndPolicyTest extends TestCase
             $this->assertTrue(Gate::forUser($wali)->allows('view', $ownAnggota));
             $this->assertTrue(Gate::forUser($wali)->allows('update', $ownPresensi));
             $this->assertTrue(Gate::forUser($wali)->allows('delete', $ownPresensi));
-            $this->assertTrue(Gate::forUser($wali)->allows('toggleMasukRapor', $ownTp));
             $this->assertTrue(Gate::forUser($wali)->allows('update', $ownAspek));
             $this->assertTrue(Gate::forUser($wali)->allows('update', $ownSumatif));
             $this->assertTrue(Gate::forUser($wali)->allows('updateDeskripsi', $ownRekap));
@@ -321,7 +320,6 @@ class SqidAndPolicyTest extends TestCase
             $this->assertTrue(Gate::forUser($wali)->denies('view', $foreignAnggota));
             $this->assertTrue(Gate::forUser($wali)->denies('update', $foreignPresensi));
             $this->assertTrue(Gate::forUser($wali)->denies('delete', $foreignPresensi));
-            $this->assertTrue(Gate::forUser($wali)->denies('toggleMasukRapor', $foreignTp));
             $this->assertTrue(Gate::forUser($wali)->denies('update', $foreignAspek));
             $this->assertTrue(Gate::forUser($wali)->denies('update', $foreignSumatif));
             $this->assertTrue(Gate::forUser($wali)->denies('updateDeskripsi', $foreignRekap));

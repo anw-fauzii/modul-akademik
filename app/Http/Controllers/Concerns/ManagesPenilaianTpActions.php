@@ -123,26 +123,6 @@ trait ManagesPenilaianTpActions
             ->with('success', $message);
     }
 
-    protected function buildToggleMasukRaporResponse(
-        TujuanPembelajaran $tp,
-        mixed $kelasId,
-        string $periode,
-        bool $masukRapor,
-        string $tpRoutePrefix
-    ): RedirectResponse {
-        $statusLabel = $masukRapor ? 'dimasukkan ke Rapor' : 'dikecualikan dari Rapor';
-        $periodeLabel = $periode === PeriodeTp::PERIODE_SEMESTER ? 'Semester' : 'Mid Semester';
-
-        return redirect()
-            ->route("{$tpRoutePrefix}.index", $this->contextQueryParams(
-                $tp->akademik_master_tahun_ajaran_id,
-                $kelasId,
-                $tp->akademik_pelajaran_mata_pelajaran_id,
-                $periode
-            ))
-            ->with('success', "{$tp->kode_tp} berhasil {$statusLabel} ({$periodeLabel}).");
-    }
-
     protected function buildAspekRedirectResponse(
         ?TujuanPembelajaran $tp,
         mixed $kelasId,
