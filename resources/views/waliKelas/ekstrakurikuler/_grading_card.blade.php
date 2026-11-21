@@ -3,10 +3,14 @@
     $materiValue = trim((string) ($ekstrakurikuler->materi ?? ''));
     $fromAdminShow = $fromAdminShow ?? false;
     $isWajibMode = $isWajibMode ?? false;
+    $periode = $periode ?? \App\Models\Admin\Penilaian\PeriodeTp::PERIODE_MID;
+    $finalisasi = $finalisasi ?? null;
+    $isLocked = (bool) ($finalisasi['is_final'] ?? false);
 @endphp
 
 <form action="{{ $formAction }}" method="POST" id="ekskulGradingForm">
     @csrf
+    <input type="hidden" name="periode" value="{{ $periode }}">
     @if ($fromAdminShow)
         <input type="hidden" name="from_admin_show" value="1">
     @endif
@@ -136,6 +140,7 @@
                                         class="ekskul-nilai-input"
                                         data-member-id="{{ $inputKey }}"
                                         placeholder="-"
+                                        @disabled($isLocked)
                                         value="{{ $currentNilai }}">
                                 </td>
                                 <td class="text-center">
@@ -169,10 +174,16 @@
                     Predikat (<strong>SAB, BSH, SB, MB</strong>) dan deskripsi rapor dihitung otomatis saat nilai disimpan.
                 </div>
 
-                <button type="submit" class="btn text-white font-weight-bold px-4 shadow-sm"
-                    style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 10px;">
-                    <i class="fa fa-save mr-1"></i> Simpan Nilai
-                </button>
+                @if ($isLocked)
+                    <span class="badge badge-success px-3 py-2" style="border-radius: 10px; font-size: 0.78rem;">
+                        <i class="fa fa-lock mr-1"></i> Terkunci (Final)
+                    </span>
+                @else
+                    <button type="submit" class="btn text-white font-weight-bold px-4 shadow-sm"
+                        style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 10px;">
+                        <i class="fa fa-save mr-1"></i> Simpan Nilai
+                    </button>
+                @endif
             </div>
         @endif
     </div>

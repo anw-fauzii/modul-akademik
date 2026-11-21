@@ -7,11 +7,13 @@ use App\Imports\Admin\Penilaian\PenilaianTpImport;
 use App\Models\Admin\DataMaster\Kelas;
 use App\Models\Admin\Pelajaran\MataPelajaran;
 use App\Models\Admin\Penilaian\AspekTp;
+use App\Models\Admin\Penilaian\PenilaianFinalisasi;
 use App\Models\Admin\Penilaian\PeriodeTp;
 use App\Models\Admin\Penilaian\RekapMapel;
 use App\Models\Admin\Penilaian\SumatifBab;
 use App\Models\Admin\TujuanPembelajaran\TujuanPembelajaran;
 use App\Models\User;
+use App\Services\Admin\Penilaian\PenilaianFinalisasiService;
 use App\Services\Admin\Penilaian\PenilaianTpService;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Maatwebsite\Excel\Facades\Excel;
@@ -20,10 +22,12 @@ class WaliKelasPenilaianService
 {
     public function __construct(
         protected ?WaliKelasScopeService $scopeService = null,
-        protected ?PenilaianTpService $penilaianTpService = null
+        protected ?PenilaianTpService $penilaianTpService = null,
+        protected ?PenilaianFinalisasiService $finalisasiService = null
     ) {
         $this->scopeService ??= new WaliKelasScopeService;
         $this->penilaianTpService ??= new PenilaianTpService;
+        $this->finalisasiService ??= new PenilaianFinalisasiService($this->scopeService);
     }
 
     /**
@@ -100,6 +104,16 @@ class WaliKelasPenilaianService
         $payload = $isRekap
             ? $this->penilaianTpService->getRekapData($filters, $taughtSdClasses, $allowedMapels)
             : $this->penilaianTpService->getMatrixData($filters, $taughtSdClasses, $allowedMapels);
+
+        if (($payload['selectedKelas'] ?? null) !== null && ($payload['selectedMapel'] ?? null) !== null) {
+            $payload['finalisasi'] = $this->finalisasiService->getStatusPayloadForComponent([
+                'jenis_komponen' => PenilaianFinalisasi::JENIS_MAPEL,
+                'tahun_ajaran_id' => $activeTaId,
+                'kelas_id' => $payload['selectedKelas']->id,
+                'mata_pelajaran_id' => $payload['selectedMapel']->id,
+                'periode' => $payload['periode'] ?? PeriodeTp::PERIODE_MID,
+            ], $user);
+        }
 
         return [
             ...$payload,

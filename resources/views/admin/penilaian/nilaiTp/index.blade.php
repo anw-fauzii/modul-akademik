@@ -800,6 +800,313 @@
                 color: #dc2626;
             }
 
+            /* Strip Progres Pengisian Nilai Aktif (Modern, 1-Baris & Ringkas) */
+            .np-progress-strip {
+                position: relative;
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.65rem 1rem;
+                padding: 0.62rem 1rem;
+                background: linear-gradient(180deg, #fafbfc 0%, #f8fafc 100%);
+                border-bottom: 1px solid #e2e8f0;
+                font-size: 0.75rem;
+                transition: background-color 0.2s ease, border-color 0.2s ease;
+            }
+
+            .np-progress-strip.is-pending {
+                background: linear-gradient(90deg, #fffdf7 0%, #fffaf2 55%, #ffffff 100%);
+                border-bottom-color: #fde68a;
+            }
+
+            .np-progress-strip.is-complete {
+                background: linear-gradient(90deg, #f3fcf8 0%, #f6fef9 55%, #ffffff 100%);
+                border-bottom-color: #bbf7d0;
+            }
+
+            .np-progress-left {
+                display: flex;
+                align-items: center;
+                gap: 0.68rem;
+                min-width: 240px;
+            }
+
+            .np-progress-icon {
+                width: 32px;
+                height: 32px;
+                border-radius: 9px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.85rem;
+                flex-shrink: 0;
+                background: #f1f5f9;
+                color: #64748b;
+                border: 1px solid #e2e8f0;
+            }
+
+            .np-progress-strip.is-pending .np-progress-icon {
+                background: #fff7ed;
+                color: #ea580c;
+                border-color: #fed7aa;
+            }
+
+            .np-progress-strip.is-complete .np-progress-icon {
+                background: #ecfdf5;
+                color: #059669;
+                border-color: #a7f3d0;
+            }
+
+            .np-progress-meta {
+                display: flex;
+                flex-direction: column;
+                gap: 0.24rem;
+                min-width: 0;
+            }
+
+            .np-progress-headline {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 0.42rem;
+                line-height: 1.25;
+            }
+
+            .np-progress-pct-pill {
+                display: inline-flex;
+                align-items: center;
+                padding: 0.08rem 0.46rem;
+                border-radius: 999px;
+                font-size: 0.66rem;
+                font-weight: 800;
+                font-variant-numeric: tabular-nums;
+                background: #ffedd5;
+                color: #c2410c;
+            }
+
+            .np-progress-strip.is-complete .np-progress-pct-pill {
+                background: #d1fae5;
+                color: #047857;
+            }
+
+            .np-progress-track-wrap {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .np-progress-track {
+                width: 170px;
+                max-width: 100%;
+                height: 6px;
+                border-radius: 999px;
+                background: rgba(148, 163, 184, 0.24);
+                overflow: hidden;
+            }
+
+            .np-progress-fill {
+                height: 100%;
+                border-radius: 999px;
+                background: linear-gradient(90deg, #f97316 0%, #f59e0b 100%);
+                transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            .np-progress-strip.is-complete .np-progress-fill {
+                background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+            }
+
+            .np-progress-right {
+                position: relative;
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 0.38rem;
+            }
+
+            .np-task-label {
+                font-size: 0.67rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.03em;
+                color: #9a3412;
+                margin-right: 0.1rem;
+            }
+
+            .np-task-chips {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 0.34rem;
+            }
+
+            .np-task-chip {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.32rem;
+                padding: 0.22rem 0.52rem;
+                border-radius: 8px;
+                border: 1px solid #fed7aa;
+                background: #ffffff;
+                color: #0f172a;
+                font-size: 0.7rem;
+                font-weight: 700;
+                cursor: pointer;
+                box-shadow: 0 1px 2px rgba(234, 88, 12, 0.05);
+                transition: all 0.14s ease;
+                font-variant-numeric: tabular-nums;
+                white-space: nowrap;
+            }
+
+            .np-task-chip:hover {
+                background: #ea580c;
+                border-color: #ea580c;
+                color: #ffffff;
+                transform: translateY(-1px);
+            }
+
+            .np-task-chip-code {
+                color: #c2410c;
+                font-weight: 800;
+            }
+
+            .np-task-chip-count {
+                color: #64748b;
+                font-weight: 600;
+                font-size: 0.67rem;
+            }
+
+            .np-task-chip-missing {
+                padding: 0.04rem 0.32rem;
+                border-radius: 5px;
+                background: #fff7ed;
+                color: #c2410c;
+                font-size: 0.64rem;
+                font-weight: 800;
+            }
+
+            .np-task-chip:hover .np-task-chip-code,
+            .np-task-chip:hover .np-task-chip-count {
+                color: #ffffff;
+            }
+
+            .np-task-chip:hover .np-task-chip-missing {
+                background: rgba(255, 255, 255, 0.24);
+                color: #ffffff;
+            }
+
+            .np-task-more-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.3rem;
+                padding: 0.22rem 0.6rem;
+                border-radius: 8px;
+                border: 1px solid #f59e0b;
+                background: #fef3c7;
+                color: #92400e;
+                font-size: 0.7rem;
+                font-weight: 800;
+                cursor: pointer;
+                transition: all 0.14s ease;
+                white-space: nowrap;
+            }
+
+            .np-task-more-btn:hover,
+            .np-task-more-btn.is-open {
+                background: #d97706;
+                border-color: #d97706;
+                color: #ffffff;
+            }
+
+            .np-task-popover {
+                position: absolute;
+                top: calc(100% + 6px);
+                right: 0;
+                z-index: 1060;
+                width: 300px;
+                max-width: calc(100vw - 2rem);
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                box-shadow: 0 16px 32px -8px rgba(15, 23, 42, 0.22);
+                overflow: hidden;
+                display: none;
+            }
+
+            .np-task-popover.is-open {
+                display: block;
+            }
+
+            .np-task-popover-head {
+                padding: 0.55rem 0.78rem;
+                background: #f8fafc;
+                border-bottom: 1px solid #e2e8f0;
+                font-size: 0.72rem;
+                font-weight: 800;
+                color: #0f172a;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .np-task-popover-list {
+                max-height: 250px;
+                overflow-y: auto;
+                padding: 0.35rem;
+                display: flex;
+                flex-direction: column;
+                gap: 0.22rem;
+            }
+
+            .np-task-popover-item {
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.5rem;
+                padding: 0.42rem 0.6rem;
+                border-radius: 8px;
+                border: 0;
+                background: transparent;
+                text-align: left;
+                font-size: 0.74rem;
+                cursor: pointer;
+                transition: background-color 0.12s ease;
+                font-variant-numeric: tabular-nums;
+            }
+
+            .np-task-popover-item:hover {
+                background: #fff7ed;
+            }
+
+            .np-col-progress-badge {
+                display: inline-flex;
+                align-items: center;
+                padding: 0.1rem 0.42rem;
+                border-radius: 6px;
+                font-size: 0.62rem;
+                font-weight: 800;
+                line-height: 1.15;
+                font-variant-numeric: tabular-nums;
+                box-shadow: 0 1px 1px rgba(15, 23, 42, 0.05);
+            }
+
+            .np-col-progress-badge.is-partial {
+                background: #fef3c7;
+                color: #b45309;
+                border: 1px solid #f59e0b;
+            }
+
+            .np-col-progress-badge.is-done {
+                background: #dcfce7;
+                color: #15803d;
+                border: 1px solid #4ade80;
+            }
+
+            .np-col-progress-badge.is-empty {
+                display: none;
+            }
+
             .np-modal-overlay {
                 position: fixed;
                 inset: 0;
@@ -855,6 +1162,9 @@
         $rekapTpLookup = $rekapTpLookup ?? [];
         $rekapMapelLookup = $rekapMapelLookup ?? [];
         $teknikOptions = $teknikOptions ?? \App\Models\Admin\Penilaian\AspekTp::TEKNIK_OPTIONS;
+        $finalisasi = $finalisasi ?? null;
+        $isLocked = (bool) ($finalisasi['is_final'] ?? false);
+        $finalisasiRoutePrefix = $isWaliKelasScope ? 'wali-kelas.penilaian-finalisasi' : 'penilaian-finalisasi';
 
         // Pada tab Mid Semester: sembunyikan TP yang sudah memiliki nilai di Semester (selama belum dinilai di Mid).
         // Pada tab Semester: tampilkan kembali TP yang sudah dinilai di Mid dan Sumatif Bab Mid dalam mode read-only.
@@ -917,6 +1227,121 @@
             'nilai_max' => (float) $p->nilai_max,
             'is_tuntas' => (bool) $p->is_tuntas,
         ])->values()->all();
+
+        // Hitung progres pengisian hanya pada kolom yang sudah mulai terisi (>= 1 siswa bernilai).
+        // Kolom yang masih kosong 100% (0 siswa bernilai) diabaikan dari perhitungan progres.
+        $totalStudentCount = $students->count();
+        $progressByCol = [];
+        $activeProgressCols = 0;
+        $completedProgressCols = 0;
+        $progressTotalSlots = 0;
+        $progressFilledSlots = 0;
+        $pendingProgressTasks = [];
+
+        if ($totalStudentCount > 0) {
+            foreach ($editableTpList as $tpItem) {
+                $tpAspeksForProg = $aspeksByTp->get($tpItem->id, collect());
+                $filledForTp = 0;
+
+                foreach ($students as $st) {
+                    $hasAnyScore = ($rekapTpLookup["{$st->id}:{$tpItem->id}:{$periode}"]?->nilai_akhir_tp ?? null) !== null;
+                    if (! $hasAnyScore) {
+                        foreach ($tpAspeksForProg as $aspItem) {
+                            if (($nilaiLookup["{$st->id}:{$aspItem->id}"]?->nilai ?? null) !== null) {
+                                $hasAnyScore = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if ($hasAnyScore) {
+                        $filledForTp++;
+                    }
+                }
+
+                $colKey = "tp:{$tpItem->id}";
+                $progressByCol[$colKey] = ['filled' => $filledForTp, 'total' => $totalStudentCount];
+
+                if ($filledForTp > 0) {
+                    $activeProgressCols++;
+                    $progressTotalSlots += $totalStudentCount;
+                    $progressFilledSlots += $filledForTp;
+
+                    if ($filledForTp >= $totalStudentCount) {
+                        $completedProgressCols++;
+                    } else {
+                        $pendingProgressTasks[] = [
+                            'key' => $colKey,
+                            'label' => $tpItem->kode_tp,
+                            'filled' => $filledForTp,
+                            'total' => $totalStudentCount,
+                            'missing' => $totalStudentCount - $filledForTp,
+                        ];
+                    }
+                }
+            }
+
+            foreach ($displaySumatifBabs as $babItem) {
+                $filledForBab = 0;
+                foreach ($students as $st) {
+                    if (($sumatifNilaiLookup["{$st->id}:{$babItem->id}"]?->nilai ?? null) !== null) {
+                        $filledForBab++;
+                    }
+                }
+
+                $colKey = "sumatif:{$babItem->id}";
+                $progressByCol[$colKey] = ['filled' => $filledForBab, 'total' => $totalStudentCount];
+
+                if ($filledForBab > 0) {
+                    $activeProgressCols++;
+                    $progressTotalSlots += $totalStudentCount;
+                    $progressFilledSlots += $filledForBab;
+
+                    if ($filledForBab >= $totalStudentCount) {
+                        $completedProgressCols++;
+                    } else {
+                        $pendingProgressTasks[] = [
+                            'key' => $colKey,
+                            'label' => $babItem->nama_bab,
+                            'filled' => $filledForBab,
+                            'total' => $totalStudentCount,
+                            'missing' => $totalStudentCount - $filledForBab,
+                        ];
+                    }
+                }
+            }
+
+            $filledForUjian = 0;
+            foreach ($students as $st) {
+                if (($rekapMapelLookup["{$st->id}:{$periode}"]?->nilai_ujian ?? null) !== null) {
+                    $filledForUjian++;
+                }
+            }
+
+            $progressByCol['ujian'] = ['filled' => $filledForUjian, 'total' => $totalStudentCount];
+            if ($filledForUjian > 0) {
+                $activeProgressCols++;
+                $progressTotalSlots += $totalStudentCount;
+                $progressFilledSlots += $filledForUjian;
+
+                if ($filledForUjian >= $totalStudentCount) {
+                    $completedProgressCols++;
+                } else {
+                    $pendingProgressTasks[] = [
+                        'key' => 'ujian',
+                        'label' => $ujianLabel,
+                        'filled' => $filledForUjian,
+                        'total' => $totalStudentCount,
+                        'missing' => $totalStudentCount - $filledForUjian,
+                    ];
+                }
+            }
+        }
+
+        $progressPercent = $progressTotalSlots > 0 ? (int) round(($progressFilledSlots / $progressTotalSlots) * 100) : 0;
+        $progressStripState = $activeProgressCols === 0
+            ? ''
+            : ($pendingProgressTasks === [] ? 'is-complete' : 'is-pending');
     @endphp
 
     <div class="app-main__inner">
@@ -956,7 +1381,9 @@
                             <i class="fa fa-file-excel mr-1"></i> Export Excel
                         </a>
                         <button type="button" id="btnOpenImportNilai" class="btn btn-light shadow-sm"
-                            style="border-radius: 10px; font-weight: 600; color: #1d4ed8; border-color: #bfdbfe; background: #eff6ff;">
+                            style="border-radius: 10px; font-weight: 600; color: #1d4ed8; border-color: #bfdbfe; background: #eff6ff;"
+                            @disabled($isLocked)
+                            title="{{ $isLocked ? 'Terkunci karena nilai sudah final' : 'Import nilai TP dari Excel' }}">
                             <i class="fa fa-upload mr-1"></i> Import Excel
                         </button>
                     @endif
@@ -1036,6 +1463,15 @@
         </div>
 
         @if ($selectedKelas && $selectedMapel)
+            @if ($finalisasi !== null)
+                @include('admin.penilaian.partials._finalisasi_banner', [
+                    'finalisasi' => $finalisasi,
+                    'routePrefix' => $finalisasiRoutePrefix,
+                    'componentTitle' => '['.($selectedMapel->singkatan ?: 'MP').'] '.$selectedMapel->nama_mata_pelajaran.' — Kelas '.$selectedKelas->nama_kelas,
+                    'summaryNote' => 'Setelah difinalkan, pengeditan nilai TP, aspek, Sumatif Bab, ujian, bobot, import Excel, dan deskripsi pada periode ini dikunci.',
+                ])
+            @endif
+
             <!-- Ringkasan Minimalis: KKM, Formula Bobot Rapor & Komponen Penilaian -->
             <div class="np-summary-grid">
                 <div class="np-summary-card">
@@ -1079,9 +1515,11 @@
                             <span class="np-card-dot" style="background: #4f46e5;"></span>
                             Formula Rapor ({{ $ujianLabel }})
                         </span>
-                        <button type="button" id="btnOpenBobotModal" class="np-card-action is-indigo">
-                            <i class="fa fa-sliders-h"></i> Atur Bobot Nilai
-                        </button>
+                        @if (! $isLocked)
+                            <button type="button" id="btnOpenBobotModal" class="np-card-action is-indigo">
+                                <i class="fa fa-sliders-h"></i> Atur Bobot Nilai
+                            </button>
+                        @endif
                     </div>
                     <div class="np-card-metric" style="font-size: 0.96rem; color: #312e81;">
                         Bobot Rapor: {{ $bobotFormulaLabel }}
@@ -1209,7 +1647,7 @@
                                             <i class="fa fa-tasks text-primary"></i> Kelola TP &amp; Aspek ({{ $displayTpList->count() }})
                                         </button>
                                     @endif
-                                    @if ($editableTpList->isNotEmpty())
+                                    @if ($editableTpList->isNotEmpty() && ! $isLocked)
                                         <button type="button" class="np-cluster-btn is-accent-orange btn-open-aspek-modal"
                                             data-tp-id="{{ $editableTpList->first()?->sqid }}"
                                             data-tp-kode="{{ $editableTpList->first()?->kode_tp }}"
@@ -1220,16 +1658,121 @@
                                 </div>
                             @endif
 
-                            <div class="np-action-cluster">
-                                @if ($hasSumatifCols)
-                                    <button type="button" id="btnOpenSumatifManager" class="np-cluster-btn">
-                                        <i class="fa fa-layer-group" style="color: #0f766e;"></i> Kelola Sumatif Bab ({{ $visibleSumatifCount }})
-                                    </button>
+                            @if ($hasSumatifCols || ! $isLocked)
+                                <div class="np-action-cluster">
+                                    @if ($hasSumatifCols)
+                                        <button type="button" id="btnOpenSumatifManager" class="np-cluster-btn">
+                                            <i class="fa fa-layer-group" style="color: #0f766e;"></i> Kelola Sumatif Bab ({{ $visibleSumatifCount }})
+                                        </button>
+                                    @endif
+                                    @if (! $isLocked)
+                                        <button type="button" class="np-cluster-btn is-accent-teal btn-open-sumatif-modal"
+                                            title="Tambah kolom Sumatif Bab baru">
+                                            <i class="fa fa-plus"></i> Sumatif Bab
+                                        </button>
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div id="npFillingProgressBar"
+                        class="np-progress-strip {{ $progressStripState }}"
+                        data-total-students="{{ $totalStudentCount }}">
+                        <div class="np-progress-left">
+                            <div class="np-progress-icon" id="npProgressIcon">
+                                @if ($activeProgressCols === 0)
+                                    <i class="fa fa-clipboard"></i>
+                                @elseif ($pendingProgressTasks === [])
+                                    <i class="fa fa-check-double"></i>
+                                @else
+                                    <i class="fa fa-tasks"></i>
                                 @endif
-                                <button type="button" class="np-cluster-btn is-accent-teal btn-open-sumatif-modal"
-                                    title="Tambah kolom Sumatif Bab baru">
-                                    <i class="fa fa-plus"></i> Sumatif Bab
+                            </div>
+                            <div class="np-progress-meta">
+                                @if ($activeProgressCols === 0)
+                                    <div class="np-progress-headline">
+                                        <span class="font-weight-bold text-dark">Progres Pengisian</span>
+                                        <span class="text-muted">Belum ada nilai yang diisi</span>
+                                    </div>
+                                    <div class="small text-muted" style="font-size: 0.69rem;">
+                                        Kolom yang masih kosong seluruhnya otomatis tidak dihitung dalam progres.
+                                    </div>
+                                @elseif ($pendingProgressTasks === [])
+                                    <div class="np-progress-headline">
+                                        <span class="font-weight-bold" style="color: #065f46;">
+                                            Progres Pengisian Lengkap: {{ $completedProgressCols }}/{{ $activeProgressCols }} kolom aktif ({{ $progressPercent }}%)
+                                        </span>
+                                        <span class="np-progress-pct-pill">{{ $progressPercent }}%</span>
+                                    </div>
+                                    <div class="np-progress-track-wrap">
+                                        <div class="np-progress-track">
+                                            <div class="np-progress-fill" style="width: {{ $progressPercent }}%;"></div>
+                                        </div>
+                                        <span class="small text-muted" style="font-size: 0.69rem;">Semua kolom yang sudah dimulai terisi penuh</span>
+                                    </div>
+                                @else
+                                    <div class="np-progress-headline">
+                                        <span class="font-weight-bold" style="color: #9a3412;">
+                                            Progres Pengisian: {{ $progressFilledSlots }}/{{ $progressTotalSlots }} nilai ({{ $progressPercent }}%)
+                                        </span>
+                                        <span class="np-progress-pct-pill">{{ count($pendingProgressTasks) }} tugas belum lengkap</span>
+                                    </div>
+                                    <div class="np-progress-track-wrap">
+                                        <div class="np-progress-track">
+                                            <div class="np-progress-fill" style="width: {{ $progressPercent }}%;"></div>
+                                        </div>
+                                        <span class="small text-muted" style="font-size: 0.69rem;">Klik chip di kanan untuk langsung mengisi</span>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        @php
+                            $inlineTasks = array_slice($pendingProgressTasks, 0, 3);
+                            $extraTaskCount = max(0, count($pendingProgressTasks) - count($inlineTasks));
+                        @endphp
+                        <div class="np-progress-right" id="npPendingTasksWrap" @style(['display: none' => $pendingProgressTasks === []])>
+                            <span class="np-task-label">
+                                <i class="fa fa-bolt mr-1"></i>Lengkapi:
+                            </span>
+                            <div class="np-task-chips" id="npPendingTaskChips">
+                                @foreach ($inlineTasks as $task)
+                                    <button type="button"
+                                        class="np-task-chip js-jump-pending-col"
+                                        data-target-col="{{ $task['key'] }}"
+                                        title="Kurang {{ $task['missing'] }} siswa • Klik untuk langsung mengisi {{ $task['label'] }}">
+                                        <span class="np-task-chip-code">{{ $task['label'] }}</span>
+                                        <span class="np-task-chip-count">{{ $task['filled'] }}/{{ $task['total'] }}</span>
+                                        <span class="np-task-chip-missing">-{{ $task['missing'] }}</span>
+                                    </button>
+                                @endforeach
+                            </div>
+
+                            @if ($extraTaskCount > 0)
+                                <button type="button" class="np-task-more-btn" id="btnTogglePendingPopover" aria-expanded="false">
+                                    +{{ $extraTaskCount }} lainnya <i class="fa fa-chevron-down" style="font-size: 0.6rem;"></i>
                                 </button>
+                            @endif
+
+                            <div class="np-task-popover" id="npPendingTaskPopover">
+                                <div class="np-task-popover-head">
+                                    <span>Semua Tugas Belum Lengkap ({{ count($pendingProgressTasks) }})</span>
+                                    <span class="text-muted font-weight-normal" style="font-size: 0.67rem;">Klik untuk isi</span>
+                                </div>
+                                <div class="np-task-popover-list" id="npPendingPopoverList">
+                                    @foreach ($pendingProgressTasks as $task)
+                                        <button type="button"
+                                            class="np-task-popover-item js-jump-pending-col"
+                                            data-target-col="{{ $task['key'] }}">
+                                            <span>
+                                                <strong style="color: #c2410c;">{{ $task['label'] }}</strong>
+                                                <span class="text-muted ml-1">{{ $task['filled'] }}/{{ $task['total'] }}</span>
+                                            </span>
+                                            <span class="np-task-chip-missing">kurang {{ $task['missing'] }} siswa</span>
+                                        </button>
+                                    @endforeach
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1247,8 +1790,14 @@
                                             $colspan = $isReadOnlyMidTp ? 1 : ($tpAspeks->count() + 1);
                                             $setting = $periodeSettingsByTp->get($tp->id);
                                             $isIncluded = $setting === null ? true : (bool) $setting->masuk_rapor;
+                                            $tpProg = $progressByCol["tp:{$tp->id}"] ?? ['filled' => 0, 'total' => $totalStudentCount];
+                                            $tpProgClass = $tpProg['filled'] === 0 ? 'is-empty' : ($tpProg['filled'] >= $tpProg['total'] ? 'is-done' : 'is-partial');
                                         @endphp
                                         <th colspan="{{ $colspan }}"
+                                            @if (! $isReadOnlyMidTp)
+                                                data-progress-th="tp:{{ $tp->id }}"
+                                                data-progress-label="{{ $tp->kode_tp }}"
+                                            @endif
                                             class="np-th-tp {{ $isReadOnlyMidTp ? 'is-mid-readonly np-mid-col' : '' }} {{ ! $isIncluded ? 'is-excluded' : '' }}">
                                             <div class="np-th-tp-inner">
                                                 <button type="button"
@@ -1262,13 +1811,23 @@
                                                     <i class="fa fa-info-circle" style="font-size: 0.7rem; opacity: 0.75;"></i>
                                                 </button>
 
-                                                @if ($isReadOnlyMidTp)
-                                                    <span class="np-mid-readonly-pill"
-                                                        title="Sudah dinilai pada Mid Semester (read-only). Ubah melalui tab Mid Semester.">
-                                                        <i class="fa fa-lock mr-1"></i>Mid
+                                                @if (! $isReadOnlyMidTp)
+                                                    <span class="np-col-progress-badge {{ $tpProgClass }}"
+                                                        data-col-progress-badge="tp:{{ $tp->id }}"
+                                                        title="Progres pengisian {{ $tp->kode_tp }}">
+                                                        {{ $tpProg['filled'] }}/{{ $tpProg['total'] }}
                                                     </span>
+                                                @endif
+
+                                                @if ($isReadOnlyMidTp || $isLocked)
+                                                    @if ($isReadOnlyMidTp)
+                                                        <span class="np-mid-readonly-pill"
+                                                            title="Sudah dinilai pada Mid Semester (read-only). Ubah melalui tab Mid Semester.">
+                                                            <i class="fa fa-lock mr-1"></i>Mid
+                                                        </span>
+                                                    @endif
                                                     <span class="np-th-mini-btn {{ $isIncluded ? 'is-rapor-on' : 'is-rapor-off' }}"
-                                                        title="{{ $isIncluded ? 'Masuk Rapor Semester' : 'Tidak Masuk Rapor Semester' }}"
+                                                        title="{{ $isIncluded ? 'Masuk Rapor' : 'Tidak Masuk Rapor' }}"
                                                         style="cursor: default; opacity: 0.8;">
                                                         <i class="fa {{ $isIncluded ? 'fa-check' : 'fa-ban' }}"></i>
                                                     </span>
@@ -1308,11 +1867,23 @@
                                             </div>
                                         </th>
                                     @endif
-                                    <th rowspan="2" class="np-th-ujian" title="{{ $ujianFullLabel }}">
-                                        {{ $ujianLabel }}
+                                    @php
+                                        $ujianProg = $progressByCol['ujian'] ?? ['filled' => 0, 'total' => $totalStudentCount];
+                                        $ujianProgClass = $ujianProg['filled'] === 0 ? 'is-empty' : ($ujianProg['filled'] >= $ujianProg['total'] ? 'is-done' : 'is-partial');
+                                    @endphp
+                                    <th rowspan="2"
+                                        class="np-th-ujian"
+                                        data-progress-th="ujian"
+                                        data-progress-label="{{ $ujianLabel }}"
+                                        title="{{ $ujianFullLabel }}">
+                                        <div>{{ $ujianLabel }}</div>
                                         <div style="font-size: 0.65rem; font-weight: 500; opacity: 0.9;">
                                             {{ $bobotUjian > 0 ? "Bobot {$bobotUjian}%" : 'Opsional (0%)' }}
                                         </div>
+                                        <span class="np-col-progress-badge {{ $ujianProgClass }} mt-1"
+                                            data-col-progress-badge="ujian">
+                                            {{ $ujianProg['filled'] }}/{{ $ujianProg['total'] }}
+                                        </span>
                                     </th>
                                     <th rowspan="2" class="np-th-rapor">NA Rapor</th>
                                     <th rowspan="2" class="np-th-rapor" style="background: #9a3412;">Predikat</th>
@@ -1333,27 +1904,29 @@
                                                 <th class="np-th-aspek" data-aspek-col="{{ $aspek->id }}">
                                                     <div class="d-inline-flex align-items-center justify-content-center gap-1">
                                                         <span>{{ $aspek->nama_aspek }}</span>
-                                                        <button type="button"
-                                                            class="np-aspek-edit btn-edit-aspek-modal"
-                                                            data-action="{{ route($tpRoutePrefix.'.aspek.update', $aspek) }}"
-                                                            data-tp-id="{{ $tp->sqid }}"
-                                                            data-tp-kode="{{ $tp->kode_tp }}"
-                                                            data-nama="{{ $aspek->nama_aspek }}"
-                                                            data-teknik="{{ $aspek->teknik_penilaian ?? '' }}"
-                                                            data-bobot="{{ $aspek->bobot ?? 100 }}"
-                                                            data-counts-na="{{ $aspek->masuk_hitung_na_tp ? '1' : '0' }}"
-                                                            data-urutan="{{ $aspek->urutan ?? 1 }}"
-                                                            title="Ubah nama aspek {{ $aspek->nama_aspek }}">
-                                                            <i class="fa fa-pen"></i>
-                                                        </button>
-                                                        @if ($tpAspeks->count() > 1)
+                                                        @if (! $isLocked)
                                                             <button type="button"
-                                                                class="np-aspek-del btn-delete-aspek"
-                                                                data-action="{{ route($tpRoutePrefix.'.aspek.destroy', $aspek) }}"
-                                                                data-label="{{ $tp->kode_tp }} - {{ $aspek->nama_aspek }}"
-                                                                title="Hapus aspek {{ $aspek->nama_aspek }}">
-                                                                &times;
+                                                                class="np-aspek-edit btn-edit-aspek-modal"
+                                                                data-action="{{ route($tpRoutePrefix.'.aspek.update', $aspek) }}"
+                                                                data-tp-id="{{ $tp->sqid }}"
+                                                                data-tp-kode="{{ $tp->kode_tp }}"
+                                                                data-nama="{{ $aspek->nama_aspek }}"
+                                                                data-teknik="{{ $aspek->teknik_penilaian ?? '' }}"
+                                                                data-bobot="{{ $aspek->bobot ?? 100 }}"
+                                                                data-counts-na="{{ $aspek->masuk_hitung_na_tp ? '1' : '0' }}"
+                                                                data-urutan="{{ $aspek->urutan ?? 1 }}"
+                                                                title="Ubah nama aspek {{ $aspek->nama_aspek }}">
+                                                                <i class="fa fa-pen"></i>
                                                             </button>
+                                                            @if ($tpAspeks->count() > 1)
+                                                                <button type="button"
+                                                                    class="np-aspek-del btn-delete-aspek"
+                                                                    data-action="{{ route($tpRoutePrefix.'.aspek.destroy', $aspek) }}"
+                                                                    data-label="{{ $tp->kode_tp }} - {{ $aspek->nama_aspek }}"
+                                                                    title="Hapus aspek {{ $aspek->nama_aspek }}">
+                                                                    &times;
+                                                                </button>
+                                                            @endif
                                                         @endif
                                                     </div>
                                                 </th>
@@ -1372,26 +1945,39 @@
                                             </th>
                                         @endforeach
                                         @foreach ($displaySumatifBabs as $bab)
-                                            <th class="np-th-sumatif" data-sumatif-col="{{ $bab->id }}"
+                                            @php
+                                                $babProg = $progressByCol["sumatif:{$bab->id}"] ?? ['filled' => 0, 'total' => $totalStudentCount];
+                                                $babProgClass = $babProg['filled'] === 0 ? 'is-empty' : ($babProg['filled'] >= $babProg['total'] ? 'is-done' : 'is-partial');
+                                            @endphp
+                                            <th class="np-th-sumatif"
+                                                data-sumatif-col="{{ $bab->id }}"
+                                                data-progress-th="sumatif:{{ $bab->id }}"
+                                                data-progress-label="{{ $bab->nama_bab }}"
                                                 title="{{ $bab->keterangan ?? $bab->nama_bab }}">
                                                 <div class="d-inline-flex align-items-center justify-content-center gap-1">
                                                     <span>{{ $bab->nama_bab }}</span>
-                                                    <button type="button"
-                                                        class="np-sumatif-action-btn btn-edit-sumatif-modal"
-                                                        data-action="{{ route($tpRoutePrefix.'.sumatif-bab.update', $bab) }}"
-                                                        data-nama="{{ $bab->nama_bab }}"
-                                                        data-keterangan="{{ $bab->keterangan ?? '' }}"
-                                                        data-urutan="{{ $bab->urutan }}"
-                                                        title="Ubah {{ $bab->nama_bab }}">
-                                                        <i class="fa fa-pen"></i>
-                                                    </button>
-                                                    <button type="button"
-                                                        class="np-sumatif-action-btn is-danger btn-delete-sumatif"
-                                                        data-action="{{ route($tpRoutePrefix.'.sumatif-bab.destroy', $bab) }}"
-                                                        data-label="{{ $bab->nama_bab }}"
-                                                        title="Hapus {{ $bab->nama_bab }}">
-                                                        &times;
-                                                    </button>
+                                                    <span class="np-col-progress-badge {{ $babProgClass }}"
+                                                        data-col-progress-badge="sumatif:{{ $bab->id }}">
+                                                        {{ $babProg['filled'] }}/{{ $babProg['total'] }}
+                                                    </span>
+                                                    @if (! $isLocked)
+                                                        <button type="button"
+                                                            class="np-sumatif-action-btn btn-edit-sumatif-modal"
+                                                            data-action="{{ route($tpRoutePrefix.'.sumatif-bab.update', $bab) }}"
+                                                            data-nama="{{ $bab->nama_bab }}"
+                                                            data-keterangan="{{ $bab->keterangan ?? '' }}"
+                                                            data-urutan="{{ $bab->urutan }}"
+                                                            title="Ubah {{ $bab->nama_bab }}">
+                                                            <i class="fa fa-pen"></i>
+                                                        </button>
+                                                        <button type="button"
+                                                            class="np-sumatif-action-btn is-danger btn-delete-sumatif"
+                                                            data-action="{{ route($tpRoutePrefix.'.sumatif-bab.destroy', $bab) }}"
+                                                            data-label="{{ $bab->nama_bab }}"
+                                                            title="Hapus {{ $bab->nama_bab }}">
+                                                            &times;
+                                                        </button>
+                                                    @endif
                                                 </div>
                                             </th>
                                         @endforeach
@@ -1464,6 +2050,7 @@
                                                             data-aspek-id="{{ $aspek->id }}"
                                                             data-weight="{{ $aspek->bobot }}"
                                                             data-counts-na="{{ $aspek->masuk_hitung_na_tp ? '1' : '0' }}"
+                                                            @disabled($isLocked)
                                                             class="np-score-input {{ $isBelow ? 'is-below-kkm' : '' }}">
                                                     </td>
                                                 @endforeach
@@ -1516,6 +2103,7 @@
                                                         data-sumatif-bab-id="{{ $bab->id }}"
                                                         data-aspek-id="sumatif-{{ $bab->id }}"
                                                         placeholder="-"
+                                                        @disabled($isLocked)
                                                         class="np-score-input np-sumatif-input {{ $isSumBelow ? 'is-below-kkm' : '' }}">
                                                 </td>
                                             @endforeach
@@ -1549,6 +2137,7 @@
                                                 data-student-id="{{ $student->id }}"
                                                 data-aspek-id="ujian"
                                                 placeholder="-"
+                                                @disabled($isLocked)
                                                 class="np-score-input np-ujian-input {{ $isUjianBelow ? 'is-below-kkm' : '' }}">
                                         </td>
                                         <td class="text-center font-weight-bold"
@@ -1577,10 +2166,16 @@
                             Menampilkan <strong>{{ $students->count() }}</strong> siswa dan <strong>{{ $displayTpList->count() }}</strong> TP.
                             Gunakan tombol <strong>Enter</strong> / <strong>Panah</strong> untuk berpindah sel cepat.
                         </div>
-                        <button type="submit" class="btn text-white shadow-sm"
-                            style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 10px; font-weight: 600; padding: 0.55rem 1.4rem;">
-                            <i class="fa fa-save mr-1"></i> Simpan Semua Nilai
-                        </button>
+                        @if ($isLocked)
+                            <span class="badge badge-success px-3 py-2" style="border-radius: 10px; font-size: 0.8rem;">
+                                <i class="fa fa-lock mr-1"></i> Terkunci (Nilai Final)
+                            </span>
+                        @else
+                            <button type="submit" class="btn text-white shadow-sm"
+                                style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 10px; font-weight: 600; padding: 0.55rem 1.4rem;">
+                                <i class="fa fa-save mr-1"></i> Simpan Semua Nilai
+                            </button>
+                        @endif
                     </div>
                 </div>
             </form>
@@ -2280,6 +2875,13 @@
                 if (activeTooltipTrigger && !e.target.closest('.np-tp-tooltip-trigger')) {
                     hideTpTooltip();
                 }
+                if (pendingPopover && pendingPopover.classList.contains('is-open') && !e.target.closest('#npPendingTasksWrap')) {
+                    pendingPopover.classList.remove('is-open');
+                    if (togglePendingPopoverBtn) {
+                        togglePendingPopoverBtn.classList.remove('is-open');
+                        togglePendingPopoverBtn.setAttribute('aria-expanded', 'false');
+                    }
+                }
             });
 
             window.addEventListener('scroll', hideTpTooltip, { capture: true, passive: true });
@@ -2561,12 +3163,298 @@
                 }
             };
 
+            const progressStrip = document.getElementById('npFillingProgressBar');
+            const progressChipsContainer = document.getElementById('npPendingTaskChips');
+            const pendingPopover = document.getElementById('npPendingTaskPopover');
+            const pendingPopoverList = document.getElementById('npPendingPopoverList');
+            let togglePendingPopoverBtn = document.getElementById('btnTogglePendingPopover');
+
+            const recalculateFillingProgress = function () {
+                if (!progressStrip) {
+                    return;
+                }
+
+                const studentRows = Array.from(table.querySelectorAll('tbody tr[data-student-row]'));
+                const totalStudents = studentRows.length;
+                const progressHeaders = Array.from(table.querySelectorAll('thead th[data-progress-th]'));
+
+                let activeCols = 0;
+                let completedCols = 0;
+                let totalSlots = 0;
+                let filledSlots = 0;
+                const pendingTasks = [];
+
+                progressHeaders.forEach(function (th) {
+                    const colKey = th.dataset.progressTh || '';
+                    const label = th.dataset.progressLabel || colKey;
+                    const badgeEl = th.querySelector('[data-col-progress-badge="' + colKey + '"]');
+                    let filledCount = 0;
+
+                    studentRows.forEach(function (tr) {
+                        let hasScore = false;
+                        if (colKey.indexOf('tp:') === 0) {
+                            const tpId = colKey.slice(3);
+                            const tpInputs = tr.querySelectorAll('input.np-score-input[data-tp-id="' + tpId + '"]');
+                            tpInputs.forEach(function (inp) {
+                                const raw = inp.value.trim();
+                                if (raw !== '' && !isNaN(Number(raw))) {
+                                    hasScore = true;
+                                }
+                            });
+                        } else if (colKey.indexOf('sumatif:') === 0) {
+                            const babId = colKey.slice(8);
+                            const sumInput = tr.querySelector('input.np-sumatif-input[data-sumatif-bab-id="' + babId + '"]');
+                            if (sumInput) {
+                                const raw = sumInput.value.trim();
+                                if (raw !== '' && !isNaN(Number(raw))) {
+                                    hasScore = true;
+                                }
+                            }
+                        } else if (colKey === 'ujian') {
+                            const ujianInput = tr.querySelector('input.np-ujian-input');
+                            if (ujianInput) {
+                                const raw = ujianInput.value.trim();
+                                if (raw !== '' && !isNaN(Number(raw))) {
+                                    hasScore = true;
+                                }
+                            }
+                        }
+
+                        if (hasScore) {
+                            filledCount++;
+                        }
+                    });
+
+                    if (badgeEl) {
+                        badgeEl.textContent = filledCount + '/' + totalStudents;
+                        badgeEl.classList.remove('is-empty', 'is-partial', 'is-done');
+                        if (filledCount === 0 || totalStudents === 0) {
+                            badgeEl.classList.add('is-empty');
+                        } else if (filledCount >= totalStudents) {
+                            badgeEl.classList.add('is-done');
+                        } else {
+                            badgeEl.classList.add('is-partial');
+                        }
+                    }
+
+                    // Kolom yang masih kosong seluruhnya (0) tidak dihitung dalam progres pengisian
+                    if (totalStudents > 0 && filledCount > 0) {
+                        activeCols++;
+                        totalSlots += totalStudents;
+                        filledSlots += filledCount;
+
+                        if (filledCount >= totalStudents) {
+                            completedCols++;
+                        } else {
+                            pendingTasks.push({
+                                key: colKey,
+                                label: label,
+                                filled: filledCount,
+                                total: totalStudents,
+                                missing: totalStudents - filledCount
+                            });
+                        }
+                    }
+                });
+
+                const pct = totalSlots > 0 ? Math.round((filledSlots / totalSlots) * 100) : 0;
+                const metaEl = progressStrip.querySelector('.np-progress-meta');
+                const iconEl = document.getElementById('npProgressIcon');
+                const tasksWrapEl = document.getElementById('npPendingTasksWrap');
+                progressStrip.classList.remove('is-pending', 'is-complete');
+
+                if (iconEl) {
+                    if (activeCols === 0) {
+                        iconEl.innerHTML = '<i class="fa fa-clipboard"></i>';
+                    } else if (pendingTasks.length === 0) {
+                        iconEl.innerHTML = '<i class="fa fa-check-double"></i>';
+                    } else {
+                        iconEl.innerHTML = '<i class="fa fa-tasks"></i>';
+                    }
+                }
+
+                if (metaEl) {
+                    metaEl.innerHTML = '';
+                    if (activeCols === 0) {
+                        const head = document.createElement('div');
+                        head.className = 'np-progress-headline';
+                        head.innerHTML = '<span class="font-weight-bold text-dark">Progres Pengisian</span> <span class="text-muted">Belum ada nilai yang diisi</span>';
+                        const sub = document.createElement('div');
+                        sub.className = 'small text-muted';
+                        sub.style.fontSize = '0.69rem';
+                        sub.textContent = 'Kolom yang masih kosong seluruhnya otomatis tidak dihitung dalam progres.';
+                        metaEl.appendChild(head);
+                        metaEl.appendChild(sub);
+                    } else if (pendingTasks.length === 0) {
+                        progressStrip.classList.add('is-complete');
+                        const head = document.createElement('div');
+                        head.className = 'np-progress-headline';
+                        const titleSpan = document.createElement('span');
+                        titleSpan.className = 'font-weight-bold';
+                        titleSpan.style.color = '#065f46';
+                        titleSpan.textContent = 'Progres Pengisian Lengkap: ' + completedCols + '/' + activeCols + ' kolom aktif (' + pct + '%)';
+                        const pctPill = document.createElement('span');
+                        pctPill.className = 'np-progress-pct-pill';
+                        pctPill.textContent = pct + '%';
+                        head.appendChild(titleSpan);
+                        head.appendChild(pctPill);
+
+                        const trackWrap = document.createElement('div');
+                        trackWrap.className = 'np-progress-track-wrap';
+                        trackWrap.innerHTML = '<div class="np-progress-track"><div class="np-progress-fill" style="width:' + pct + '%;"></div></div><span class="small text-muted" style="font-size:0.69rem;">Semua kolom yang sudah dimulai terisi penuh</span>';
+                        metaEl.appendChild(head);
+                        metaEl.appendChild(trackWrap);
+                    } else {
+                        progressStrip.classList.add('is-pending');
+                        const head = document.createElement('div');
+                        head.className = 'np-progress-headline';
+                        const titleSpan = document.createElement('span');
+                        titleSpan.className = 'font-weight-bold';
+                        titleSpan.style.color = '#9a3412';
+                        titleSpan.textContent = 'Progres Pengisian: ' + filledSlots + '/' + totalSlots + ' nilai (' + pct + '%)';
+                        const pctPill = document.createElement('span');
+                        pctPill.className = 'np-progress-pct-pill';
+                        pctPill.textContent = pendingTasks.length + ' tugas belum lengkap';
+                        head.appendChild(titleSpan);
+                        head.appendChild(pctPill);
+
+                        const trackWrap = document.createElement('div');
+                        trackWrap.className = 'np-progress-track-wrap';
+                        trackWrap.innerHTML = '<div class="np-progress-track"><div class="np-progress-fill" style="width:' + pct + '%;"></div></div><span class="small text-muted" style="font-size:0.69rem;">Klik chip di kanan untuk langsung mengisi</span>';
+                        metaEl.appendChild(head);
+                        metaEl.appendChild(trackWrap);
+                    }
+                }
+
+                if (tasksWrapEl) {
+                    tasksWrapEl.style.display = pendingTasks.length > 0 ? '' : 'none';
+                }
+
+                if (progressChipsContainer) {
+                    progressChipsContainer.innerHTML = '';
+                    pendingTasks.slice(0, 3).forEach(function (task) {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'np-task-chip js-jump-pending-col';
+                        btn.dataset.targetCol = task.key;
+                        btn.title = 'Kurang ' + task.missing + ' siswa • Klik untuk langsung mengisi ' + task.label;
+
+                        const codeEl = document.createElement('span');
+                        codeEl.className = 'np-task-chip-code';
+                        codeEl.textContent = task.label;
+
+                        const countEl = document.createElement('span');
+                        countEl.className = 'np-task-chip-count';
+                        countEl.textContent = task.filled + '/' + task.total;
+
+                        const missEl = document.createElement('span');
+                        missEl.className = 'np-task-chip-missing';
+                        missEl.textContent = '-' + task.missing;
+
+                        btn.appendChild(codeEl);
+                        btn.appendChild(countEl);
+                        btn.appendChild(missEl);
+                        progressChipsContainer.appendChild(btn);
+                    });
+                }
+
+                const extraCount = Math.max(0, pendingTasks.length - 3);
+                if (tasksWrapEl) {
+                    if (extraCount > 0) {
+                        if (!togglePendingPopoverBtn) {
+                            togglePendingPopoverBtn = document.createElement('button');
+                            togglePendingPopoverBtn.type = 'button';
+                            togglePendingPopoverBtn.id = 'btnTogglePendingPopover';
+                            togglePendingPopoverBtn.className = 'np-task-more-btn';
+                            togglePendingPopoverBtn.setAttribute('aria-expanded', 'false');
+                            tasksWrapEl.insertBefore(togglePendingPopoverBtn, pendingPopover || null);
+                        }
+                        togglePendingPopoverBtn.style.display = '';
+                        togglePendingPopoverBtn.innerHTML = '+' + extraCount + ' lainnya <i class="fa fa-chevron-down" style="font-size: 0.6rem;"></i>';
+                    } else if (togglePendingPopoverBtn) {
+                        togglePendingPopoverBtn.style.display = 'none';
+                        if (pendingPopover) {
+                            pendingPopover.classList.remove('is-open');
+                        }
+                    }
+                }
+
+                if (pendingPopover && pendingPopoverList) {
+                    const headCountSpan = pendingPopover.querySelector('.np-task-popover-head > span:first-child');
+                    if (headCountSpan) {
+                        headCountSpan.textContent = 'Semua Tugas Belum Lengkap (' + pendingTasks.length + ')';
+                    }
+                    pendingPopoverList.innerHTML = '';
+                    pendingTasks.forEach(function (task) {
+                        const itemBtn = document.createElement('button');
+                        itemBtn.type = 'button';
+                        itemBtn.className = 'np-task-popover-item js-jump-pending-col';
+                        itemBtn.dataset.targetCol = task.key;
+                        itemBtn.innerHTML = '<span><strong style="color:#c2410c;"></strong> <span class="text-muted ml-1"></span></span><span class="np-task-chip-missing"></span>';
+                        itemBtn.querySelector('strong').textContent = task.label;
+                        itemBtn.querySelector('.text-muted').textContent = task.filled + '/' + task.total;
+                        itemBtn.querySelector('.np-task-chip-missing').textContent = 'kurang ' + task.missing + ' siswa';
+                        pendingPopoverList.appendChild(itemBtn);
+                    });
+                }
+            };
+
+            if (progressStrip) {
+                progressStrip.addEventListener('click', function (e) {
+                    const moreBtn = e.target.closest('#btnTogglePendingPopover');
+                    if (moreBtn && pendingPopover) {
+                        e.stopPropagation();
+                        const willOpen = !pendingPopover.classList.contains('is-open');
+                        pendingPopover.classList.toggle('is-open', willOpen);
+                        moreBtn.classList.toggle('is-open', willOpen);
+                        moreBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+                        return;
+                    }
+
+                    const chip = e.target.closest('.js-jump-pending-col');
+                    if (!chip) {
+                        return;
+                    }
+                    if (pendingPopover) {
+                        pendingPopover.classList.remove('is-open');
+                    }
+                    if (togglePendingPopoverBtn) {
+                        togglePendingPopoverBtn.classList.remove('is-open');
+                        togglePendingPopoverBtn.setAttribute('aria-expanded', 'false');
+                    }
+                    const targetCol = chip.dataset.targetCol || '';
+                    let firstEmpty = null;
+
+                    if (targetCol.indexOf('tp:') === 0) {
+                        const tpId = targetCol.slice(3);
+                        firstEmpty = Array.from(table.querySelectorAll('input.np-score-input[data-tp-id="' + tpId + '"]'))
+                            .find(function (inp) { return inp.value.trim() === ''; });
+                    } else if (targetCol.indexOf('sumatif:') === 0) {
+                        const babId = targetCol.slice(8);
+                        firstEmpty = Array.from(table.querySelectorAll('input.np-sumatif-input[data-sumatif-bab-id="' + babId + '"]'))
+                            .find(function (inp) { return inp.value.trim() === ''; });
+                    } else if (targetCol === 'ujian') {
+                        firstEmpty = Array.from(table.querySelectorAll('input.np-ujian-input'))
+                            .find(function (inp) { return inp.value.trim() === ''; });
+                    }
+
+                    if (firstEmpty) {
+                        firstEmpty.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                        setTimeout(function () {
+                            firstEmpty.focus();
+                            firstEmpty.select();
+                        }, 180);
+                    }
+                });
+            }
+
             table.addEventListener('input', function (e) {
                 if (!e.target.classList.contains('np-score-input')) {
                     return;
                 }
                 const tr = e.target.closest('tr');
                 if (tr) recalculateRow(tr);
+                recalculateFillingProgress();
             });
 
             const studentSearchInput = document.getElementById('npStudentSearch');

@@ -250,6 +250,10 @@ class WaliKelasPerkembanganTest extends TestCase
         $this->assertStringContainsString('Pendidikan Agama Islam', $indexHtml);
         $this->assertStringContainsString('Ustadz Ahmad', $indexHtml);
         $this->assertStringContainsString('Mapel Anda', $indexHtml);
+        $this->assertStringContainsString('wk-mapel-grid', $indexHtml);
+        $this->assertStringContainsString('id="wkTabPanelMapel"', $indexHtml);
+        $this->assertStringContainsString('data-wk-tab="mapel"', $indexHtml);
+        $this->assertStringContainsString('Ringkasan Mapel', $indexHtml);
         $this->assertStringContainsString('id="wkPerkembanganTable"', $indexHtml);
         $this->assertStringContainsString(route('wali-kelas.perkembangan-siswa.show', ['anggota_kelas' => sqidFor('wali-kelas.perkembangan-siswa.show', 301), 'periode' => 'mid']), $indexHtml);
         $this->assertStringContainsString('fa-ellipsis-v', $indexHtml);

@@ -8,6 +8,9 @@
 </head>
 
 <body>
+    <div class="pdf-page-footer">
+        <span class="pdf-page-number"></span>
+    </div>
     @php
         $namaSekolah = $sekolah?->nama_sekolah ?: (strtoupper((string) $kelas->jenjang_kelas).' Prima Insani');
         $alamatSekolah = trim((string) ($sekolah?->alamat ?? '')) !== ''
@@ -53,7 +56,7 @@
             $sectionIdx = 0;
         @endphp
 
-        <div class="{{ ! $loop->last ? 'page-break' : '' }}">
+        <div class="student-rapor-entry">
             <!-- IDENTITAS RINGKAS DI BAGIAN PALING ATAS (TANPA KOP) -->
             <div class="meta-box">
                 <table class="meta-table">
@@ -148,78 +151,82 @@
                     return ($isWajib ? '0_' : '1_').mb_strtolower((string) ($ekskul?->nama_ekstrakurikuler ?? ''));
                 })->values();
             @endphp
-            <div class="section-heading uppercase">{{ $nextSectionLetter($sectionIdx++) }}. EKSTRAKURIKULER</div>
-            <table class="rapor-table rapor-table--mapel">
-                <thead>
-                    <tr>
-                        <th style="width: 6%;">NO</th>
-                        <th style="width: 24%;">EKSTRAKURIKULER</th>
-                        <th style="width: 12%;">CAPAIAN</th>
-                        <th style="width: 58%;">DESKRIPSI</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($sortedEkskulRows as $ekskulItem)
-                        @php
-                            $ekskul = $ekskulItem->relationLoaded('ekstrakurikuler') ? $ekskulItem->ekstrakurikuler : null;
-                            $predikatEkskul = trim((string) ($ekskulItem->predikat ?? ''));
-                            if ($predikatEkskul === '' && $ekskulItem->nilai !== null) {
-                                $resolvedRange = \App\Models\Admin\DataMaster\Ekstrakurikuler::resolvePredikatForNilai(
-                                    $ekskulItem->nilai,
-                                    $ekskul?->kkm
-                                );
-                                $predikatEkskul = $resolvedRange['predikat'] ?? '';
-                            }
-                            $deskripsiEkskul = $ekskulItem->resolvedDeskripsiRapor();
-                        @endphp
+            <div class="section-keep-together">
+                <div class="section-heading uppercase">{{ $nextSectionLetter($sectionIdx++) }}. EKSTRAKURIKULER</div>
+                <table class="rapor-table rapor-table--mapel">
+                    <thead>
                         <tr>
-                            <td class="text-center muted font-bold" style="vertical-align: middle;">{{ $loop->iteration }}</td>
-                            <td class="font-bold" style="vertical-align: middle;">{{ $ekskul?->nama_ekstrakurikuler ?? '-' }}</td>
-                            <td class="text-center font-bold" style="vertical-align: middle; font-size: 8.5pt;">{{ $predikatEkskul !== '' ? $predikatEkskul : '-' }}</td>
-                            <td>
-                                <div class="desc-text">
-                                    {{ $deskripsiEkskul }}
-                                </div>
-                            </td>
+                            <th style="width: 6%;">NO</th>
+                            <th style="width: 24%;">EKSTRAKURIKULER</th>
+                            <th style="width: 12%;">CAPAIAN</th>
+                            <th style="width: 58%;">DESKRIPSI</th>
                         </tr>
-                    @empty
-                        <tr>
-                            <td class="text-center muted" style="vertical-align: middle;">1</td>
-                            <td class="muted" style="vertical-align: middle;">-</td>
-                            <td class="text-center muted" style="vertical-align: middle;">-</td>
-                            <td>
-                                <div class="desc-text muted">-</div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @forelse ($sortedEkskulRows as $ekskulItem)
+                            @php
+                                $ekskul = $ekskulItem->relationLoaded('ekstrakurikuler') ? $ekskulItem->ekstrakurikuler : null;
+                                $predikatEkskul = trim((string) ($ekskulItem->predikat ?? ''));
+                                if ($predikatEkskul === '' && $ekskulItem->nilai !== null) {
+                                    $resolvedRange = \App\Models\Admin\DataMaster\Ekstrakurikuler::resolvePredikatForNilai(
+                                        $ekskulItem->nilai,
+                                        $ekskul?->kkm
+                                    );
+                                    $predikatEkskul = $resolvedRange['predikat'] ?? '';
+                                }
+                                $deskripsiEkskul = $ekskulItem->resolvedDeskripsiRapor();
+                            @endphp
+                            <tr>
+                                <td class="text-center muted font-bold" style="vertical-align: middle;">{{ $loop->iteration }}</td>
+                                <td class="font-bold" style="vertical-align: middle;">{{ $ekskul?->nama_ekstrakurikuler ?? '-' }}</td>
+                                <td class="text-center font-bold" style="vertical-align: middle; font-size: 8.5pt;">{{ $predikatEkskul !== '' ? $predikatEkskul : '-' }}</td>
+                                <td>
+                                    <div class="desc-text">
+                                        {{ $deskripsiEkskul }}
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td class="text-center muted" style="vertical-align: middle;">1</td>
+                                <td class="muted" style="vertical-align: middle;">-</td>
+                                <td class="text-center muted" style="vertical-align: middle;">-</td>
+                                <td>
+                                    <div class="desc-text muted">-</div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
 
             @if ($t2q)
                 @php
                     $guruT2q = $t2q->relationLoaded('guruT2q') ? $t2q->guruT2q : null;
                 @endphp
-                <div class="section-heading uppercase">{{ $nextSectionLetter($sectionIdx++) }}. PROGRAM TAHSIN &amp; TAHFIDZ AL-QUR'AN (T2Q)</div>
-                <table class="rapor-table rapor-table--mapel">
-                    <thead>
-                        <tr>
-                            <th style="width: 24%;">TINGKAT / JILID</th>
-                            <th class="text-left" style="width: 32%;">PEMBIMBING</th>
-                            <th class="text-left" style="width: 44%;">KETERANGAN</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="text-center font-bold" style="vertical-align: middle;">{{ $t2q->tingkat ?: '-' }}</td>
-                            <td style="vertical-align: middle;">{{ $guruT2q?->nama_gelar ?? ($t2q->karyawan_nipy ?: '-') }}</td>
-                            <td>
-                                <div class="desc-text">
-                                    {{ $t2q->keterangan ?: '-' }}
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="section-keep-together">
+                    <div class="section-heading uppercase">{{ $nextSectionLetter($sectionIdx++) }}. PROGRAM TAHSIN &amp; TAHFIDZ AL-QUR'AN (T2Q)</div>
+                    <table class="rapor-table rapor-table--mapel">
+                        <thead>
+                            <tr>
+                                <th style="width: 24%;">TINGKAT / JILID</th>
+                                <th class="text-left" style="width: 32%;">PEMBIMBING</th>
+                                <th class="text-left" style="width: 44%;">KETERANGAN</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="text-center font-bold" style="vertical-align: middle;">{{ $t2q->tingkat ?: '-' }}</td>
+                                <td style="vertical-align: middle;">{{ $guruT2q?->nama_gelar ?? ($t2q->karyawan_nipy ?: '-') }}</td>
+                                <td>
+                                    <div class="desc-text">
+                                        {{ $t2q->keterangan ?: '-' }}
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             @endif
 
             <!-- KETIDAKHADIRAN & CATATAN WALI KELAS -->
@@ -288,6 +295,9 @@
                 </table>
             </div>
         </div>
+        @if (! $loop->last)
+            <div class="page-break student-page-reset"></div>
+        @endif
     @empty
         <div class="text-center muted" style="padding: 40px;">
             Belum ada siswa terdaftar di kelas {{ $kelas->nama_kelas }}.

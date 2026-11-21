@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\Pelajaran\JadwalPelajaranController;
 use App\Http\Controllers\Admin\Pelajaran\JamPelajaranController;
 use App\Http\Controllers\Admin\Pelajaran\KelompokPelajaranController;
 use App\Http\Controllers\Admin\Pelajaran\MataPelajaranController;
+use App\Http\Controllers\Admin\Penilaian\FinalisasiController;
 use App\Http\Controllers\Admin\Penilaian\KkmController;
 use App\Http\Controllers\Admin\Penilaian\PenilaianTpController;
 use App\Http\Controllers\Admin\Penilaian\RaporController;
@@ -118,6 +119,10 @@ Route::middleware(['auth', 'sso.check', 'nocache', 'sqid.decode'])->group(functi
         ->name('wali-kelas.penilaian-rekap.deskripsi.update');
     Route::post('/wali-kelas/penilaian/rekap/regenerate-deskripsi', [WaliKelasPenilaianTpController::class, 'regenerateDeskripsi'])
         ->name('wali-kelas.penilaian-rekap.deskripsi.regenerate');
+    Route::post('/wali-kelas/penilaian/finalisasi', [FinalisasiController::class, 'finalize'])
+        ->name('wali-kelas.penilaian-finalisasi.finalize');
+    Route::post('/wali-kelas/penilaian/finalisasi/unlock', [FinalisasiController::class, 'unlock'])
+        ->name('wali-kelas.penilaian-finalisasi.unlock');
     Route::get('/wali-kelas/rapor/identitas/kelas/{kelas}', [WaliKelasRaporController::class, 'identitasKelas'])
         ->name('wali-kelas.rapor.identitas.kelas');
     Route::get('/wali-kelas/rapor/identitas/siswa/{anggota_kelas}', [WaliKelasRaporController::class, 'identitasSiswa'])
@@ -262,6 +267,10 @@ Route::middleware(['auth', 'sso.check', 'nocache', 'sqid.decode'])->group(functi
         ->name('penilaian-rekap.deskripsi.update');
     Route::post('/penilaian/rekap/regenerate-deskripsi', [PenilaianTpController::class, 'regenerateDeskripsi'])
         ->name('penilaian-rekap.deskripsi.regenerate');
+    Route::post('/penilaian/finalisasi', [FinalisasiController::class, 'finalize'])
+        ->name('penilaian-finalisasi.finalize');
+    Route::post('/penilaian/finalisasi/unlock', [FinalisasiController::class, 'unlock'])
+        ->name('penilaian-finalisasi.unlock');
     Route::get('/penilaian/rapor', [RaporController::class, 'index'])
         ->name('penilaian-rapor.index');
     Route::get('/penilaian/rapor/identitas/kelas/{kelas}', [RaporController::class, 'identitasKelas'])

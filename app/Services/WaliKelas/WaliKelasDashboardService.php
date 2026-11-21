@@ -15,6 +15,7 @@ use App\Models\Admin\Penilaian\RekapMapel;
 use App\Models\Admin\Presensi\PresensiSiswa;
 use App\Models\Admin\TujuanPembelajaran\TujuanPembelajaran;
 use App\Models\User;
+use App\Services\Admin\Penilaian\PenilaianFinalisasiService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
@@ -22,9 +23,11 @@ use Illuminate\Support\Collection;
 class WaliKelasDashboardService
 {
     public function __construct(
-        protected ?WaliKelasScopeService $scopeService = null
+        protected ?WaliKelasScopeService $scopeService = null,
+        protected ?PenilaianFinalisasiService $finalisasiService = null
     ) {
         $this->scopeService ??= new WaliKelasScopeService;
+        $this->finalisasiService ??= new PenilaianFinalisasiService($this->scopeService);
     }
 
     /**
@@ -76,6 +79,7 @@ class WaliKelasDashboardService
                 'jadwalHariIni' => new EloquentCollection,
                 'jadwalMingguanCount' => 0,
                 'penilaianSummary' => null,
+                'raporReadiness' => null,
                 'upcomingAgendas' => new EloquentCollection,
                 'latestPengumuman' => new EloquentCollection,
             ];
@@ -124,6 +128,10 @@ class WaliKelasDashboardService
             $anggotaIds,
             $totalSiswa
         );
+        $activePeriode = $penilaianSummary['periode'] ?? (str_contains(strtolower((string) $activeTahunAjaran->semester), 'mid')
+            ? PeriodeTp::PERIODE_MID
+            : PeriodeTp::PERIODE_SEMESTER);
+        $raporReadiness = $this->finalisasiService->getClassReadiness($selectedKelas, $activePeriode, $user);
 
         $upcomingAgendas = $this->getRelevantAgendas($activeTahunAjaran->id, (string) $selectedKelas->jenjang_kelas, $today);
         $latestPengumuman = Pengumuman::query()
@@ -147,6 +155,7 @@ class WaliKelasDashboardService
             'jadwalHariIni' => $jadwalHariIni,
             'jadwalMingguanCount' => $jadwalMingguanCount,
             'penilaianSummary' => $penilaianSummary,
+            'raporReadiness' => $raporReadiness,
             'upcomingAgendas' => $upcomingAgendas,
             'latestPengumuman' => $latestPengumuman,
         ];

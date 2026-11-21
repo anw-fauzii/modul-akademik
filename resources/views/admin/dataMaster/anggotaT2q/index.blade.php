@@ -134,6 +134,38 @@
         </div>
 
         <!-- MAIN CARD -->
+        @if (isset($errors) && $errors->any())
+            <div class="alert alert-danger shadow-sm border-0 mb-3" style="border-radius: 12px;">
+                <i class="fa fa-lock mr-1"></i> {{ $errors->first() }}
+            </div>
+        @endif
+
+        @if (isset($t2qFinalisasi) && is_array($t2qFinalisasi))
+            @php
+                $t2qKelasLabel = $t2qFinalisasi['kelas']?->nama_kelas ?? 'Kelas';
+            @endphp
+            <div class="row mb-3">
+                <div class="col-md-6 mb-2 mb-md-0">
+                    @include('admin.penilaian.partials._finalisasi_banner', [
+                        'finalisasi' => $t2qFinalisasi['mid'],
+                        'routePrefix' => 'penilaian-finalisasi',
+                        'componentTitle' => 'Finalisasi T2Q — Kelas '.$t2qKelasLabel,
+                        'summaryNote' => 'Setelah difinalkan, data anggota dan keterangan T2Q untuk periode Mid Semester dikunci.',
+                        'compact' => true,
+                    ])
+                </div>
+                <div class="col-md-6">
+                    @include('admin.penilaian.partials._finalisasi_banner', [
+                        'finalisasi' => $t2qFinalisasi['semester'],
+                        'routePrefix' => 'penilaian-finalisasi',
+                        'componentTitle' => 'Finalisasi T2Q — Kelas '.$t2qKelasLabel,
+                        'summaryNote' => 'Setelah difinalkan, seluruh data anggota & keterangan T2Q kelas ini dikunci.',
+                        'compact' => true,
+                    ])
+                </div>
+            </div>
+        @endif
+
         <div class="main-card card mb-3 shadow-sm border-0">
             <div class="card-body">
                 <div class="table-responsive">

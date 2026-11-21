@@ -11,6 +11,7 @@ use App\Models\Admin\Penilaian\Kkm;
 use App\Models\Admin\Penilaian\KkmPredikat;
 use App\Models\Admin\Penilaian\NilaiAspek;
 use App\Models\Admin\Penilaian\NilaiSumatifBab;
+use App\Models\Admin\Penilaian\PenilaianFinalisasi;
 use App\Models\Admin\Penilaian\PeriodeTp;
 use App\Models\Admin\Penilaian\RekapMapel;
 use App\Models\Admin\Penilaian\RekapTp;
@@ -23,6 +24,12 @@ use Illuminate\Validation\ValidationException;
 
 class PenilaianTpService
 {
+    public function __construct(
+        protected ?PenilaianFinalisasiService $finalisasiService = null
+    ) {
+        $this->finalisasiService ??= new PenilaianFinalisasiService;
+    }
+
     /**
      * Menghitung NA TP dari nilai-nilai aspek (mengabaikan sel NULL/kosong dan membulatkan bulat terdekat).
      *
@@ -529,6 +536,13 @@ class PenilaianTpService
             'hasKkmConfig' => $kkmBundle['has_config'],
             'kkmModel' => $kkmBundle['model'],
             'includedTpCount' => $includedCount,
+            'finalisasi' => $this->finalisasiService->getStatusPayloadForComponent([
+                'jenis_komponen' => PenilaianFinalisasi::JENIS_MAPEL,
+                'tahun_ajaran_id' => $tahunAjaranId,
+                'kelas_id' => $selectedKelas->id,
+                'mata_pelajaran_id' => $selectedMapel->id,
+                'periode' => $periode,
+            ], auth()->user()),
         ];
     }
 
@@ -626,6 +640,12 @@ class PenilaianTpService
     public function toggleMasukRapor(TujuanPembelajaran $tp, string $periode, bool $masukRapor): PeriodeTp
     {
         $periode = $this->normalizePeriode($periode);
+        $this->finalisasiService->assertMapelStructureEditable(
+            (int) $tp->akademik_master_tahun_ajaran_id,
+            (int) $tp->akademik_pelajaran_mata_pelajaran_id,
+            (string) $tp->tingkatan_kelas,
+            $periode
+        );
 
         return DB::transaction(function () use ($tp, $periode, $masukRapor): PeriodeTp {
             $setting = PeriodeTp::query()->updateOrCreate(
@@ -657,6 +677,12 @@ class PenilaianTpService
     public function saveAspek(TujuanPembelajaran $tp, array $data, ?AspekTp $existing = null): AspekTp
     {
         $periode = $this->normalizePeriode($data['periode'] ?? PeriodeTp::PERIODE_MID);
+        $this->finalisasiService->assertMapelStructureEditable(
+            (int) $tp->akademik_master_tahun_ajaran_id,
+            (int) $tp->akademik_pelajaran_mata_pelajaran_id,
+            (string) $tp->tingkatan_kelas,
+            $periode
+        );
         $namaAspek = trim((string) $data['nama_aspek']);
 
         $duplicate = AspekTp::query()
@@ -715,6 +741,15 @@ class PenilaianTpService
         $aspek->loadMissing('tujuanPembelajaran');
         $tp = $aspek->tujuanPembelajaran;
 
+        if ($tp !== null) {
+            $this->finalisasiService->assertMapelStructureEditable(
+                (int) $tp->akademik_master_tahun_ajaran_id,
+                (int) $tp->akademik_pelajaran_mata_pelajaran_id,
+                (string) $tp->tingkatan_kelas,
+                (string) $aspek->periode
+            );
+        }
+
         DB::transaction(function () use ($aspek, $tp): void {
             $aspek->delete();
 
@@ -739,6 +774,7 @@ class PenilaianTpService
         $mapelId = (int) $data['mata_pelajaran_id'];
         $tingkatanKelas = trim((string) $data['tingkatan_kelas']);
         $periode = $this->normalizePeriode($data['periode'] ?? PeriodeTp::PERIODE_MID);
+        $this->finalisasiService->assertMapelStructureEditable($tahunAjaranId, $mapelId, $tingkatanKelas, $periode);
         $namaBab = trim((string) $data['nama_bab']);
         $keterangan = filled($data['keterangan'] ?? null) ? trim((string) $data['keterangan']) : null;
 
@@ -807,6 +843,12 @@ class PenilaianTpService
         $tahunAjaranId = $sumatifBab->akademik_master_tahun_ajaran_id;
         $mapelId = $sumatifBab->akademik_pelajaran_mata_pelajaran_id;
         $tingkatanKelas = (string) $sumatifBab->tingkatan_kelas;
+        $this->finalisasiService->assertMapelStructureEditable(
+            (int) $tahunAjaranId,
+            (int) $mapelId,
+            $tingkatanKelas,
+            (string) $sumatifBab->periode
+        );
 
         DB::transaction(function () use ($sumatifBab, $tahunAjaranId, $mapelId, $tingkatanKelas): void {
             $sumatifBab->delete();
@@ -834,6 +876,12 @@ class PenilaianTpService
         if (($error = Kkm::validateBobotPair($bobotTp, $bobotUjian, $bobotSumatif)) !== null) {
             throw ValidationException::withMessages(['bobot_ujian' => $error]);
         }
+
+        $this->finalisasiService->assertMapelStructureEditableAnyPeriode(
+            (int) $kelas->akademik_master_tahun_ajaran_id,
+            (int) $mapel->id,
+            (string) $kelas->tingkatan_kelas
+        );
 
         return DB::transaction(function () use ($kelas, $mapel, $bobotTp, $bobotSumatif, $bobotUjian): Kkm {
             $kkm = Kkm::query()
@@ -909,6 +957,7 @@ class PenilaianTpService
         array $sumatifMatrix = []
     ): array {
         $periode = $this->normalizePeriode($periode);
+        $this->finalisasiService->assertMapelGridEditable($kelas, $mapel, $periode);
 
         if (strtoupper(trim((string) $kelas->jenjang_kelas)) !== Kkm::TARGET_UNIT || strtoupper(trim((string) $mapel->unit)) !== Kkm::TARGET_UNIT) {
             throw ValidationException::withMessages([
@@ -1066,6 +1115,21 @@ class PenilaianTpService
      */
     public function updateDeskripsi(RekapMapel $rekapMapel, ?string $deskripsi): RekapMapel
     {
+        $rekapMapel->loadMissing([
+            'anggotaKelas:id,akademik_master_kelas_id',
+            'anggotaKelas.kelas:id,nama_kelas',
+            'mataPelajaran:id,nama_mata_pelajaran',
+        ]);
+
+        $this->finalisasiService->assertMapelGridEditableByIds(
+            (int) $rekapMapel->akademik_master_tahun_ajaran_id,
+            (int) ($rekapMapel->anggotaKelas?->akademik_master_kelas_id ?? 0),
+            (int) $rekapMapel->akademik_pelajaran_mata_pelajaran_id,
+            (string) $rekapMapel->periode,
+            $rekapMapel->anggotaKelas?->kelas?->nama_kelas,
+            $rekapMapel->mataPelajaran?->nama_mata_pelajaran
+        );
+
         $rekapMapel->update([
             'deskripsi_capaian' => filled($deskripsi) ? trim($deskripsi) : null,
         ]);
@@ -1079,6 +1143,7 @@ class PenilaianTpService
     public function regenerateAllDeskripsi(Kelas $kelas, MataPelajaran $mapel, string $periode): int
     {
         $periode = $this->normalizePeriode($periode);
+        $this->finalisasiService->assertMapelGridEditable($kelas, $mapel, $periode);
 
         return DB::transaction(fn (): int => $this->recalculateScope(
             $kelas->akademik_master_tahun_ajaran_id,

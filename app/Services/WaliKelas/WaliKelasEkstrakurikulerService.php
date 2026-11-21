@@ -8,7 +8,10 @@ use App\Models\Admin\DataMaster\Ekstrakurikuler;
 use App\Models\Admin\DataMaster\Karyawan;
 use App\Models\Admin\DataMaster\Kelas;
 use App\Models\Admin\DataMaster\TahunAjaran;
+use App\Models\Admin\Penilaian\PenilaianFinalisasi;
+use App\Models\Admin\Penilaian\PeriodeTp;
 use App\Models\User;
+use App\Services\Admin\Penilaian\PenilaianFinalisasiService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Facades\DB;
@@ -17,9 +20,11 @@ use Illuminate\Validation\ValidationException;
 class WaliKelasEkstrakurikulerService
 {
     public function __construct(
-        protected ?WaliKelasScopeService $scopeService = null
+        protected ?WaliKelasScopeService $scopeService = null,
+        protected ?PenilaianFinalisasiService $finalisasiService = null
     ) {
         $this->scopeService ??= new WaliKelasScopeService;
+        $this->finalisasiService ??= new PenilaianFinalisasiService($this->scopeService);
     }
 
     /**
@@ -144,8 +149,10 @@ class WaliKelasEkstrakurikulerService
         User $user,
         ?int $requestedEkskulId = null,
         ?int $requestedKelasId = null,
-        ?string $requestedMode = null
+        ?string $requestedMode = null,
+        ?string $requestedPeriode = null
     ): array {
+        $periode = $this->finalisasiService->normalizePeriode($requestedPeriode);
         $activeTahunAjaran = TahunAjaran::query()->active()->first();
         $nipy = trim((string) ($user->no_induk ?? ''));
         $karyawanProfile = $nipy !== ''
@@ -210,6 +217,7 @@ class WaliKelasEkstrakurikulerService
             return [
                 'isEligible' => true,
                 'mode' => 'wajib',
+                'periode' => $periode,
                 'guardReason' => null,
                 'ineligibleReason' => null,
                 'nipy' => $nipy,
@@ -222,6 +230,12 @@ class WaliKelasEkstrakurikulerService
                 'selectedEkskul' => $wajibEkskul,
                 'members' => $members,
                 'predikatRanges' => $wajibEkskul->predikatRanges(),
+                'finalisasi' => $this->finalisasiService->getStatusPayloadForComponent([
+                    'jenis_komponen' => PenilaianFinalisasi::JENIS_EKSKUL_WAJIB,
+                    'tahun_ajaran_id' => $activeTahunAjaran->id,
+                    'kelas_id' => $selectedKelas->id,
+                    'periode' => $periode,
+                ], $user),
                 'stats' => [
                     'total' => $members->count(),
                     'dinilai' => $dinilaiCount,
@@ -245,6 +259,7 @@ class WaliKelasEkstrakurikulerService
         return [
             'isEligible' => true,
             'mode' => 'pilihan',
+            'periode' => $periode,
             'guardReason' => null,
             'ineligibleReason' => null,
             'nipy' => $nipy,
@@ -257,6 +272,12 @@ class WaliKelasEkstrakurikulerService
             'selectedEkskul' => $selectedEkskul,
             'members' => $members,
             'predikatRanges' => $selectedEkskul->predikatRanges(),
+            'finalisasi' => $this->finalisasiService->getStatusPayloadForComponent([
+                'jenis_komponen' => PenilaianFinalisasi::JENIS_EKSKUL_PILIHAN,
+                'tahun_ajaran_id' => $activeTahunAjaran->id,
+                'ekstrakurikuler_id' => $selectedEkskul->id,
+                'periode' => $periode,
+            ], $user),
             'stats' => [
                 'total' => $members->count(),
                 'dinilai' => $dinilaiCount,
@@ -309,6 +330,9 @@ class WaliKelasEkstrakurikulerService
      */
     public function savePenilaianWajibKelas(Kelas $kelas, array $payload): int
     {
+        $periode = $this->finalisasiService->normalizePeriode($payload['periode'] ?? PeriodeTp::PERIODE_MID);
+        $this->finalisasiService->assertEkskulWajibEditable($kelas, $periode);
+
         $kelas->loadMissing('tahunAjaran:id,nama_tahun_ajaran,semester,is_active');
         $tahunAjaran = $kelas->tahunAjaran ?? TahunAjaran::query()->findOrFail($kelas->akademik_master_tahun_ajaran_id);
 
@@ -425,6 +449,9 @@ class WaliKelasEkstrakurikulerService
         array $payload,
         bool $regenerateAllDescriptions = false
     ): int {
+        $periode = $this->finalisasiService->normalizePeriode($payload['periode'] ?? PeriodeTp::PERIODE_MID);
+        $this->finalisasiService->assertEkskulPilihanEditable($ekstrakurikuler, $periode);
+
         $kkm = isset($payload['kkm']) && is_numeric($payload['kkm'])
             ? max(1, min(100, (int) $payload['kkm']))
             : ((int) ($ekstrakurikuler->kkm ?: Ekstrakurikuler::DEFAULT_KKM));

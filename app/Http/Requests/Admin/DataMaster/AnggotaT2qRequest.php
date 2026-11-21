@@ -71,6 +71,10 @@ class AnggotaT2qRequest extends FormRequest
                 'string',
                 'max:255',
             ],
+            'for_semester_update' => [
+                'nullable',
+                'boolean',
+            ],
         ];
 
         $this->applyBatchMemberRules(

@@ -31,9 +31,10 @@ class PenilaianEkstrakurikulerController extends Controller
         $ekskulId = $request->integer('ekstrakurikuler_id') ?: null;
         $kelasId = $request->integer('kelas_id') ?: null;
         $mode = $request->string('mode')->toString() ?: null;
+        $periode = $request->string('periode')->toString() ?: null;
 
-        $data = ($kelasId !== null || $mode !== null)
-            ? $this->service->getPageData($request->user(), $ekskulId, $kelasId, $mode)
+        $data = ($kelasId !== null || $mode !== null || $periode !== null)
+            ? $this->service->getPageData($request->user(), $ekskulId, $kelasId, $mode, $periode)
             : $this->service->getPageData($request->user(), $ekskulId);
 
         return view('waliKelas.ekstrakurikuler.index', $data);
@@ -47,6 +48,7 @@ class PenilaianEkstrakurikulerController extends Controller
         $this->service->authorizeEkstrakurikulerForUser($request->user(), $ekstrakurikuler);
 
         $validated = $request->validate([
+            'periode' => ['nullable', 'string', 'in:mid,semester'],
             'kkm' => ['nullable', 'integer', 'min:1', 'max:100'],
             'materi' => ['nullable', 'string', 'max:500'],
             'nilai' => ['nullable', 'array'],
@@ -64,6 +66,7 @@ class PenilaianEkstrakurikulerController extends Controller
         ]);
 
         $regenerate = $request->boolean('regenerate_deskripsi');
+        $periode = $validated['periode'] ?? 'mid';
         $this->service->savePenilaian($ekstrakurikuler, $validated, $regenerate);
 
         $redirectToAdmin = $request->boolean('from_admin_show') && $request->user()?->hasRole('super admin');
@@ -77,6 +80,7 @@ class PenilaianEkstrakurikulerController extends Controller
             ->route('wali-kelas.ekstrakurikuler.index', [
                 'mode' => 'pilihan',
                 'ekstrakurikuler_id' => $ekstrakurikuler->sqid,
+                'periode' => $periode,
             ])
             ->with('success', 'Nilai, Predikat (SAB/BSH/SB/MB), dan Deskripsi Rapor Ekstrakurikuler berhasil disimpan.');
     }
@@ -89,6 +93,7 @@ class PenilaianEkstrakurikulerController extends Controller
         $this->service->authorizeWajibKelasForUser($request->user(), $kelas);
 
         $validated = $request->validate([
+            'periode' => ['nullable', 'string', 'in:mid,semester'],
             'nilai' => ['nullable', 'array'],
             'nilai.*' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ], [
@@ -97,12 +102,14 @@ class PenilaianEkstrakurikulerController extends Controller
             'nilai.*.max' => 'Nilai Pramuka siswa maksimal 100.',
         ]);
 
+        $periode = $validated['periode'] ?? 'mid';
         $this->service->savePenilaianWajibKelas($kelas, $validated);
 
         return redirect()
             ->route('wali-kelas.ekstrakurikuler.index', [
                 'mode' => 'wajib',
                 'kelas_id' => $kelas->sqid,
+                'periode' => $periode,
             ])
             ->with('success', 'Nilai Pramuka (Wajib), Predikat (SAB/BSH/SB/MB), dan Deskripsi Rapor berhasil disimpan.');
     }

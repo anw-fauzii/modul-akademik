@@ -14,6 +14,7 @@ use App\Models\Admin\Presensi\PresensiSiswa;
 use App\Models\Admin\TujuanPembelajaran\TujuanPembelajaran;
 use App\Models\User;
 use App\Services\Admin\DataMaster\AnggotaKelasService;
+use App\Services\Admin\Penilaian\PenilaianFinalisasiService;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 
@@ -21,10 +22,12 @@ class WaliKelasPerkembanganService
 {
     public function __construct(
         protected ?WaliKelasScopeService $scopeService = null,
-        protected ?AnggotaKelasService $anggotaKelasService = null
+        protected ?AnggotaKelasService $anggotaKelasService = null,
+        protected ?PenilaianFinalisasiService $finalisasiService = null
     ) {
         $this->scopeService ??= new WaliKelasScopeService;
         $this->anggotaKelasService ??= new AnggotaKelasService;
+        $this->finalisasiService ??= new PenilaianFinalisasiService($this->scopeService);
     }
 
     /**
@@ -51,6 +54,7 @@ class WaliKelasPerkembanganService
                 'mapelSummaries' => collect(),
                 'studentRows' => collect(),
                 'overviewStats' => $this->emptyOverviewStats(),
+                'readiness' => null,
             ];
         }
 
@@ -103,6 +107,7 @@ class WaliKelasPerkembanganService
                     ...$this->emptyOverviewStats(),
                     'avg_kehadiran' => $this->computeClassAttendanceRate($presensiByAnggota),
                 ],
+                'readiness' => $this->finalisasiService->getClassReadiness($selectedKelas, $periode, $user),
             ];
         }
 
@@ -210,16 +215,21 @@ class WaliKelasPerkembanganService
             ];
         });
 
+        $readiness = $this->finalisasiService->getClassReadiness($selectedKelas, $periode, $user);
+        $finalStatusByMapel = collect($readiness['groups']['mapel'] ?? [])->keyBy('mata_pelajaran_id');
+
         $mapelSummaries = $mapels->map(function (MataPelajaran $mapel) use (
             $kkmByMapel,
             $teachersByMapel,
             $userTaughtMapelIds,
             $mapelScoreSums,
             $mapelScoredCounts,
-            $mapelTuntasCounts
+            $mapelTuntasCounts,
+            $finalStatusByMapel
         ): array {
             $dinilai = $mapelScoredCounts[$mapel->id] ?? 0;
             $tuntas = $mapelTuntasCounts[$mapel->id] ?? 0;
+            $finalItem = $finalStatusByMapel->get($mapel->id);
 
             return [
                 'mapel' => $mapel,
@@ -230,6 +240,10 @@ class WaliKelasPerkembanganService
                 'tuntas_count' => $tuntas,
                 'belum_tuntas_count' => max(0, $dinilai - $tuntas),
                 'avg_rapor' => $dinilai > 0 ? round($mapelScoreSums[$mapel->id] / $dinilai, 1) : null,
+                'is_final' => (bool) ($finalItem['is_final'] ?? false),
+                'finalized_by_name' => $finalItem['finalized_by_name'] ?? null,
+                'finalized_at' => $finalItem['finalized_at'] ?? null,
+                'is_required_for_rapor' => $finalItem !== null,
             ];
         });
 
@@ -242,6 +256,7 @@ class WaliKelasPerkembanganService
             'mapels' => $mapels,
             'mapelSummaries' => $mapelSummaries,
             'studentRows' => $studentRows,
+            'readiness' => $readiness,
             'overviewStats' => [
                 'avg_rapor' => $allScores !== [] ? round(array_sum($allScores) / count($allScores), 1) : null,
                 'tuntas_rate' => $totalScoredEntries > 0 ? round(($totalTuntasEntries / $totalScoredEntries) * 100, 1) : null,
@@ -295,6 +310,7 @@ class WaliKelasPerkembanganService
                 'siswa' => $siswa,
                 'presensiStats' => $presensiStats,
                 'subjectDetails' => collect(),
+                'readiness' => $this->finalisasiService->getClassReadiness($selectedKelas, $periode, $user),
                 'summary' => [
                     'total_mapel' => 0,
                     'dinilai_count' => 0,
@@ -427,6 +443,7 @@ class WaliKelasPerkembanganService
             'siswa' => $siswa,
             'presensiStats' => $presensiStats,
             'subjectDetails' => $subjectDetails,
+            'readiness' => $this->finalisasiService->getClassReadiness($selectedKelas, $periode, $user),
             'summary' => [
                 'total_mapel' => $mapels->count(),
                 'dinilai_count' => count($scores),

@@ -256,9 +256,24 @@
                                     </div>
                                 </div>
                                 <div class="d-flex flex-wrap align-items-center gap-2">
+                                    @php
+                                        $dashReadiness = $raporReadiness ?? null;
+                                    @endphp
+                                    @if ($dashReadiness !== null && ($dashReadiness['is_sd'] ?? false))
+                                        <span class="badge px-2 py-1 font-weight-bold"
+                                            style="border-radius: 999px; font-size: 0.7rem; background: {{ $dashReadiness['is_ready'] ? '#d1fae5' : '#fef3c7' }}; color: {{ $dashReadiness['is_ready'] ? '#047857' : '#b45309' }};">
+                                            <i class="fa {{ $dashReadiness['is_ready'] ? 'fa-lock' : 'fa-clock' }} mr-1"></i>
+                                            Rapor {{ $dashReadiness['finalized_count'] }}/{{ $dashReadiness['total_components'] }} Final
+                                        </span>
+                                    @endif
                                     <span class="badge badge-light" style="font-weight: 700;">
                                         {{ $penilaianSummary['assessed_mapel'] }}/{{ $penilaianSummary['total_mapel'] }} Mapel Terisi
                                     </span>
+                                    <a href="{{ route('wali-kelas.perkembangan-siswa.index', ['kelas_id' => $selectedKelas->sqid]) }}"
+                                        class="btn btn-sm btn-light border font-weight-semibold text-primary"
+                                        style="border-radius: 9px; font-size: 0.72rem; white-space: nowrap;">
+                                        <i class="fa fa-clipboard-check mr-1"></i> Cek Kesiapan Rapor
+                                    </a>
                                     <a href="{{ route('wali-kelas.penilaian-tp.index', ['kelas_id' => $selectedKelas->sqid]) }}"
                                         class="btn btn-sm btn-light border font-weight-semibold text-primary"
                                         style="border-radius: 9px; font-size: 0.72rem; white-space: nowrap;">

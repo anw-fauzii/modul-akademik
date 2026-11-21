@@ -5,7 +5,10 @@ namespace App\Services\Admin\Presensi;
 use App\Models\Admin\DataMaster\AnggotaKelas;
 use App\Models\Admin\DataMaster\Kelas;
 use App\Models\Admin\DataMaster\TahunAjaran;
+use App\Models\Admin\Penilaian\PenilaianFinalisasi;
+use App\Models\Admin\Penilaian\PeriodeTp;
 use App\Models\Admin\Presensi\PresensiSiswa;
+use App\Services\Admin\Penilaian\PenilaianFinalisasiService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
@@ -14,6 +17,12 @@ use Illuminate\Support\Facades\DB;
 
 class PresensiSiswaService
 {
+    public function __construct(
+        protected ?PenilaianFinalisasiService $finalisasiService = null
+    ) {
+        $this->finalisasiService ??= new PenilaianFinalisasiService;
+    }
+
     /**
      * Mengambil data daftar & matriks presensi siswa per kelas tanpa query N+1.
      *
@@ -68,6 +77,21 @@ class PresensiSiswaService
                 'alpa' => (int) ($matrixSummary['alpa'] ?? 0),
             ],
             'matrix' => $matrix,
+            'selectedKelas' => $selectedKelas,
+            'presensiFinalisasi' => $selectedKelas !== null ? [
+                'mid' => $this->finalisasiService->getStatusPayloadForComponent([
+                    'jenis_komponen' => PenilaianFinalisasi::JENIS_PRESENSI,
+                    'tahun_ajaran_id' => $selectedKelas->akademik_master_tahun_ajaran_id,
+                    'kelas_id' => $selectedKelas->id,
+                    'periode' => PeriodeTp::PERIODE_MID,
+                ], auth()->user()),
+                'semester' => $this->finalisasiService->getStatusPayloadForComponent([
+                    'jenis_komponen' => PenilaianFinalisasi::JENIS_PRESENSI,
+                    'tahun_ajaran_id' => $selectedKelas->akademik_master_tahun_ajaran_id,
+                    'kelas_id' => $selectedKelas->id,
+                    'periode' => PeriodeTp::PERIODE_SEMESTER,
+                ], auth()->user()),
+            ] : null,
             'kelasOptions' => $allKelasOptions,
             'tahunAjaranOptions' => $tahunAjaranOptions,
             'statusOptions' => PresensiSiswa::STATUS_OPTIONS,
@@ -119,7 +143,30 @@ class PresensiSiswaService
      */
     public function update(PresensiSiswa $presensiSiswa, array $data): PresensiSiswa
     {
-        $presensiSiswa->update($this->normalizePayload($data));
+        $presensiSiswa->loadMissing('anggotaKelas.kelas:id,akademik_master_tahun_ajaran_id');
+        $origKelas = $presensiSiswa->anggotaKelas?->kelas;
+        if ($origKelas !== null) {
+            $this->finalisasiService->assertPresensiEditable(
+                (int) $origKelas->akademik_master_tahun_ajaran_id,
+                (int) $origKelas->id,
+                (string) ($presensiSiswa->tanggal?->toDateString() ?? $data['tanggal'] ?? now()->toDateString())
+            );
+        }
+
+        $normalized = $this->normalizePayload($data);
+        $targetAnggota = (int) ($normalized['anggota_kelas_id'] ?? 0) === (int) $presensiSiswa->anggota_kelas_id
+            ? $presensiSiswa->anggotaKelas
+            : AnggotaKelas::query()->with('kelas:id,akademik_master_tahun_ajaran_id')->find($normalized['anggota_kelas_id']);
+
+        if ($targetAnggota?->kelas !== null) {
+            $this->finalisasiService->assertPresensiEditable(
+                (int) $targetAnggota->kelas->akademik_master_tahun_ajaran_id,
+                (int) $targetAnggota->kelas->id,
+                (string) $normalized['tanggal']
+            );
+        }
+
+        $presensiSiswa->update($normalized);
 
         return $presensiSiswa;
     }
@@ -129,6 +176,16 @@ class PresensiSiswaService
      */
     public function delete(PresensiSiswa $presensiSiswa): void
     {
+        $presensiSiswa->loadMissing('anggotaKelas.kelas:id,akademik_master_tahun_ajaran_id');
+        $kelas = $presensiSiswa->anggotaKelas?->kelas;
+        if ($kelas !== null) {
+            $this->finalisasiService->assertPresensiEditable(
+                (int) $kelas->akademik_master_tahun_ajaran_id,
+                (int) $kelas->id,
+                (string) ($presensiSiswa->tanggal?->toDateString() ?? now()->toDateString())
+            );
+        }
+
         $presensiSiswa->delete();
     }
 
@@ -195,8 +252,10 @@ class PresensiSiswaService
         $tanggal = $this->resolveDate((string) ($data['tanggal'] ?? ''));
         $now = now();
         $payloadRows = [];
+        $anggotaIdsForLock = [];
 
         foreach ($data['items'] ?? [] as $item) {
+            $anggotaIdsForLock[] = (int) $item['anggota_kelas_id'];
             $normalized = $this->normalizePayload([
                 'anggota_kelas_id' => $item['anggota_kelas_id'],
                 'tanggal' => $tanggal,
@@ -212,6 +271,31 @@ class PresensiSiswaService
 
         if ($payloadRows === []) {
             return 0;
+        }
+
+        $uniqueAnggotaIds = array_values(array_unique(array_filter($anggotaIdsForLock, static fn (int $id): bool => $id > 0)));
+        if ($uniqueAnggotaIds !== []) {
+            $kelasIds = AnggotaKelas::query()
+                ->whereIn('id', $uniqueAnggotaIds)
+                ->distinct()
+                ->pluck('akademik_master_kelas_id')
+                ->map(static fn ($id): int => (int) $id)
+                ->all();
+
+            if ($kelasIds !== []) {
+                $kelasRows = Kelas::query()
+                    ->select(['id', 'akademik_master_tahun_ajaran_id'])
+                    ->whereIn('id', $kelasIds)
+                    ->get();
+
+                foreach ($kelasRows as $kelasRow) {
+                    $this->finalisasiService->assertPresensiEditable(
+                        (int) $kelasRow->akademik_master_tahun_ajaran_id,
+                        (int) $kelasRow->id,
+                        $tanggal
+                    );
+                }
+            }
         }
 
         DB::transaction(function () use ($payloadRows): void {
@@ -235,6 +319,15 @@ class PresensiSiswaService
         }
 
         $normalizedDate = $this->resolveDate($tanggal);
+        $kelasRow = Kelas::query()->select(['id', 'akademik_master_tahun_ajaran_id'])->find($kelasId);
+        if ($kelasRow !== null) {
+            $this->finalisasiService->assertPresensiEditable(
+                (int) $kelasRow->akademik_master_tahun_ajaran_id,
+                (int) $kelasRow->id,
+                $normalizedDate
+            );
+        }
+
         $anggotaIds = AnggotaKelas::query()
             ->where('akademik_master_kelas_id', $kelasId)
             ->pluck('id')

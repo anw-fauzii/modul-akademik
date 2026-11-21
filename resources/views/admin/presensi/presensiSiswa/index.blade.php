@@ -249,6 +249,38 @@
         </div>
 
         <!-- JUDUL & INFORMASI KELAS & BULAN -->
+        @if (isset($errors) && $errors->any())
+            <div class="alert alert-danger shadow-sm border-0 mb-3" style="border-radius: 12px;">
+                <i class="fa fa-lock mr-1"></i> {{ $errors->first() }}
+            </div>
+        @endif
+
+        @if (isset($matrixKelas) && $matrixKelas && isset($presensiFinalisasi) && is_array($presensiFinalisasi))
+            @php
+                $prFinPrefix = $isWaliKelasScope ? 'wali-kelas.penilaian-finalisasi' : 'penilaian-finalisasi';
+            @endphp
+            <div class="row mb-3">
+                <div class="col-md-6 mb-2 mb-md-0">
+                    @include('admin.penilaian.partials._finalisasi_banner', [
+                        'finalisasi' => $presensiFinalisasi['mid'],
+                        'routePrefix' => $prFinPrefix,
+                        'componentTitle' => 'Finalisasi Presensi — '.$matrixKelas->nama_kelas,
+                        'summaryNote' => 'Setelah Mid Semester difinalkan, pengubahan presensi pada atau sebelum tanggal finalisasi Mid akan dikunci.',
+                        'compact' => true,
+                    ])
+                </div>
+                <div class="col-md-6">
+                    @include('admin.penilaian.partials._finalisasi_banner', [
+                        'finalisasi' => $presensiFinalisasi['semester'],
+                        'routePrefix' => $prFinPrefix,
+                        'componentTitle' => 'Finalisasi Presensi — '.$matrixKelas->nama_kelas,
+                        'summaryNote' => 'Setelah Semester difinalkan, seluruh catatan presensi kelas ini dikunci untuk cetak rapor.',
+                        'compact' => true,
+                    ])
+                </div>
+            </div>
+        @endif
+
         <div class="presensi-hero mb-4">
             <div class="flex flex-wrap items-center gap-2 mb-2">
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-500/20 text-orange-300 border border-orange-400/30">

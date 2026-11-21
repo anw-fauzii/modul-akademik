@@ -17,6 +17,9 @@
         $presensiByAnggota = $presensiByAnggota ?? [];
         $totalSdMapels = $totalSdMapels ?? 0;
         $isSd = $isSd ?? false;
+        $readiness = $readiness ?? null;
+        $canPrintNilai = $readiness === null || (bool) ($readiness['is_ready'] ?? false);
+        $pendingCountRapor = (int) ($readiness['pending_count'] ?? 0);
     @endphp
 
     <div class="app-main__inner">
@@ -43,11 +46,21 @@
                             <i class="fa fa-id-card text-primary mr-1"></i> Cetak Identitas (1 Kelas)
                         </a>
                         @if ($isSd)
-                            <a href="{{ route('penilaian-rapor.nilai.kelas', ['kelas' => $selectedKelas, 'periode' => $periode]) }}" target="_blank"
-                                class="btn text-white shadow-sm font-weight-bold"
-                                style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 9px;">
-                                <i class="fa fa-file-pdf mr-1"></i> Cetak Nilai Rapor (1 Kelas)
-                            </a>
+                            @if ($canPrintNilai)
+                                <a href="{{ route('penilaian-rapor.nilai.kelas', ['kelas' => $selectedKelas, 'periode' => $periode]) }}" target="_blank"
+                                    class="btn text-white shadow-sm font-weight-bold"
+                                    style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 9px;">
+                                    <i class="fa fa-file-pdf mr-1"></i> Cetak Nilai Rapor (1 Kelas)
+                                </a>
+                            @else
+                                <button type="button"
+                                    class="btn btn-secondary shadow-sm font-weight-bold"
+                                    style="border-radius: 9px; opacity: 0.85;"
+                                    onclick="if (window.toastr) { window.toastr.error('Cetak Nilai Rapor diblokir: masih ada {{ $pendingCountRapor }} komponen belum Final pada periode ini.', 'Cetak Diblokir'); }"
+                                    title="Diblokir: masih ada {{ $pendingCountRapor }} komponen belum Final pada periode ini.">
+                                    <i class="fa fa-lock mr-1"></i> Cetak Nilai Rapor ({{ $pendingCountRapor }} Belum Final)
+                                </button>
+                            @endif
                         @endif
                     </div>
                 @endif
@@ -97,6 +110,14 @@
         </div>
 
         @if ($selectedKelas)
+            @if ($isSd && $readiness !== null)
+                @include('admin.penilaian.partials._rapor_readiness_panel', [
+                    'readiness' => $readiness,
+                    'routePrefix' => 'penilaian-finalisasi',
+                    'periode' => $periode,
+                ])
+            @endif
+
             <!-- STATUS KELENGKAPAN MASTER DATA (SEKOLAH & TITIMANGSA) -->
             <div class="row mb-3">
                 <div class="col-md-6 mb-2 mb-md-0">
@@ -223,11 +244,21 @@
                                                 <i class="fa fa-id-card mr-1"></i> Identitas
                                             </a>
                                             @if ($isSd)
-                                                <a href="{{ route('penilaian-rapor.nilai.siswa', ['anggota_kelas' => $anggota, 'periode' => $periode]) }}" target="_blank"
-                                                    class="btn btn-sm text-white font-weight-semibold"
-                                                    style="background: #ea580c; border-radius: 7px;" title="Cetak Nilai Hasil Belajar">
-                                                    <i class="fa fa-file-pdf mr-1"></i> Nilai
-                                                </a>
+                                                @if ($canPrintNilai)
+                                                    <a href="{{ route('penilaian-rapor.nilai.siswa', ['anggota_kelas' => $anggota, 'periode' => $periode]) }}" target="_blank"
+                                                        class="btn btn-sm text-white font-weight-semibold"
+                                                        style="background: #ea580c; border-radius: 7px;" title="Cetak Nilai Hasil Belajar">
+                                                        <i class="fa fa-file-pdf mr-1"></i> Nilai
+                                                    </a>
+                                                @else
+                                                    <button type="button"
+                                                        class="btn btn-sm btn-secondary font-weight-semibold"
+                                                        style="border-radius: 7px; opacity: 0.85;"
+                                                        onclick="if (window.toastr) { window.toastr.error('Cetak Nilai Rapor diblokir: masih ada {{ $pendingCountRapor }} komponen belum Final.', 'Cetak Diblokir'); }"
+                                                        title="Diblokir: masih ada {{ $pendingCountRapor }} komponen belum Final">
+                                                        <i class="fa fa-lock mr-1"></i> Nilai
+                                                    </button>
+                                                @endif
                                             @endif
                                         </td>
                                     </tr>

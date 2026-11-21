@@ -9,6 +9,7 @@ use App\Models\Admin\DataMaster\Karyawan;
 use App\Models\Admin\DataMaster\Surah;
 use App\Models\Admin\DataMaster\TahunAjaran;
 use App\Models\Admin\DataMaster\TargetCapaian;
+use App\Services\Admin\Penilaian\PenilaianFinalisasiService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -208,6 +209,32 @@ abstract class BaseYaumiyahT2qService
 
         $lookupMaps = $this->loadValidationLookupMaps();
         $normalizedDate = $this->resolveDate($tanggal);
+
+        if ($allowedIds !== []) {
+            $touchedAnggotaIds = [];
+            foreach ($rows as $rawAnggotaId => $rowInput) {
+                $anggotaId = (int) $rawAnggotaId;
+                if (isset($allowedIds[$anggotaId]) && is_array($rowInput)) {
+                    $touchedAnggotaIds[] = $anggotaId;
+                }
+            }
+
+            if ($touchedAnggotaIds !== []) {
+                $kelasIds = AnggotaT2q::query()
+                    ->join('akademik_master_anggota_kelas as ak', 'ak.id', '=', 'akademik_master_anggota_t2q.anggota_kelas_id')
+                    ->whereIn('akademik_master_anggota_t2q.id', $touchedAnggotaIds)
+                    ->distinct()
+                    ->pluck('ak.akademik_master_kelas_id')
+                    ->map(static fn ($id): int => (int) $id)
+                    ->all();
+
+                $finalisasiService = app(PenilaianFinalisasiService::class);
+                foreach ($kelasIds as $kelasId) {
+                    $finalisasiService->assertYaumiyahEditable((int) $activeTahunAjaran->id, $kelasId, $normalizedDate);
+                }
+            }
+        }
+
         $modelClass = $this->modelClass();
         $savedCount = 0;
 
@@ -242,6 +269,20 @@ abstract class BaseYaumiyahT2qService
      */
     public function delete(Model $entry): bool
     {
+        $entry->loadMissing('anggotaT2q.anggotaKelas.kelas:id,akademik_master_tahun_ajaran_id');
+        $kelas = $entry->anggotaT2q?->anggotaKelas?->kelas;
+        if ($kelas !== null) {
+            $tanggal = method_exists($entry->tanggal ?? null, 'toDateString')
+                ? $entry->tanggal->toDateString()
+                : (string) ($entry->tanggal ?? now()->toDateString());
+
+            app(PenilaianFinalisasiService::class)->assertYaumiyahEditable(
+                (int) $kelas->akademik_master_tahun_ajaran_id,
+                (int) $kelas->id,
+                $tanggal
+            );
+        }
+
         return (bool) $entry->delete();
     }
 

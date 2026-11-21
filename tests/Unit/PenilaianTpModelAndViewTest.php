@@ -1117,4 +1117,106 @@ class PenilaianTpModelAndViewTest extends TestCase
             Model::preventLazyLoading(false);
         }
     }
+
+    public function test_nilai_tp_progress_bar_counts_partially_filled_columns_and_ignores_completely_empty_columns(): void
+    {
+        $ta = TahunAjaran::make(['nama_tahun_ajaran' => '2026/2027', 'semester' => '1', 'is_active' => true]);
+        $ta->id = 1;
+
+        $kelas = Kelas::make([
+            'akademik_master_tahun_ajaran_id' => 1,
+            'tingkatan_kelas' => '5',
+            'nama_kelas' => '5A',
+            'jenjang_kelas' => 'SD',
+        ]);
+        $kelas->id = 10;
+
+        $mapel = MataPelajaran::make(['singkatan' => 'PAI', 'nama_mata_pelajaran' => 'Pendidikan Agama Islam', 'unit' => 'SD']);
+        $mapel->id = 20;
+
+        $tpComplete = TujuanPembelajaran::make(['kode_tp' => '5.1', 'tujuan_pembelajaran' => 'TP Lengkap', 'urutan' => 1]);
+        $tpComplete->id = 101;
+        $tpPartial = TujuanPembelajaran::make(['kode_tp' => '5.3', 'tujuan_pembelajaran' => 'TP Sebagian', 'urutan' => 2]);
+        $tpPartial->id = 102;
+        $tpEmpty = TujuanPembelajaran::make(['kode_tp' => '5.5', 'tujuan_pembelajaran' => 'TP Kosong Semua', 'urutan' => 3]);
+        $tpEmpty->id = 103;
+
+        $asp1 = AspekTp::make(['tujuan_pembelajaran_id' => 101, 'nama_aspek' => 'Menghafal', 'bobot' => 100, 'masuk_hitung_na_tp' => true]);
+        $asp1->id = 201;
+        $asp2 = AspekTp::make(['tujuan_pembelajaran_id' => 102, 'nama_aspek' => 'Menghafal', 'bobot' => 100, 'masuk_hitung_na_tp' => true]);
+        $asp2->id = 202;
+        $asp3 = AspekTp::make(['tujuan_pembelajaran_id' => 103, 'nama_aspek' => 'Nilai TP', 'bobot' => 100, 'masuk_hitung_na_tp' => true]);
+        $asp3->id = 203;
+
+        $s1 = Siswa::make(['nis' => '1001', 'nama_lengkap' => 'Hana Kirana']);
+        $s2 = Siswa::make(['nis' => '1002', 'nama_lengkap' => 'Nayla Azzahra']);
+        $ak1 = AnggotaKelas::make(['siswa_nis' => '1001', 'akademik_master_kelas_id' => 10]);
+        $ak1->id = 51;
+        $ak1->setRelation('siswa', $s1);
+        $ak2 = AnggotaKelas::make(['siswa_nis' => '1002', 'akademik_master_kelas_id' => 10]);
+        $ak2->id = 52;
+        $ak2->setRelation('siswa', $s2);
+
+        // 5.1 terisi 2/2 siswa; 5.3 terisi 1/2 siswa; 5.5 kosong (0/2 siswa -> tidak boleh dihitung!)
+        $nilaiLookup = [
+            '51:201' => NilaiAspek::make(['anggota_kelas_id' => 51, 'aspek_tp_id' => 201, 'nilai' => 85]),
+            '52:201' => NilaiAspek::make(['anggota_kelas_id' => 52, 'aspek_tp_id' => 201, 'nilai' => 87]),
+            '52:202' => NilaiAspek::make(['anggota_kelas_id' => 52, 'aspek_tp_id' => 202, 'nilai' => 100]),
+        ];
+
+        $rekapTpLookup = [
+            '51:101:mid' => RekapTp::make(['nilai_akhir_tp' => 85, 'tuntas_kkm' => true]),
+            '52:101:mid' => RekapTp::make(['nilai_akhir_tp' => 87, 'tuntas_kkm' => true]),
+            '52:102:mid' => RekapTp::make(['nilai_akhir_tp' => 100, 'tuntas_kkm' => true]),
+        ];
+
+        Model::preventLazyLoading(true);
+        try {
+            $html = view('admin.penilaian.nilaiTp.index', [
+                'tahunAjaranOptions' => new Collection([$ta]),
+                'kelasOptions' => new Collection([$kelas]),
+                'mataPelajaranOptions' => new Collection([$mapel]),
+                'selectedTahunAjaranId' => 1,
+                'selectedTahunAjaran' => $ta,
+                'selectedKelas' => $kelas,
+                'selectedMapel' => $mapel,
+                'periode' => PeriodeTp::PERIODE_MID,
+                'hasKkmConfig' => false,
+                'kkmModel' => null,
+                'kkmNilai' => 75.0,
+                'kkmPredikats' => new Collection,
+                'bobotTp' => 100,
+                'bobotSumatif' => 0,
+                'bobotUjian' => 0,
+                'tpList' => new Collection([$tpComplete, $tpPartial, $tpEmpty]),
+                'students' => new Collection([$ak1, $ak2]),
+                'aspeksByTp' => collect([
+                    101 => new Collection([$asp1]),
+                    102 => new Collection([$asp2]),
+                    103 => new Collection([$asp3]),
+                ]),
+                'periodeSettingsByTp' => collect(),
+                'carriedMidSumatifBabs' => new Collection,
+                'activeSumatifBabs' => new Collection,
+                'sumatifNilaiLookup' => [],
+                'nilaiLookup' => $nilaiLookup,
+                'rekapTpLookup' => $rekapTpLookup,
+                'rekapMapelLookup' => [],
+            ])->render();
+        } finally {
+            Model::preventLazyLoading(false);
+        }
+
+        // Hanya 5.1 (2/2) + 5.3 (1/2) yang dihitung = 3/4 nilai (75%), dan 1 tugas belum lengkap yaitu 5.3 (kurang 1)
+        // 5.5 kosong 0/2 tidak masuk perhitungan progres ataupun daftar tugas belum lengkap!
+        $this->assertStringContainsString('Progres Pengisian: 3/4 nilai (75%)', $html);
+        $this->assertStringContainsString('1 tugas belum lengkap', $html);
+        $this->assertStringContainsString('data-target-col="tp:102"', $html);
+        $this->assertStringContainsString('1/2', $html);
+        $this->assertStringContainsString('-1', $html);
+        $this->assertStringNotContainsString('data-target-col="tp:101"', $html);
+        $this->assertStringNotContainsString('data-target-col="tp:103"', $html);
+        $this->assertStringContainsString('data-col-progress-badge="tp:103"', $html);
+        $this->assertStringContainsString('np-col-progress-badge is-empty', $html);
+    }
 }

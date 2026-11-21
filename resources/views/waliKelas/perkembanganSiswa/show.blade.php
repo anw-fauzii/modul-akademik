@@ -14,6 +14,9 @@
         $presensiStats = $presensiStats ?? ['total' => 0, 'hadir' => 0, 'terlambat' => 0, 'izin' => 0, 'sakit' => 0, 'alpa' => 0, 'hadir_rate' => null];
         $summary = $summary ?? ['total_mapel' => 0, 'dinilai_count' => 0, 'tuntas_count' => 0, 'belum_tuntas_count' => 0, 'rata_rapor' => null];
         $subjectDetails = $subjectDetails ?? collect();
+        $readiness = $readiness ?? null;
+        $canPrintNilai = $readiness === null || (bool) ($readiness['is_ready'] ?? false);
+        $pendingCountRapor = (int) ($readiness['pending_count'] ?? 0);
     @endphp
 
     <div class="app-main__inner">
@@ -66,10 +69,20 @@
                         <i class="fa fa-id-card text-primary mr-1"></i> PDF Identitas
                     </a>
                     @if ($isSd)
-                        <a href="{{ route('wali-kelas.rapor.nilai.siswa', ['anggota_kelas' => $anggotaKelas, 'periode' => $periode]) }}" target="_blank"
-                            class="btn btn-sm btn-light font-weight-semibold shadow-sm" style="border-radius: 9px; color: #c2410c;">
-                            <i class="fa fa-file-pdf mr-1"></i> PDF Nilai
-                        </a>
+                        @if ($canPrintNilai)
+                            <a href="{{ route('wali-kelas.rapor.nilai.siswa', ['anggota_kelas' => $anggotaKelas, 'periode' => $periode]) }}" target="_blank"
+                                class="btn btn-sm btn-light font-weight-semibold shadow-sm" style="border-radius: 9px; color: #c2410c;">
+                                <i class="fa fa-file-pdf mr-1"></i> PDF Nilai
+                            </a>
+                        @else
+                            <button type="button"
+                                class="btn btn-sm btn-secondary font-weight-semibold shadow-sm"
+                                style="border-radius: 9px; opacity: 0.85;"
+                                onclick="if (window.toastr) { window.toastr.error('Cetak Nilai Rapor diblokir: masih ada {{ $pendingCountRapor }} komponen belum Final.', 'Cetak Diblokir'); }"
+                                title="PDF Nilai diblokir: masih ada {{ $pendingCountRapor }} komponen belum Final.">
+                                <i class="fa fa-lock mr-1"></i> PDF Nilai ({{ $pendingCountRapor }} Draft)
+                            </button>
+                        @endif
                     @endif
                     <a href="{{ route('wali-kelas.anggota-kelas.show', $anggotaKelas) }}"
                         class="btn btn-sm btn-light font-weight-semibold shadow-sm" style="border-radius: 9px;">

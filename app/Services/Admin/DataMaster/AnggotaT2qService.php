@@ -8,6 +8,7 @@ use App\Models\Admin\DataMaster\Karyawan;
 use App\Models\Admin\DataMaster\Kelas;
 use App\Models\Admin\DataMaster\TahunAjaran;
 use App\Services\Admin\DataMaster\Concerns\ManagesTahunAjaranMembership;
+use App\Services\Admin\Penilaian\PenilaianFinalisasiService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,12 @@ use Illuminate\Validation\ValidationException;
 class AnggotaT2qService
 {
     use ManagesTahunAjaranMembership;
+
+    public function __construct(
+        protected ?PenilaianFinalisasiService $finalisasiService = null
+    ) {
+        $this->finalisasiService ??= new PenilaianFinalisasiService;
+    }
 
     private const string NESTED_SISWA_MEMBERSHIP_RELATION = 'anggotaT2q.anggotaKelas.kelas';
 
@@ -237,6 +244,7 @@ class AnggotaT2qService
         $requestedTahunAjaranId = isset($data['tahun_ajaran_id']) && is_numeric($data['tahun_ajaran_id'])
             ? (int) $data['tahun_ajaran_id']
             : null;
+        $forSemesterUpdate = (bool) ($data['for_semester_update'] ?? false);
 
         return DB::transaction(function () use (
             $anggotaKelasIds,
@@ -244,7 +252,8 @@ class AnggotaT2qService
             $rawTingkat,
             $pendaftaran,
             $keterangan,
-            $requestedTahunAjaranId
+            $requestedTahunAjaranId,
+            $forSemesterUpdate
         ): Collection {
             $anggotaKelasRows = AnggotaKelas::query()
                 ->select(['id', 'siswa_nis', 'akademik_master_kelas_id'])
@@ -252,6 +261,17 @@ class AnggotaT2qService
                 ->whereIn('id', $anggotaKelasIds)
                 ->get()
                 ->keyBy('id');
+
+            foreach ($anggotaKelasRows as $row) {
+                $kls = $row->kelas;
+                if ($kls !== null) {
+                    $this->finalisasiService->assertAnggotaT2qEditable(
+                        (int) $kls->akademik_master_tahun_ajaran_id,
+                        (int) $kls->id,
+                        $forSemesterUpdate
+                    );
+                }
+            }
 
             if ($requestedTahunAjaranId !== null) {
                 $this->assertValidAnggotaKelasTahunAjaranAndNoConflict(
@@ -324,6 +344,7 @@ class AnggotaT2qService
         $karyawanNipy = trim((string) $data['karyawan_nipy']);
         $rawTingkat = AnggotaT2q::normalizeTingkat($data['tingkat']);
         $keterangan = $this->normalizeNullableText($data['keterangan'] ?? null);
+        $forSemesterUpdate = (bool) ($data['for_semester_update'] ?? false);
 
         return DB::transaction(function () use (
             $anggotaT2q,
@@ -331,14 +352,32 @@ class AnggotaT2qService
             $newAnggotaKelasId,
             $karyawanNipy,
             $rawTingkat,
-            $keterangan
+            $keterangan,
+            $forSemesterUpdate
         ): bool {
+            $anggotaT2q->loadMissing('anggotaKelas.kelas:id,akademik_master_tahun_ajaran_id');
+            $origKelas = $anggotaT2q->anggotaKelas?->kelas;
+            if ($origKelas !== null) {
+                $this->finalisasiService->assertAnggotaT2qEditable(
+                    (int) $origKelas->akademik_master_tahun_ajaran_id,
+                    (int) $origKelas->id,
+                    $forSemesterUpdate
+                );
+            }
+
             $targetAnggotaKelas = AnggotaKelas::query()
                 ->select(['id', 'siswa_nis', 'akademik_master_kelas_id'])
                 ->with(['kelas:id,akademik_master_tahun_ajaran_id,tingkatan_kelas'])
                 ->findOrFail($newAnggotaKelasId);
 
             $targetTahunAjaranId = (int) ($targetAnggotaKelas->kelas?->akademik_master_tahun_ajaran_id ?? 0);
+            if ($targetAnggotaKelas->kelas !== null) {
+                $this->finalisasiService->assertAnggotaT2qEditable(
+                    $targetTahunAjaranId,
+                    (int) $targetAnggotaKelas->kelas->id,
+                    $forSemesterUpdate
+                );
+            }
 
             $this->assertValidAnggotaKelasTahunAjaranAndNoConflict(
                 AnggotaT2q::class,
@@ -364,6 +403,16 @@ class AnggotaT2qService
      */
     public function delete(AnggotaT2q $anggotaT2q): bool
     {
+        $anggotaT2q->loadMissing('anggotaKelas.kelas:id,akademik_master_tahun_ajaran_id');
+        $kelas = $anggotaT2q->anggotaKelas?->kelas;
+        if ($kelas !== null) {
+            $this->finalisasiService->assertAnggotaT2qEditable(
+                (int) $kelas->akademik_master_tahun_ajaran_id,
+                (int) $kelas->id,
+                false
+            );
+        }
+
         return (bool) $anggotaT2q->delete();
     }
 

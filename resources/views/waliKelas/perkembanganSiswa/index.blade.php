@@ -7,6 +7,182 @@
 @section('content')
     @include('waliKelas.partials._styles')
 
+    @pushOnce('css')
+        <style>
+            .wk-mapel-grid {
+                display: grid;
+                grid-template-columns: repeat(1, minmax(0, 1fr));
+                gap: 0.55rem;
+            }
+
+            @media (min-width: 640px) {
+                .wk-mapel-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+            }
+
+            @media (min-width: 1024px) {
+                .wk-mapel-grid {
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                }
+            }
+
+            @media (min-width: 1320px) {
+                .wk-mapel-grid {
+                    grid-template-columns: repeat(4, minmax(0, 1fr));
+                }
+            }
+
+            .wk-mapel-tile {
+                position: relative;
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 0.65rem 0.78rem;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                gap: 0.45rem;
+                transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+                overflow: hidden;
+            }
+
+            .wk-mapel-tile:hover {
+                border-color: #cbd5e1;
+                box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+                transform: translateY(-1px);
+            }
+
+            .wk-mapel-tile.is-mine {
+                border-color: #fed7aa;
+                background: linear-gradient(180deg, #fffaf5 0%, #ffffff 100%);
+            }
+
+            .wk-mapel-code {
+                display: inline-flex;
+                align-items: center;
+                padding: 0.14rem 0.42rem;
+                border-radius: 6px;
+                font-size: 0.65rem;
+                font-weight: 800;
+                letter-spacing: 0.02em;
+                background: #f1f5f9;
+                color: #334155;
+                flex-shrink: 0;
+            }
+
+            .wk-mapel-tile.is-mine .wk-mapel-code {
+                background: #ffedd5;
+                color: #c2410c;
+            }
+
+            .wk-mapel-name {
+                font-size: 0.79rem;
+                font-weight: 700;
+                color: #0f172a;
+                line-height: 1.25;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .wk-mapel-teacher {
+                font-size: 0.7rem;
+                color: #64748b;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .wk-mapel-foot {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.4rem;
+                padding-top: 0.42rem;
+                border-top: 1px dashed #e2e8f0;
+                font-size: 0.71rem;
+                font-variant-numeric: tabular-nums;
+            }
+
+            .wk-mapel-pill {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.25rem;
+                padding: 0.14rem 0.48rem;
+                border-radius: 999px;
+                font-size: 0.66rem;
+                font-weight: 700;
+                white-space: nowrap;
+            }
+
+            .wk-mapel-bar {
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                height: 2.5px;
+                background: #f1f5f9;
+            }
+
+            .wk-mapel-bar > span {
+                display: block;
+                height: 100%;
+                border-radius: 999px;
+            }
+
+            .wk-subtabs {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 0.4rem;
+                padding: 0.35rem;
+                margin-bottom: 0.9rem;
+                background: #f1f5f9;
+                border: 1px solid #e2e8f0;
+                border-radius: 13px;
+                width: fit-content;
+                max-width: 100%;
+            }
+
+            .wk-subtab-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.45rem;
+                padding: 0.48rem 0.9rem;
+                border-radius: 10px;
+                border: 0;
+                background: transparent;
+                color: #475569;
+                font-size: 0.8rem;
+                font-weight: 700;
+                cursor: pointer;
+                transition: all 0.15s ease;
+                white-space: nowrap;
+            }
+
+            .wk-subtab-btn:hover {
+                color: #0f172a;
+                background: rgba(255, 255, 255, 0.55);
+            }
+
+            .wk-subtab-btn.is-active {
+                background: #ffffff;
+                color: #c2410c;
+                box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+            }
+
+            .wk-subtab-pill {
+                display: inline-flex;
+                align-items: center;
+                padding: 0.12rem 0.48rem;
+                border-radius: 999px;
+                font-size: 0.68rem;
+                font-weight: 800;
+            }
+        </style>
+    @endPushOnce
+
     @php
         $isEligible = $isEligible ?? false;
         $isSd = $isSd ?? false;
@@ -26,6 +202,9 @@
             'need_attention_students' => 0,
             'avg_kehadiran' => null,
         ];
+        $readiness = $readiness ?? null;
+        $canPrintNilai = $readiness === null || (bool) ($readiness['is_ready'] ?? false);
+        $pendingCountRapor = (int) ($readiness['pending_count'] ?? 0);
     @endphp
 
     <div class="app-main__inner">
@@ -147,107 +326,112 @@
                 </div>
             </div>
 
-            @if ($isSd && $mapelSummaries->isNotEmpty())
-                <!-- RINGKASAN PER MATA PELAJARAN (READ-ONLY SEMUA MAPEL) -->
-                <div class="wk-surface">
-                    <div class="wk-surface-head">
-                        <div>
-                            <h6 class="wk-surface-title">
-                                <i class="fa fa-book-open text-warning mr-1"></i>
-                                Ringkasan Perkembangan Seluruh Mata Pelajaran ({{ $isMid ? 'Mid Semester' : 'Semester' }})
-                            </h6>
-                            <div class="small text-muted">
-                                Menampilkan capaian semua mata pelajaran SD termasuk yang diampu oleh guru bidang studi lain.
-                            </div>
-                        </div>
-                        <span class="badge badge-light border px-2.5 py-1.5" style="font-size: 0.72rem;">
-                            {{ $mapelSummaries->count() }} Mata Pelajaran
-                        </span>
-                    </div>
+            @php
+                $hasMapelTab = $isSd && $mapelSummaries->isNotEmpty();
+                $scoredMapelCount = $hasMapelTab
+                    ? $mapelSummaries->filter(static fn (array $ms): bool => ($ms['dinilai_count'] ?? 0) > 0)->count()
+                    : 0;
+                $allTuntasMapelCount = $hasMapelTab
+                    ? $mapelSummaries->filter(static fn (array $ms): bool => ($ms['dinilai_count'] ?? 0) > 0 && ($ms['belum_tuntas_count'] ?? 0) === 0)->count()
+                    : 0;
 
-                    <div class="p-3">
-                        <div class="row">
-                            @foreach ($mapelSummaries as $ms)
-                                @php
-                                    $mp = $ms['mapel'];
-                                @endphp
-                                <div class="col-md-6 col-xl-4 mb-3">
-                                    <div class="p-3 rounded border bg-light h-100 d-flex flex-column justify-content-between"
-                                        style="border-radius: 12px !important; background: #f8fafc !important;">
-                                        <div>
-                                            <div class="d-flex align-items-start justify-content-between gap-2 mb-1">
-                                                <div>
-                                                    <div class="font-weight-bold text-dark" style="font-size: 0.86rem;">
-                                                        [{{ $mp->singkatan }}] {{ $mp->nama_mata_pelajaran }}
-                                                    </div>
-                                                    <div class="small text-muted" style="font-size: 0.72rem;">
-                                                        Pengampu: {{ $ms['teachers'] !== [] ? implode(', ', $ms['teachers']) : 'Belum dijadwalkan' }}
-                                                    </div>
-                                                </div>
-                                                @if ($ms['is_taught_by_user'])
-                                                    <span class="badge badge-warning text-dark font-weight-bold" style="font-size: 0.65rem;">
-                                                        Mapel Anda
-                                                    </span>
-                                                @endif
-                                            </div>
-                                        </div>
+                $hasReadinessTab = $isSd && $readiness !== null;
+                $rdReadyTab = (bool) ($readiness['is_ready'] ?? false);
+                $rdFinalizedTab = (int) ($readiness['finalized_count'] ?? 0);
+                $rdTotalTab = (int) ($readiness['total_components'] ?? 0);
+                $hasSubTabs = $hasMapelTab || $hasReadinessTab;
+            @endphp
 
-                                        <div class="d-flex align-items-center justify-content-between pt-2 mt-2 border-top">
-                                            <div class="small">
-                                                <span class="text-muted">Rata NA:</span>
-                                                <strong class="text-dark">{{ $ms['avg_rapor'] !== null ? number_format((float) $ms['avg_rapor'], 1) : '-' }}</strong>
-                                                <span class="text-muted ml-2">KKM {{ rtrim(rtrim(number_format((float) $ms['kkm'], 2, '.', ''), '0'), '.') }}</span>
-                                            </div>
-                                            <div class="d-flex align-items-center gap-1">
-                                                <span class="badge {{ $ms['belum_tuntas_count'] > 0 ? 'badge-danger' : ($ms['dinilai_count'] > 0 ? 'badge-success' : 'badge-secondary') }}"
-                                                    style="font-size: 0.68rem;">
-                                                    {{ $ms['dinilai_count'] > 0 ? "{$ms['tuntas_count']}/{$ms['dinilai_count']} Tuntas" : 'Belum dinilai' }}
-                                                </span>
-                                                @if ($ms['is_taught_by_user'])
-                                                    <a href="{{ route('wali-kelas.penilaian-tp.index', ['kelas_id' => $selectedKelas->sqid, 'mata_pelajaran_id' => $mp->sqid, 'periode' => $periode]) }}"
-                                                        class="badge badge-primary text-decoration-none" style="font-size: 0.68rem;" title="Input nilai mapel yang Anda ampu">
-                                                        Input
-                                                    </a>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
+            @if ($hasSubTabs)
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-1">
+                    <div class="wk-subtabs" role="tablist" aria-label="Tampilan Data Perkembangan">
+                        <button type="button"
+                            class="wk-subtab-btn is-active js-wk-tab-btn"
+                            role="tab"
+                            aria-selected="true"
+                            aria-controls="wkTabPanelLeger"
+                            data-wk-tab="leger">
+                            <i class="fa fa-graduation-cap"></i>
+                            <span>Leger Siswa</span>
+                            <span class="wk-subtab-pill" style="background: #eff6ff; color: #1d4ed8;">
+                                {{ $students->count() }}
+                            </span>
+                        </button>
+                        @if ($hasMapelTab)
+                            <button type="button"
+                                class="wk-subtab-btn js-wk-tab-btn"
+                                role="tab"
+                                aria-selected="false"
+                                aria-controls="wkTabPanelMapel"
+                                data-wk-tab="mapel">
+                                <i class="fa fa-book-open"></i>
+                                <span>Ringkasan Mapel</span>
+                                <span class="wk-subtab-pill"
+                                    style="background: {{ $allTuntasMapelCount === $mapelSummaries->count() && $scoredMapelCount > 0 ? '#d1fae5' : '#fff7ed' }}; color: {{ $allTuntasMapelCount === $mapelSummaries->count() && $scoredMapelCount > 0 ? '#047857' : '#c2410c' }};">
+                                    {{ $scoredMapelCount }}/{{ $mapelSummaries->count() }} Dinilai
+                                </span>
+                            </button>
+                        @endif
+                        @if ($hasReadinessTab)
+                            <button type="button"
+                                class="wk-subtab-btn js-wk-tab-btn"
+                                role="tab"
+                                aria-selected="false"
+                                aria-controls="wkTabPanelKesiapan"
+                                data-wk-tab="kesiapan">
+                                <i class="fa fa-clipboard-check"></i>
+                                <span>Kesiapan &amp; Finalisasi Rapor</span>
+                                <span class="wk-subtab-pill"
+                                    style="background: {{ $rdReadyTab ? '#d1fae5' : '#fef3c7' }}; color: {{ $rdReadyTab ? '#047857' : '#b45309' }};">
+                                    {{ $rdFinalizedTab }}/{{ $rdTotalTab }} Final
+                                </span>
+                            </button>
+                        @endif
                     </div>
                 </div>
             @endif
 
-            <!-- LEGER PERKEMBANGAN SELURUH SISWA -->
-            <div class="wk-surface">
-                <div class="wk-surface-head">
-                    <div>
-                        <h6 class="wk-surface-title">
-                            <i class="fa fa-graduation-cap text-primary mr-1"></i>
-                            Leger Perkembangan Siswa Kelas {{ $selectedKelas->nama_kelas }}
-                        </h6>
-                        <div class="small text-muted">
-                            Klik nama siswa atau tombol <strong>Detail</strong> untuk melihat perkembangan lengkap, atau cetak PDF Identitas &amp; Nilai Rapor terpisah.
+            <!-- TAB 1: LEGER PERKEMBANGAN SELURUH SISWA -->
+            <div id="wkTabPanelLeger" data-wk-panel="leger" role="tabpanel">
+                <div class="wk-surface">
+                    <div class="wk-surface-head">
+                        <div>
+                            <h6 class="wk-surface-title">
+                                <i class="fa fa-graduation-cap text-primary mr-1"></i>
+                                Leger Perkembangan Siswa Kelas {{ $selectedKelas->nama_kelas }}
+                            </h6>
+                            <div class="small text-muted">
+                                Klik nama siswa atau tombol <strong>Detail</strong> untuk melihat perkembangan lengkap, atau cetak PDF Identitas &amp; Nilai Rapor terpisah.
+                            </div>
                         </div>
-                    </div>
-                    @if ($students->isNotEmpty())
-                        <div class="d-flex flex-wrap align-items-center" style="gap: 0.45rem;">
-                            <a href="{{ route('wali-kelas.rapor.identitas.kelas', $selectedKelas) }}" target="_blank"
-                                class="btn btn-sm btn-outline-primary font-weight-semibold"
-                                style="border-radius: 8px; font-size: 0.74rem;">
-                                <i class="fa fa-id-card mr-1"></i> Identitas (1 Kelas)
-                            </a>
-                            @if ($isSd)
-                                <a href="{{ route('wali-kelas.rapor.nilai.kelas', ['kelas' => $selectedKelas, 'periode' => $periode]) }}" target="_blank"
-                                    class="btn btn-sm text-white font-weight-semibold shadow-sm"
-                                    style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%); border-radius: 8px; font-size: 0.74rem;">
-                                    <i class="fa fa-file-pdf mr-1"></i> Nilai Rapor (1 Kelas)
+                        @if ($students->isNotEmpty())
+                            <div class="d-flex flex-wrap align-items-center" style="gap: 0.45rem;">
+                                <a href="{{ route('wali-kelas.rapor.identitas.kelas', $selectedKelas) }}" target="_blank"
+                                    class="btn btn-sm btn-outline-primary font-weight-semibold"
+                                    style="border-radius: 8px; font-size: 0.74rem;">
+                                    <i class="fa fa-id-card mr-1"></i> Identitas (1 Kelas)
                                 </a>
-                            @endif
-                        </div>
-                    @endif
-                </div>
+                                @if ($isSd)
+                                    @if ($canPrintNilai)
+                                        <a href="{{ route('wali-kelas.rapor.nilai.kelas', ['kelas' => $selectedKelas, 'periode' => $periode]) }}" target="_blank"
+                                            class="btn btn-sm text-white font-weight-semibold shadow-sm"
+                                            style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%); border-radius: 8px; font-size: 0.74rem;">
+                                            <i class="fa fa-file-pdf mr-1"></i> Nilai Rapor (1 Kelas)
+                                        </a>
+                                    @else
+                                        <button type="button"
+                                            class="btn btn-sm btn-secondary font-weight-semibold shadow-sm js-wk-tab-btn js-blocked-print-trigger"
+                                            data-wk-tab="kesiapan"
+                                            data-blocked-toast="Cetak Nilai Rapor belum dapat dilakukan: masih ada {{ $pendingCountRapor }} komponen yang belum difinalkan."
+                                            style="border-radius: 8px; font-size: 0.74rem; opacity: 0.88;"
+                                            title="Cetak Nilai Rapor diblokir: masih ada {{ $pendingCountRapor }} komponen belum difinalkan. Klik untuk cek tab Kesiapan Rapor.">
+                                            <i class="fa fa-lock mr-1"></i> Nilai Rapor ({{ $pendingCountRapor }} Belum Final)
+                                        </button>
+                                    @endif
+                                @endif
+                            </div>
+                        @endif
+                    </div>
 
                 <div class="p-3 p-md-4">
                     <div class="table-responsive">
@@ -354,10 +538,21 @@
                                                     <span>Cetak Identitas (PDF)</span>
                                                 </a>
                                                 @if ($isSd)
-                                                    <a href="{{ route('wali-kelas.rapor.nilai.siswa', ['anggota_kelas' => $anggota, 'periode' => $periode]) }}" target="_blank" class="action-dropdown-item" role="menuitem">
-                                                        <i class="fa fa-file-pdf text-danger action-item-icon"></i>
-                                                        <span>Cetak Nilai Rapor (PDF)</span>
-                                                    </a>
+                                                    @if ($canPrintNilai)
+                                                        <a href="{{ route('wali-kelas.rapor.nilai.siswa', ['anggota_kelas' => $anggota, 'periode' => $periode]) }}" target="_blank" class="action-dropdown-item" role="menuitem">
+                                                            <i class="fa fa-file-pdf text-danger action-item-icon"></i>
+                                                            <span>Cetak Nilai Rapor (PDF)</span>
+                                                        </a>
+                                                    @else
+                                                        <button type="button"
+                                                            class="action-dropdown-item text-muted js-wk-tab-btn js-blocked-print-trigger"
+                                                            role="menuitem"
+                                                            data-wk-tab="kesiapan"
+                                                            data-blocked-toast="Cetak Nilai Rapor belum dapat dilakukan: masih ada {{ $pendingCountRapor }} komponen yang belum difinalkan.">
+                                                            <i class="fa fa-lock text-warning action-item-icon"></i>
+                                                            <span>Cetak Nilai Rapor ({{ $pendingCountRapor }} Belum Final)</span>
+                                                        </button>
+                                                    @endif
                                                 @endif
                                             </x-action-dropdown>
                                         </td>
@@ -368,7 +563,203 @@
                     </div>
                 </div>
             </div>
+            </div>
+
+            @if ($hasMapelTab)
+                <!-- TAB 2: RINGKASAN MATA PELAJARAN -->
+                <div id="wkTabPanelMapel" data-wk-panel="mapel" role="tabpanel" style="display: none;">
+                    <div class="wk-surface" id="wkMapelSummaryCard">
+                        <div class="wk-surface-head">
+                            <div>
+                                <h6 class="wk-surface-title">
+                                    <i class="fa fa-book-open text-warning mr-1"></i>
+                                    Ringkasan Mata Pelajaran ({{ $isMid ? 'Mid Semester' : 'Semester' }})
+                                </h6>
+                                <div class="small text-muted">
+                                    Pantauan rata-rata kelas, ketuntasan KKM, guru pengampu, dan status finalisasi tiap mata pelajaran.
+                                </div>
+                            </div>
+
+                            <div class="d-flex flex-wrap align-items-center" style="gap: 0.45rem;">
+                                <span class="badge badge-light border px-2 py-1" style="font-size: 0.71rem; color: #475569;">
+                                    {{ $mapelSummaries->count() }} Mapel &bull; {{ $scoredMapelCount }} Dinilai
+                                </span>
+                                @if ($scoredMapelCount > 0)
+                                    <span class="wk-mapel-pill" style="background: #ecfdf5; color: #047857; font-size: 0.71rem; padding: 0.24rem 0.62rem;">
+                                        {{ $allTuntasMapelCount }} Mapel 100% Tuntas
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="p-3 p-md-4" id="wkMapelSummaryBody">
+                            <div class="wk-mapel-grid">
+                                @foreach ($mapelSummaries as $ms)
+                                    @php
+                                        $mp = $ms['mapel'];
+                                        $isMine = (bool) ($ms['is_taught_by_user'] ?? false);
+                                        $dinilai = (int) ($ms['dinilai_count'] ?? 0);
+                                        $tuntas = (int) ($ms['tuntas_count'] ?? 0);
+                                        $belumTuntas = (int) ($ms['belum_tuntas_count'] ?? 0);
+                                        $isFinalMapel = (bool) ($ms['is_final'] ?? false);
+                                        $isRequiredForRapor = (bool) ($ms['is_required_for_rapor'] ?? false);
+                                        $teacherText = $ms['teachers'] !== [] ? implode(', ', $ms['teachers']) : 'Belum dijadwalkan';
+                                        $kkmClean = rtrim(rtrim(number_format((float) $ms['kkm'], 2, '.', ''), '0'), '.');
+                                        $tuntasPct = $dinilai > 0 ? (int) round(($tuntas / $dinilai) * 100) : 0;
+                                        $barColor = $dinilai === 0 ? '#cbd5e1' : ($belumTuntas > 0 ? '#ef4444' : '#10b981');
+                                    @endphp
+                                    <div class="wk-mapel-tile {{ $isMine ? 'is-mine' : '' }}">
+                                        <div style="min-width: 0;">
+                                            <div class="d-flex align-items-center justify-content-between" style="gap: 0.4rem; margin-bottom: 0.25rem;">
+                                                <div class="d-flex align-items-center" style="gap: 0.4rem; min-width: 0;">
+                                                    <span class="wk-mapel-code">{{ $mp->singkatan ?: 'MP' }}</span>
+                                                    <span class="wk-mapel-name" title="{{ $mp->nama_mata_pelajaran }}">
+                                                        {{ $mp->nama_mata_pelajaran }}
+                                                    </span>
+                                                </div>
+                                                @if ($isMine)
+                                                    <span class="wk-mapel-pill" style="background: #ffedd5; color: #c2410c; font-size: 0.62rem;" title="Mata pelajaran yang Anda ampu">
+                                                        Mapel Anda
+                                                    </span>
+                                                @elseif ($isRequiredForRapor)
+                                                    <span class="wk-mapel-pill"
+                                                        style="background: {{ $isFinalMapel ? '#ecfdf5' : '#fffbeb' }}; color: {{ $isFinalMapel ? '#047857' : '#b45309' }}; font-size: 0.62rem;"
+                                                        title="{{ $isFinalMapel ? 'Sudah difinalkan oleh '.($ms['finalized_by_name'] ?? 'Guru Pengampu') : 'Menunggu finalisasi dari guru pengampu' }}">
+                                                        <i class="fa {{ $isFinalMapel ? 'fa-lock' : 'fa-clock' }}"></i>
+                                                        {{ $isFinalMapel ? 'Final' : 'Draft' }}
+                                                    </span>
+                                                @endif
+                                            </div>
+
+                                            <div class="d-flex align-items-center justify-content-between" style="gap: 0.35rem;">
+                                                <div class="wk-mapel-teacher" title="{{ $teacherText }}" style="flex: 1 1 auto;">
+                                                    <i class="fa fa-user-tie mr-1" style="font-size: 0.62rem; opacity: 0.7;"></i>{{ $teacherText }}
+                                                </div>
+                                                @if ($isMine && $isRequiredForRapor)
+                                                    <span class="wk-mapel-pill"
+                                                        style="background: {{ $isFinalMapel ? '#d1fae5' : '#fef3c7' }}; color: {{ $isFinalMapel ? '#047857' : '#b45309' }}; font-size: 0.6rem;">
+                                                        <i class="fa {{ $isFinalMapel ? 'fa-lock' : 'fa-clock' }}"></i>
+                                                        {{ $isFinalMapel ? 'Final' : 'Draft' }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        <div class="wk-mapel-foot">
+                                            <div class="text-muted">
+                                                NA <strong class="text-dark">{{ $ms['avg_rapor'] !== null ? number_format((float) $ms['avg_rapor'], 1) : '-' }}</strong>
+                                                <span style="opacity: 0.5;">&bull;</span>
+                                                <span>KKM {{ $kkmClean }}</span>
+                                            </div>
+
+                                            <div class="d-flex align-items-center" style="gap: 0.3rem;">
+                                                @if ($dinilai > 0)
+                                                    <span class="wk-mapel-pill"
+                                                        style="background: {{ $belumTuntas > 0 ? '#fef2f2' : '#ecfdf5' }}; color: {{ $belumTuntas > 0 ? '#b91c1c' : '#047857' }};">
+                                                        {{ $tuntas }}/{{ $dinilai }} Tuntas
+                                                    </span>
+                                                @else
+                                                    <span class="wk-mapel-pill" style="background: #f1f5f9; color: #64748b;">
+                                                        Belum dinilai
+                                                    </span>
+                                                @endif
+
+                                                @if ($isMine)
+                                                    <a href="{{ route('wali-kelas.penilaian-tp.index', ['kelas_id' => $selectedKelas->sqid, 'mata_pelajaran_id' => $mp->sqid, 'periode' => $periode]) }}"
+                                                        class="wk-mapel-pill text-decoration-none"
+                                                        style="background: #ea580c; color: #ffffff;"
+                                                        title="Input nilai {{ $mp->nama_mata_pelajaran }}">
+                                                        Input
+                                                    </a>
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        <div class="wk-mapel-bar" aria-hidden="true">
+                                            <span style="width: {{ $dinilai > 0 ? $tuntasPct : 0 }}%; background: {{ $barColor }};"></span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            @if ($hasReadinessTab)
+                <!-- TAB 3: KESIAPAN & FINALISASI RAPOR -->
+                <div id="wkTabPanelKesiapan" data-wk-panel="kesiapan" role="tabpanel" style="display: none;">
+                    @include('admin.penilaian.partials._rapor_readiness_panel', [
+                        'readiness' => $readiness,
+                        'routePrefix' => 'wali-kelas.penilaian-finalisasi',
+                        'periode' => $periode,
+                        'collapseId' => 'wkRaporReadinessChecklistBody',
+                        'defaultExpanded' => true,
+                    ])
+                </div>
+            @endif
         @endif
     </div>
+
+    @if ($isEligible)
+        @pushOnce('js')
+            <script>
+                (function () {
+                    const tabButtons = document.querySelectorAll('.wk-subtab-btn[data-wk-tab]');
+                    const tabPanels = document.querySelectorAll('[data-wk-panel]');
+                    const tabStorageKey = 'wk_perkembangan_active_tab';
+
+                    function activateTab(tabName) {
+                        if (tabPanels.length <= 1) return;
+
+                        const targetPanel = Array.from(tabPanels).find(function (panel) {
+                            return panel.dataset.wkPanel === tabName;
+                        });
+                        const resolvedTab = targetPanel ? tabName : 'leger';
+
+                        tabPanels.forEach(function (panel) {
+                            panel.style.display = panel.dataset.wkPanel === resolvedTab ? '' : 'none';
+                        });
+
+                        tabButtons.forEach(function (btn) {
+                            const active = btn.dataset.wkTab === resolvedTab;
+                            btn.classList.toggle('is-active', active);
+                            btn.setAttribute('aria-selected', active ? 'true' : 'false');
+                        });
+
+                        if (resolvedTab === 'leger' && window.jQuery && window.jQuery.fn && window.jQuery.fn.dataTable) {
+                            window.jQuery.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
+                        }
+
+                        try {
+                            sessionStorage.setItem(tabStorageKey, resolvedTab);
+                        } catch (e) {}
+                    }
+
+                    document.addEventListener('click', function (e) {
+                        const trigger = e.target.closest('.js-wk-tab-btn[data-wk-tab]');
+                        if (!trigger) return;
+                        activateTab(trigger.dataset.wkTab);
+
+                        const blockedToastMsg = trigger.dataset.blockedToast;
+                        if (blockedToastMsg) {
+                            if (window.toastr && typeof window.toastr.error === 'function') {
+                                window.toastr.error(blockedToastMsg, 'Cetak Nilai Rapor Diblokir');
+                            } else {
+                                alert(blockedToastMsg);
+                            }
+                        }
+                    });
+
+                    try {
+                        const savedTab = sessionStorage.getItem(tabStorageKey);
+                        if (savedTab && savedTab !== 'leger') {
+                            activateTab(savedTab);
+                        }
+                    } catch (e) {}
+                })();
+            </script>
+        @endPushOnce
+    @endif
 @endsection
 

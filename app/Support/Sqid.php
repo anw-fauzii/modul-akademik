@@ -28,6 +28,7 @@ use App\Models\Admin\Pelajaran\KelompokPelajaran;
 use App\Models\Admin\Pelajaran\MataPelajaran;
 use App\Models\Admin\Penilaian\AspekTp;
 use App\Models\Admin\Penilaian\Kkm;
+use App\Models\Admin\Penilaian\PenilaianFinalisasi;
 use App\Models\Admin\Penilaian\RekapMapel;
 use App\Models\Admin\Penilaian\SumatifBab;
 use App\Models\Admin\Presensi\PresensiSiswa;
@@ -83,6 +84,7 @@ final class Sqid
         30 => PresensiSiswa::class,
         31 => YaumiyahTahfizh::class,
         32 => YaumiyahTahsin::class,
+        33 => PenilaianFinalisasi::class,
     ];
 
     /**

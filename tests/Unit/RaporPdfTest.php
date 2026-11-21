@@ -624,5 +624,47 @@ class RaporPdfTest extends TestCase
 
         $pdfBinary = Pdf::loadView('pdf.rapor.nilai', $payload)->setPaper('a4', 'portrait')->output();
         $this->assertStringStartsWith('%PDF-', $pdfBinary);
+
+        // Pastikan penomoran halaman kembali ke Halaman 1 setiap berganti siswa pada cetak massal
+        $multiPayload = $payload;
+        $longRekap = RekapMapel::make([
+            'nilai_akhir_rapor' => 91,
+            'deskripsi_capaian' => str_repeat('Menunjukkan penguasaan kompetensi dasar matematika dengan sangat baik dan teliti. ', 18),
+        ]);
+        $longRows = [];
+        for ($i = 0; $i < 6; $i++) {
+            $longRows[] = ['mapel' => MataPelajaran::make(['nama_mata_pelajaran' => 'Matematika '.$i]), 'rekap' => $longRekap];
+        }
+        $entryA = $payload['entries'][0];
+        $entryA['mapelGroups'] = [['kelompok' => null, 'kode' => 'A', 'label' => 'Kelompok A', 'urutan' => 1, 'rows' => $longRows]];
+        $entryB = $entryA;
+        $multiPayload['entries'] = [$entryA, $entryB];
+
+        $pageFooters = [];
+        $multiPdf = Pdf::loadView('pdf.rapor.nilai', $multiPayload)->setPaper('a4', 'portrait');
+        $dompdf = $multiPdf->getDomPDF();
+        $dompdf->setCallbacks([
+            [
+                'event' => 'end_page_render',
+                'f' => static function ($frame) use (&$pageFooters): void {
+                    $firstChild = $frame->get_first_child();
+                    $pageFooters[] = trim((string) $firstChild?->get_node()?->textContent);
+                },
+            ],
+        ]);
+        $dompdf->render();
+
+        $this->assertSame([
+            'Halaman 1',
+            'Halaman 2',
+            'Halaman 3',
+            'Halaman 4',
+            'Halaman 5',
+            'Halaman 1',
+            'Halaman 2',
+            'Halaman 3',
+            'Halaman 4',
+            'Halaman 5',
+        ], $pageFooters);
     }
 }

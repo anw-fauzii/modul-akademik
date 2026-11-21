@@ -29,6 +29,7 @@ use App\Models\Admin\Pelajaran\KelompokPelajaran;
 use App\Models\Admin\Pelajaran\MataPelajaran;
 use App\Models\Admin\Penilaian\AspekTp;
 use App\Models\Admin\Penilaian\Kkm;
+use App\Models\Admin\Penilaian\PenilaianFinalisasi;
 use App\Models\Admin\Penilaian\RekapMapel;
 use App\Models\Admin\Penilaian\SumatifBab;
 use App\Models\Admin\Presensi\PresensiSiswa;
@@ -41,6 +42,7 @@ use App\Policies\AspekTpPolicy;
 use App\Policies\EkstrakurikulerPolicy;
 use App\Policies\JadwalPelajaranPolicy;
 use App\Policies\KelasPolicy;
+use App\Policies\PenilaianFinalisasiPolicy;
 use App\Policies\PresensiSiswaPolicy;
 use App\Policies\RekapMapelPolicy;
 use App\Policies\SumatifBabPolicy;
@@ -86,6 +88,7 @@ class AppServiceProvider extends ServiceProvider
         AspekTp::class => AspekTpPolicy::class,
         SumatifBab::class => SumatifBabPolicy::class,
         TujuanPembelajaran::class => TujuanPembelajaranPolicy::class,
+        PenilaianFinalisasi::class => PenilaianFinalisasiPolicy::class,
         RekapMapel::class => RekapMapelPolicy::class,
         PresensiSiswa::class => PresensiSiswaPolicy::class,
         YaumiyahTahfizh::class => YaumiyahT2qPolicy::class,

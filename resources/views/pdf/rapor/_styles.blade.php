@@ -1,7 +1,7 @@
 <style>
     @page {
         size: A4 portrait;
-        margin: 8mm 10mm 8mm 10mm;
+        margin: 8mm 10mm 13mm 10mm;
     }
 
     body {
@@ -15,6 +15,11 @@
 
     .page-break {
         page-break-after: always;
+    }
+
+    .student-page-reset {
+        page-break-after: always;
+        counter-reset: rapor-page 0;
     }
 
     .text-center { text-align: center; }
@@ -123,6 +128,27 @@
         margin: 11px 0 4px 0;
         padding: 0;
         page-break-after: avoid;
+    }
+
+    /* Blok seksi ringkas (Ekstrakurikuler / T2Q) agar judul + header tabel + isi tidak terpotong menggantung */
+    .section-keep-together {
+        page-break-inside: avoid;
+    }
+
+    /* Penomoran halaman di pojok kanan bawah (reset kembali ke 1 setiap ganti siswa) */
+    .pdf-page-footer {
+        position: fixed;
+        bottom: -7mm;
+        left: 0;
+        right: 0;
+        text-align: right;
+        font-size: 7.5pt;
+        color: #64748b;
+        counter-increment: rapor-page;
+    }
+
+    .pdf-page-number:after {
+        content: "Halaman " counter(rapor-page);
     }
 
     /* Tabel Rapor Modern Tanpa Garis Vertikal (Clean Horizontal Rules) */

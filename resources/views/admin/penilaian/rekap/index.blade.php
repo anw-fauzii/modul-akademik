@@ -490,6 +490,9 @@
         $kkmNilai = $kkmNilai ?? \App\Models\Admin\Penilaian\Kkm::DEFAULT_KKM;
         $kkmDisplay = rtrim(rtrim(number_format((float) $kkmNilai, 2, '.', ''), '0'), '.');
         $showSumatifSection = $rekapSumatifCols->isNotEmpty() || $bobotSumatif > 0;
+        $finalisasi = $finalisasi ?? null;
+        $isLocked = (bool) ($finalisasi['is_final'] ?? false);
+        $finalisasiRoutePrefix = $isWaliKelasScope ? 'wali-kelas.penilaian-finalisasi' : 'penilaian-finalisasi';
 
         $hiddenSemTpIds = [];
         $midTpIds = [];
@@ -614,7 +617,7 @@
                         <i class="fa fa-th mr-1"></i> Input Nilai
                     </a>
 
-                    @if ($selectedKelas && $selectedMapel && $students->isNotEmpty())
+                    @if ($selectedKelas && $selectedMapel && $students->isNotEmpty() && ! $isLocked)
                         <form method="POST" action="{{ route($rekapRoutePrefix.'.deskripsi.regenerate') }}" class="d-inline">
                             @csrf
                             <input type="hidden" name="kelas_id" value="{{ $selectedKelas->sqid }}">
@@ -689,6 +692,16 @@
                 </div>
             </form>
         </div>
+
+        @if ($selectedKelas && $selectedMapel && $finalisasi !== null)
+            @include('admin.penilaian.partials._finalisasi_banner', [
+                'finalisasi' => $finalisasi,
+                'routePrefix' => $finalisasiRoutePrefix,
+                'componentTitle' => '['.($selectedMapel->singkatan ?: 'MP').'] '.$selectedMapel->nama_mata_pelajaran.' — Kelas '.$selectedKelas->nama_kelas,
+                'summaryNote' => 'Setelah difinalkan, deskripsi capaian rapor dan nilai pada periode ini terkunci hingga dibuka kunci.',
+                'compact' => true,
+            ])
+        @endif
 
         @if ($students->isNotEmpty() && ($tpList->isNotEmpty() || $rekapSumatifCols->isNotEmpty()))
             <!-- KPI Ringkas Kelas -->
@@ -1006,7 +1019,7 @@
                                                         Selengkapnya
                                                     </button>
                                                 @endif
-                                                @if ($rekapMapel !== null)
+                                                @if ($rekapMapel !== null && ! $isLocked)
                                                     <button type="button"
                                                         class="rk-desc-edit-btn btn-edit-deskripsi"
                                                         data-action="{{ route($rekapRoutePrefix.'.deskripsi.update', $rekapMapel) }}"

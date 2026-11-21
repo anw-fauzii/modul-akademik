@@ -57,6 +57,9 @@
         $progressPercent = $totalMembers > 0 ? round(($dinilaiCount / $totalMembers) * 100) : 0;
         $tuntasCount = $members->filter(static fn ($m): bool => in_array($m->predikat, ['SAB', 'BSH', 'SB'], true))->count();
         $totalSwitcherItems = $assignedClasses->count() + $assignedEkskuls->count();
+        $periode = $periode ?? \App\Models\Admin\Penilaian\PeriodeTp::PERIODE_MID;
+        $isMid = $periode === \App\Models\Admin\Penilaian\PeriodeTp::PERIODE_MID;
+        $finalisasi = $finalisasi ?? null;
     @endphp
 
     <div class="app-main__inner">
@@ -205,7 +208,7 @@
                         @php
                             $isActiveKelas = $isWajibMode && isset($selectedKelas) && (int) $kelasOption->id === (int) $selectedKelas->id;
                         @endphp
-                        <a href="{{ route('wali-kelas.ekstrakurikuler.index', ['mode' => 'wajib', 'kelas_id' => $kelasOption->sqid]) }}"
+                        <a href="{{ route('wali-kelas.ekstrakurikuler.index', ['mode' => 'wajib', 'kelas_id' => $kelasOption->sqid, 'periode' => $periode]) }}"
                             class="wk-class-pill {{ $isActiveKelas ? 'is-active' : '' }}">
                             <i class="fa fa-campground"></i>
                             <span>Pramuka (Wajib) • Kelas {{ $kelasOption->nama_kelas }}</span>
@@ -219,7 +222,7 @@
                         @php
                             $isActiveOption = ! $isWajibMode && isset($selectedEkskul) && (int) $ekskulOption->id === (int) $selectedEkskul->id;
                         @endphp
-                        <a href="{{ route('wali-kelas.ekstrakurikuler.index', ['mode' => 'pilihan', 'ekstrakurikuler_id' => $ekskulOption->sqid]) }}"
+                        <a href="{{ route('wali-kelas.ekstrakurikuler.index', ['mode' => 'pilihan', 'ekstrakurikuler_id' => $ekskulOption->sqid, 'periode' => $periode]) }}"
                             class="wk-class-pill {{ $isActiveOption ? 'is-active' : '' }}">
                             <i class="fa fa-medal"></i>
                             <span>{{ $ekskulOption->nama_ekstrakurikuler }} (Pilihan • {{ strtoupper((string) $ekskulOption->unit) }})</span>
@@ -313,12 +316,50 @@
                 </div>
             @endif
 
+            @php
+                $eksSwitchBase = $isWajibMode && isset($selectedKelas)
+                    ? ['mode' => 'wajib', 'kelas_id' => $selectedKelas->sqid]
+                    : ['mode' => 'pilihan', 'ekstrakurikuler_id' => $selectedEkskul->sqid];
+            @endphp
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                <div class="small text-muted font-weight-semibold">
+                    <i class="fa fa-layer-group text-warning mr-1"></i>
+                    Status &amp; Finalisasi dipisah antara periode <strong>Mid Semester</strong> dan <strong>Semester</strong>.
+                </div>
+                <div class="btn-group btn-group-sm shadow-sm" role="group" aria-label="Pilih Periode Ekskul">
+                    <a href="{{ route('wali-kelas.ekstrakurikuler.index', array_merge($eksSwitchBase, ['periode' => 'mid'])) }}"
+                        class="btn {{ $isMid ? 'text-white font-weight-bold' : 'btn-light border text-slate-700' }}"
+                        style="{{ $isMid ? 'background: linear-gradient(135deg, #ea580c 0%, #d97706 100%);' : '' }}">
+                        Mid Semester
+                    </a>
+                    <a href="{{ route('wali-kelas.ekstrakurikuler.index', array_merge($eksSwitchBase, ['periode' => 'semester'])) }}"
+                        class="btn {{ ! $isMid ? 'text-white font-weight-bold' : 'btn-light border text-slate-700' }}"
+                        style="{{ ! $isMid ? 'background: linear-gradient(135deg, #ea580c 0%, #d97706 100%);' : '' }}">
+                        Semester
+                    </a>
+                </div>
+            </div>
+
+            @if ($finalisasi !== null)
+                @include('admin.penilaian.partials._finalisasi_banner', [
+                    'finalisasi' => $finalisasi,
+                    'routePrefix' => 'wali-kelas.penilaian-finalisasi',
+                    'componentTitle' => $isWajibMode && isset($selectedKelas)
+                        ? 'Pramuka (Wajib) — Kelas '.$selectedKelas->nama_kelas
+                        : 'Ekskul '.$selectedEkskul->nama_ekstrakurikuler,
+                    'summaryNote' => 'Setelah difinalkan, penginputan atau perubahan nilai ekstrakurikuler untuk periode ini dikunci.',
+                    'compact' => true,
+                ])
+            @endif
+
             @include('waliKelas.ekstrakurikuler._grading_card', [
                 'ekstrakurikuler' => $selectedEkskul,
                 'members' => $members,
                 'predikatRanges' => $predikatRanges,
                 'isWajibMode' => $isWajibMode,
                 'selectedKelas' => $selectedKelas ?? null,
+                'periode' => $periode,
+                'finalisasi' => $finalisasi,
                 'formAction' => $isWajibMode && isset($selectedKelas)
                     ? route('wali-kelas.ekstrakurikuler.wajib.store', $selectedKelas)
                     : route('wali-kelas.ekstrakurikuler.penilaian.store', $selectedEkskul),

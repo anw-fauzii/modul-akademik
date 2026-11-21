@@ -66,12 +66,14 @@ class RaporPdfService
         protected ?SekolahService $sekolahService = null,
         protected ?TitimangsaService $titimangsaService = null,
         protected ?AnggotaKelasService $anggotaKelasService = null,
-        protected ?WaliKelasScopeService $scopeService = null
+        protected ?WaliKelasScopeService $scopeService = null,
+        protected ?PenilaianFinalisasiService $finalisasiService = null
     ) {
         $this->sekolahService ??= new SekolahService;
         $this->titimangsaService ??= new TitimangsaService;
         $this->anggotaKelasService ??= new AnggotaKelasService;
         $this->scopeService ??= new WaliKelasScopeService;
+        $this->finalisasiService ??= new PenilaianFinalisasiService;
     }
 
     /**
@@ -209,6 +211,7 @@ class RaporPdfService
             't2qCountByAnggota' => $t2qCountByAnggota,
             'presensiByAnggota' => $this->buildPresensiSummaryByAnggota($anggotaIds),
             'totalSdMapels' => $totalSdMapels,
+            'readiness' => $this->finalisasiService->getClassReadiness($selectedKelas, $periode, auth()->user()),
         ];
     }
 
@@ -638,6 +641,7 @@ class RaporPdfService
         string $periode = PeriodeTp::PERIODE_MID,
         ?AnggotaKelas $singleAnggota = null
     ): Response {
+        $this->finalisasiService->assertClassReadyForPrint($kelas, $periode);
         $payload = $this->buildNilaiPdfPayload($kelas, $periode, $singleAnggota);
         $filename = $this->buildFilename('rapor-nilai', $kelas, $payload['periode'], $singleAnggota);
 

@@ -380,6 +380,16 @@
 </div>
 
 <div class="t2q-form-actions">
+    @if (! empty($t2qMidIsFinal) && empty($t2qSemIsFinal))
+        <div class="w-100 mb-2 p-2 px-3 rounded" style="background: #fffbeb; border: 1px solid #fde68a; font-size: 0.78rem; color: #92400e;">
+            <div class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" id="for_semester_update" name="for_semester_update" value="1" @checked(old('for_semester_update'))>
+                <label class="custom-control-label font-weight-semibold" for="for_semester_update">
+                    Terapkan perubahan ini untuk periode <strong>Semester</strong> (T2Q Mid Semester kelas ini sudah berstatus Final &amp; dikunci).
+                </label>
+            </div>
+        </div>
+    @endif
     <button type="submit" class="btn text-white shadow-sm font-weight-bold px-4" id="submitBtn"
         style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 8px; border: none;">
         <i class="fa fa-save mr-1"></i> Simpan
