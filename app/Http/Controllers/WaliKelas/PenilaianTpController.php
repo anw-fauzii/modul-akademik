@@ -27,7 +27,7 @@ class PenilaianTpController extends Controller
     public function __construct(
         private readonly WaliKelasPenilaianService $service
     ) {
-        $this->middleware('role:super admin|wali kelas');
+        $this->middleware($this->allowedRoleMiddleware());
         $this->middleware('can:viewAny,'.RekapMapel::class)->only(['index', 'rekap', 'export']);
         $this->middleware('can:create,'.SumatifBab::class)->only(['store', 'updateBobot', 'storeSumatifBab', 'import']);
         $this->middleware('can:update,sumatif_bab')->only(['updateSumatifBab']);
@@ -39,21 +39,33 @@ class PenilaianTpController extends Controller
         $this->middleware('can:regenerateDeskripsi,'.RekapMapel::class)->only(['regenerateDeskripsi']);
     }
 
+    protected function allowedRoleMiddleware(): string
+    {
+        return 'role:super admin|wali kelas';
+    }
+
+    protected function routeScope(): string
+    {
+        return 'wali-kelas';
+    }
+
     /**
-     * Menampilkan matriks input nilai TP khusus kelas SD binaan Wali Kelas / Pendamping aktif.
+     * Menampilkan matriks input nilai TP per kelas & mata pelajaran SD yang diampu user.
      */
     public function index(Request $request): View
     {
+        $scope = $this->routeScope();
+
         return $this->renderScopedView(
             'admin.penilaian.nilaiTp.index',
-            $this->service->getPageData($request->user(), $this->extractPenilaianFilters($request), false),
+            $this->service->getPageData($request->user(), $this->extractPenilaianFilters($request), false, $scope),
             'Penilaian Tujuan Pembelajaran (SD)',
-            'Penilaian TP Kelas Binaan'
+            $scope === 'guru-mapel' ? 'Penilaian TP Mapel Saya' : 'Penilaian TP Kelas Binaan'
         );
     }
 
     /**
-     * Menyimpan seluruh nilai grid kelas SD binaan secara batch anti-N+1.
+     * Menyimpan seluruh nilai grid kelas SD secara batch anti-N+1.
      */
     public function store(SimpanNilaiTpRequest $request): RedirectResponse
     {
@@ -65,12 +77,12 @@ class PenilaianTpController extends Controller
             $saved['mapel'],
             (string) $validated['periode'],
             $saved['result'],
-            'wali-kelas.penilaian-tp'
+            $this->routeScope().'.penilaian-tp'
         );
     }
 
     /**
-     * Memperbarui bobot persentase Rapor jenjang kelas SD binaan aktif.
+     * Memperbarui bobot persentase Rapor jenjang kelas SD.
      */
     public function updateBobot(UpdateBobotRaporRequest $request): RedirectResponse
     {
@@ -84,12 +96,12 @@ class PenilaianTpController extends Controller
             (int) $validated['bobot_tp'],
             (int) ($validated['bobot_sumatif'] ?? 0),
             (int) $validated['bobot_ujian'],
-            'wali-kelas.penilaian-tp'
+            $this->routeScope().'.penilaian-tp'
         );
     }
 
     /**
-     * Menambahkan kolom Sumatif Bab pada kelas/tingkatan SD binaan aktif.
+     * Menambahkan kolom Sumatif Bab pada kelas/tingkatan SD.
      */
     public function storeSumatifBab(SumatifBabRequest $request): RedirectResponse
     {
@@ -102,12 +114,12 @@ class PenilaianTpController extends Controller
             $sumatifBab->akademik_pelajaran_mata_pelajaran_id,
             $sumatifBab->periode,
             $this->buildSumatifCreatedMessage($sumatifBab),
-            'wali-kelas.penilaian-tp'
+            $this->routeScope().'.penilaian-tp'
         );
     }
 
     /**
-     * Memperbarui kolom Sumatif Bab pada kelas/tingkatan SD binaan aktif.
+     * Memperbarui kolom Sumatif Bab pada kelas/tingkatan SD.
      */
     public function updateSumatifBab(SumatifBabRequest $request, SumatifBab $sumatifBab): RedirectResponse
     {
@@ -120,12 +132,12 @@ class PenilaianTpController extends Controller
             $updated->akademik_pelajaran_mata_pelajaran_id,
             $updated->periode,
             "Kolom Sumatif Bab \"{$updated->nama_bab}\" berhasil diperbarui.",
-            'wali-kelas.penilaian-tp'
+            $this->routeScope().'.penilaian-tp'
         );
     }
 
     /**
-     * Menghapus kolom Sumatif Bab pada kelas/tingkatan SD binaan aktif.
+     * Menghapus kolom Sumatif Bab pada kelas/tingkatan SD.
      */
     public function destroySumatifBab(Request $request, SumatifBab $sumatifBab): RedirectResponse
     {
@@ -143,12 +155,12 @@ class PenilaianTpController extends Controller
             $mapelId,
             $periode,
             "Kolom Sumatif Bab \"{$namaBab}\" berhasil dihapus dan NA Rapor disinkronkan ulang.",
-            'wali-kelas.penilaian-tp'
+            $this->routeScope().'.penilaian-tp'
         );
     }
 
     /**
-     * Menambahkan aspek penilaian pada TP kelas/tingkatan SD binaan aktif.
+     * Menambahkan aspek penilaian pada TP kelas/tingkatan SD.
      */
     public function storeAspek(AspekTpRequest $request): RedirectResponse
     {
@@ -161,12 +173,12 @@ class PenilaianTpController extends Controller
             $validated['kelas_id'] ?? null,
             (string) $validated['periode'],
             "Aspek \"{$saved['aspek']->nama_aspek}\" berhasil ditambahkan pada {$saved['tp']->kode_tp} (seragam jenjang Kelas {$saved['tp']->tingkatan_kelas}).",
-            'wali-kelas.penilaian-tp'
+            $this->routeScope().'.penilaian-tp'
         );
     }
 
     /**
-     * Memperbarui aspek penilaian pada TP kelas/tingkatan SD binaan aktif.
+     * Memperbarui aspek penilaian pada TP kelas/tingkatan SD.
      */
     public function updateAspek(AspekTpRequest $request, AspekTp $aspekTp): RedirectResponse
     {
@@ -179,12 +191,12 @@ class PenilaianTpController extends Controller
             $validated['kelas_id'] ?? null,
             (string) $validated['periode'],
             'Aspek penilaian berhasil diperbarui.',
-            'wali-kelas.penilaian-tp'
+            $this->routeScope().'.penilaian-tp'
         );
     }
 
     /**
-     * Menghapus aspek penilaian pada TP kelas/tingkatan SD binaan aktif.
+     * Menghapus aspek penilaian pada TP kelas/tingkatan SD.
      */
     public function destroyAspek(Request $request, AspekTp $aspekTp): RedirectResponse
     {
@@ -197,12 +209,12 @@ class PenilaianTpController extends Controller
             $request->input('kelas_id'),
             $periode,
             'Aspek penilaian berhasil dihapus dan NA TP disinkronkan ulang.',
-            'wali-kelas.penilaian-tp'
+            $this->routeScope().'.penilaian-tp'
         );
     }
 
     /**
-     * Mengekspor matrix nilai TP format 2-baris header khusus kelas SD binaan aktif.
+     * Mengekspor matrix nilai TP format 2-baris header.
      */
     public function export(Request $request): BinaryFileResponse
     {
@@ -213,7 +225,7 @@ class PenilaianTpController extends Controller
     }
 
     /**
-     * Mengimpor nilai aspek TP dari Excel/CSV khusus kelas SD binaan aktif.
+     * Mengimpor nilai aspek TP dari Excel/CSV.
      */
     public function import(ImportNilaiTpRequest $request): RedirectResponse
     {
@@ -225,25 +237,27 @@ class PenilaianTpController extends Controller
             $imported['mapel'],
             (string) $validated['periode'],
             $imported['import'],
-            'wali-kelas.penilaian-tp'
+            $this->routeScope().'.penilaian-tp'
         );
     }
 
     /**
-     * Menampilkan rekap nilai rapor & deskripsi capaian khusus kelas SD binaan aktif.
+     * Menampilkan rekap nilai rapor & deskripsi capaian mapel SD yang diampu.
      */
     public function rekap(Request $request): View
     {
+        $scope = $this->routeScope();
+
         return $this->renderScopedView(
             'admin.penilaian.rekap.index',
-            $this->service->getPageData($request->user(), $this->extractPenilaianFilters($request), true),
+            $this->service->getPageData($request->user(), $this->extractPenilaianFilters($request), true, $scope),
             'Rekap Nilai & Deskripsi Rapor (SD)',
-            'Rekap & Deskripsi Rapor Kelas Binaan'
+            $scope === 'guru-mapel' ? 'Rekap & Deskripsi Mapel Saya' : 'Rekap & Deskripsi Rapor Kelas Binaan'
         );
     }
 
     /**
-     * Memperbarui deskripsi capaian rapor siswa kelas SD binaan aktif.
+     * Memperbarui deskripsi capaian rapor siswa.
      */
     public function updateDeskripsi(Request $request, RekapMapel $rekapMapel): RedirectResponse
     {
@@ -258,12 +272,12 @@ class PenilaianTpController extends Controller
         return $this->buildUpdateDeskripsiResponse(
             $rekapMapel,
             $validated['kelas_id'] ?? null,
-            'wali-kelas.penilaian-rekap'
+            $this->routeScope().'.penilaian-rekap'
         );
     }
 
     /**
-     * Menghasilkan ulang seluruh draf deskripsi capaian rapor kelas SD binaan aktif.
+     * Menghasilkan ulang seluruh draf deskripsi capaian rapor.
      */
     public function regenerateDeskripsi(Request $request): RedirectResponse
     {
@@ -280,7 +294,7 @@ class PenilaianTpController extends Controller
             $regenerated['mapel'],
             (string) $validated['periode'],
             $regenerated['count'],
-            'wali-kelas.penilaian-rekap'
+            $this->routeScope().'.penilaian-rekap'
         );
     }
 

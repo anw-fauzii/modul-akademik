@@ -16,12 +16,12 @@ class PenilaianFinalisasiPolicy extends BasePolicy
 {
     public function viewAny(User $user): Response
     {
-        return $this->allowIfWaliKelas($user);
+        return $this->allowIfGuruPengajar($user);
     }
 
     public function view(User $user, PenilaianFinalisasi $finalisasi): Response
     {
-        return $this->allowIfWaliKelas($user);
+        return $this->allowIfGuruPengajar($user);
     }
 
     /**
@@ -31,7 +31,7 @@ class PenilaianFinalisasiPolicy extends BasePolicy
      */
     public function manageComponent(User $user, array $context): Response
     {
-        if (! $this->isWaliKelas($user)) {
+        if (! $this->isGuruPengajar($user)) {
             return Response::deny('Akses ditolak.');
         }
 

@@ -14,9 +14,15 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
  */
 abstract class BasePolicy
 {
+    public const string ROLE_SUPER_ADMIN = 'super admin';
+
+    public const string ROLE_WALI_KELAS = 'wali kelas';
+
+    public const string ROLE_GURU_MAPEL_SD = 'guru mapel sd';
+
     public function before(User $user, string $ability): ?bool
     {
-        if ($user->hasRole('super admin')) {
+        if ($user->hasRole(self::ROLE_SUPER_ADMIN)) {
             return true;
         }
 
@@ -25,7 +31,17 @@ abstract class BasePolicy
 
     protected function isWaliKelas(User $user): bool
     {
-        return $user->hasRole('wali kelas');
+        return $user->hasRole(self::ROLE_WALI_KELAS);
+    }
+
+    protected function isGuruMapelSd(User $user): bool
+    {
+        return $user->hasRole(self::ROLE_GURU_MAPEL_SD);
+    }
+
+    protected function isGuruPengajar(User $user): bool
+    {
+        return $user->hasAnyRole([self::ROLE_WALI_KELAS, self::ROLE_GURU_MAPEL_SD]);
     }
 
     protected function allowIfWaliKelas(
@@ -33,6 +49,15 @@ abstract class BasePolicy
         string $deniedMessage = 'Akses ditolak. Fitur ini khusus Super Admin atau Wali Kelas.'
     ): Response {
         return $this->isWaliKelas($user)
+            ? Response::allow()
+            : Response::deny($deniedMessage);
+    }
+
+    protected function allowIfGuruPengajar(
+        User $user,
+        string $deniedMessage = 'Akses ditolak. Fitur ini khusus Super Admin, Wali Kelas, atau Guru Mapel SD.'
+    ): Response {
+        return $this->isGuruPengajar($user)
             ? Response::allow()
             : Response::deny($deniedMessage);
     }

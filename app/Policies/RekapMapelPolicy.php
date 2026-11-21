@@ -11,12 +11,12 @@ class RekapMapelPolicy extends BasePolicy
 {
     public function viewAny(User $user): Response
     {
-        return $this->allowIfWaliKelas($user);
+        return $this->allowIfGuruPengajar($user);
     }
 
     public function updateDeskripsi(User $user, RekapMapel $rekapMapel, ?int $kelasId = null): Response
     {
-        if (! $this->isWaliKelas($user)) {
+        if (! $this->isGuruPengajar($user)) {
             return Response::deny('Akses ditolak.');
         }
 
@@ -31,7 +31,7 @@ class RekapMapelPolicy extends BasePolicy
 
     public function regenerateDeskripsi(User $user, ?int $kelasId = null, ?int $mapelId = null): Response
     {
-        if (! $this->isWaliKelas($user)) {
+        if (! $this->isGuruPengajar($user)) {
             return Response::deny('Akses ditolak.');
         }
 

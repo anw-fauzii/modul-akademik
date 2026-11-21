@@ -11,12 +11,12 @@ class SumatifBabPolicy extends BasePolicy
 {
     public function create(User $user): Response
     {
-        return $this->allowIfWaliKelas($user);
+        return $this->allowIfGuruPengajar($user);
     }
 
     public function update(User $user, SumatifBab $sumatifBab, ?int $kelasId = null): Response
     {
-        if (! $this->isWaliKelas($user)) {
+        if (! $this->isGuruPengajar($user)) {
             return Response::deny('Akses ditolak.');
         }
 

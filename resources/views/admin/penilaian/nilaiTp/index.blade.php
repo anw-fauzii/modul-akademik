@@ -1142,7 +1142,9 @@
         $teknikOptions = $teknikOptions ?? \App\Models\Admin\Penilaian\AspekTp::TEKNIK_OPTIONS;
         $finalisasi = $finalisasi ?? null;
         $isLocked = (bool) ($finalisasi['is_final'] ?? false);
-        $finalisasiRoutePrefix = $isWaliKelasScope ? 'wali-kelas.penilaian-finalisasi' : 'penilaian-finalisasi';
+        $isGuruMapelScope = $isGuruMapelScope ?? false;
+        $perkembanganRoutePrefix = $perkembanganRoutePrefix ?? ($isGuruMapelScope ? 'guru-mapel.perkembangan-siswa' : 'wali-kelas.perkembangan-siswa');
+        $finalisasiRoutePrefix = $finalisasiRoutePrefix ?? ($isWaliKelasScope ? ($isGuruMapelScope ? 'guru-mapel.penilaian-finalisasi' : 'wali-kelas.penilaian-finalisasi') : 'penilaian-finalisasi');
 
         // Pada tab Mid Semester: sembunyikan TP yang sudah memiliki nilai di Semester (selama belum dinilai di Mid).
         // Pada tab Semester: tampilkan kembali TP yang sudah dinilai di Mid dan Sumatif Bab Mid dalam mode read-only.
@@ -1338,10 +1340,10 @@
 
                 <div class="page-title-actions flex-wrap">
                     @if ($isWaliKelasScope)
-                        <a href="{{ route('wali-kelas.perkembangan-siswa.index', ['periode' => $periode]) }}"
+                        <a href="{{ route($perkembanganRoutePrefix.'.index', ['periode' => $periode]) }}"
                             class="btn btn-light shadow-sm"
                             style="border-radius: 10px; font-weight: 600; color: #ea580c; border-color: #fed7aa; background: #fff7ed;">
-                            <i class="fa fa-chart-line mr-1"></i> Perkembangan Semua Mapel
+                            <i class="fa fa-chart-line mr-1"></i> {{ $isGuruMapelScope ? 'Perkembangan Siswa' : 'Perkembangan Semua Mapel' }}
                         </a>
                     @endif
                     @if ($selectedKelas && $selectedMapel && ($tpList->isNotEmpty() || $hasSumatifCols))

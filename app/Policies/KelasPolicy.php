@@ -11,7 +11,7 @@ class KelasPolicy extends BasePolicy
 {
     public function viewAny(User $user): Response
     {
-        return $this->allowIfWaliKelas($user);
+        return $this->allowIfGuruPengajar($user);
     }
 
     public function view(User $user, Kelas $kelas): Response

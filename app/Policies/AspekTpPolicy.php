@@ -12,12 +12,12 @@ class AspekTpPolicy extends BasePolicy
 {
     public function create(User $user): Response
     {
-        return $this->allowIfWaliKelas($user);
+        return $this->allowIfGuruPengajar($user);
     }
 
     public function createForTp(User $user, TujuanPembelajaran $tujuanPembelajaran, ?int $kelasId = null): Response
     {
-        if (! $this->isWaliKelas($user)) {
+        if (! $this->isGuruPengajar($user)) {
             return Response::deny('Akses ditolak.');
         }
 
@@ -34,7 +34,7 @@ class AspekTpPolicy extends BasePolicy
 
     public function update(User $user, AspekTp $aspekTp, ?int $kelasId = null): Response
     {
-        if (! $this->isWaliKelas($user)) {
+        if (! $this->isGuruPengajar($user)) {
             return Response::deny('Akses ditolak.');
         }
 

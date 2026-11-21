@@ -34,6 +34,11 @@ use App\Http\Controllers\Admin\Presensi\PresensiSiswaController;
 use App\Http\Controllers\Admin\T2q\YaumiyahTahfizhController;
 use App\Http\Controllers\Admin\T2q\YaumiyahTahsinController;
 use App\Http\Controllers\Admin\TujuanPembelajaran\TujuanPembelajaranController;
+use App\Http\Controllers\GuruMapel\DashboardController as GuruMapelDashboardController;
+use App\Http\Controllers\GuruMapel\JadwalPelajaranController as GuruMapelJadwalPelajaranController;
+use App\Http\Controllers\GuruMapel\PenilaianEkstrakurikulerController as GuruMapelPenilaianEkstrakurikulerController;
+use App\Http\Controllers\GuruMapel\PenilaianTpController as GuruMapelPenilaianTpController;
+use App\Http\Controllers\GuruMapel\PerkembanganSiswaController as GuruMapelPerkembanganSiswaController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SSOController;
 use App\Http\Controllers\WaliKelas\AnggotaKelasController as WaliKelasAnggotaKelasController;
@@ -143,6 +148,50 @@ Route::middleware(['auth', 'sso.check', 'nocache', 'sqid.decode'])->group(functi
         ->name('wali-kelas.ekstrakurikuler.wajib.store');
     Route::post('/wali-kelas/ekstrakurikuler/{ekstrakurikuler}/penilaian', [WaliKelasPenilaianEkstrakurikulerController::class, 'store'])
         ->name('wali-kelas.ekstrakurikuler.penilaian.store');
+    Route::get('/guru-mapel/dashboard', [GuruMapelDashboardController::class, 'index'])
+        ->name('guru-mapel.dashboard');
+    Route::get('/guru-mapel/jadwal-pelajaran', [GuruMapelJadwalPelajaranController::class, 'index'])
+        ->name('guru-mapel.jadwal-pelajaran.index');
+    Route::get('/guru-mapel/perkembangan-siswa', [GuruMapelPerkembanganSiswaController::class, 'index'])
+        ->name('guru-mapel.perkembangan-siswa.index');
+    Route::get('/guru-mapel/perkembangan-siswa/{anggota_kelas}', [GuruMapelPerkembanganSiswaController::class, 'show'])
+        ->name('guru-mapel.perkembangan-siswa.show');
+    Route::get('/guru-mapel/penilaian/nilai-tp', [GuruMapelPenilaianTpController::class, 'index'])
+        ->name('guru-mapel.penilaian-tp.index');
+    Route::post('/guru-mapel/penilaian/nilai-tp', [GuruMapelPenilaianTpController::class, 'store'])
+        ->name('guru-mapel.penilaian-tp.store');
+    Route::post('/guru-mapel/penilaian/nilai-tp/bobot', [GuruMapelPenilaianTpController::class, 'updateBobot'])
+        ->name('guru-mapel.penilaian-tp.bobot.update');
+    Route::post('/guru-mapel/penilaian/nilai-tp/aspek', [GuruMapelPenilaianTpController::class, 'storeAspek'])
+        ->name('guru-mapel.penilaian-tp.aspek.store');
+    Route::put('/guru-mapel/penilaian/nilai-tp/aspek/{aspek_tp}', [GuruMapelPenilaianTpController::class, 'updateAspek'])
+        ->name('guru-mapel.penilaian-tp.aspek.update');
+    Route::delete('/guru-mapel/penilaian/nilai-tp/aspek/{aspek_tp}', [GuruMapelPenilaianTpController::class, 'destroyAspek'])
+        ->name('guru-mapel.penilaian-tp.aspek.destroy');
+    Route::post('/guru-mapel/penilaian/nilai-tp/sumatif-bab', [GuruMapelPenilaianTpController::class, 'storeSumatifBab'])
+        ->name('guru-mapel.penilaian-tp.sumatif-bab.store');
+    Route::put('/guru-mapel/penilaian/nilai-tp/sumatif-bab/{sumatif_bab}', [GuruMapelPenilaianTpController::class, 'updateSumatifBab'])
+        ->name('guru-mapel.penilaian-tp.sumatif-bab.update');
+    Route::delete('/guru-mapel/penilaian/nilai-tp/sumatif-bab/{sumatif_bab}', [GuruMapelPenilaianTpController::class, 'destroySumatifBab'])
+        ->name('guru-mapel.penilaian-tp.sumatif-bab.destroy');
+    Route::get('/guru-mapel/penilaian/nilai-tp/export', [GuruMapelPenilaianTpController::class, 'export'])
+        ->name('guru-mapel.penilaian-tp.export');
+    Route::post('/guru-mapel/penilaian/nilai-tp/import', [GuruMapelPenilaianTpController::class, 'import'])
+        ->name('guru-mapel.penilaian-tp.import');
+    Route::get('/guru-mapel/penilaian/rekap', [GuruMapelPenilaianTpController::class, 'rekap'])
+        ->name('guru-mapel.penilaian-rekap.index');
+    Route::put('/guru-mapel/penilaian/rekap/{rekap_mapel}/deskripsi', [GuruMapelPenilaianTpController::class, 'updateDeskripsi'])
+        ->name('guru-mapel.penilaian-rekap.deskripsi.update');
+    Route::post('/guru-mapel/penilaian/rekap/regenerate-deskripsi', [GuruMapelPenilaianTpController::class, 'regenerateDeskripsi'])
+        ->name('guru-mapel.penilaian-rekap.deskripsi.regenerate');
+    Route::post('/guru-mapel/penilaian/finalisasi', [FinalisasiController::class, 'finalize'])
+        ->name('guru-mapel.penilaian-finalisasi.finalize');
+    Route::post('/guru-mapel/penilaian/finalisasi/unlock', [FinalisasiController::class, 'unlock'])
+        ->name('guru-mapel.penilaian-finalisasi.unlock');
+    Route::get('/guru-mapel/ekstrakurikuler', [GuruMapelPenilaianEkstrakurikulerController::class, 'index'])
+        ->name('guru-mapel.ekstrakurikuler.index');
+    Route::post('/guru-mapel/ekstrakurikuler/{ekstrakurikuler}/penilaian', [GuruMapelPenilaianEkstrakurikulerController::class, 'store'])
+        ->name('guru-mapel.ekstrakurikuler.penilaian.store');
     Route::post('/data-master/tahun-ajaran/{tahun_ajaran}/toggle-active', [TahunAjaranController::class, 'toggleActive'])->name('tahun-ajaran.toggle-active');
     Route::resource('/data-master/tahun-ajaran', TahunAjaranController::class);
     Route::resource('/data-master/kelas', KelasController::class)->parameters(

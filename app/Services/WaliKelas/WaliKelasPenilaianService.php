@@ -36,8 +36,18 @@ class WaliKelasPenilaianService
      * @param  array<string, mixed>  $filters
      * @return array<string, mixed>
      */
-    public function getPageData(User $user, array $filters = [], bool $isRekap = false): array
+    public function getPageData(User $user, array $filters = [], bool $isRekap = false, string $routeScope = 'wali-kelas'): array
     {
+        $isGuruMapelScope = $routeScope === 'guru-mapel';
+        $scopeLinks = [
+            'tpRoutePrefix' => "{$routeScope}.penilaian-tp",
+            'rekapRoutePrefix' => "{$routeScope}.penilaian-rekap",
+            'perkembanganRoutePrefix' => "{$routeScope}.perkembangan-siswa",
+            'finalisasiRoutePrefix' => "{$routeScope}.penilaian-finalisasi",
+            'dashboardRouteName' => "{$routeScope}.dashboard",
+            'isGuruMapelScope' => $isGuruMapelScope,
+        ];
+
         $requestedKelasId = isset($filters['kelas_id']) && (int) $filters['kelas_id'] > 0
             ? (int) $filters['kelas_id']
             : null;
@@ -55,21 +65,25 @@ class WaliKelasPenilaianService
             if ($reason === 'no_active_tahun_ajaran' || $reason === 'missing_nipy') {
                 return [
                     ...$taughtScope,
+                    ...$scopeLinks,
                     'isEligible' => false,
                     'hasSdClasses' => false,
                     'guardReason' => $reason,
                 ];
             }
 
-            $assignedClasses = $this->scopeService->getAssignedClassesForUser($user, $taughtScope['activeTahunAjaran']);
+            $assignedClasses = $isGuruMapelScope
+                ? new EloquentCollection
+                : $this->scopeService->getAssignedClassesForUser($user, $taughtScope['activeTahunAjaran']);
             $sdClasses = $this->scopeService->filterSdClasses($assignedClasses);
             $hasNonSdOnly = $assignedClasses->isNotEmpty() && $sdClasses->isEmpty();
             $guardReason = $hasNonSdOnly
                 ? 'non_sd_only'
-                : ($sdClasses->isNotEmpty() ? 'no_taught_mapel' : 'not_assigned_active_year');
+                : (($sdClasses->isNotEmpty() || $isGuruMapelScope) ? 'no_taught_mapel' : 'not_assigned_active_year');
 
             return [
                 ...$taughtScope,
+                ...$scopeLinks,
                 'assignedClasses' => $assignedClasses,
                 'isEligible' => false,
                 'hasSdClasses' => $sdClasses->isNotEmpty(),
@@ -79,7 +93,7 @@ class WaliKelasPenilaianService
 
         $activeTaId = (int) ($taughtScope['activeTahunAjaran']?->id ?? 0);
         if ($requestedTaId !== null && $requestedTaId !== $activeTaId) {
-            abort(403, 'Penilaian Wali Kelas hanya tersedia untuk Tahun Ajaran aktif.');
+            abort(403, 'Penilaian SD hanya tersedia untuk Tahun Ajaran aktif.');
         }
 
         /** @var EloquentCollection<int, Kelas> $taughtSdClasses */
@@ -117,10 +131,9 @@ class WaliKelasPenilaianService
 
         return [
             ...$payload,
+            ...$scopeLinks,
             'isEligible' => true,
             'hasSdClasses' => true,
-            'tpRoutePrefix' => 'wali-kelas.penilaian-tp',
-            'rekapRoutePrefix' => 'wali-kelas.penilaian-rekap',
             'isWaliKelasScope' => true,
             'assignedClasses' => $taughtSdClasses,
             'peranDiKelas' => $this->scopeService->resolveRoleInKelas(

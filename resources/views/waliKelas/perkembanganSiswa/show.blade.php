@@ -15,7 +15,11 @@
         $summary = $summary ?? ['total_mapel' => 0, 'dinilai_count' => 0, 'tuntas_count' => 0, 'belum_tuntas_count' => 0, 'rata_rapor' => null];
         $subjectDetails = $subjectDetails ?? collect();
         $readiness = $readiness ?? null;
-        $canPrintNilai = $readiness === null || (bool) ($readiness['is_ready'] ?? false);
+        $isGuruMapelScope = $isGuruMapelScope ?? false;
+        $canPrintRapor = $canPrintRapor ?? ! $isGuruMapelScope;
+        $perkembanganRoutePrefix = $perkembanganRoutePrefix ?? 'wali-kelas.perkembangan-siswa';
+        $tpRoutePrefix = $tpRoutePrefix ?? 'wali-kelas.penilaian-tp';
+        $canPrintNilai = $canPrintRapor && ($readiness === null || (bool) ($readiness['is_ready'] ?? false));
         $pendingCountRapor = (int) ($readiness['pending_count'] ?? 0);
     @endphp
 
@@ -64,31 +68,33 @@
                 </div>
 
                 <div class="col-lg-4 d-flex flex-wrap justify-content-lg-end gap-2">
-                    <a href="{{ route('wali-kelas.rapor.identitas.siswa', $anggotaKelas) }}" target="_blank"
-                        class="btn btn-sm btn-light font-weight-semibold shadow-sm" style="border-radius: 9px;">
-                        <i class="fa fa-id-card text-primary mr-1"></i> PDF Identitas
-                    </a>
-                    @if ($isSd)
-                        @if ($canPrintNilai)
-                            <a href="{{ route('wali-kelas.rapor.nilai.siswa', ['anggota_kelas' => $anggotaKelas, 'periode' => $periode]) }}" target="_blank"
-                                class="btn btn-sm btn-light font-weight-semibold shadow-sm" style="border-radius: 9px; color: #c2410c;">
-                                <i class="fa fa-file-pdf mr-1"></i> PDF Nilai
-                            </a>
-                        @else
-                            <button type="button"
-                                class="btn btn-sm btn-secondary font-weight-semibold shadow-sm"
-                                style="border-radius: 9px; opacity: 0.85;"
-                                onclick="if (window.toastr) { window.toastr.error('Cetak Nilai Rapor diblokir: masih ada {{ $pendingCountRapor }} komponen belum Final.', 'Cetak Diblokir'); }"
-                                title="PDF Nilai diblokir: masih ada {{ $pendingCountRapor }} komponen belum Final.">
-                                <i class="fa fa-lock mr-1"></i> PDF Nilai ({{ $pendingCountRapor }} Draft)
-                            </button>
+                    @if ($canPrintRapor)
+                        <a href="{{ route('wali-kelas.rapor.identitas.siswa', $anggotaKelas) }}" target="_blank"
+                            class="btn btn-sm btn-light font-weight-semibold shadow-sm" style="border-radius: 9px;">
+                            <i class="fa fa-id-card text-primary mr-1"></i> PDF Identitas
+                        </a>
+                        @if ($isSd)
+                            @if ($canPrintNilai)
+                                <a href="{{ route('wali-kelas.rapor.nilai.siswa', ['anggota_kelas' => $anggotaKelas, 'periode' => $periode]) }}" target="_blank"
+                                    class="btn btn-sm btn-light font-weight-semibold shadow-sm" style="border-radius: 9px; color: #c2410c;">
+                                    <i class="fa fa-file-pdf mr-1"></i> PDF Nilai
+                                </a>
+                            @else
+                                <button type="button"
+                                    class="btn btn-sm btn-secondary font-weight-semibold shadow-sm"
+                                    style="border-radius: 9px; opacity: 0.85;"
+                                    onclick="if (window.toastr) { window.toastr.error('Cetak Nilai Rapor diblokir: masih ada {{ $pendingCountRapor }} komponen belum Final.', 'Cetak Diblokir'); }"
+                                    title="PDF Nilai diblokir: masih ada {{ $pendingCountRapor }} komponen belum Final.">
+                                    <i class="fa fa-lock mr-1"></i> PDF Nilai ({{ $pendingCountRapor }} Draft)
+                                </button>
+                            @endif
                         @endif
+                        <a href="{{ route('wali-kelas.anggota-kelas.show', $anggotaKelas) }}"
+                            class="btn btn-sm btn-light font-weight-semibold shadow-sm" style="border-radius: 9px;">
+                            <i class="fa fa-user mr-1"></i> Biodata
+                        </a>
                     @endif
-                    <a href="{{ route('wali-kelas.anggota-kelas.show', $anggotaKelas) }}"
-                        class="btn btn-sm btn-light font-weight-semibold shadow-sm" style="border-radius: 9px;">
-                        <i class="fa fa-user mr-1"></i> Biodata
-                    </a>
-                    <a href="{{ route('wali-kelas.perkembangan-siswa.index', ['kelas_id' => $selectedKelas->sqid, 'periode' => $periode]) }}"
+                    <a href="{{ route($perkembanganRoutePrefix.'.index', ['kelas_id' => $selectedKelas->sqid, 'periode' => $periode]) }}"
                         class="btn btn-sm text-white font-weight-semibold shadow-sm"
                         style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 9px;">
                         <i class="fa fa-arrow-left mr-1"></i> Kembali ke Leger
@@ -103,12 +109,12 @@
                     Menampilkan rekap periode <strong>{{ $isMid ? 'Mid Semester' : 'Semester' }}</strong> (beserta perbandingan Mid vs Semester per mapel &amp; TP).
                 </div>
                 <div class="btn-group btn-group-sm shadow-sm">
-                    <a href="{{ route('wali-kelas.perkembangan-siswa.show', ['anggota_kelas' => $anggotaKelas, 'periode' => 'mid']) }}"
+                    <a href="{{ route($perkembanganRoutePrefix.'.show', ['anggota_kelas' => $anggotaKelas, 'periode' => 'mid']) }}"
                         class="btn {{ $isMid ? 'text-white font-weight-bold' : 'btn-light border text-slate-700' }}"
                         style="{{ $isMid ? 'background: linear-gradient(135deg, #ea580c 0%, #d97706 100%);' : '' }}">
                         Mid Semester
                     </a>
-                    <a href="{{ route('wali-kelas.perkembangan-siswa.show', ['anggota_kelas' => $anggotaKelas, 'periode' => 'semester']) }}"
+                    <a href="{{ route($perkembanganRoutePrefix.'.show', ['anggota_kelas' => $anggotaKelas, 'periode' => 'semester']) }}"
                         class="btn {{ ! $isMid ? 'text-white font-weight-bold' : 'btn-light border text-slate-700' }}"
                         style="{{ ! $isMid ? 'background: linear-gradient(135deg, #ea580c 0%, #d97706 100%);' : '' }}">
                         Semester
@@ -233,7 +239,7 @@
                             @endif
 
                             @if ($item['is_taught_by_user'])
-                                <a href="{{ route('wali-kelas.penilaian-tp.index', ['kelas_id' => $selectedKelas->sqid, 'mata_pelajaran_id' => $mp->sqid, 'periode' => $periode]) }}"
+                                <a href="{{ route($tpRoutePrefix.'.index', ['kelas_id' => $selectedKelas->sqid, 'mata_pelajaran_id' => $mp->sqid, 'periode' => $periode]) }}"
                                     class="btn btn-sm btn-outline-primary font-weight-semibold" style="border-radius: 8px; font-size: 0.72rem;">
                                     <i class="fa fa-edit mr-1"></i> Kelola Nilai
                                 </a>

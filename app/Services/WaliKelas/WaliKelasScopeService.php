@@ -582,6 +582,49 @@ class WaliKelasScopeService
     }
 
     /**
+     * Memastikan user memiliki jadwal mengajar SD aktif pada kelas tertentu (tanpa N+1).
+     *
+     * @return array{
+     *     isEligible: bool,
+     *     ineligibleReason: ?string,
+     *     nipy: string,
+     *     karyawanProfile: ?Karyawan,
+     *     activeTahunAjaran: TahunAjaran,
+     *     taughtClasses: EloquentCollection<int, Kelas>,
+     *     taughtMapelsByClass: Collection<int, EloquentCollection<int, MataPelajaran>>,
+     *     selectedKelas: Kelas,
+     *     taughtMapels: EloquentCollection<int, MataPelajaran>
+     * }
+     */
+    public function authorizeTaughtSdKelasIdForUser(
+        User $user,
+        int $kelasId,
+        string $errorMessage = 'Anda hanya dapat mengakses data kelas SD yang Anda ampu pada Jadwal Pelajaran Tahun Ajaran aktif.'
+    ): array {
+        if ($kelasId <= 0) {
+            abort(403, $errorMessage);
+        }
+
+        $scope = $this->getTaughtSdScopeForUser($user, null, false);
+        /** @var EloquentCollection<int, Kelas> $taughtClasses */
+        $taughtClasses = $scope['taughtClasses'];
+        $selectedKelas = $taughtClasses->firstWhere('id', $kelasId);
+
+        if (! $scope['isEligible'] || ! $selectedKelas instanceof Kelas || ! $scope['activeTahunAjaran'] instanceof TahunAjaran) {
+            abort(403, $errorMessage);
+        }
+
+        /** @var EloquentCollection<int, MataPelajaran> $taughtMapels */
+        $taughtMapels = $scope['taughtMapelsByClass']->get((int) $selectedKelas->id, new EloquentCollection);
+
+        return [
+            ...$scope,
+            'selectedKelas' => $selectedKelas,
+            'taughtMapels' => $taughtMapels,
+        ];
+    }
+
+    /**
      * Memetakan mata pelajaran SD aktif yang diampu user pada jadwal setiap kelas SD (anti-N+1).
      *
      * @param  EloquentCollection<int, Kelas>  $sdClasses

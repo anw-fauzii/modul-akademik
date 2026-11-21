@@ -11,18 +11,27 @@ class AnggotaKelasPolicy extends BasePolicy
 {
     public function viewAny(User $user): Response
     {
-        return $this->allowIfWaliKelas($user);
+        return $this->allowIfGuruPengajar($user);
     }
 
     public function view(User $user, AnggotaKelas $anggotaKelas): Response
     {
-        if (! $this->isWaliKelas($user)) {
-            return Response::deny('Akses ditolak.');
+        if ($this->isWaliKelas($user)) {
+            return $this->checkScope(
+                fn (WaliKelasScopeService $scope) => $scope->authorizeAnggotaKelasForUser($user, $anggotaKelas)
+            );
         }
 
-        return $this->checkScope(
-            fn (WaliKelasScopeService $scope) => $scope->authorizeAnggotaKelasForUser($user, $anggotaKelas)
-        );
+        if ($this->isGuruMapelSd($user)) {
+            return $this->checkScope(
+                fn (WaliKelasScopeService $scope) => $scope->authorizeTaughtSdKelasIdForUser(
+                    $user,
+                    (int) $anggotaKelas->akademik_master_kelas_id
+                )
+            );
+        }
+
+        return Response::deny('Akses ditolak.');
     }
 
     public function create(User $user): Response

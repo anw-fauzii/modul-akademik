@@ -7,6 +7,7 @@ use App\Models\Admin\DataMaster\Siswa;
 use App\Models\Admin\Pelajaran\JadwalPelajaran;
 use App\Models\Admin\Pelajaran\MataPelajaran;
 use App\Models\Admin\Penilaian\Kkm;
+use App\Models\Admin\Penilaian\PenilaianFinalisasi;
 use App\Models\Admin\Penilaian\PeriodeTp;
 use App\Models\Admin\Penilaian\RekapMapel;
 use App\Models\Admin\Penilaian\RekapTp;
@@ -38,14 +39,47 @@ class WaliKelasPerkembanganService
     public function getIndexData(
         User $user,
         ?int $requestedKelasId = null,
-        string $periodeInput = PeriodeTp::PERIODE_MID
+        string $periodeInput = PeriodeTp::PERIODE_MID,
+        bool $onlyTaughtMapels = false
     ): array {
-        $scope = $this->scopeService->resolveScopeContext($user, $requestedKelasId);
+        $routeScope = $onlyTaughtMapels ? 'guru-mapel' : 'wali-kelas';
+        $scopeLinks = [
+            'isGuruMapelScope' => $onlyTaughtMapels,
+            'canPrintRapor' => ! $onlyTaughtMapels,
+            'perkembanganRoutePrefix' => "{$routeScope}.perkembangan-siswa",
+            'dashboardRouteName' => "{$routeScope}.dashboard",
+            'tpRoutePrefix' => "{$routeScope}.penilaian-tp",
+        ];
+
         $periode = $this->normalizePeriode($periodeInput);
+        $taughtMapelsByClass = collect();
+
+        if ($onlyTaughtMapels) {
+            $taughtScope = $this->scopeService->getTaughtSdScopeForUser($user, null, true);
+            $assignedClasses = $taughtScope['taughtClasses'];
+            $taughtMapelsByClass = $taughtScope['taughtMapelsByClass'];
+            $selectedKelas = $requestedKelasId !== null && $requestedKelasId > 0
+                ? ($assignedClasses->firstWhere('id', $requestedKelasId) ?? $assignedClasses->first())
+                : $assignedClasses->first();
+
+            $scope = [
+                'isEligible' => (bool) ($taughtScope['isEligible'] ?? false),
+                'ineligibleReason' => $taughtScope['ineligibleReason'] ?? null,
+                'nipy' => $taughtScope['nipy'] ?? '',
+                'karyawanProfile' => $taughtScope['karyawanProfile'] ?? null,
+                'activeTahunAjaran' => $taughtScope['activeTahunAjaran'] ?? null,
+                'assignedClasses' => $assignedClasses,
+                'selectedKelas' => $selectedKelas,
+                'peranDiKelas' => $selectedKelas !== null ? 'Guru Mapel SD' : null,
+            ];
+        } else {
+            $scope = $this->scopeService->resolveScopeContext($user, $requestedKelasId);
+        }
 
         if (! $scope['isEligible'] || $scope['selectedKelas'] === null || $scope['activeTahunAjaran'] === null) {
             return [
                 ...$scope,
+                ...$scopeLinks,
                 'periode' => $periode,
                 'isSd' => false,
                 'students' => new EloquentCollection,
@@ -96,6 +130,7 @@ class WaliKelasPerkembanganService
 
             return [
                 ...$scope,
+                ...$scopeLinks,
                 'periode' => $periode,
                 'isSd' => false,
                 'students' => $students,
@@ -107,11 +142,14 @@ class WaliKelasPerkembanganService
                     ...$this->emptyOverviewStats(),
                     'avg_kehadiran' => $this->computeClassAttendanceRate($presensiByAnggota),
                 ],
-                'readiness' => $this->finalisasiService->getClassReadiness($selectedKelas, $periode, $user),
+                'readiness' => $onlyTaughtMapels ? null : $this->finalisasiService->getClassReadiness($selectedKelas, $periode, $user),
             ];
         }
 
-        $mapels = $this->getActiveSdMapels();
+        $mapels = $onlyTaughtMapels
+            ? $taughtMapelsByClass->get((int) $selectedKelas->id, new EloquentCollection)
+            : $this->getActiveSdMapels();
+        $mapelIds = $mapels->pluck('id')->map(static fn ($id): int => (int) $id)->all();
         $kkmByMapel = $this->getKkmByMapel($activeTahunAjaran->id, (string) $selectedKelas->tingkatan_kelas);
         [$teachersByMapel, $userTaughtMapelIds] = $this->getTeachersByMapel(
             $activeTahunAjaran->id,
@@ -120,7 +158,7 @@ class WaliKelasPerkembanganService
         );
 
         $rekapLookup = [];
-        if ($anggotaIds !== []) {
+        if ($anggotaIds !== [] && $mapelIds !== []) {
             $rekapRows = RekapMapel::query()
                 ->select([
                     'id',
@@ -137,6 +175,7 @@ class WaliKelasPerkembanganService
                 ])
                 ->where('akademik_master_tahun_ajaran_id', $activeTahunAjaran->id)
                 ->whereIn('anggota_kelas_id', $anggotaIds)
+                ->when($onlyTaughtMapels, static fn ($q) => $q->whereIn('akademik_pelajaran_mata_pelajaran_id', $mapelIds))
                 ->where('periode', $periode)
                 ->get();
 
@@ -215,8 +254,27 @@ class WaliKelasPerkembanganService
             ];
         });
 
-        $readiness = $this->finalisasiService->getClassReadiness($selectedKelas, $periode, $user);
-        $finalStatusByMapel = collect($readiness['groups']['mapel'] ?? [])->keyBy('mata_pelajaran_id');
+        $readiness = $onlyTaughtMapels
+            ? null
+            : $this->finalisasiService->getClassReadiness($selectedKelas, $periode, $user);
+
+        if ($onlyTaughtMapels) {
+            $finalStatusByMapel = PenilaianFinalisasi::query()
+                ->where('akademik_master_tahun_ajaran_id', $activeTahunAjaran->id)
+                ->where('jenis_komponen', PenilaianFinalisasi::JENIS_MAPEL)
+                ->where('akademik_master_kelas_id', $selectedKelas->id)
+                ->where('periode', $periode)
+                ->whereIn('akademik_pelajaran_mata_pelajaran_id', $mapelIds !== [] ? $mapelIds : [0])
+                ->get()
+                ->keyBy('akademik_pelajaran_mata_pelajaran_id')
+                ->map(static fn (PenilaianFinalisasi $rec): array => [
+                    'is_final' => $rec->isFinal(),
+                    'finalized_by_name' => $rec->finalized_by_name,
+                    'finalized_at' => $rec->finalized_at,
+                ]);
+        } else {
+            $finalStatusByMapel = collect($readiness['groups']['mapel'] ?? [])->keyBy('mata_pelajaran_id');
+        }
 
         $mapelSummaries = $mapels->map(function (MataPelajaran $mapel) use (
             $kkmByMapel,
@@ -225,7 +283,8 @@ class WaliKelasPerkembanganService
             $mapelScoreSums,
             $mapelScoredCounts,
             $mapelTuntasCounts,
-            $finalStatusByMapel
+            $finalStatusByMapel,
+            $onlyTaughtMapels
         ): array {
             $dinilai = $mapelScoredCounts[$mapel->id] ?? 0;
             $tuntas = $mapelTuntasCounts[$mapel->id] ?? 0;
@@ -243,12 +302,13 @@ class WaliKelasPerkembanganService
                 'is_final' => (bool) ($finalItem['is_final'] ?? false),
                 'finalized_by_name' => $finalItem['finalized_by_name'] ?? null,
                 'finalized_at' => $finalItem['finalized_at'] ?? null,
-                'is_required_for_rapor' => $finalItem !== null,
+                'is_required_for_rapor' => ! $onlyTaughtMapels && $finalItem !== null,
             ];
         });
 
         return [
             ...$scope,
+            ...$scopeLinks,
             'periode' => $periode,
             'isSd' => true,
             'students' => $students,
@@ -276,9 +336,36 @@ class WaliKelasPerkembanganService
     public function getStudentDetailData(
         User $user,
         AnggotaKelas $anggotaKelas,
-        string $periodeInput = PeriodeTp::PERIODE_MID
+        string $periodeInput = PeriodeTp::PERIODE_MID,
+        bool $onlyTaughtMapels = false
     ): array {
-        $scope = $this->scopeService->authorizeAnggotaKelasForUser($user, $anggotaKelas);
+        $routeScope = $onlyTaughtMapels ? 'guru-mapel' : 'wali-kelas';
+        $scopeLinks = [
+            'isGuruMapelScope' => $onlyTaughtMapels,
+            'canPrintRapor' => ! $onlyTaughtMapels,
+            'perkembanganRoutePrefix' => "{$routeScope}.perkembangan-siswa",
+            'dashboardRouteName' => "{$routeScope}.dashboard",
+            'tpRoutePrefix' => "{$routeScope}.penilaian-tp",
+        ];
+
+        $taughtMapels = new EloquentCollection;
+        if ($onlyTaughtMapels) {
+            $taughtScope = $this->scopeService->authorizeTaughtSdKelasIdForUser($user, (int) $anggotaKelas->akademik_master_kelas_id);
+            $taughtMapels = $taughtScope['taughtMapels'];
+            $scope = [
+                'isEligible' => true,
+                'ineligibleReason' => null,
+                'nipy' => $taughtScope['nipy'],
+                'karyawanProfile' => $taughtScope['karyawanProfile'],
+                'activeTahunAjaran' => $taughtScope['activeTahunAjaran'],
+                'assignedClasses' => $taughtScope['taughtClasses'],
+                'selectedKelas' => $taughtScope['selectedKelas'],
+                'peranDiKelas' => 'Guru Mapel SD',
+            ];
+        } else {
+            $scope = $this->scopeService->authorizeAnggotaKelasForUser($user, $anggotaKelas);
+        }
+
         $periode = $this->normalizePeriode($periodeInput);
         $selectedKelas = $scope['selectedKelas'];
         $activeTahunAjaran = $scope['activeTahunAjaran'];
@@ -304,13 +391,14 @@ class WaliKelasPerkembanganService
         if (! $isSd || $activeTahunAjaran === null) {
             return [
                 ...$scope,
+                ...$scopeLinks,
                 'periode' => $periode,
                 'isSd' => false,
                 'anggotaKelas' => $anggotaKelas,
                 'siswa' => $siswa,
                 'presensiStats' => $presensiStats,
                 'subjectDetails' => collect(),
-                'readiness' => $this->finalisasiService->getClassReadiness($selectedKelas, $periode, $user),
+                'readiness' => $onlyTaughtMapels ? null : $this->finalisasiService->getClassReadiness($selectedKelas, $periode, $user),
                 'summary' => [
                     'total_mapel' => 0,
                     'dinilai_count' => 0,
@@ -321,7 +409,8 @@ class WaliKelasPerkembanganService
             ];
         }
 
-        $mapels = $this->getActiveSdMapels();
+        $mapels = $onlyTaughtMapels ? $taughtMapels : $this->getActiveSdMapels();
+        $mapelIds = $mapels->pluck('id')->map(static fn ($id): int => (int) $id)->all();
         $kkmByMapel = $this->getKkmByMapel($activeTahunAjaran->id, (string) $selectedKelas->tingkatan_kelas);
         [$teachersByMapel, $userTaughtMapelIds] = $this->getTeachersByMapel(
             $activeTahunAjaran->id,
@@ -351,6 +440,7 @@ class WaliKelasPerkembanganService
             ])
             ->where('akademik_master_tahun_ajaran_id', $activeTahunAjaran->id)
             ->where('anggota_kelas_id', $anggotaKelas->id)
+            ->when($onlyTaughtMapels, static fn ($q) => $q->whereIn('akademik_pelajaran_mata_pelajaran_id', $mapelIds !== [] ? $mapelIds : [0]))
             ->whereIn('periode', [PeriodeTp::PERIODE_MID, PeriodeTp::PERIODE_SEMESTER])
             ->get();
 
@@ -370,6 +460,7 @@ class WaliKelasPerkembanganService
             ])
             ->where('akademik_master_tahun_ajaran_id', $activeTahunAjaran->id)
             ->where('tingkatan_kelas', (string) $selectedKelas->tingkatan_kelas)
+            ->when($onlyTaughtMapels, static fn ($q) => $q->whereIn('akademik_pelajaran_mata_pelajaran_id', $mapelIds !== [] ? $mapelIds : [0]))
             ->where('status', true)
             ->ordered()
             ->get()
@@ -437,13 +528,14 @@ class WaliKelasPerkembanganService
 
         return [
             ...$scope,
+            ...$scopeLinks,
             'periode' => $periode,
             'isSd' => true,
             'anggotaKelas' => $anggotaKelas,
             'siswa' => $siswa,
             'presensiStats' => $presensiStats,
             'subjectDetails' => $subjectDetails,
-            'readiness' => $this->finalisasiService->getClassReadiness($selectedKelas, $periode, $user),
+            'readiness' => $onlyTaughtMapels ? null : $this->finalisasiService->getClassReadiness($selectedKelas, $periode, $user),
             'summary' => [
                 'total_mapel' => $mapels->count(),
                 'dinilai_count' => count($scores),

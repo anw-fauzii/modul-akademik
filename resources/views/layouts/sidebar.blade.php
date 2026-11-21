@@ -37,9 +37,17 @@
                 $authUser = Auth::user();
                 $isSuperAdmin = $authUser?->hasRole('super admin') ?? false;
                 $isWaliKelas = $authUser?->hasRole('wali kelas') ?? false;
+                $isGuruMapelSd = $authUser?->hasRole('guru mapel sd') ?? false;
                 $showAdminMenus = $authUser === null || $isSuperAdmin;
                 $showWaliMenus = ! $isSuperAdmin && $isWaliKelas;
-                $isDashboardActive = request()->routeIs('home') || ($showWaliMenus && request()->routeIs('wali-kelas.dashboard'));
+                $showGuruMapelMenus = ! $isSuperAdmin && ! $isWaliKelas && $isGuruMapelSd;
+                $isDashboardActive = request()->routeIs('home')
+                    || ($showWaliMenus && request()->routeIs('wali-kelas.dashboard'))
+                    || ($showGuruMapelMenus && request()->routeIs('guru-mapel.dashboard'));
+                $isGuruMapelJadwalActive = request()->routeIs('guru-mapel.jadwal-pelajaran.*');
+                $isGuruMapelPerkembanganActive = request()->routeIs('guru-mapel.perkembangan-siswa.*');
+                $isGuruMapelPenilaianActive = request()->routeIs('guru-mapel.penilaian-tp.*', 'guru-mapel.penilaian-rekap.*');
+                $isGuruMapelEkskulActive = request()->routeIs('guru-mapel.ekstrakurikuler.*');
                 $isWaliAnggotaActive = request()->routeIs('wali-kelas.anggota-kelas.*');
                 $isWaliJadwalActive = request()->routeIs('wali-kelas.jadwal-pelajaran.*');
                 $isWaliPerkembanganActive = request()->routeIs('wali-kelas.perkembangan-siswa.*');
@@ -231,6 +239,80 @@
                             </div>
                         </div>
                     @endforeach
+                @endif
+
+                @if ($showGuruMapelMenus)
+                    @php
+                        $guruMapelSingleLinks = [
+                            [
+                                'label' => 'Jadwal Mengajar Saya',
+                                'route' => 'guru-mapel.jadwal-pelajaran.index',
+                                'active' => $isGuruMapelJadwalActive,
+                                'icon' => 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+                            ],
+                            [
+                                'label' => 'Perkembangan Siswa',
+                                'route' => 'guru-mapel.perkembangan-siswa.index',
+                                'active' => $isGuruMapelPerkembanganActive,
+                                'icon' => 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
+                            ],
+                            [
+                                'label' => 'Penilaian Ekstrakurikuler',
+                                'route' => 'guru-mapel.ekstrakurikuler.index',
+                                'active' => $isGuruMapelEkskulActive,
+                                'icon' => 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z',
+                            ],
+                        ];
+                    @endphp
+                    @foreach ($guruMapelSingleLinks as $gmLink)
+                        <div class="relative group/tooltip">
+                            <a href="{{ route($gmLink['route']) }}"
+                                class="group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all {{ $gmLink['active'] ? $menuActiveClass : $menuInactiveClass }}">
+                                <div class="flex items-center gap-3">
+                                    <svg class="h-4 w-4 shrink-0 {{ $gmLink['active'] ? $menuIconActiveClass : $menuIconInactiveClass }}"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="{{ $gmLink['icon'] }}" />
+                                    </svg>
+                                    <span class="menu-text">{{ $gmLink['label'] }}</span>
+                                </div>
+                            </a>
+                            <div class="sidebar-tooltip">{{ $gmLink['label'] }}</div>
+                        </div>
+                    @endforeach
+
+                    <div class="has-submenu relative group/submenu">
+                        <button type="button" data-sidebar-toggle="submenu-guru-mapel-penilaian"
+                            aria-expanded="{{ $isGuruMapelPenilaianActive ? 'true' : 'false' }}"
+                            class="w-full group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all {{ $isGuruMapelPenilaianActive ? $menuActiveClass : $menuInactiveClass }}">
+                            <div class="flex items-center gap-3">
+                                <svg class="h-4 w-4 shrink-0 {{ $isGuruMapelPenilaianActive ? $menuIconActiveClass : $menuIconInactiveClass }}"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                                </svg>
+                                <span class="menu-text">Penilaian (SD)</span>
+                            </div>
+                            <svg class="menu-chevron h-3.5 w-3.5 transition-transform duration-200 {{ $isGuruMapelPenilaianActive ? 'text-white rotate-180' : 'text-slate-400 group-hover:text-white' }}"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div id="submenu-guru-mapel-penilaian"
+                            class="{{ $isGuruMapelPenilaianActive ? '' : 'hidden' }} submenu-flyout mt-1 space-y-1 pl-4 border-l border-slate-800 ml-5 py-1">
+                            <div class="flyout-header hidden">
+                                <span>Penilaian (SD)</span>
+                            </div>
+                            <a href="{{ route('guru-mapel.penilaian-tp.index') }}"
+                                class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->routeIs('guru-mapel.penilaian-tp.*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                                Input Nilai TP
+                            </a>
+                            <a href="{{ route('guru-mapel.penilaian-rekap.index') }}"
+                                class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->routeIs('guru-mapel.penilaian-rekap.*') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                                Rekap &amp; Deskripsi
+                            </a>
+                        </div>
+                    </div>
                 @endif
             </nav>
         </div>

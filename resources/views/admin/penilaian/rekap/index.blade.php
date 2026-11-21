@@ -492,7 +492,9 @@
         $showSumatifSection = $rekapSumatifCols->isNotEmpty() || $bobotSumatif > 0;
         $finalisasi = $finalisasi ?? null;
         $isLocked = (bool) ($finalisasi['is_final'] ?? false);
-        $finalisasiRoutePrefix = $isWaliKelasScope ? 'wali-kelas.penilaian-finalisasi' : 'penilaian-finalisasi';
+        $isGuruMapelScope = $isGuruMapelScope ?? false;
+        $perkembanganRoutePrefix = $perkembanganRoutePrefix ?? ($isGuruMapelScope ? 'guru-mapel.perkembangan-siswa' : 'wali-kelas.perkembangan-siswa');
+        $finalisasiRoutePrefix = $finalisasiRoutePrefix ?? ($isWaliKelasScope ? ($isGuruMapelScope ? 'guru-mapel.penilaian-finalisasi' : 'wali-kelas.penilaian-finalisasi') : 'penilaian-finalisasi');
 
         $hiddenSemTpIds = [];
         $midTpIds = [];
@@ -600,10 +602,10 @@
 
                 <div class="page-title-actions flex-wrap">
                     @if ($isWaliKelasScope)
-                        <a href="{{ route('wali-kelas.perkembangan-siswa.index', ['periode' => $periode]) }}"
+                        <a href="{{ route($perkembanganRoutePrefix.'.index', ['periode' => $periode]) }}"
                             class="btn btn-light shadow-sm"
                             style="border-radius: 10px; font-weight: 600; color: #ea580c; border-color: #fed7aa; background: #fff7ed;">
-                            <i class="fa fa-chart-line mr-1"></i> Perkembangan Semua Mapel
+                            <i class="fa fa-chart-line mr-1"></i> {{ $isGuruMapelScope ? 'Perkembangan Siswa' : 'Perkembangan Semua Mapel' }}
                         </a>
                     @elseif ($selectedKelas)
                         <a href="{{ route('penilaian-rapor.index', \App\Support\Sqid::encodeQueryParams(array_filter(['tahun_ajaran_id' => $selectedTahunAjaranId, 'kelas_id' => $selectedKelas->sqid, 'periode' => $periode]))) }}"

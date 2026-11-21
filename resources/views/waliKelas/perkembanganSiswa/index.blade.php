@@ -1,7 +1,7 @@
 @extends('layouts.appui')
 
 @section('title')
-    <title>Perkembangan Siswa Wali Kelas - PION Yayasan Prima Insani</title>
+    <title>{{ ($isGuruMapelScope ?? false) ? 'Perkembangan Siswa Guru Mapel SD' : 'Perkembangan Siswa Wali Kelas' }} - PION Yayasan Prima Insani</title>
 @endsection
 
 @section('content')
@@ -180,6 +180,53 @@
                 font-size: 0.68rem;
                 font-weight: 800;
             }
+
+            .wk-controlbar {
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 14px;
+                padding: 0.65rem 0.95rem;
+                margin-bottom: 1.05rem;
+                box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.65rem;
+            }
+
+            .wk-periode-seg {
+                display: inline-flex;
+                align-items: center;
+                padding: 3px;
+                border-radius: 10px;
+                background: #f1f5f9;
+                border: 1px solid #e2e8f0;
+                gap: 2px;
+                flex-shrink: 0;
+            }
+
+            .wk-periode-btn {
+                padding: 0.34rem 0.8rem;
+                border-radius: 7px;
+                font-size: 0.76rem;
+                font-weight: 700;
+                color: #64748b;
+                text-decoration: none !important;
+                transition: all 0.15s ease;
+                white-space: nowrap;
+            }
+
+            .wk-periode-btn:hover {
+                color: #0f172a;
+                background: rgba(255, 255, 255, 0.7);
+            }
+
+            .wk-periode-btn.is-active {
+                background: #ffffff;
+                color: #c2410c;
+                box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+            }
         </style>
     @endPushOnce
 
@@ -203,7 +250,12 @@
             'avg_kehadiran' => null,
         ];
         $readiness = $readiness ?? null;
-        $canPrintNilai = $readiness === null || (bool) ($readiness['is_ready'] ?? false);
+        $isGuruMapelScope = $isGuruMapelScope ?? false;
+        $canPrintRapor = $canPrintRapor ?? ! $isGuruMapelScope;
+        $perkembanganRoutePrefix = $perkembanganRoutePrefix ?? 'wali-kelas.perkembangan-siswa';
+        $dashboardRouteName = $dashboardRouteName ?? 'wali-kelas.dashboard';
+        $tpRoutePrefix = $tpRoutePrefix ?? 'wali-kelas.penilaian-tp';
+        $canPrintNilai = $canPrintRapor && ($readiness === null || (bool) ($readiness['is_ready'] ?? false));
         $pendingCountRapor = (int) ($readiness['pending_count'] ?? 0);
     @endphp
 
@@ -212,9 +264,11 @@
             'heroBadgeText' => $isEligible ? 'PERKEMBANGAN SISWA • '.strtoupper((string) $peranDiKelas) : 'PERKEMBANGAN SISWA',
             'heroTitle' => $isEligible && $selectedKelas ? 'Perkembangan Siswa Kelas '.$selectedKelas->nama_kelas : 'Perkembangan Hasil Belajar Siswa',
             'heroSubtitle' => $isEligible && $selectedKelas
-                ? "Pantauan menyeluruh capaian semua mata pelajaran dan kehadiran seluruh siswa kelas {$selectedKelas->nama_kelas} pada {$activeTahunAjaran->full_label}."
+                ? ($isGuruMapelScope
+                    ? "Pantauan capaian mata pelajaran yang Anda ampu serta ringkasan kehadiran siswa kelas {$selectedKelas->nama_kelas} pada {$activeTahunAjaran->full_label}."
+                    : "Pantauan menyeluruh capaian semua mata pelajaran dan kehadiran seluruh siswa kelas {$selectedKelas->nama_kelas} pada {$activeTahunAjaran->full_label}.")
                 : null,
-            'heroActionUrl' => route('wali-kelas.dashboard', $selectedKelas ? ['kelas_id' => $selectedKelas->sqid] : []),
+            'heroActionUrl' => route($dashboardRouteName, (! $isGuruMapelScope && $selectedKelas) ? ['kelas_id' => $selectedKelas->sqid] : []),
             'heroActionLabel' => 'Kembali ke Dashboard',
             'heroActionIcon' => 'fa-arrow-left',
         ])
@@ -222,28 +276,34 @@
         @if (! $isEligible)
             @include('waliKelas.partials._ineligible_guard')
         @else
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+            <div class="wk-controlbar">
                 @if ($assignedClasses->count() > 1)
                     @include('waliKelas.partials._class_switcher', [
-                        'switcherRoute' => 'wali-kelas.perkembangan-siswa.index',
+                        'switcherRoute' => $perkembanganRoutePrefix.'.index',
+                        'switcherParams' => $isSd ? ['periode' => $periode] : [],
+                        'isGuruMapelScope' => $isGuruMapelScope,
+                        'switcherInline' => true,
                     ])
                 @else
                     <div class="small text-muted font-weight-semibold">
                         <i class="fa fa-info-circle text-warning mr-1"></i>
-                        Menampilkan ringkasan capaian semua mata pelajaran untuk peran <strong>{{ $peranDiKelas }}</strong>.
+                        {{ $isGuruMapelScope
+                            ? 'Menampilkan capaian khusus mata pelajaran yang Anda ampu pada kelas ini.'
+                            : 'Menampilkan ringkasan capaian semua mata pelajaran untuk peran' }}
+                        @if (! $isGuruMapelScope)
+                            <strong>{{ $peranDiKelas }}</strong>.
+                        @endif
                     </div>
                 @endif
 
                 @if ($isSd)
-                    <div class="btn-group btn-group-sm shadow-sm" role="group" aria-label="Pilih Periode Perkembangan">
-                        <a href="{{ route('wali-kelas.perkembangan-siswa.index', ['kelas_id' => $selectedKelas->sqid, 'periode' => 'mid']) }}"
-                            class="btn {{ $isMid ? 'text-white font-weight-bold' : 'btn-light border text-slate-700' }}"
-                            style="{{ $isMid ? 'background: linear-gradient(135deg, #ea580c 0%, #d97706 100%);' : '' }}">
+                    <div class="wk-periode-seg" role="group" aria-label="Pilih Periode Perkembangan">
+                        <a href="{{ route($perkembanganRoutePrefix.'.index', ['kelas_id' => $selectedKelas->sqid, 'periode' => 'mid']) }}"
+                            class="wk-periode-btn {{ $isMid ? 'is-active' : '' }}">
                             Mid Semester
                         </a>
-                        <a href="{{ route('wali-kelas.perkembangan-siswa.index', ['kelas_id' => $selectedKelas->sqid, 'periode' => 'semester']) }}"
-                            class="btn {{ ! $isMid ? 'text-white font-weight-bold' : 'btn-light border text-slate-700' }}"
-                            style="{{ ! $isMid ? 'background: linear-gradient(135deg, #ea580c 0%, #d97706 100%);' : '' }}">
+                        <a href="{{ route($perkembanganRoutePrefix.'.index', ['kelas_id' => $selectedKelas->sqid, 'periode' => 'semester']) }}"
+                            class="wk-periode-btn {{ ! $isMid ? 'is-active' : '' }}">
                             Semester
                         </a>
                     </div>
@@ -255,7 +315,7 @@
                 <div class="wk-kpi-card">
                     <div>
                         <div class="wk-kpi-label">
-                            <span class="wk-kpi-dot" style="background: #2563eb;"></span> Total Siswa Binaan
+                            <span class="wk-kpi-dot" style="background: #2563eb;"></span> {{ $isGuruMapelScope ? 'Total Siswa Kelas' : 'Total Siswa Binaan' }}
                         </div>
                         <div class="wk-kpi-value">{{ $studentStats['total'] }}</div>
                         <div class="wk-kpi-sub">
@@ -270,7 +330,7 @@
                 <div class="wk-kpi-card">
                     <div>
                         <div class="wk-kpi-label">
-                            <span class="wk-kpi-dot" style="background: #ea580c;"></span> Rata-Rata Nilai Kelas
+                            <span class="wk-kpi-dot" style="background: #ea580c;"></span> {{ $isGuruMapelScope ? 'Rata-Rata Nilai Mapel' : 'Rata-Rata Nilai Kelas' }}
                         </div>
                         <div class="wk-kpi-value" style="color: #c2410c;">
                             {{ $overviewStats['avg_rapor'] !== null ? number_format((float) $overviewStats['avg_rapor'], 1) : '-' }}
@@ -401,10 +461,14 @@
                                 Leger Perkembangan Siswa Kelas {{ $selectedKelas->nama_kelas }}
                             </h6>
                             <div class="small text-muted">
-                                Klik nama siswa atau tombol <strong>Detail</strong> untuk melihat perkembangan lengkap, atau cetak PDF Identitas &amp; Nilai Rapor terpisah.
+                                @if ($canPrintRapor)
+                                    Klik nama siswa atau tombol <strong>Detail</strong> untuk melihat perkembangan lengkap, atau cetak PDF Identitas &amp; Nilai Rapor terpisah.
+                                @else
+                                    Klik nama siswa atau tombol <strong>Detail</strong> untuk melihat capaian mapel yang Anda ampu serta ringkasan kehadirannya.
+                                @endif
                             </div>
                         </div>
-                        @if ($students->isNotEmpty())
+                        @if ($canPrintRapor && $students->isNotEmpty())
                             <div class="d-flex flex-wrap align-items-center" style="gap: 0.45rem;">
                                 <a href="{{ route('wali-kelas.rapor.identitas.kelas', $selectedKelas) }}" target="_blank"
                                     class="btn btn-sm btn-outline-primary font-weight-semibold"
@@ -462,7 +526,7 @@
                                         $siswa = $anggota->siswa;
                                         $siswaName = $siswa?->nama_lengkap ?? $anggota->siswa_nis;
                                         $presensi = $row['presensi'];
-                                        $detailUrl = route('wali-kelas.perkembangan-siswa.show', ['anggota_kelas' => $anggota, 'periode' => $periode]);
+                                        $detailUrl = route($perkembanganRoutePrefix.'.show', ['anggota_kelas' => $anggota, 'periode' => $periode]);
                                     @endphp
                                     <tr>
                                         <td class="text-center text-muted font-weight-semibold">{{ $idx + 1 }}</td>
@@ -527,34 +591,41 @@
                                             </td>
                                         @endif
                                         <td class="text-center">
-                                            <x-action-dropdown>
-                                                <a href="{{ $detailUrl }}" class="action-dropdown-item" role="menuitem">
-                                                    <i class="fa fa-chart-area text-primary action-item-icon"></i>
-                                                    <span>Detail Perkembangan</span>
-                                                </a>
-                                                <div class="action-dropdown-divider"></div>
-                                                <a href="{{ route('wali-kelas.rapor.identitas.siswa', $anggota) }}" target="_blank" class="action-dropdown-item" role="menuitem">
-                                                    <i class="fa fa-id-card text-info action-item-icon"></i>
-                                                    <span>Cetak Identitas (PDF)</span>
-                                                </a>
-                                                @if ($isSd)
-                                                    @if ($canPrintNilai)
-                                                        <a href="{{ route('wali-kelas.rapor.nilai.siswa', ['anggota_kelas' => $anggota, 'periode' => $periode]) }}" target="_blank" class="action-dropdown-item" role="menuitem">
-                                                            <i class="fa fa-file-pdf text-danger action-item-icon"></i>
-                                                            <span>Cetak Nilai Rapor (PDF)</span>
-                                                        </a>
-                                                    @else
-                                                        <button type="button"
-                                                            class="action-dropdown-item text-muted js-wk-tab-btn js-blocked-print-trigger"
-                                                            role="menuitem"
-                                                            data-wk-tab="kesiapan"
-                                                            data-blocked-toast="Cetak Nilai Rapor belum dapat dilakukan: masih ada {{ $pendingCountRapor }} komponen yang belum difinalkan.">
-                                                            <i class="fa fa-lock text-warning action-item-icon"></i>
-                                                            <span>Cetak Nilai Rapor ({{ $pendingCountRapor }} Belum Final)</span>
-                                                        </button>
+                                            @if ($canPrintRapor)
+                                                <x-action-dropdown>
+                                                    <a href="{{ $detailUrl }}" class="action-dropdown-item" role="menuitem">
+                                                        <i class="fa fa-chart-area text-primary action-item-icon"></i>
+                                                        <span>Detail Perkembangan</span>
+                                                    </a>
+                                                    <div class="action-dropdown-divider"></div>
+                                                    <a href="{{ route('wali-kelas.rapor.identitas.siswa', $anggota) }}" target="_blank" class="action-dropdown-item" role="menuitem">
+                                                        <i class="fa fa-id-card text-info action-item-icon"></i>
+                                                        <span>Cetak Identitas (PDF)</span>
+                                                    </a>
+                                                    @if ($isSd)
+                                                        @if ($canPrintNilai)
+                                                            <a href="{{ route('wali-kelas.rapor.nilai.siswa', ['anggota_kelas' => $anggota, 'periode' => $periode]) }}" target="_blank" class="action-dropdown-item" role="menuitem">
+                                                                <i class="fa fa-file-pdf text-danger action-item-icon"></i>
+                                                                <span>Cetak Nilai Rapor (PDF)</span>
+                                                            </a>
+                                                        @else
+                                                            <button type="button"
+                                                                class="action-dropdown-item text-muted js-wk-tab-btn js-blocked-print-trigger"
+                                                                role="menuitem"
+                                                                data-wk-tab="kesiapan"
+                                                                data-blocked-toast="Cetak Nilai Rapor belum dapat dilakukan: masih ada {{ $pendingCountRapor }} komponen yang belum difinalkan.">
+                                                                <i class="fa fa-lock text-warning action-item-icon"></i>
+                                                                <span>Cetak Nilai Rapor ({{ $pendingCountRapor }} Belum Final)</span>
+                                                            </button>
+                                                        @endif
                                                     @endif
-                                                @endif
-                                            </x-action-dropdown>
+                                                </x-action-dropdown>
+                                            @else
+                                                <a href="{{ $detailUrl }}" class="btn btn-xs btn-light border font-weight-semibold px-2 py-1"
+                                                    style="border-radius: 7px; font-size: 0.7rem;">
+                                                    Detail
+                                                </a>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforeach
@@ -665,7 +736,7 @@
                                                 @endif
 
                                                 @if ($isMine)
-                                                    <a href="{{ route('wali-kelas.penilaian-tp.index', ['kelas_id' => $selectedKelas->sqid, 'mata_pelajaran_id' => $mp->sqid, 'periode' => $periode]) }}"
+                                                    <a href="{{ route($tpRoutePrefix.'.index', ['kelas_id' => $selectedKelas->sqid, 'mata_pelajaran_id' => $mp->sqid, 'periode' => $periode]) }}"
                                                         class="wk-mapel-pill text-decoration-none"
                                                         style="background: #ea580c; color: #ffffff;"
                                                         title="Input nilai {{ $mp->nama_mata_pelajaran }}">

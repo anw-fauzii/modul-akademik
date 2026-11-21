@@ -10,6 +10,7 @@ use App\Models\Admin\DataPelengkap\JenjangPendidikan;
 use App\Models\Admin\DataPelengkap\Pekerjaan;
 use App\Models\Admin\DataPelengkap\Penghasilan;
 use App\Models\Admin\DataPelengkap\Transportasi;
+use App\Services\GuruMapel\GuruMapelDashboardService;
 use App\Services\WaliKelas\WaliKelasDashboardService;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
@@ -20,28 +21,39 @@ class HomeController extends Controller
      * Create a new controller instance.
      */
     public function __construct(
-        protected ?WaliKelasDashboardService $waliKelasDashboardService = null
+        protected ?WaliKelasDashboardService $waliKelasDashboardService = null,
+        protected ?GuruMapelDashboardService $guruMapelDashboardService = null
     ) {
         $this->middleware('auth');
-        $this->middleware('role:super admin|wali kelas');
+        $this->middleware('role:super admin|wali kelas|guru mapel sd');
         $this->middleware('can:viewAny,'.Kelas::class)->only(['index']);
         $this->waliKelasDashboardService ??= app(WaliKelasDashboardService::class);
+        $this->guruMapelDashboardService ??= app(GuruMapelDashboardService::class);
     }
 
     /**
-     * Menampilkan dashboard utama sesuai role pengguna (Admin atau Wali Kelas pada tahun ajaran aktif).
+     * Menampilkan dashboard utama sesuai role pengguna (Admin, Wali Kelas, atau Guru Mapel SD).
      */
     public function index(Request $request): Renderable
     {
         $user = $request->user();
-        if ($user !== null && ! $user->hasRole('super admin') && $user->hasRole('wali kelas')) {
-            return view(
-                'waliKelas.dashboard',
-                $this->waliKelasDashboardService->getDashboardData(
-                    $user,
-                    $request->integer('kelas_id') ?: null
-                )
-            );
+        if ($user !== null && ! $user->hasRole('super admin')) {
+            if ($user->hasRole('wali kelas')) {
+                return view(
+                    'waliKelas.dashboard',
+                    $this->waliKelasDashboardService->getDashboardData(
+                        $user,
+                        $request->integer('kelas_id') ?: null
+                    )
+                );
+            }
+
+            if ($user->hasRole('guru mapel sd')) {
+                return view(
+                    'guruMapel.dashboard',
+                    $this->guruMapelDashboardService->getDashboardData($user)
+                );
+            }
         }
         // 1. DATA MASTER
         $activeTahunAjaran = TahunAjaran::where('is_active', true)->first();

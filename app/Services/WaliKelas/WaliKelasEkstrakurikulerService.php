@@ -150,7 +150,9 @@ class WaliKelasEkstrakurikulerService
         ?int $requestedEkskulId = null,
         ?int $requestedKelasId = null,
         ?string $requestedMode = null,
-        ?string $requestedPeriode = null
+        ?string $requestedPeriode = null,
+        bool $pilihanOnly = false,
+        string $routeScope = 'wali-kelas'
     ): array {
         $periode = $this->finalisasiService->normalizePeriode($requestedPeriode);
         $activeTahunAjaran = TahunAjaran::query()->active()->first();
@@ -162,22 +164,52 @@ class WaliKelasEkstrakurikulerService
                 ->first()
             : null;
 
+        $scopeLinks = [
+            'isGuruMapelScope' => $pilihanOnly || $routeScope === 'guru-mapel',
+            'ekskulRoutePrefix' => "{$routeScope}.ekstrakurikuler",
+            'finalisasiRoutePrefix' => "{$routeScope}.penilaian-finalisasi",
+            'dashboardRouteName' => "{$routeScope}.dashboard",
+        ];
+
         if ($activeTahunAjaran === null) {
-            return $this->buildIneligiblePayload('no_active_tahun_ajaran', $nipy, $karyawanProfile, null);
+            return [
+                ...$this->buildIneligiblePayload('no_active_tahun_ajaran', $nipy, $karyawanProfile, null),
+                ...$scopeLinks,
+            ];
         }
 
         if ($nipy === '') {
-            return $this->buildIneligiblePayload('missing_nipy', '', null, $activeTahunAjaran);
+            return [
+                ...$this->buildIneligiblePayload('missing_nipy', '', null, $activeTahunAjaran),
+                ...$scopeLinks,
+            ];
         }
 
-        $assignedClasses = $this->scopeService->getAssignedClassesForUser($user, $activeTahunAjaran);
+        if ($pilihanOnly && ($requestedMode === 'wajib' || ($requestedKelasId !== null && $requestedKelasId > 0))) {
+            abort(403, 'Penilaian Pramuka Wajib khusus untuk Wali Kelas atau Guru Pendamping.');
+        }
+
+        $assignedClasses = $pilihanOnly
+            ? new EloquentCollection
+            : $this->scopeService->getAssignedClassesForUser($user, $activeTahunAjaran);
+
         $assignedEkskuls = $this->getAssignedEkstrakurikulerForUser($user, $activeTahunAjaran);
+        if ($pilihanOnly) {
+            $assignedEkskuls = new EloquentCollection(
+                $assignedEkskuls->reject(static fn (Ekstrakurikuler $eks): bool => $eks->isWajib())->values()->all()
+            );
+        }
 
         if ($assignedClasses->isEmpty() && $assignedEkskuls->isEmpty()) {
-            return $this->buildIneligiblePayload('no_assigned_ekskul', $nipy, $karyawanProfile, $activeTahunAjaran);
+            return [
+                ...$this->buildIneligiblePayload('no_assigned_ekskul', $nipy, $karyawanProfile, $activeTahunAjaran),
+                ...$scopeLinks,
+            ];
         }
 
-        if ($requestedEkskulId !== null && $requestedEkskulId > 0) {
+        if ($pilihanOnly) {
+            $mode = 'pilihan';
+        } elseif ($requestedEkskulId !== null && $requestedEkskulId > 0) {
             $mode = 'pilihan';
         } elseif ($requestedKelasId !== null && $requestedKelasId > 0) {
             $mode = 'wajib';
@@ -215,6 +247,7 @@ class WaliKelasEkstrakurikulerService
             $dinilaiCount = $members->filter(static fn (AnggotaEkstrakurikuler $m): bool => $m->nilai !== null)->count();
 
             return [
+                ...$scopeLinks,
                 'isEligible' => true,
                 'mode' => 'wajib',
                 'periode' => $periode,
@@ -257,6 +290,7 @@ class WaliKelasEkstrakurikulerService
         $dinilaiCount = $members->filter(static fn (AnggotaEkstrakurikuler $m): bool => $m->nilai !== null)->count();
 
         return [
+            ...$scopeLinks,
             'isEligible' => true,
             'mode' => 'pilihan',
             'periode' => $periode,

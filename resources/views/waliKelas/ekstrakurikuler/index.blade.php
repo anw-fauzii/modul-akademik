@@ -60,6 +60,10 @@
         $periode = $periode ?? \App\Models\Admin\Penilaian\PeriodeTp::PERIODE_MID;
         $isMid = $periode === \App\Models\Admin\Penilaian\PeriodeTp::PERIODE_MID;
         $finalisasi = $finalisasi ?? null;
+        $isGuruMapelScope = $isGuruMapelScope ?? false;
+        $ekskulRoutePrefix = $ekskulRoutePrefix ?? 'wali-kelas.ekstrakurikuler';
+        $finalisasiRoutePrefix = $finalisasiRoutePrefix ?? 'wali-kelas.penilaian-finalisasi';
+        $dashboardRouteName = $dashboardRouteName ?? 'wali-kelas.dashboard';
     @endphp
 
     <div class="app-main__inner">
@@ -126,7 +130,11 @@
                         </div>
                     @else
                         <p class="mb-2" style="color: rgba(255, 255, 255, 0.76); max-width: 640px; font-size: 0.86rem;">
-                            Halo {{ $displayName }}, halaman ini digunakan oleh Wali Kelas (untuk menilai Pramuka Wajib kelas binaannya) dan Pembina Ekstrakurikuler (untuk menilai Ekskul Pilihan/Minat).
+                            @if ($isGuruMapelScope)
+                                Halo {{ $displayName }}, halaman ini digunakan untuk menilai dan memfinalkan peserta <strong>Ekstrakurikuler Pilihan</strong> yang Anda bina pada Tahun Ajaran aktif.
+                            @else
+                                Halo {{ $displayName }}, halaman ini digunakan oleh Wali Kelas (untuk menilai Pramuka Wajib kelas binaannya) dan Pembina Ekstrakurikuler (untuk menilai Ekskul Pilihan/Minat).
+                            @endif
                         </p>
                         @if ($activeTahunAjaran)
                             <span class="badge px-3 py-2"
@@ -179,15 +187,21 @@
                         Tidak Ada Ekstrakurikuler yang Anda Dampingi
                     </h5>
                     <p class="small text-muted mb-3">
-                        Pada Tahun Ajaran aktif (<strong>{{ $activeTahunAjaran?->full_label }}</strong>), NIPY Anda (<code>{{ $nipy ?: '-' }}</code>) belum tercatat sebagai <strong>Wali Kelas</strong> (penilai Pramuka Wajib) maupun <strong>Pembina Ekstrakurikuler Pilihan</strong>.
+                        @if ($isGuruMapelScope)
+                            Pada Tahun Ajaran aktif (<strong>{{ $activeTahunAjaran?->full_label }}</strong>), NIPY Anda (<code>{{ $nipy ?: '-' }}</code>) belum tercatat sebagai <strong>Pembina Ekstrakurikuler Pilihan</strong>.
+                        @else
+                            Pada Tahun Ajaran aktif (<strong>{{ $activeTahunAjaran?->full_label }}</strong>), NIPY Anda (<code>{{ $nipy ?: '-' }}</code>) belum tercatat sebagai <strong>Wali Kelas</strong> (penilai Pramuka Wajib) maupun <strong>Pembina Ekstrakurikuler Pilihan</strong>.
+                        @endif
                     </p>
                     <div class="small text-muted px-3 py-2 rounded d-inline-block mb-3"
                         style="background: #f8fafc; border: 1px solid #e2e8f0;">
                         <i class="fa fa-info-circle text-warning mr-1"></i>
-                        Hubungi Admin Akademik apabila Anda bertugas sebagai Wali Kelas atau Pembina Ekstrakurikuler pada semester ini.
+                        {{ $isGuruMapelScope
+                            ? 'Hubungi Admin Akademik apabila Anda bertugas membina Ekstrakurikuler Pilihan pada semester ini.'
+                            : 'Hubungi Admin Akademik apabila Anda bertugas sebagai Wali Kelas atau Pembina Ekstrakurikuler pada semester ini.' }}
                     </div>
                     <div>
-                        <a href="{{ route('wali-kelas.dashboard') }}" class="btn btn-sm text-white font-weight-semibold px-3"
+                        <a href="{{ route($dashboardRouteName) }}" class="btn btn-sm text-white font-weight-semibold px-3"
                             style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 9px;">
                             <i class="fa fa-arrow-left mr-1"></i> Kembali ke Dashboard
                         </a>
@@ -208,7 +222,7 @@
                         @php
                             $isActiveKelas = $isWajibMode && isset($selectedKelas) && (int) $kelasOption->id === (int) $selectedKelas->id;
                         @endphp
-                        <a href="{{ route('wali-kelas.ekstrakurikuler.index', ['mode' => 'wajib', 'kelas_id' => $kelasOption->sqid, 'periode' => $periode]) }}"
+                        <a href="{{ route($ekskulRoutePrefix.'.index', ['mode' => 'wajib', 'kelas_id' => $kelasOption->sqid, 'periode' => $periode]) }}"
                             class="wk-class-pill {{ $isActiveKelas ? 'is-active' : '' }}">
                             <i class="fa fa-campground"></i>
                             <span>Pramuka (Wajib) • Kelas {{ $kelasOption->nama_kelas }}</span>
@@ -222,7 +236,7 @@
                         @php
                             $isActiveOption = ! $isWajibMode && isset($selectedEkskul) && (int) $ekskulOption->id === (int) $selectedEkskul->id;
                         @endphp
-                        <a href="{{ route('wali-kelas.ekstrakurikuler.index', ['mode' => 'pilihan', 'ekstrakurikuler_id' => $ekskulOption->sqid, 'periode' => $periode]) }}"
+                        <a href="{{ route($ekskulRoutePrefix.'.index', ['mode' => 'pilihan', 'ekstrakurikuler_id' => $ekskulOption->sqid, 'periode' => $periode]) }}"
                             class="wk-class-pill {{ $isActiveOption ? 'is-active' : '' }}">
                             <i class="fa fa-medal"></i>
                             <span>{{ $ekskulOption->nama_ekstrakurikuler }} (Pilihan • {{ strtoupper((string) $ekskulOption->unit) }})</span>
@@ -303,7 +317,7 @@
                 </div>
             @endif
 
-            @if ($errors->any())
+            @if (isset($errors) && $errors->any())
                 <div class="alert alert-danger shadow-sm border-0 mb-3" style="border-radius: 12px;">
                     <div class="font-weight-bold mb-1">
                         <i class="fa fa-exclamation-triangle mr-1"></i> Periksa kembali input penilaian:
@@ -327,12 +341,12 @@
                     Status &amp; Finalisasi dipisah antara periode <strong>Mid Semester</strong> dan <strong>Semester</strong>.
                 </div>
                 <div class="btn-group btn-group-sm shadow-sm" role="group" aria-label="Pilih Periode Ekskul">
-                    <a href="{{ route('wali-kelas.ekstrakurikuler.index', array_merge($eksSwitchBase, ['periode' => 'mid'])) }}"
+                    <a href="{{ route($ekskulRoutePrefix.'.index', array_merge($eksSwitchBase, ['periode' => 'mid'])) }}"
                         class="btn {{ $isMid ? 'text-white font-weight-bold' : 'btn-light border text-slate-700' }}"
                         style="{{ $isMid ? 'background: linear-gradient(135deg, #ea580c 0%, #d97706 100%);' : '' }}">
                         Mid Semester
                     </a>
-                    <a href="{{ route('wali-kelas.ekstrakurikuler.index', array_merge($eksSwitchBase, ['periode' => 'semester'])) }}"
+                    <a href="{{ route($ekskulRoutePrefix.'.index', array_merge($eksSwitchBase, ['periode' => 'semester'])) }}"
                         class="btn {{ ! $isMid ? 'text-white font-weight-bold' : 'btn-light border text-slate-700' }}"
                         style="{{ ! $isMid ? 'background: linear-gradient(135deg, #ea580c 0%, #d97706 100%);' : '' }}">
                         Semester
@@ -343,7 +357,7 @@
             @if ($finalisasi !== null)
                 @include('admin.penilaian.partials._finalisasi_banner', [
                     'finalisasi' => $finalisasi,
-                    'routePrefix' => 'wali-kelas.penilaian-finalisasi',
+                    'routePrefix' => $finalisasiRoutePrefix,
                     'componentTitle' => $isWajibMode && isset($selectedKelas)
                         ? 'Pramuka (Wajib) — Kelas '.$selectedKelas->nama_kelas
                         : 'Ekskul '.$selectedEkskul->nama_ekstrakurikuler,
@@ -362,7 +376,7 @@
                 'finalisasi' => $finalisasi,
                 'formAction' => $isWajibMode && isset($selectedKelas)
                     ? route('wali-kelas.ekstrakurikuler.wajib.store', $selectedKelas)
-                    : route('wali-kelas.ekstrakurikuler.penilaian.store', $selectedEkskul),
+                    : route($ekskulRoutePrefix.'.penilaian.store', $selectedEkskul),
                 'fromAdminShow' => false,
             ])
         @endif

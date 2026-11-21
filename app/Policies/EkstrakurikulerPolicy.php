@@ -42,12 +42,12 @@ class EkstrakurikulerPolicy extends BasePolicy
 
     public function viewPenilaian(User $user): Response
     {
-        return $this->allowIfWaliKelas($user);
+        return $this->allowIfGuruPengajar($user);
     }
 
     public function inputNilai(User $user, Ekstrakurikuler $ekstrakurikuler): Response
     {
-        if (! $this->isWaliKelas($user)) {
+        if (! $this->isGuruPengajar($user)) {
             return Response::deny('Akses ditolak.');
         }
 
