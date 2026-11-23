@@ -5,10 +5,12 @@ namespace App\Services\GuruT2q;
 use App\Models\Admin\DataMaster\AnggotaT2q;
 use App\Models\Admin\DataMaster\Karyawan;
 use App\Models\Admin\DataMaster\TahunAjaran;
+use App\Models\Admin\Penilaian\Kkm;
 use App\Models\Admin\Penilaian\PenilaianFinalisasi;
 use App\Models\Admin\Penilaian\PeriodeTp;
 use App\Models\User;
 use App\Services\Admin\Penilaian\PenilaianFinalisasiService;
+use App\Services\Admin\T2q\T2qRaporResolverService;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -247,7 +249,7 @@ class GuruT2qScopeService
      */
     public function finalizeBatchForUser(User $user, string $periode): int
     {
-        $scope = $this->getActiveScopeForUser($user, false);
+        $scope = $this->getActiveScopeForUser($user, true);
         $activeTa = $scope['activeTahunAjaran'];
 
         if (! $scope['isEligible'] || ! $activeTa instanceof TahunAjaran || $scope['supervisedKelasIds'] === []) {
@@ -255,9 +257,20 @@ class GuruT2qScopeService
         }
 
         $normPeriode = $this->finalisasiService->normalizePeriode($periode);
+        $sdMembers = new EloquentCollection(
+            $scope['anggotaT2qList']
+                ->filter(static fn (AnggotaT2q $m): bool => strtoupper(trim((string) ($m->anggotaKelas?->kelas?->jenjang_kelas ?? ''))) === Kkm::TARGET_UNIT)
+                ->values()
+                ->all()
+        );
+        $resolver = new T2qRaporResolverService;
         $count = 0;
 
-        DB::transaction(function () use ($user, $activeTa, $scope, $normPeriode, &$count): void {
+        DB::transaction(function () use ($user, $activeTa, $scope, $normPeriode, $sdMembers, $resolver, &$count): void {
+            if ($sdMembers->isNotEmpty()) {
+                $resolver->snapshotMissingOrOutdatedDrafts($sdMembers, (int) $activeTa->id, $normPeriode, $user);
+            }
+
             foreach ($scope['supervisedKelasIds'] as $kelasId) {
                 $this->finalisasiService->finalize($user, [
                     'jenis_komponen' => PenilaianFinalisasi::JENIS_T2Q,

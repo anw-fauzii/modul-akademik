@@ -213,6 +213,10 @@
         border-bottom: 1px solid #cbd5e1;
     }
 
+    .rapor-table--t2q tbody tr td {
+        background-color: #ffffff;
+    }
+
     .rapor-table tr {
         page-break-inside: avoid;
     }

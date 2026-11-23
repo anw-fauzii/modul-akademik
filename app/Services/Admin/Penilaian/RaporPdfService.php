@@ -18,6 +18,7 @@ use App\Models\Admin\Presensi\PresensiSiswa;
 use App\Services\Admin\DataMaster\AnggotaKelasService;
 use App\Services\Admin\DataMaster\SekolahService;
 use App\Services\Admin\DataMaster\TitimangsaService;
+use App\Services\Admin\T2q\T2qRaporResolverService;
 use App\Services\WaliKelas\WaliKelasScopeService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -67,13 +68,15 @@ class RaporPdfService
         protected ?TitimangsaService $titimangsaService = null,
         protected ?AnggotaKelasService $anggotaKelasService = null,
         protected ?WaliKelasScopeService $scopeService = null,
-        protected ?PenilaianFinalisasiService $finalisasiService = null
+        protected ?PenilaianFinalisasiService $finalisasiService = null,
+        protected ?T2qRaporResolverService $t2qRaporResolver = null
     ) {
         $this->sekolahService ??= new SekolahService;
         $this->titimangsaService ??= new TitimangsaService;
         $this->anggotaKelasService ??= new AnggotaKelasService;
         $this->scopeService ??= new WaliKelasScopeService;
         $this->finalisasiService ??= new PenilaianFinalisasiService;
+        $this->t2qRaporResolver ??= new T2qRaporResolverService;
     }
 
     /**
@@ -374,11 +377,22 @@ class RaporPdfService
 
             $t2qByAnggota = AnggotaT2q::query()
                 ->select(['id', 'anggota_kelas_id', 'karyawan_nipy', 'tingkat', 'keterangan'])
-                ->with(['guruT2q:nipy,nama_lengkap,gelar'])
+                ->with([
+                    'guruT2q:nipy,nama_lengkap,gelar',
+                    'anggotaKelas:id,akademik_master_kelas_id',
+                ])
                 ->whereIn('anggota_kelas_id', $anggotaIds)
                 ->get()
                 ->keyBy('anggota_kelas_id');
         }
+
+        $t2qRaporByT2qId = $t2qByAnggota->isNotEmpty()
+            ? $this->t2qRaporResolver->resolveForAnggotaT2qList(
+                new EloquentCollection($t2qByAnggota->values()->all()),
+                (int) $kelas->akademik_master_tahun_ajaran_id,
+                $periode
+            )
+            : [];
 
         $presensiByAnggota = $this->buildPresensiSummaryByAnggota($anggotaIds);
         $sekolah = $this->sekolahService->resolveByJenjang((string) $kelas->jenjang_kelas);
@@ -397,6 +411,7 @@ class RaporPdfService
             $rekapLookup,
             $ekskulByAnggota,
             $t2qByAnggota,
+            $t2qRaporByT2qId,
             $presensiByAnggota
         ): array {
             $rawGroups = array_map(static function (array $group) use ($anggota, $rekapLookup): array {
@@ -423,13 +438,16 @@ class RaporPdfService
                 ->values()
                 ->all();
 
+            $t2qItem = $t2qByAnggota->get($anggota->id);
+
             return [
                 'anggota' => $anggota,
                 'siswa' => $anggota->siswa,
                 'mapelRows' => $mapelRows,
                 'mapelGroups' => $mapelGroups,
                 'ekskulRows' => $ekskulByAnggota->get($anggota->id, collect())->values()->all(),
-                't2q' => $t2qByAnggota->get($anggota->id),
+                't2q' => $t2qItem,
+                't2qRapor' => $t2qItem instanceof AnggotaT2q ? ($t2qRaporByT2qId[(int) $t2qItem->id] ?? null) : null,
                 'presensi' => $presensiByAnggota[$anggota->id] ?? ['sakit' => 0, 'izin' => 0, 'alpa' => 0],
             ];
         })->values()->all();

@@ -171,10 +171,38 @@ class RaporPdfTest extends TestCase
         $anggotaEkskul = AnggotaEkstrakurikuler::make(['anggota_kelas_id' => 301, 'keterangan' => 'Aktif dan disiplin.']);
         $anggotaEkskul->setRelation('ekstrakurikuler', $ekskulModel);
 
-        $anggotaT2q = AnggotaT2q::make(['anggota_kelas_id' => 301, 'karyawan_nipy' => 'NIPY-TQ1', 'tingkat' => 'Jilid 4', 'keterangan' => 'Lancar tajwid']);
+        $anggotaT2q = AnggotaT2q::make(['anggota_kelas_id' => 301, 'karyawan_nipy' => 'NIPY-TQ1', 'tingkat' => '4', 'keterangan' => 'Lancar tajwid']);
+        $anggotaT2q->id = 401;
         $anggotaT2q->setRelation('guruT2q', $guruT2q);
 
-        return compact('ta', 'wali', 'kepsek', 'kelas', 'sekolah', 'titimangsa', 'anggota1', 'anggota2', 'mapel', 'rekap', 'anggotaEkskul', 'anggotaT2q');
+        $t2qRapor = [
+            'saved' => null,
+            'is_locked' => false,
+            'mid_cutoff_date' => null,
+            'tahsin' => [
+                'has_data' => true,
+                'materi' => 'Jilid 4 halaman 11',
+                'nilai' => 84,
+                'predikat' => 'BSH',
+                'predikat_label' => 'Berkembang Sesuai Harapan',
+                'keunggulan' => 'bacaan panjang 2 harakat (mad)',
+                'peningkatan' => 'huruf yang disukunkan',
+                'deskripsi' => 'Ananda berkembang sesuai harapan dalam menguasai kompetensi tahsin Jilid 4 halaman 11, terutama dalam bacaan panjang 2 harakat (mad). Perlu peningkatan dalam huruf yang disukunkan.',
+            ],
+            'tahfizh' => [
+                'has_data' => true,
+                'materi' => 'Surah al-Buruj',
+                'has_ayat' => false,
+                'nilai' => 85,
+                'predikat' => 'BSH',
+                'predikat_label' => 'Berkembang Sesuai Harapan',
+                'keunggulan' => 'mad',
+                'peningkatan' => 'kelancaran',
+                'deskripsi' => 'Ananda berkembang sesuai harapan dalam melafalkan Surah al-Buruj, terutama dalam mad. Perlu peningkatan dalam kelancaran.',
+            ],
+        ];
+
+        return compact('ta', 'wali', 'kepsek', 'kelas', 'sekolah', 'titimangsa', 'anggota1', 'anggota2', 'mapel', 'rekap', 'anggotaEkskul', 'anggotaT2q', 't2qRapor');
     }
 
     public function test_separated_identitas_and_nilai_pdf_views_render_clean_html_and_valid_dompdf_binaries(): void
@@ -209,6 +237,7 @@ class RaporPdfTest extends TestCase
                     'mapelRows' => [['mapel' => $f['mapel'], 'rekap' => $f['rekap']]],
                     'ekskulRows' => [$f['anggotaEkskul']],
                     't2q' => $f['anggotaT2q'],
+                    't2qRapor' => $f['t2qRapor'],
                     'presensi' => ['sakit' => 1, 'izin' => 0, 'alpa' => 0],
                 ],
             ],
@@ -252,8 +281,12 @@ class RaporPdfTest extends TestCase
         $this->assertStringContainsString('Menunjukkan penguasaan baik pada operasi hitung pecahan.', $nilaiHtml);
         $this->assertStringNotContainsString('(BSH)', $nilaiHtml);
         $this->assertStringContainsString('Pramuka', $nilaiHtml);
-        $this->assertStringContainsString('Jilid 4', $nilaiHtml);
-        $this->assertStringContainsString('Ustadz Ridwan, S.Ag', $nilaiHtml);
+        $this->assertStringContainsString("TAHSIN DAN TAHFIDZ AL-QUR'AN", $nilaiHtml);
+        $this->assertStringContainsString("TAHSIN AL-QUR'AN", $nilaiHtml);
+        $this->assertStringContainsString("TAHFIDZ AL-QUR'AN", $nilaiHtml);
+        $this->assertStringContainsString('Jilid 4 halaman 11', $nilaiHtml);
+        $this->assertStringContainsString('Surah al-Buruj', $nilaiHtml);
+        $this->assertStringContainsString('Perlu peningkatan dalam huruf yang disukunkan.', $nilaiHtml);
         $this->assertStringContainsString('1 hari', $nilaiHtml);
         $this->assertStringContainsString('CATATAN WALI KELAS', $nilaiHtml);
         $this->assertStringContainsString('Sari Wulandari, S.Pd', $nilaiHtml);
@@ -523,6 +556,7 @@ class RaporPdfTest extends TestCase
                         'mapelGroups' => $groupedAll,
                         'ekskulRows' => [$f['anggotaEkskul']],
                         't2q' => $f['anggotaT2q'],
+                        't2qRapor' => $f['t2qRapor'],
                         'presensi' => ['sakit' => 1, 'izin' => 0, 'alpa' => 0],
                     ],
                 ],
@@ -611,12 +645,13 @@ class RaporPdfTest extends TestCase
         $this->assertLessThan($posMulok, $posB);
 
         $this->assertStringContainsString('D. EKSTRAKURIKULER', $html);
-        $this->assertStringContainsString("E. PROGRAM TAHSIN &amp; TAHFIDZ AL-QUR'AN (T2Q)", $html);
+        $this->assertStringContainsString("E. TAHSIN DAN TAHFIDZ AL-QUR'AN", $html);
         $this->assertStringContainsString('F. KETIDAKHADIRAN', $html);
         $this->assertStringContainsString('G. CATATAN WALI KELAS', $html);
 
         $noT2qPayload = $payload;
         $noT2qPayload['entries'][0]['t2q'] = null;
+        $noT2qPayload['entries'][0]['t2qRapor'] = null;
         $noT2qHtml = view('pdf.rapor.nilai', $noT2qPayload)->render();
         $this->assertStringContainsString('D. EKSTRAKURIKULER', $noT2qHtml);
         $this->assertStringContainsString('E. KETIDAKHADIRAN', $noT2qHtml);

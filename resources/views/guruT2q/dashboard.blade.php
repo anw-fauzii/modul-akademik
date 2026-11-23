@@ -18,13 +18,13 @@
 
             @media (min-width: 768px) {
                 .gt2q-dock-bar {
-                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                    grid-template-columns: repeat(4, minmax(0, 1fr));
                 }
             }
 
-            @media (min-width: 1200px) {
+            @media (min-width: 1340px) {
                 .gt2q-dock-bar {
-                    grid-template-columns: repeat(6, minmax(0, 1fr));
+                    grid-template-columns: repeat(7, minmax(0, 1fr));
                 }
             }
 
@@ -457,6 +457,14 @@
                         'icon' => 'fa-chart-bar',
                         'bg' => '#fefce8',
                         'color' => '#ca8a04',
+                    ],
+                    [
+                        'title' => 'Rekap Rapor SD',
+                        'sub' => 'Nilai akhir & deskripsi',
+                        'url' => route('guru-t2q.rapor.index'),
+                        'icon' => 'fa-file-signature',
+                        'bg' => '#ecfeff',
+                        'color' => '#0891b2',
                     ],
                     [
                         'title' => 'Ekstrakurikuler',

@@ -52,6 +52,7 @@
                 : [['kelompok' => null, 'kode' => '', 'label' => 'Mata Pelajaran', 'rows' => []]];
             $ekskulRows = $entry['ekskulRows'];
             $t2q = $entry['t2q'];
+            $t2qRapor = $entry['t2qRapor'] ?? null;
             $presensi = $entry['presensi'];
             $sectionIdx = 0;
         @endphp
@@ -202,26 +203,57 @@
 
             @if ($t2q)
                 @php
-                    $guruT2q = $t2q->relationLoaded('guruT2q') ? $t2q->guruT2q : null;
+                    $tahsinRapor = is_array($t2qRapor) ? ($t2qRapor['tahsin'] ?? null) : null;
+                    $tahfizhRapor = is_array($t2qRapor) ? ($t2qRapor['tahfizh'] ?? null) : null;
+
+                    $tahsinHasData = is_array($tahsinRapor) && ($tahsinRapor['has_data'] ?? false);
+                    $tahsinMateriText = $tahsinHasData && filled($tahsinRapor['materi'] ?? null) ? $tahsinRapor['materi'] : '-';
+                    $tahsinNilaiText = $tahsinHasData && isset($tahsinRapor['nilai']) && $tahsinRapor['nilai'] !== null
+                        ? number_format((float) $tahsinRapor['nilai'], 0)
+                        : '-';
+                    $tahsinDeskripsiText = $tahsinHasData && filled($tahsinRapor['deskripsi'] ?? null)
+                        ? $tahsinRapor['deskripsi']
+                        : '-';
+
+                    $tahfizhHasData = is_array($tahfizhRapor) && ($tahfizhRapor['has_data'] ?? false);
+                    $tahfizhMateriText = $tahfizhHasData && filled($tahfizhRapor['materi'] ?? null) ? $tahfizhRapor['materi'] : '-';
+                    $tahfizhNilaiText = $tahfizhHasData && isset($tahfizhRapor['nilai']) && $tahfizhRapor['nilai'] !== null
+                        ? number_format((float) $tahfizhRapor['nilai'], 0)
+                        : '-';
+                    $tahfizhDeskripsiText = $tahfizhHasData && filled($tahfizhRapor['deskripsi'] ?? null)
+                        ? $tahfizhRapor['deskripsi']
+                        : '-';
                 @endphp
                 <div class="section-keep-together">
-                    <div class="section-heading uppercase">{{ $nextSectionLetter($sectionIdx++) }}. PROGRAM TAHSIN &amp; TAHFIDZ AL-QUR'AN (T2Q)</div>
-                    <table class="rapor-table rapor-table--mapel">
-                        <thead>
-                            <tr>
-                                <th style="width: 24%;">TINGKAT / JILID</th>
-                                <th class="text-left" style="width: 32%;">PEMBIMBING</th>
-                                <th class="text-left" style="width: 44%;">KETERANGAN</th>
-                            </tr>
-                        </thead>
+                    <div class="section-heading uppercase">{{ $nextSectionLetter($sectionIdx++) }}. TAHSIN DAN TAHFIDZ AL-QUR'AN</div>
+                    <table class="rapor-table rapor-table--mapel rapor-table--t2q">
                         <tbody>
                             <tr>
-                                <td class="text-center font-bold" style="vertical-align: middle;">{{ $t2q->tingkat ?: '-' }}</td>
-                                <td style="vertical-align: middle;">{{ $guruT2q?->nama_gelar ?? ($t2q->karyawan_nipy ?: '-') }}</td>
+                                <th style="width: 6%;">NO</th>
+                                <th style="width: 24%;">TAHSIN AL-QUR'AN</th>
+                                <th style="width: 12%;">NILAI</th>
+                                <th style="width: 58%;">DESKRIPSI</th>
+                            </tr>
+                            <tr>
+                                <td class="text-center muted font-bold" style="vertical-align: middle;">1</td>
+                                <td class="font-bold" style="vertical-align: middle;">{{ $tahsinMateriText }}</td>
+                                <td class="text-center font-bold" style="vertical-align: middle; font-size: 8.5pt;">{{ $tahsinNilaiText }}</td>
                                 <td>
-                                    <div class="desc-text">
-                                        {{ $t2q->keterangan ?: '-' }}
-                                    </div>
+                                    <div class="desc-text">{{ $tahsinDeskripsiText }}</div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th style="width: 6%;">NO</th>
+                                <th style="width: 24%;">TAHFIDZ AL-QUR'AN</th>
+                                <th style="width: 12%;">NILAI</th>
+                                <th style="width: 58%;">DESKRIPSI</th>
+                            </tr>
+                            <tr>
+                                <td class="text-center muted font-bold" style="vertical-align: middle;">1</td>
+                                <td class="font-bold" style="vertical-align: middle;">{{ $tahfizhMateriText }}</td>
+                                <td class="text-center font-bold" style="vertical-align: middle; font-size: 8.5pt;">{{ $tahfizhNilaiText }}</td>
+                                <td>
+                                    <div class="desc-text">{{ $tahfizhDeskripsiText }}</div>
                                 </td>
                             </tr>
                         </tbody>

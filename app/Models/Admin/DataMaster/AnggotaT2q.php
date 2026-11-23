@@ -2,6 +2,7 @@
 
 namespace App\Models\Admin\DataMaster;
 
+use App\Models\Admin\T2q\RaporT2q;
 use App\Models\Admin\T2q\YaumiyahTahfizh;
 use App\Models\Admin\T2q\YaumiyahTahsin;
 use App\Models\Concerns\HasSqidRouteKey;
@@ -304,5 +305,15 @@ class AnggotaT2q extends Model
     public function yaumiyahTahfizh(): HasMany
     {
         return $this->hasMany(YaumiyahTahfizh::class, 'anggota_t2q_id');
+    }
+
+    /**
+     * Relasi rekap nilai & deskripsi rapor T2Q milik anggota T2Q ini.
+     *
+     * @return HasMany<RaporT2q, $this>
+     */
+    public function raporT2q(): HasMany
+    {
+        return $this->hasMany(RaporT2q::class, 'anggota_t2q_id');
     }
 }

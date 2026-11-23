@@ -673,6 +673,8 @@ class GuruT2qTest extends TestCase
         $this->assertStringContainsString('Yaumiyah Tahfizh', $sidebarHtml);
         $this->assertStringContainsString('Matriks (Sen–Kam)', $sidebarHtml);
         $this->assertStringContainsString('Statistik T2Q', $sidebarHtml);
+        $this->assertStringContainsString('Rekap Rapor T2Q', $sidebarHtml);
+        $this->assertStringContainsString('/guru-t2q/rapor', $sidebarHtml);
         $this->assertStringContainsString('Penilaian Ekstrakurikuler', $sidebarHtml);
         $this->assertStringContainsString('/guru-t2q/ekstrakurikuler', $sidebarHtml);
         $this->assertStringNotContainsString('Anggota Kelas', $sidebarHtml);

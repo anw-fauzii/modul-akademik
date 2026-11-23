@@ -42,6 +42,7 @@ use App\Http\Controllers\GuruMapel\PerkembanganSiswaController as GuruMapelPerke
 use App\Http\Controllers\GuruT2q\DashboardController as GuruT2qDashboardController;
 use App\Http\Controllers\GuruT2q\FinalisasiT2qController as GuruT2qFinalisasiController;
 use App\Http\Controllers\GuruT2q\PenilaianEkstrakurikulerController as GuruT2qPenilaianEkstrakurikulerController;
+use App\Http\Controllers\GuruT2q\RaporT2qController as GuruT2qRaporController;
 use App\Http\Controllers\GuruT2q\YaumiyahTahfizhController as GuruT2qYaumiyahTahfizhController;
 use App\Http\Controllers\GuruT2q\YaumiyahTahsinController as GuruT2qYaumiyahTahsinController;
 use App\Http\Controllers\HomeController;
@@ -219,6 +220,12 @@ Route::middleware(['auth', 'sso.check', 'nocache', 'sqid.decode'])->group(functi
         ->name('guru-t2q.yaumiyah-tahfizh.store');
     Route::delete('/guru-t2q/yaumiyah-tahfizh/{yaumiyah_tahfizh}', [GuruT2qYaumiyahTahfizhController::class, 'destroy'])
         ->name('guru-t2q.yaumiyah-tahfizh.destroy');
+    Route::get('/guru-t2q/rapor', [GuruT2qRaporController::class, 'index'])
+        ->name('guru-t2q.rapor.index');
+    Route::post('/guru-t2q/rapor', [GuruT2qRaporController::class, 'store'])
+        ->name('guru-t2q.rapor.store');
+    Route::post('/guru-t2q/rapor/generate', [GuruT2qRaporController::class, 'generate'])
+        ->name('guru-t2q.rapor.generate');
     Route::post('/guru-t2q/finalisasi', [GuruT2qFinalisasiController::class, 'finalize'])
         ->name('guru-t2q.finalisasi.finalize');
     Route::post('/guru-t2q/finalisasi/unlock', [GuruT2qFinalisasiController::class, 'unlock'])
