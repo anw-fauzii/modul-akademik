@@ -11,6 +11,7 @@ use App\Models\Admin\DataPelengkap\Pekerjaan;
 use App\Models\Admin\DataPelengkap\Penghasilan;
 use App\Models\Admin\DataPelengkap\Transportasi;
 use App\Services\GuruMapel\GuruMapelDashboardService;
+use App\Services\GuruT2q\GuruT2qDashboardService;
 use App\Services\WaliKelas\WaliKelasDashboardService;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
@@ -22,17 +23,19 @@ class HomeController extends Controller
      */
     public function __construct(
         protected ?WaliKelasDashboardService $waliKelasDashboardService = null,
-        protected ?GuruMapelDashboardService $guruMapelDashboardService = null
+        protected ?GuruMapelDashboardService $guruMapelDashboardService = null,
+        protected ?GuruT2qDashboardService $guruT2qDashboardService = null
     ) {
         $this->middleware('auth');
-        $this->middleware('role:super admin|wali kelas|guru mapel sd');
+        $this->middleware('role:super admin|wali kelas|guru mapel sd|guru t2q');
         $this->middleware('can:viewAny,'.Kelas::class)->only(['index']);
         $this->waliKelasDashboardService ??= app(WaliKelasDashboardService::class);
         $this->guruMapelDashboardService ??= app(GuruMapelDashboardService::class);
+        $this->guruT2qDashboardService ??= app(GuruT2qDashboardService::class);
     }
 
     /**
-     * Menampilkan dashboard utama sesuai role pengguna (Admin, Wali Kelas, atau Guru Mapel SD).
+     * Menampilkan dashboard utama sesuai role pengguna (Admin, Wali Kelas, Guru Mapel SD, atau Guru T2Q).
      */
     public function index(Request $request): Renderable
     {
@@ -52,6 +55,13 @@ class HomeController extends Controller
                 return view(
                     'guruMapel.dashboard',
                     $this->guruMapelDashboardService->getDashboardData($user)
+                );
+            }
+
+            if ($user->hasRole('guru t2q')) {
+                return view(
+                    'guruT2q.dashboard',
+                    $this->guruT2qDashboardService->getDashboardData($user)
                 );
             }
         }

@@ -15,7 +15,7 @@ class FinalisasiController extends Controller
     public function __construct(
         private readonly PenilaianFinalisasiService $finalisasiService
     ) {
-        $this->middleware('role:super admin|wali kelas|guru mapel sd');
+        $this->middleware('role:super admin|wali kelas|guru mapel sd|guru t2q');
     }
 
     /**

@@ -38,12 +38,20 @@
                 $isSuperAdmin = $authUser?->hasRole('super admin') ?? false;
                 $isWaliKelas = $authUser?->hasRole('wali kelas') ?? false;
                 $isGuruMapelSd = $authUser?->hasRole('guru mapel sd') ?? false;
+                $isGuruT2q = $authUser?->hasRole('guru t2q') ?? false;
                 $showAdminMenus = $authUser === null || $isSuperAdmin;
                 $showWaliMenus = ! $isSuperAdmin && $isWaliKelas;
                 $showGuruMapelMenus = ! $isSuperAdmin && ! $isWaliKelas && $isGuruMapelSd;
+                $showGuruT2qMenus = ! $isSuperAdmin && ! $isWaliKelas && ! $isGuruMapelSd && $isGuruT2q;
                 $isDashboardActive = request()->routeIs('home')
                     || ($showWaliMenus && request()->routeIs('wali-kelas.dashboard'))
-                    || ($showGuruMapelMenus && request()->routeIs('guru-mapel.dashboard'));
+                    || ($showGuruMapelMenus && request()->routeIs('guru-mapel.dashboard'))
+                    || ($showGuruT2qMenus && request()->routeIs('guru-t2q.dashboard'));
+                $isGuruT2qTahsinActive = request()->routeIs('guru-t2q.yaumiyah-tahsin.index');
+                $isGuruT2qTahfizhActive = request()->routeIs('guru-t2q.yaumiyah-tahfizh.index');
+                $isGuruT2qMatriksActive = request()->routeIs('guru-t2q.yaumiyah-*.matriks');
+                $isGuruT2qStatistikActive = request()->routeIs('guru-t2q.yaumiyah-*.statistik');
+                $isGuruT2qEkskulActive = request()->routeIs('guru-t2q.ekstrakurikuler.*');
                 $isGuruMapelJadwalActive = request()->routeIs('guru-mapel.jadwal-pelajaran.*');
                 $isGuruMapelPerkembanganActive = request()->routeIs('guru-mapel.perkembangan-siswa.*');
                 $isGuruMapelPenilaianActive = request()->routeIs('guru-mapel.penilaian-tp.*', 'guru-mapel.penilaian-rekap.*');
@@ -313,6 +321,59 @@
                             </a>
                         </div>
                     </div>
+                @endif
+
+                @if ($showGuruT2qMenus)
+                    @php
+                        $guruT2qSingleLinks = [
+                            [
+                                'label' => 'Yaumiyah Tahsin',
+                                'route' => 'guru-t2q.yaumiyah-tahsin.index',
+                                'active' => $isGuruT2qTahsinActive,
+                                'icon' => 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253',
+                            ],
+                            [
+                                'label' => 'Yaumiyah Tahfizh',
+                                'route' => 'guru-t2q.yaumiyah-tahfizh.index',
+                                'active' => $isGuruT2qTahfizhActive,
+                                'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+                            ],
+                            [
+                                'label' => 'Matriks (Sen–Kam)',
+                                'route' => 'guru-t2q.yaumiyah-tahsin.matriks',
+                                'active' => $isGuruT2qMatriksActive,
+                                'icon' => 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z',
+                            ],
+                            [
+                                'label' => 'Statistik T2Q',
+                                'route' => 'guru-t2q.yaumiyah-tahsin.statistik',
+                                'active' => $isGuruT2qStatistikActive,
+                                'icon' => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+                            ],
+                            [
+                                'label' => 'Penilaian Ekstrakurikuler',
+                                'route' => 'guru-t2q.ekstrakurikuler.index',
+                                'active' => $isGuruT2qEkskulActive,
+                                'icon' => 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z',
+                            ],
+                        ];
+                    @endphp
+                    @foreach ($guruT2qSingleLinks as $gtLink)
+                        <div class="relative group/tooltip">
+                            <a href="{{ route($gtLink['route']) }}"
+                                class="group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all {{ $gtLink['active'] ? $menuActiveClass : $menuInactiveClass }}">
+                                <div class="flex items-center gap-3">
+                                    <svg class="h-4 w-4 shrink-0 {{ $gtLink['active'] ? $menuIconActiveClass : $menuIconInactiveClass }}"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="{{ $gtLink['icon'] }}" />
+                                    </svg>
+                                    <span class="menu-text">{{ $gtLink['label'] }}</span>
+                                </div>
+                            </a>
+                            <div class="sidebar-tooltip">{{ $gtLink['label'] }}</div>
+                        </div>
+                    @endforeach
                 @endif
             </nav>
         </div>

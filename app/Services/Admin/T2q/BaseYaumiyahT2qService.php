@@ -55,9 +55,9 @@ abstract class BaseYaumiyahT2qService
      * @param  array<string, mixed>  $input
      * @return array<string, mixed>
      */
-    public function getWorkspaceData(array $input = []): array
+    public function getWorkspaceData(array $input = [], ?string $forcedGuruNipy = null): array
     {
-        $context = $this->resolveBaseContext($input);
+        $context = $this->resolveBaseContext($input, null, $forcedGuruNipy);
         $masterOptions = $this->getMasterOptions();
 
         if ($context['activeTahunAjaran'] === null) {
@@ -89,9 +89,9 @@ abstract class BaseYaumiyahT2qService
      * @param  list<int>|null  $scopedKelasIds
      * @return array<string, mixed>
      */
-    public function getMatrixData(array $input = [], ?array $scopedKelasIds = null): array
+    public function getMatrixData(array $input = [], ?array $scopedKelasIds = null, ?string $forcedGuruNipy = null): array
     {
-        $context = $this->resolveBaseContext($input, $scopedKelasIds);
+        $context = $this->resolveBaseContext($input, $scopedKelasIds, $forcedGuruNipy);
         $period = $this->resolveWeekPeriod($context['payload']['tanggal']);
 
         $entriesByAnggotaDate = ($context['activeTahunAjaran'] !== null && $context['anggotaIds'] !== [])
@@ -118,8 +118,10 @@ abstract class BaseYaumiyahT2qService
     public function getStatistikData(
         array $input = [],
         ?array $scopedKelasIds = null,
-        ?EloquentCollection $scopedTahunAjaranOptions = null
+        ?EloquentCollection $scopedTahunAjaranOptions = null,
+        ?string $forcedGuruNipy = null
     ): array {
+        $normalizedForcedNipy = $forcedGuruNipy !== null ? trim($forcedGuruNipy) : null;
         $tahunAjaranOptions = $scopedTahunAjaranOptions ?? TahunAjaran::query()
             ->orderedForDropdown()
             ->get();
@@ -131,15 +133,15 @@ abstract class BaseYaumiyahT2qService
                 ?? $tahunAjaranOptions->first())
             : ($tahunAjaranOptions->firstWhere('is_active', true) ?? $tahunAjaranOptions->first());
 
-        $selectedGuruNipy = trim((string) ($input['karyawan_nipy'] ?? ''));
+        $selectedGuruNipy = $normalizedForcedNipy ?? trim((string) ($input['karyawan_nipy'] ?? ''));
         $requestedTingkat = AnggotaT2q::normalizeTingkat($input['tingkat'] ?? '');
 
-        if ($selectedTahunAjaran === null) {
+        if ($selectedTahunAjaran === null || $normalizedForcedNipy === '') {
             return $this->emptyStatistikPayload($tahunAjaranOptions, $selectedGuruNipy, $requestedTingkat);
         }
 
         $guruOptions = $this->getGuruOptions((int) $selectedTahunAjaran->id, $scopedKelasIds);
-        if ($selectedGuruNipy !== '' && ! $guruOptions->contains('nipy', $selectedGuruNipy)) {
+        if ($normalizedForcedNipy === null && $selectedGuruNipy !== '' && ! $guruOptions->contains('nipy', $selectedGuruNipy)) {
             $selectedGuruNipy = '';
         }
 
@@ -182,8 +184,13 @@ abstract class BaseYaumiyahT2qService
      *
      * @param  array<int|string, array<string, mixed>>  $rows
      */
-    public function saveBatch(string $tanggal, array $rows): int
+    public function saveBatch(string $tanggal, array $rows, ?string $forcedGuruNipy = null): int
     {
+        $normalizedForcedNipy = $forcedGuruNipy !== null ? trim($forcedGuruNipy) : null;
+        if ($normalizedForcedNipy === '') {
+            abort(403, 'Akun Guru T2Q Anda belum memiliki NIPY yang valid untuk mencatat setoran.');
+        }
+
         $activeTahunAjaran = $this->resolveActiveTahunAjaran();
         if ($activeTahunAjaran === null || $rows === []) {
             return 0;
@@ -202,10 +209,19 @@ abstract class BaseYaumiyahT2qService
         $allowedIds = AnggotaT2q::query()
             ->whereIn('id', $candidateIds)
             ->forTahunAjaran($activeTahunAjaran->id)
+            ->when($normalizedForcedNipy !== null, static fn (Builder $query) => $query->forKaryawan($normalizedForcedNipy))
             ->pluck('id')
             ->map(static fn ($id): int => (int) $id)
             ->flip()
             ->all();
+
+        if ($normalizedForcedNipy !== null) {
+            foreach ($candidateIds as $candidateId) {
+                if (! isset($allowedIds[$candidateId])) {
+                    abort(403, 'Anda hanya dapat mencatat setoran Yaumiyah T2Q untuk siswa bimbingan Anda pada Tahun Ajaran aktif.');
+                }
+            }
+        }
 
         $lookupMaps = $this->loadValidationLookupMaps();
         $normalizedDate = $this->resolveDate($tanggal);
@@ -583,21 +599,22 @@ abstract class BaseYaumiyahT2qService
      *     payload: array<string, mixed>
      * }
      */
-    private function resolveBaseContext(array $input, ?array $scopedKelasIds = null): array
+    private function resolveBaseContext(array $input, ?array $scopedKelasIds = null, ?string $forcedGuruNipy = null): array
     {
+        $normalizedForcedNipy = $forcedGuruNipy !== null ? trim($forcedGuruNipy) : null;
         $activeTahunAjaran = $this->resolveActiveTahunAjaran();
         $tanggal = $this->resolveDate($input['tanggal'] ?? null);
-        $selectedGuruNipy = trim((string) ($input['karyawan_nipy'] ?? ''));
+        $selectedGuruNipy = $normalizedForcedNipy ?? trim((string) ($input['karyawan_nipy'] ?? ''));
         $requestedTingkat = AnggotaT2q::normalizeTingkat($input['tingkat'] ?? '');
 
-        if ($activeTahunAjaran === null) {
+        if ($activeTahunAjaran === null || $normalizedForcedNipy === '') {
             return [
-                'activeTahunAjaran' => null,
+                'activeTahunAjaran' => $activeTahunAjaran,
                 'anggotaIds' => [],
                 'payload' => [
                     'mode' => $this->modeKey(),
                     'usesDaftarJilid' => $this->usesDaftarJilid(),
-                    'activeTahunAjaran' => null,
+                    'activeTahunAjaran' => $activeTahunAjaran,
                     'tanggal' => $tanggal,
                     'tanggalFormatted' => Carbon::parse($tanggal)->locale('id')->translatedFormat('l, d F Y'),
                     'guruOptions' => new EloquentCollection,
@@ -611,7 +628,7 @@ abstract class BaseYaumiyahT2qService
         }
 
         $guruOptions = $this->getGuruOptions($activeTahunAjaran->id, $scopedKelasIds);
-        if ($selectedGuruNipy !== '' && ! $guruOptions->contains('nipy', $selectedGuruNipy)) {
+        if ($normalizedForcedNipy === null && $selectedGuruNipy !== '' && ! $guruOptions->contains('nipy', $selectedGuruNipy)) {
             $selectedGuruNipy = '';
         }
 

@@ -11,7 +11,9 @@ class KelasPolicy extends BasePolicy
 {
     public function viewAny(User $user): Response
     {
-        return $this->allowIfGuruPengajar($user);
+        return ($this->isGuruPengajar($user) || $this->isGuruT2q($user))
+            ? Response::allow()
+            : Response::deny('Akses ditolak. Fitur ini khusus Super Admin, Wali Kelas, Guru Mapel SD, atau Guru T2Q.');
     }
 
     public function view(User $user, Kelas $kelas): Response

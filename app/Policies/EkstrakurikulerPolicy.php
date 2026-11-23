@@ -42,13 +42,22 @@ class EkstrakurikulerPolicy extends BasePolicy
 
     public function viewPenilaian(User $user): Response
     {
-        return $this->allowIfGuruPengajar($user);
+        return ($this->isGuruPengajar($user) || $this->isGuruT2q($user))
+            ? Response::allow()
+            : Response::deny('Akses ditolak. Fitur ini khusus Super Admin, Wali Kelas, Guru Mapel SD, atau Guru T2Q.');
     }
 
     public function inputNilai(User $user, Ekstrakurikuler $ekstrakurikuler): Response
     {
-        if (! $this->isGuruPengajar($user)) {
+        $isPengajar = $this->isGuruPengajar($user);
+        $isT2q = $this->isGuruT2q($user);
+
+        if (! $isPengajar && ! $isT2q) {
             return Response::deny('Akses ditolak.');
+        }
+
+        if ($isT2q && ! $isPengajar && $ekstrakurikuler->isWajib()) {
+            return Response::deny('Guru T2Q hanya dapat menilai Ekstrakurikuler Pilihan.');
         }
 
         return $this->checkScope(static function () use ($user, $ekstrakurikuler): void {

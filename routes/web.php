@@ -39,6 +39,11 @@ use App\Http\Controllers\GuruMapel\JadwalPelajaranController as GuruMapelJadwalP
 use App\Http\Controllers\GuruMapel\PenilaianEkstrakurikulerController as GuruMapelPenilaianEkstrakurikulerController;
 use App\Http\Controllers\GuruMapel\PenilaianTpController as GuruMapelPenilaianTpController;
 use App\Http\Controllers\GuruMapel\PerkembanganSiswaController as GuruMapelPerkembanganSiswaController;
+use App\Http\Controllers\GuruT2q\DashboardController as GuruT2qDashboardController;
+use App\Http\Controllers\GuruT2q\FinalisasiT2qController as GuruT2qFinalisasiController;
+use App\Http\Controllers\GuruT2q\PenilaianEkstrakurikulerController as GuruT2qPenilaianEkstrakurikulerController;
+use App\Http\Controllers\GuruT2q\YaumiyahTahfizhController as GuruT2qYaumiyahTahfizhController;
+use App\Http\Controllers\GuruT2q\YaumiyahTahsinController as GuruT2qYaumiyahTahsinController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SSOController;
 use App\Http\Controllers\WaliKelas\AnggotaKelasController as WaliKelasAnggotaKelasController;
@@ -192,6 +197,40 @@ Route::middleware(['auth', 'sso.check', 'nocache', 'sqid.decode'])->group(functi
         ->name('guru-mapel.ekstrakurikuler.index');
     Route::post('/guru-mapel/ekstrakurikuler/{ekstrakurikuler}/penilaian', [GuruMapelPenilaianEkstrakurikulerController::class, 'store'])
         ->name('guru-mapel.ekstrakurikuler.penilaian.store');
+    Route::get('/guru-t2q/dashboard', [GuruT2qDashboardController::class, 'index'])
+        ->name('guru-t2q.dashboard');
+    Route::get('/guru-t2q/yaumiyah-tahsin', [GuruT2qYaumiyahTahsinController::class, 'index'])
+        ->name('guru-t2q.yaumiyah-tahsin.index');
+    Route::get('/guru-t2q/yaumiyah-tahsin/matriks', [GuruT2qYaumiyahTahsinController::class, 'matriks'])
+        ->name('guru-t2q.yaumiyah-tahsin.matriks');
+    Route::get('/guru-t2q/yaumiyah-tahsin/statistik', [GuruT2qYaumiyahTahsinController::class, 'statistik'])
+        ->name('guru-t2q.yaumiyah-tahsin.statistik');
+    Route::post('/guru-t2q/yaumiyah-tahsin', [GuruT2qYaumiyahTahsinController::class, 'store'])
+        ->name('guru-t2q.yaumiyah-tahsin.store');
+    Route::delete('/guru-t2q/yaumiyah-tahsin/{yaumiyah_tahsin}', [GuruT2qYaumiyahTahsinController::class, 'destroy'])
+        ->name('guru-t2q.yaumiyah-tahsin.destroy');
+    Route::get('/guru-t2q/yaumiyah-tahfizh', [GuruT2qYaumiyahTahfizhController::class, 'index'])
+        ->name('guru-t2q.yaumiyah-tahfizh.index');
+    Route::get('/guru-t2q/yaumiyah-tahfizh/matriks', [GuruT2qYaumiyahTahfizhController::class, 'matriks'])
+        ->name('guru-t2q.yaumiyah-tahfizh.matriks');
+    Route::get('/guru-t2q/yaumiyah-tahfizh/statistik', [GuruT2qYaumiyahTahfizhController::class, 'statistik'])
+        ->name('guru-t2q.yaumiyah-tahfizh.statistik');
+    Route::post('/guru-t2q/yaumiyah-tahfizh', [GuruT2qYaumiyahTahfizhController::class, 'store'])
+        ->name('guru-t2q.yaumiyah-tahfizh.store');
+    Route::delete('/guru-t2q/yaumiyah-tahfizh/{yaumiyah_tahfizh}', [GuruT2qYaumiyahTahfizhController::class, 'destroy'])
+        ->name('guru-t2q.yaumiyah-tahfizh.destroy');
+    Route::post('/guru-t2q/finalisasi', [GuruT2qFinalisasiController::class, 'finalize'])
+        ->name('guru-t2q.finalisasi.finalize');
+    Route::post('/guru-t2q/finalisasi/unlock', [GuruT2qFinalisasiController::class, 'unlock'])
+        ->name('guru-t2q.finalisasi.unlock');
+    Route::post('/guru-t2q/penilaian/finalisasi', [FinalisasiController::class, 'finalize'])
+        ->name('guru-t2q.penilaian-finalisasi.finalize');
+    Route::post('/guru-t2q/penilaian/finalisasi/unlock', [FinalisasiController::class, 'unlock'])
+        ->name('guru-t2q.penilaian-finalisasi.unlock');
+    Route::get('/guru-t2q/ekstrakurikuler', [GuruT2qPenilaianEkstrakurikulerController::class, 'index'])
+        ->name('guru-t2q.ekstrakurikuler.index');
+    Route::post('/guru-t2q/ekstrakurikuler/{ekstrakurikuler}/penilaian', [GuruT2qPenilaianEkstrakurikulerController::class, 'store'])
+        ->name('guru-t2q.ekstrakurikuler.penilaian.store');
     Route::post('/data-master/tahun-ajaran/{tahun_ajaran}/toggle-active', [TahunAjaranController::class, 'toggleActive'])->name('tahun-ajaran.toggle-active');
     Route::resource('/data-master/tahun-ajaran', TahunAjaranController::class);
     Route::resource('/data-master/kelas', KelasController::class)->parameters(

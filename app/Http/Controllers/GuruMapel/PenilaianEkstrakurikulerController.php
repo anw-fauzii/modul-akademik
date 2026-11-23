@@ -14,13 +14,23 @@ class PenilaianEkstrakurikulerController extends Controller
     public function __construct(
         protected WaliKelasEkstrakurikulerService $service
     ) {
-        $this->middleware('role:super admin|guru mapel sd');
+        $this->middleware($this->allowedRoleMiddleware());
         $this->middleware('can:viewPenilaian,'.Ekstrakurikuler::class)->only(['index']);
         $this->middleware('can:inputNilai,ekstrakurikuler')->only(['store']);
     }
 
+    protected function allowedRoleMiddleware(): string
+    {
+        return 'role:super admin|guru mapel sd';
+    }
+
+    protected function routeScope(): string
+    {
+        return 'guru-mapel';
+    }
+
     /**
-     * Menampilkan halaman Penilaian Ekstrakurikuler Pilihan yang dibina oleh Guru Mapel SD.
+     * Menampilkan halaman Penilaian Ekstrakurikuler Pilihan sesuai cakupan pengampu.
      */
     public function index(Request $request): View
     {
@@ -31,12 +41,12 @@ class PenilaianEkstrakurikulerController extends Controller
 
         return view(
             'waliKelas.ekstrakurikuler.index',
-            $this->service->getPageData($request->user(), $ekskulId, $kelasId, $mode, $periode, true, 'guru-mapel')
+            $this->service->getPageData($request->user(), $ekskulId, $kelasId, $mode, $periode, true, $this->routeScope())
         );
     }
 
     /**
-     * Menyimpan nilai angka seluruh anggota Ekstrakurikuler Pilihan yang dibina Guru Mapel SD.
+     * Menyimpan nilai angka seluruh anggota Ekstrakurikuler Pilihan yang dibina.
      */
     public function store(Request $request, Ekstrakurikuler $ekstrakurikuler): RedirectResponse
     {
@@ -65,7 +75,7 @@ class PenilaianEkstrakurikulerController extends Controller
         $this->service->savePenilaian($ekstrakurikuler, $validated, $regenerate);
 
         return redirect()
-            ->route('guru-mapel.ekstrakurikuler.index', [
+            ->route($this->routeScope().'.ekstrakurikuler.index', [
                 'mode' => 'pilihan',
                 'ekstrakurikuler_id' => $ekstrakurikuler->sqid,
                 'periode' => $periode,

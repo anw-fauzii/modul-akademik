@@ -497,6 +497,8 @@
     $isTahsin = ($mode ?? 'tahsin') === 'tahsin';
     $isReadOnly = (bool) ($isReadOnly ?? false);
     $isWaliKelasScope = (bool) ($isWaliKelasScope ?? false);
+    $isGuruT2qScope = (bool) ($isGuruT2qScope ?? false);
+    $karyawanProfile = $karyawanProfile ?? null;
     $routePrefix = (string) ($routePrefix ?? 't2q');
     $assignedClasses = $assignedClasses ?? collect();
     $selectedKelas = $selectedKelas ?? null;
@@ -504,7 +506,7 @@
     $peranDiKelas = $peranDiKelas ?? null;
     $showKelasSelector = $isWaliKelasScope && $assignedClasses->count() > 1;
 
-    $indexRoute = $isTahsin ? 't2q.yaumiyah-tahsin.index' : 't2q.yaumiyah-tahfizh.index';
+    $indexRoute = $routePrefix . '.' . ($isTahsin ? 'yaumiyah-tahsin.index' : 'yaumiyah-tahfizh.index');
     $tahsinMatriksRoute = $routePrefix . '.yaumiyah-tahsin.matriks';
     $tahfizhMatriksRoute = $routePrefix . '.yaumiyah-tahfizh.matriks';
     $matriksRoute = $isTahsin ? $tahsinMatriksRoute : $tahfizhMatriksRoute;
@@ -556,13 +558,13 @@
     $sharedQuery = array_filter([
         ...$kelasQueryParam,
         'tanggal' => $period['anchor_date'],
-        'karyawan_nipy' => $selectedGuruNipy,
+        'karyawan_nipy' => $isGuruT2qScope ? null : $selectedGuruNipy,
         'tingkat' => $selectedTingkat,
     ]);
     $statistikQuery = array_filter([
         ...$kelasQueryParam,
         'tahun_ajaran_id' => $activeTahunAjaran?->sqid,
-        'karyawan_nipy' => $selectedGuruNipy,
+        'karyawan_nipy' => $isGuruT2qScope ? null : $selectedGuruNipy,
         'tingkat' => $selectedTingkat,
     ]);
 @endphp
@@ -585,6 +587,12 @@
             </div>
 
             <div class="page-title-actions d-flex flex-wrap align-items-center" style="gap: 0.65rem;">
+                @if ($isGuruT2qScope)
+                    <a href="{{ route('guru-t2q.dashboard') }}" class="filter-btn filter-btn-secondary" style="height: 2.2rem; min-height: 2.2rem;">
+                        <i class="fa fa-arrow-left text-warning"></i>
+                        <span>Dashboard</span>
+                    </a>
+                @endif
                 <div class="t2q-view-switch" role="navigation" aria-label="Pilih program matriks">
                     <a href="{{ route($tahsinMatriksRoute, $sharedQuery) }}"
                         class="t2q-view-pill {{ $isTahsin ? 'is-active' : '' }}">
@@ -722,21 +730,30 @@
 
                     <div>
                         <label for="mx_filter_guru" class="filter-label">Guru Pembimbing T2Q</label>
-                        <select name="karyawan_nipy" id="mx_filter_guru" class="filter-control js-mx-auto-submit">
-                            <option value="">Semua Guru T2Q</option>
-                            @foreach ($guruOptions as $guru)
-                                <option value="{{ $guru->nipy }}" @selected($selectedGuruNipy === (string) $guru->nipy)>
-                                    {{ $guru->nama_gelar }}
-                                </option>
-                            @endforeach
-                        </select>
+                        @if ($isGuruT2qScope)
+                            <input type="hidden" name="karyawan_nipy" value="{{ $selectedGuruNipy }}">
+                            <div class="filter-control d-flex align-items-center font-weight-semibold text-slate-700"
+                                style="background: #f8fafc; color: #334155;">
+                                <i class="fa fa-user-check text-success mr-2"></i>
+                                <span class="text-truncate">{{ $karyawanProfile?->nama_gelar ?? $selectedGuruNipy }}</span>
+                            </div>
+                        @else
+                            <select name="karyawan_nipy" id="mx_filter_guru" class="filter-control js-mx-auto-submit">
+                                <option value="">Semua Guru T2Q</option>
+                                @foreach ($guruOptions as $guru)
+                                    <option value="{{ $guru->nipy }}" @selected($selectedGuruNipy === (string) $guru->nipy)>
+                                        {{ $guru->nama_gelar }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        @endif
                     </div>
 
                     <div class="d-flex align-items-center" style="gap: 0.45rem;">
                         <button type="submit" class="filter-btn filter-btn-primary">
                             <i class="fa fa-sync-alt"></i> Terapkan
                         </button>
-                        @if ($selectedGuruNipy !== '' || ! $period['is_current_week'])
+                        @if ((! $isGuruT2qScope && $selectedGuruNipy !== '') || ! $period['is_current_week'])
                             <a href="{{ route($matriksRoute, array_filter([...$kelasQueryParam, 'tingkat' => $selectedTingkat])) }}"
                                 class="filter-btn filter-btn-secondary filter-btn-icon" title="Reset ke pekan ini">
                                 <i class="fa fa-undo"></i>
@@ -841,8 +858,8 @@
                                     $nisSiswa = $ak?->siswa_nis ?? '';
                                     $metaParts = array_filter([
                                         $nisSiswa,
-                                        $kelas?->nama_kelas,
-                                        $guru?->nama_gelar,
+                                        ! $isGuruT2qScope ? $kelas?->nama_kelas : null,
+                                        ! $isGuruT2qScope ? $guru?->nama_gelar : null,
                                     ]);
                                     $searchText = strtolower(trim($namaSiswa . ' ' . implode(' ', $metaParts)));
                                     $cells = $row['cells'];

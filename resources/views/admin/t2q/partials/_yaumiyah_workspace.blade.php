@@ -153,12 +153,18 @@
 @endpush
 
 @php
+    $errors ??= new \Illuminate\Support\ViewErrorBag;
     $isTahsin = ($mode ?? 'tahsin') === 'tahsin';
-    $indexRoute = $isTahsin ? 't2q.yaumiyah-tahsin.index' : 't2q.yaumiyah-tahfizh.index';
-    $matriksRoute = $isTahsin ? 't2q.yaumiyah-tahsin.matriks' : 't2q.yaumiyah-tahfizh.matriks';
-    $statistikRoute = $isTahsin ? 't2q.yaumiyah-tahsin.statistik' : 't2q.yaumiyah-tahfizh.statistik';
-    $storeRoute = $isTahsin ? 't2q.yaumiyah-tahsin.store' : 't2q.yaumiyah-tahfizh.store';
-    $destroyRoute = $isTahsin ? 't2q.yaumiyah-tahsin.destroy' : 't2q.yaumiyah-tahfizh.destroy';
+    $routePrefix = (string) ($routePrefix ?? 't2q');
+    $isGuruT2qScope = (bool) ($isGuruT2qScope ?? false);
+    $karyawanProfile = $karyawanProfile ?? null;
+    $t2qFinalisasi = $t2qFinalisasi ?? null;
+
+    $indexRoute = $routePrefix . '.' . ($isTahsin ? 'yaumiyah-tahsin.index' : 'yaumiyah-tahfizh.index');
+    $matriksRoute = $routePrefix . '.' . ($isTahsin ? 'yaumiyah-tahsin.matriks' : 'yaumiyah-tahfizh.matriks');
+    $statistikRoute = $routePrefix . '.' . ($isTahsin ? 'yaumiyah-tahsin.statistik' : 'yaumiyah-tahfizh.statistik');
+    $storeRoute = $routePrefix . '.' . ($isTahsin ? 'yaumiyah-tahsin.store' : 'yaumiyah-tahfizh.store');
+    $destroyRoute = $routePrefix . '.' . ($isTahsin ? 'yaumiyah-tahsin.destroy' : 'yaumiyah-tahfizh.destroy');
     $pageTitle = $isTahsin ? 'Yaumiyah Tahsin' : 'Yaumiyah Tahfizh';
     $pageSubtitle = $isTahsin
         ? 'Catat setoran harian bacaan jilid / Al-Qur\'an per tingkat (1 setoran per hari).'
@@ -209,10 +215,16 @@
                 @php
                     $sharedViewQuery = array_filter([
                         'tanggal' => $tanggal,
-                        'karyawan_nipy' => $selectedGuruNipy,
+                        'karyawan_nipy' => $isGuruT2qScope ? null : $selectedGuruNipy,
                         'tingkat' => $selectedTingkat,
                     ]);
                 @endphp
+                @if ($isGuruT2qScope)
+                    <a href="{{ route('guru-t2q.dashboard') }}" class="filter-btn filter-btn-secondary" style="height: 2.2rem; min-height: 2.2rem;">
+                        <i class="fa fa-arrow-left text-warning"></i>
+                        <span>Dashboard</span>
+                    </a>
+                @endif
                 <div class="t2q-view-switch" role="navigation" aria-label="Mode tampilan">
                     <a href="{{ route($indexRoute, $sharedViewQuery) }}" class="t2q-view-pill is-active">
                         <i class="fa fa-edit"></i>
@@ -222,7 +234,7 @@
                         <i class="fa fa-th"></i>
                         <span>Matriks (Sen–Kam)</span>
                     </a>
-                    <a href="{{ route($statistikRoute, array_filter(['tahun_ajaran_id' => $activeTahunAjaran?->sqid, 'karyawan_nipy' => $selectedGuruNipy, 'tingkat' => $selectedTingkat])) }}" class="t2q-view-pill">
+                    <a href="{{ route($statistikRoute, array_filter(['tahun_ajaran_id' => $activeTahunAjaran?->sqid, 'karyawan_nipy' => $isGuruT2qScope ? null : $selectedGuruNipy, 'tingkat' => $selectedTingkat])) }}" class="t2q-view-pill">
                         <i class="fa fa-chart-bar"></i>
                         <span>Statistik</span>
                     </a>
@@ -281,21 +293,30 @@
 
                     <div class="t2q-filter-field">
                         <label for="filter_karyawan_nipy" class="filter-label">Guru Pembimbing T2Q</label>
-                        <select name="karyawan_nipy" id="filter_karyawan_nipy" class="filter-control">
-                            <option value="">Semua Guru T2Q</option>
-                            @foreach ($guruOptions as $guru)
-                                <option value="{{ $guru->nipy }}" @selected($selectedGuruNipy === (string) $guru->nipy)>
-                                    {{ $guru->nama_gelar }}
-                                </option>
-                            @endforeach
-                        </select>
+                        @if ($isGuruT2qScope)
+                            <input type="hidden" name="karyawan_nipy" value="{{ $selectedGuruNipy }}">
+                            <div class="filter-control d-flex align-items-center font-weight-semibold text-slate-700"
+                                style="background: #f8fafc; color: #334155;">
+                                <i class="fa fa-user-check text-success mr-2"></i>
+                                <span class="text-truncate">{{ $karyawanProfile?->nama_gelar ?? $selectedGuruNipy }}</span>
+                            </div>
+                        @else
+                            <select name="karyawan_nipy" id="filter_karyawan_nipy" class="filter-control">
+                                <option value="">Semua Guru T2Q</option>
+                                @foreach ($guruOptions as $guru)
+                                    <option value="{{ $guru->nipy }}" @selected($selectedGuruNipy === (string) $guru->nipy)>
+                                        {{ $guru->nama_gelar }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        @endif
                     </div>
 
                     <div class="t2q-filter-actions">
                         <button type="submit" class="filter-btn filter-btn-primary">
                             <i class="fa fa-sync-alt"></i> Terapkan
                         </button>
-                        @if ($selectedGuruNipy !== '' || $tanggal !== $todayDate)
+                        @if ((! $isGuruT2qScope && $selectedGuruNipy !== '') || $tanggal !== $todayDate)
                             <a href="{{ route($indexRoute, array_filter(['tingkat' => $selectedTingkat])) }}"
                                 class="filter-btn filter-btn-secondary filter-btn-icon" title="Reset filter">
                                 <i class="fa fa-undo"></i>
@@ -306,12 +327,19 @@
             </div>
         </div>
 
+        @if ($isGuruT2qScope && is_array($t2qFinalisasi) && $t2qFinalisasi !== [])
+            @include('guruT2q.partials._finalisasi_card', [
+                't2qFinalisasi' => $t2qFinalisasi,
+                'compact' => true,
+            ])
+        @endif
+
         <!-- TAB TINGKAT & REFERENSI TARGET CAPAIAN -->
         @include('admin.t2q.partials._tingkat_strip', [
             'tabRoute' => $indexRoute,
             'tabBaseQuery' => [
                 'tanggal' => $tanggal,
-                'karyawan_nipy' => $selectedGuruNipy,
+                'karyawan_nipy' => $isGuruT2qScope ? null : $selectedGuruNipy,
             ],
             'tingkatTabs' => $tingkatTabs,
             'selectedTingkat' => $selectedTingkat,
@@ -408,10 +436,10 @@
                                             </div>
                                             <div class="small text-muted" style="font-size: 0.71rem;">
                                                 {{ $nisSiswa }}
-                                                @if ($kelas)
+                                                @if (! $isGuruT2qScope && $kelas)
                                                     &bull; {{ $kelas->nama_kelas }}
                                                 @endif
-                                                @if ($guru)
+                                                @if (! $isGuruT2qScope && $guru)
                                                     &bull; {{ $guru->nama_gelar }}
                                                 @endif
                                             </div>

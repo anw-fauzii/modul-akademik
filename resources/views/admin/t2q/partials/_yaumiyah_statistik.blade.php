@@ -424,6 +424,8 @@
     $isTahsin = ($mode ?? 'tahsin') === 'tahsin';
     $isReadOnly = (bool) ($isReadOnly ?? false);
     $isWaliKelasScope = (bool) ($isWaliKelasScope ?? false);
+    $isGuruT2qScope = (bool) ($isGuruT2qScope ?? false);
+    $karyawanProfile = $karyawanProfile ?? null;
     $routePrefix = (string) ($routePrefix ?? 't2q');
     $assignedClasses = $assignedClasses ?? collect();
     $selectedKelas = $selectedKelas ?? null;
@@ -431,7 +433,7 @@
     $peranDiKelas = $peranDiKelas ?? null;
     $showKelasSelector = $isWaliKelasScope && $assignedClasses->count() > 1;
 
-    $indexRoute = $isTahsin ? 't2q.yaumiyah-tahsin.index' : 't2q.yaumiyah-tahfizh.index';
+    $indexRoute = $routePrefix . '.' . ($isTahsin ? 'yaumiyah-tahsin.index' : 'yaumiyah-tahfizh.index');
     $tahsinStatistikRoute = $routePrefix . '.yaumiyah-tahsin.statistik';
     $tahfizhStatistikRoute = $routePrefix . '.yaumiyah-tahfizh.statistik';
     $matriksRoute = $routePrefix . '.' . ($isTahsin ? 'yaumiyah-tahsin.matriks' : 'yaumiyah-tahfizh.matriks');
@@ -473,7 +475,7 @@
     $guruRows = $stats['guru_rows'] ?? [];
     $studentRows = $stats['student_rows'] ?? [];
 
-    $extractStudentMeta = static function ($anggota): array {
+    $extractStudentMeta = static function ($anggota) use ($isGuruT2qScope): array {
         $ak = $anggota->relationLoaded('anggotaKelas') ? $anggota->anggotaKelas : null;
         $siswa = ($ak && $ak->relationLoaded('siswa')) ? $ak->siswa : null;
         $kelas = ($ak && $ak->relationLoaded('kelas')) ? $ak->kelas : null;
@@ -484,22 +486,22 @@
         return [
             'nama' => $namaSiswa,
             'nis' => $nisSiswa,
-            'kelas' => $kelas?->nama_kelas ?? '',
-            'guru' => $guru?->nama_gelar ?? '',
+            'kelas' => $isGuruT2qScope ? '' : ($kelas?->nama_kelas ?? ''),
+            'guru' => $isGuruT2qScope ? '' : ($guru?->nama_gelar ?? ''),
             'tingkat' => (string) ($anggota->tingkat ?? '-'),
-            'search' => strtolower(trim("{$namaSiswa} {$nisSiswa} ".($kelas?->nama_kelas ?? '').' '.($guru?->nama_gelar ?? '').' tingkat '.($anggota->tingkat ?? ''))),
+            'search' => strtolower(trim("{$namaSiswa} {$nisSiswa} ".(! $isGuruT2qScope ? ($kelas?->nama_kelas ?? '').' '.($guru?->nama_gelar ?? '').' ' : '').'tingkat '.($anggota->tingkat ?? ''))),
         ];
     };
 
     $modeSwitchQuery = \App\Support\Sqid::encodeQueryParams(array_filter([
         'tahun_ajaran_id' => $selectedTahunAjaranId,
         'kelas_id' => $selectedKelasId > 0 ? $selectedKelasId : null,
-        'karyawan_nipy' => $selectedGuruNipy,
+        'karyawan_nipy' => $isGuruT2qScope ? null : $selectedGuruNipy,
         'tingkat' => $selectedTingkat,
     ]));
     $workspaceQuery = \App\Support\Sqid::encodeQueryParams(array_filter([
         'kelas_id' => ($selectedKelasId > 0 && ($selectedTahunAjaran?->is_active ?? false)) ? $selectedKelasId : null,
-        'karyawan_nipy' => $selectedGuruNipy,
+        'karyawan_nipy' => $isGuruT2qScope ? null : $selectedGuruNipy,
         'tingkat' => $selectedTingkat,
     ]));
 @endphp
@@ -522,6 +524,12 @@
             </div>
 
             <div class="page-title-actions d-flex flex-wrap align-items-center" style="gap: 0.65rem;">
+                @if ($isGuruT2qScope)
+                    <a href="{{ route('guru-t2q.dashboard') }}" class="filter-btn filter-btn-secondary" style="height: 2.2rem; min-height: 2.2rem;">
+                        <i class="fa fa-arrow-left text-warning"></i>
+                        <span>Dashboard</span>
+                    </a>
+                @endif
                 <div class="t2q-view-switch" role="navigation" aria-label="Pilih program statistik">
                     <a href="{{ route($tahsinStatistikRoute, $modeSwitchQuery) }}"
                         class="t2q-view-pill {{ $isTahsin ? 'is-active' : '' }}">
@@ -621,14 +629,23 @@
 
                     <div>
                         <label for="st_filter_guru" class="filter-label">Guru Pembimbing T2Q</label>
-                        <select name="karyawan_nipy" id="st_filter_guru" class="filter-control js-st-auto-submit">
-                            <option value="">Semua Guru T2Q</option>
-                            @foreach ($guruOptions as $guru)
-                                <option value="{{ $guru->nipy }}" @selected($selectedGuruNipy === (string) $guru->nipy)>
-                                    {{ $guru->nama_gelar }}
-                                </option>
-                            @endforeach
-                        </select>
+                        @if ($isGuruT2qScope)
+                            <input type="hidden" name="karyawan_nipy" value="{{ $selectedGuruNipy }}">
+                            <div class="filter-control d-flex align-items-center font-weight-semibold text-slate-700"
+                                style="background: #f8fafc; color: #334155;">
+                                <i class="fa fa-user-check text-success mr-2"></i>
+                                <span class="text-truncate">{{ $karyawanProfile?->nama_gelar ?? $selectedGuruNipy }}</span>
+                            </div>
+                        @else
+                            <select name="karyawan_nipy" id="st_filter_guru" class="filter-control js-st-auto-submit">
+                                <option value="">Semua Guru T2Q</option>
+                                @foreach ($guruOptions as $guru)
+                                    <option value="{{ $guru->nipy }}" @selected($selectedGuruNipy === (string) $guru->nipy)>
+                                        {{ $guru->nama_gelar }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        @endif
                     </div>
 
                     <div>
@@ -647,7 +664,7 @@
                         <button type="submit" class="filter-btn filter-btn-primary">
                             <i class="fa fa-filter"></i> Terapkan
                         </button>
-                        @if ($selectedGuruNipy !== '' || $selectedTingkat !== '' || ($showKelasSelector && $selectedKelasId > 0) || ! $selectedTahunAjaran->is_active)
+                        @if ((! $isGuruT2qScope && $selectedGuruNipy !== '') || $selectedTingkat !== '' || ($showKelasSelector && $selectedKelasId > 0) || ! $selectedTahunAjaran->is_active)
                             <a href="{{ route($statistikRoute) }}" class="filter-btn filter-btn-secondary filter-btn-icon"
                                 title="Reset ke Tahun Ajaran aktif">
                                 <i class="fa fa-undo"></i>
@@ -1048,10 +1065,12 @@
                         <span>Per Tingkat</span>
                         <span class="t2q-tingkat-count">{{ count($tingkatRows) }}</span>
                     </button>
-                    <button type="button" class="t2q-tingkat-tab" data-st-tab="guru" role="tab">
-                        <span>Per Guru T2Q</span>
-                        <span class="t2q-tingkat-count">{{ count($guruRows) }}</span>
-                    </button>
+                    @if (! $isGuruT2qScope)
+                        <button type="button" class="t2q-tingkat-tab" data-st-tab="guru" role="tab">
+                            <span>Per Guru T2Q</span>
+                            <span class="t2q-tingkat-count">{{ count($guruRows) }}</span>
+                        </button>
+                    @endif
                     <button type="button" class="t2q-tingkat-tab" data-st-tab="siswa" role="tab">
                         <span>Per Siswa</span>
                         <span class="t2q-tingkat-count">{{ count($studentRows) }}</span>
@@ -1127,8 +1146,9 @@
                 @endif
             </div>
 
-            <!-- PANEL 2: PER GURU -->
-            <div class="t2q-st-tab-panel" data-st-panel="guru">
+            @if (! $isGuruT2qScope)
+                <!-- PANEL 2: PER GURU -->
+                <div class="t2q-st-tab-panel" data-st-panel="guru">
                 @if ($guruRows === [])
                     <div class="text-center py-5 px-4 text-muted small">Belum ada guru pembimbing T2Q tercatat pada Tahun Ajaran ini.</div>
                 @else
@@ -1171,7 +1191,8 @@
                         </table>
                     </div>
                 @endif
-            </div>
+                </div>
+            @endif
 
             <!-- PANEL 3: PER SISWA -->
             <div class="t2q-st-tab-panel" data-st-panel="siswa">

@@ -16,12 +16,16 @@ class PenilaianFinalisasiPolicy extends BasePolicy
 {
     public function viewAny(User $user): Response
     {
-        return $this->allowIfGuruPengajar($user);
+        return ($this->isGuruPengajar($user) || $this->isGuruT2q($user))
+            ? Response::allow()
+            : Response::deny('Akses ditolak.');
     }
 
     public function view(User $user, PenilaianFinalisasi $finalisasi): Response
     {
-        return $this->allowIfGuruPengajar($user);
+        return ($this->isGuruPengajar($user) || $this->isGuruT2q($user))
+            ? Response::allow()
+            : Response::deny('Akses ditolak.');
     }
 
     /**
@@ -31,8 +35,22 @@ class PenilaianFinalisasiPolicy extends BasePolicy
      */
     public function manageComponent(User $user, array $context): Response
     {
-        if (! $this->isGuruPengajar($user)) {
+        $isPengajar = $this->isGuruPengajar($user);
+        $isT2q = $this->isGuruT2q($user);
+
+        if (! $isPengajar && ! $isT2q) {
             return Response::deny('Akses ditolak.');
+        }
+
+        if (
+            $isT2q
+            && ! $isPengajar
+            && ! in_array(trim((string) ($context['jenis_komponen'] ?? '')), [
+                PenilaianFinalisasi::JENIS_T2Q,
+                PenilaianFinalisasi::JENIS_EKSKUL_PILIHAN,
+            ], true)
+        ) {
+            return Response::deny('Guru T2Q hanya dapat mengelola finalisasi Program T2Q atau Ekstrakurikuler Pilihan yang dibinanya.');
         }
 
         return $this->checkScope(static function () use ($user, $context): void {

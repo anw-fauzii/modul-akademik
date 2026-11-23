@@ -20,6 +20,8 @@ abstract class BasePolicy
 
     public const string ROLE_GURU_MAPEL_SD = 'guru mapel sd';
 
+    public const string ROLE_GURU_T2Q = 'guru t2q';
+
     public function before(User $user, string $ability): ?bool
     {
         if ($user->hasRole(self::ROLE_SUPER_ADMIN)) {
@@ -37,6 +39,11 @@ abstract class BasePolicy
     protected function isGuruMapelSd(User $user): bool
     {
         return $user->hasRole(self::ROLE_GURU_MAPEL_SD);
+    }
+
+    protected function isGuruT2q(User $user): bool
+    {
+        return $user->hasRole(self::ROLE_GURU_T2Q);
     }
 
     protected function isGuruPengajar(User $user): bool
