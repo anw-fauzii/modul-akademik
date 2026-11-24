@@ -6,6 +6,7 @@ use App\Models\Admin\DataMaster\AnggotaT2q;
 use App\Models\Admin\DataMaster\AngkaArab;
 use App\Models\Admin\DataMaster\DaftarJilid;
 use App\Models\Admin\DataMaster\Ekstrakurikuler;
+use App\Models\Admin\DataMaster\KomentarT2q;
 use App\Models\Admin\DataMaster\Surah;
 use App\Models\Admin\DataMaster\TahunAjaran;
 use App\Models\Concerns\HasSqidRouteKey;
@@ -45,70 +46,6 @@ class RaporT2q extends Model
     public const string MODE_TAHSIN = 'tahsin';
 
     public const string MODE_TAHFIZH = 'tahfizh';
-
-    /**
-     * Preset chip cepat untuk aspek keunggulan Tahsin pada editor deskripsi rapor T2Q.
-     *
-     * @var list<string>
-     */
-    public const array TAHSIN_KEUNGGULAN_PRESETS = [
-        'bacaan panjang 2 harakat (mad)',
-        'ketepatan makhraj huruf',
-        'bacaan dengung (ghunnah)',
-        'kelancaran membaca',
-        'ketepatan harakat',
-        'bacaan huruf yang disukunkan',
-        'bacaan qalqalah',
-        'hukum tajwid dasar',
-        'kelancaran sambung ayat',
-    ];
-
-    /**
-     * Preset chip cepat untuk aspek yang perlu ditingkatkan pada Tahsin.
-     *
-     * @var list<string>
-     */
-    public const array TAHSIN_PENINGKATAN_PRESETS = [
-        'huruf yang disukunkan',
-        'bacaan panjang pendek (mad)',
-        'kelancaran membaca',
-        'ketepatan makhraj huruf',
-        'ketepatan harakat',
-        'bacaan dengung (ghunnah)',
-        'bacaan qalqalah',
-        'ketepatan waqaf',
-        'bacaan gharib',
-    ];
-
-    /**
-     * Preset chip cepat untuk aspek keunggulan Tahfidz pada editor deskripsi rapor T2Q.
-     *
-     * @var list<string>
-     */
-    public const array TAHFIDZ_KEUNGGULAN_PRESETS = [
-        'bacaan mad',
-        'kelancaran hafalan',
-        'ketepatan makhraj huruf',
-        'ketepatan harakat',
-        'bacaan dengung (ghunnah)',
-        'tartil bacaan',
-        'kepercayaan diri saat setoran',
-    ];
-
-    /**
-     * Preset chip cepat untuk aspek yang perlu ditingkatkan pada Tahfidz.
-     *
-     * @var list<string>
-     */
-    public const array TAHFIDZ_PENINGKATAN_PRESETS = [
-        'kelancaran hafalan',
-        'ketepatan makhraj huruf',
-        'bacaan mad',
-        'murajaah hafalan',
-        'ketepatan harakat',
-        'hafalan ayat lanjutan',
-        'ketelitian bacaan',
-    ];
 
     /**
      * Atribut yang di-cast secara otomatis.
@@ -357,11 +294,12 @@ class RaporT2q extends Model
     }
 
     /**
-     * Mengurai string aspek keunggulan/peningkatan tersimpan ("A dan B" atau "A, B, dan C") menjadi daftar item unik.
+     * Mengurai string aspek keunggulan/peningkatan tersimpan menjadi daftar item unik (mendukung item mengandung koma atau "dan").
      *
+     * @param  list<string>  $knownOptions
      * @return list<string>
      */
-    public static function parseAspectList(?string $raw): array
+    public static function parseAspectList(?string $raw, array $knownOptions = []): array
     {
         $clean = trim(preg_replace('/\s+/', ' ', (string) ($raw ?? '')) ?? '');
         if ($clean === '') {
@@ -369,28 +307,76 @@ class RaporT2q extends Model
         }
 
         $clean = rtrim($clean, ". \t\n\r\0\x0B");
-        $parts = preg_split('/\s*,\s*(?:dan\s+)?|\s+dan\s+/iu', $clean) ?: [];
+        $catalog = array_values(array_unique(array_filter(
+            array_map(
+                static fn (mixed $v): string => trim((string) $v),
+                [...$knownOptions, ...KomentarT2q::DEFAULT_COMMENTS]
+            ),
+            static fn (string $v): bool => $v !== ''
+        )));
 
-        $unique = [];
+        usort($catalog, static fn (string $a, string $b): int => mb_strlen($b) <=> mb_strlen($a));
+
+        $result = [];
         $seen = [];
-        foreach ($parts as $part) {
-            $item = trim($part);
-            if ($item === '') {
+        $remaining = $clean;
+        $sepPattern = '/\A(?:\s*[;,]\s*(?:(?:dan|serta)\s+)?|\s+(?:dan|serta)\s+)/iu';
+
+        $pushUnique = static function (string $item) use (&$result, &$seen): void {
+            $trimmed = rtrim(trim($item), ". \t\n\r\0\x0B");
+            if ($trimmed === '') {
+                return;
+            }
+            $key = mb_strtolower($trimmed);
+            if (! isset($seen[$key])) {
+                $seen[$key] = true;
+                $result[] = $trimmed;
+            }
+        };
+
+        while ($remaining !== '') {
+            $remaining = (string) preg_replace($sepPattern, '', $remaining);
+            if ($remaining === '') {
+                break;
+            }
+
+            $matchedOption = null;
+            foreach ($catalog as $opt) {
+                $optLen = mb_strlen($opt);
+                if (mb_strlen($remaining) < $optLen) {
+                    continue;
+                }
+
+                if (mb_strtolower(mb_substr($remaining, 0, $optLen)) === mb_strtolower($opt)) {
+                    $after = mb_substr($remaining, $optLen);
+                    if ($after === '' || preg_match($sepPattern, $after) === 1) {
+                        $matchedOption = $opt;
+                        $remaining = $after;
+                        break;
+                    }
+                }
+            }
+
+            if ($matchedOption !== null) {
+                $pushUnique($matchedOption);
+
                 continue;
             }
-            $key = mb_strtolower($item);
-            if (isset($seen[$key])) {
-                continue;
+
+            if (preg_match('/^(.*?)(?:\s*[;,]\s*(?:(?:dan|serta)\s+)?|\s+(?:dan|serta)\s+)(.*)$/iu', $remaining, $matches) === 1) {
+                $pushUnique($matches[1]);
+                $remaining = $matches[2];
+            } else {
+                $pushUnique($remaining);
+                break;
             }
-            $seen[$key] = true;
-            $unique[] = $item;
         }
 
-        return $unique;
+        return $result;
     }
 
     /**
-     * Merangkai daftar beberapa aspek menjadi frasa bahasa Indonesia yang rapi ("A dan B" atau "A, B, dan C").
+     * Merangkai daftar beberapa aspek menjadi frasa bahasa Indonesia yang rapi (aman untuk item mengandung koma / "dan").
      *
      * @param  list<string>  $items
      */
@@ -421,13 +407,29 @@ class RaporT2q extends Model
             return $cleanItems[0];
         }
 
+        $hasComma = false;
+        $hasDan = false;
+        foreach ($cleanItems as $item) {
+            if (str_contains($item, ',')) {
+                $hasComma = true;
+            }
+            if (preg_match('/\bdan\b/iu', $item) === 1) {
+                $hasDan = true;
+            }
+        }
+
         if ($count === 2) {
-            return "{$cleanItems[0]} dan {$cleanItems[1]}";
+            $glue = ($hasComma || $hasDan) ? ', serta ' : ' dan ';
+
+            return $cleanItems[0].$glue.$cleanItems[1];
         }
 
         $last = array_pop($cleanItems);
+        if ($hasComma) {
+            return implode('; ', $cleanItems).'; serta '.$last;
+        }
 
-        return implode(', ', $cleanItems).', dan '.$last;
+        return implode(', ', $cleanItems).($hasDan ? ', serta ' : ', dan ').$last;
     }
 
     public function tahunAjaran(): BelongsTo

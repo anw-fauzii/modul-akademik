@@ -219,12 +219,6 @@
                         'tingkat' => $selectedTingkat,
                     ]);
                 @endphp
-                @if ($isGuruT2qScope)
-                    <a href="{{ route('guru-t2q.dashboard') }}" class="filter-btn filter-btn-secondary" style="height: 2.2rem; min-height: 2.2rem;">
-                        <i class="fa fa-arrow-left text-warning"></i>
-                        <span>Dashboard</span>
-                    </a>
-                @endif
                 <div class="t2q-view-switch" role="navigation" aria-label="Mode tampilan">
                     <a href="{{ route($indexRoute, $sharedViewQuery) }}" class="t2q-view-pill is-active">
                         <i class="fa fa-edit"></i>

@@ -3,6 +3,7 @@
 namespace App\Services\GuruT2q;
 
 use App\Models\Admin\DataMaster\AnggotaT2q;
+use App\Models\Admin\DataMaster\KomentarT2q;
 use App\Models\Admin\DataMaster\TahunAjaran;
 use App\Models\Admin\Penilaian\Kkm;
 use App\Models\Admin\Penilaian\PeriodeTp;
@@ -36,6 +37,7 @@ class GuruT2qRaporService
         $nipy = (string) ($scope['nipy'] ?? '');
         $karyawanProfile = $scope['karyawanProfile'] ?? null;
         $periode = $this->resolverService->normalizePeriode((string) ($filters['periode'] ?? PeriodeTp::PERIODE_MID));
+        $komentarOptions = $this->loadKomentarOptions();
 
         if (! $scope['isEligible'] || ! $activeTa instanceof TahunAjaran) {
             return [
@@ -47,6 +49,7 @@ class GuruT2qRaporService
                 'periode' => $periode,
                 'periodeOptions' => PeriodeTp::PERIODE_OPTIONS,
                 'predikatRanges' => RaporT2q::predikatRanges(),
+                'komentarOptions' => $komentarOptions,
                 'tingkatTabs' => [],
                 'selectedTingkat' => '',
                 'rows' => collect(),
@@ -149,6 +152,7 @@ class GuruT2qRaporService
             'periode' => $periode,
             'periodeOptions' => PeriodeTp::PERIODE_OPTIONS,
             'predikatRanges' => RaporT2q::predikatRanges(),
+            'komentarOptions' => $komentarOptions,
             'tingkatTabs' => $tingkatTabs,
             'selectedTingkat' => $selectedTingkat,
             'rows' => collect($rows),
@@ -359,6 +363,33 @@ class GuruT2qRaporService
             'generated_count' => count($upserts),
             'periode_label' => $periodeLabel,
         ];
+    }
+
+    /**
+     * Memuat daftar opsi komentar dari tabel master `akademik_master_t2q_komentar` (fallback aman offline).
+     *
+     * @return list<string>
+     */
+    public function loadKomentarOptions(): array
+    {
+        try {
+            $comments = KomentarT2q::query()
+                ->ordered()
+                ->pluck('komentar')
+                ->filter(static fn (mixed $v): bool => filled($v))
+                ->map(static fn (mixed $v): string => trim((string) $v))
+                ->unique()
+                ->values()
+                ->all();
+
+            if ($comments !== []) {
+                return $comments;
+            }
+        } catch (\Throwable) {
+            // Fallback bila tabel belum tersedia pada lingkungan uji tanpa driver database.
+        }
+
+        return KomentarT2q::DEFAULT_COMMENTS;
     }
 
     /**

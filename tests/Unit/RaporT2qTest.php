@@ -10,6 +10,7 @@ use App\Models\Admin\DataMaster\AngkaArab;
 use App\Models\Admin\DataMaster\DaftarJilid;
 use App\Models\Admin\DataMaster\Karyawan;
 use App\Models\Admin\DataMaster\Kelas;
+use App\Models\Admin\DataMaster\KomentarT2q;
 use App\Models\Admin\DataMaster\Sekolah;
 use App\Models\Admin\DataMaster\Siswa;
 use App\Models\Admin\DataMaster\Surah;
@@ -186,6 +187,51 @@ class RaporT2qTest extends TestCase
             'Ananda berkembang sesuai harapan dalam menguasai kompetensi tahsin Jilid 4 halaman 11, terutama dalam bacaan panjang 2 harakat (mad) dan ketepatan makhraj huruf. Perlu peningkatan dalam huruf yang disukunkan dan kelancaran membaca.',
             $multiAspectDesc
         );
+
+        // Item master KomentarT2q yang mengandung koma atau "dan" di dalam teks tetap utuh saat format & parse ulang
+        $commaAndDanFormatted = RaporT2q::formatAspectList([
+            'konsistensi harakat fathah, kasrah, dan damah',
+            'iqlab',
+        ]);
+        $this->assertSame('konsistensi harakat fathah, kasrah, dan damah, serta iqlab', $commaAndDanFormatted);
+        $this->assertSame(
+            ['konsistensi harakat fathah, kasrah, dan damah', 'iqlab'],
+            RaporT2q::parseAspectList($commaAndDanFormatted, KomentarT2q::DEFAULT_COMMENTS)
+        );
+
+        $threeWithSemicolon = RaporT2q::formatAspectList([
+            'mad wajib muttasil dan mad jaiz munfashil',
+            'konsistensi harakat fathah, kasrah, dan damah',
+            'bacaan lin',
+        ]);
+        $this->assertSame(
+            'mad wajib muttasil dan mad jaiz munfashil; konsistensi harakat fathah, kasrah, dan damah; serta bacaan lin',
+            $threeWithSemicolon
+        );
+        $this->assertSame(
+            ['mad wajib muttasil dan mad jaiz munfashil', 'konsistensi harakat fathah, kasrah, dan damah', 'bacaan lin'],
+            RaporT2q::parseAspectList($threeWithSemicolon, KomentarT2q::DEFAULT_COMMENTS)
+        );
+    }
+
+    public function test_komentar_t2q_master_model_and_seeder_catalog_match_pdf_rows(): void
+    {
+        $model = KomentarT2q::make(['komentar' => 'bacaan panjang 2 harakat (mad)']);
+        $this->assertSame('akademik_master_t2q_komentar', $model->getTable());
+        $this->assertSame(['komentar'], $model->getFillable());
+
+        $comments = KomentarT2q::DEFAULT_COMMENTS;
+        $this->assertCount(77, $comments);
+        $this->assertCount(77, array_unique(array_map('mb_strtolower', $comments)));
+        foreach ($comments as $item) {
+            $this->assertNotEmpty(trim($item));
+            $this->assertLessThanOrEqual(255, strlen($item));
+        }
+
+        $this->assertContains('huruf hijaiyah lepas berharakat fathah kasroh dan dhommah', $comments);
+        $this->assertContains("perbedaan huruf 'ain dan hamzah sukun", $comments);
+        $this->assertContains('konsistensi harakat fathah, kasrah, dan damah', $comments);
+        $this->assertContains('tanafus (terputus)', $comments);
     }
 
     public function test_resolver_mid_cutoff_and_snapshot_merge_logic(): void
@@ -450,13 +496,23 @@ class RaporT2qTest extends TestCase
 
         $this->assertSame(1, $data['stats']['total_sd']);
         $this->assertSame(1, $data['nonSdCount']);
+        $this->assertCount(77, $data['komentarOptions']);
         $this->assertStringContainsString('Aisyah Humaira', $html);
         $this->assertStringContainsString('Jilid 4 halaman 11', $html);
         $this->assertStringContainsString('Surah al-Buruj ayat 15', $html);
         $this->assertStringContainsString('Skala Predikat Rapor T2Q (Min. 75)', $html);
         $this->assertStringContainsString('js-t2q-ms-search', $html);
         $this->assertStringContainsString('js-t2q-ms-trigger', $html);
+        $this->assertStringContainsString('t2q-list-surface', $html);
+        $this->assertStringContainsString('t2q-sync-form', $html);
+        $this->assertStringContainsString('t2qToggleAllBtn', $html);
+        $this->assertStringContainsString('js-t2q-toggle-row', $html);
+        $this->assertStringContainsString('t2q-row-drawer', $html);
+        $this->assertStringContainsString('t2q-ms-selected-drawer', $html);
+        $this->assertStringContainsString('autoSizeTextarea', $html);
         $this->assertStringContainsString('closeAllDropdowns', $html);
+        $this->assertStringContainsString('BASE_KOMENTAR_OPTIONS', $html);
+        $this->assertStringContainsString('konsistensi harakat fathah, kasrah, dan damah', $html);
         $this->assertStringNotContainsString('Zayd Ibrahim', $html);
         $this->assertStringNotContainsString('4 Al-Farabi', $html);
 

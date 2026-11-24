@@ -9,114 +9,729 @@
 
     @pushOnce('css')
         <style>
-            .t2q-rapor-card {
-                position: relative;
-                z-index: 1;
-                background: #ffffff;
-                border: 1px solid #e2e8f0;
-                border-radius: 14px;
-                margin-bottom: 0.9rem;
-                overflow: visible;
-                box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
-                transition: border-color 0.15s ease, box-shadow 0.15s ease;
+            .t2q-page-wrap {
+                margin: 0 auto;
             }
 
-            .t2q-rapor-card.has-open-ms {
-                z-index: 60;
-            }
-
-            .t2q-rapor-card:hover {
-                border-color: #cbd5e1;
-                box-shadow: 0 6px 16px -6px rgba(15, 23, 42, 0.08);
-            }
-
-            .t2q-rapor-card.is-locked {
-                background: #fcfcfd;
-                border-color: #bbf7d0;
-            }
-
-            .t2q-rapor-head {
-                background: #f8fafc;
-                border-bottom: 1px solid #e2e8f0;
-                border-radius: 13px 13px 0 0;
-                padding: 0.72rem 1.05rem;
+            /* Header Minimalis */
+            .t2q-head-bar {
                 display: flex;
                 flex-wrap: wrap;
-                align-items: center;
+                align-items: flex-end;
                 justify-content: space-between;
-                gap: 0.65rem;
+                gap: 0.9rem;
+                margin-bottom: 0.95rem;
             }
 
-            .t2q-rapor-body {
-                display: grid;
-                grid-template-columns: minmax(0, 1fr);
-                gap: 0;
-            }
-
-            @media (min-width: 992px) {
-                .t2q-rapor-body {
-                    grid-template-columns: repeat(2, minmax(0, 1fr));
-                }
-
-                .t2q-rapor-panel + .t2q-rapor-panel {
-                    border-left: 1px solid #e2e8f0;
-                }
-            }
-
-            .t2q-rapor-panel {
-                padding: 0.95rem 1.05rem;
+            .t2q-head-left {
+                display: flex;
+                align-items: flex-start;
+                gap: 0.8rem;
                 min-width: 0;
             }
 
-            @media (max-width: 991.98px) {
-                .t2q-rapor-panel + .t2q-rapor-panel {
-                    border-top: 1px solid #e2e8f0;
+            .t2q-head-icon {
+                width: 42px;
+                height: 42px;
+                border-radius: 12px;
+                background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+                border: 1px solid #fed7aa;
+                color: #ea580c;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.02rem;
+                flex-shrink: 0;
+            }
+
+            .t2q-head-title {
+                margin: 0;
+                font-size: 1.2rem;
+                font-weight: 800;
+                color: #0f172a;
+                letter-spacing: -0.02em;
+                line-height: 1.25;
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 0.45rem;
+            }
+
+            .t2q-unit-pill {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.3rem;
+                padding: 0.16rem 0.6rem;
+                border-radius: 999px;
+                background: #fff7ed;
+                border: 1px solid #fed7aa;
+                color: #c2410c;
+                font-size: 0.69rem;
+                font-weight: 700;
+            }
+
+            .t2q-head-sub {
+                margin: 0.24rem 0 0;
+                font-size: 0.78rem;
+                color: #64748b;
+                line-height: 1.45;
+            }
+
+            .t2q-seg-control {
+                display: inline-flex;
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 10px;
+                padding: 3px;
+                box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+            }
+
+            .t2q-seg-btn {
+                padding: 0.36rem 0.82rem;
+                border-radius: 7px;
+                font-size: 0.75rem;
+                font-weight: 700;
+                color: #475569;
+                text-decoration: none !important;
+                transition: all 0.15s ease;
+                white-space: nowrap;
+            }
+
+            .t2q-seg-btn:hover {
+                color: #0f172a;
+                background: #f8fafc;
+            }
+
+            .t2q-seg-btn.is-active {
+                background: #ea580c;
+                color: #ffffff;
+                box-shadow: 0 2px 6px rgba(234, 88, 12, 0.25);
+            }
+
+            /* Ringkasan Statistik Ringkas */
+            .t2q-mini-stats {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 0.6rem;
+                margin-bottom: 0.8rem;
+            }
+
+            @media (min-width: 992px) {
+                .t2q-mini-stats {
+                    grid-template-columns: repeat(4, minmax(0, 1fr));
                 }
             }
 
-            .t2q-panel-header {
+            .t2q-stat-tile {
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 0.65rem 0.88rem;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.6rem;
+            }
+
+            .t2q-stat-label {
+                font-size: 0.67rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                color: #64748b;
+            }
+
+            .t2q-stat-val {
+                font-size: 1.1rem;
+                font-weight: 800;
+                color: #0f172a;
+                line-height: 1.2;
+                margin-top: 0.1rem;
+                font-variant-numeric: tabular-nums;
+            }
+
+            .t2q-stat-sub {
+                font-size: 0.67rem;
+                color: #64748b;
+                margin-top: 0.06rem;
+            }
+
+            .t2q-stat-dot {
+                width: 30px;
+                height: 30px;
+                border-radius: 8px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.8rem;
+                flex-shrink: 0;
+            }
+
+            /* Panduan Ringkas & Skala 75 */
+            .t2q-guide-card {
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 0.62rem 0.9rem;
+                margin-bottom: 0.8rem;
                 display: flex;
                 flex-wrap: wrap;
                 align-items: center;
                 justify-content: space-between;
-                gap: 0.5rem;
-                padding-bottom: 0.62rem;
-                margin-bottom: 0.72rem;
-                border-bottom: 1px dashed #e2e8f0;
+                gap: 0.55rem 1rem;
             }
 
-            .t2q-materi-box {
+            .t2q-steps-flow {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 0.35rem;
+                font-size: 0.72rem;
+                color: #475569;
+            }
+
+            .t2q-step-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.3rem;
                 background: #f8fafc;
                 border: 1px solid #e2e8f0;
-                border-radius: 10px;
-                padding: 0.52rem 0.75rem;
-                margin-bottom: 0.72rem;
+                border-radius: 7px;
+                padding: 0.16rem 0.48rem;
+                color: #334155;
+                font-weight: 600;
+            }
+
+            .t2q-step-num {
+                width: 15px;
+                height: 15px;
+                border-radius: 999px;
+                background: #ea580c;
+                color: #ffffff;
+                font-size: 0.61rem;
+                font-weight: 800;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .t2q-scale-row {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 0.35rem;
+            }
+
+            .t2q-scale-chip {
+                font-size: 0.67rem;
+                font-weight: 700;
+                border-radius: 6px;
+                padding: 0.14rem 0.45rem;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.25rem;
+            }
+
+            /* Toolbar 1 Baris Rapi */
+            .t2q-toolbar {
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 0.62rem 0.9rem;
+                margin-bottom: 0.85rem;
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.65rem 1rem;
+            }
+
+            .t2q-tingkat-pills {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 0.35rem;
+                min-width: 0;
+            }
+
+            .t2q-pill-tab {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.35rem;
+                padding: 0.3rem 0.68rem;
+                border-radius: 999px;
+                border: 1px solid #e2e8f0;
+                background: #f8fafc;
+                color: #475569;
+                font-size: 0.73rem;
+                font-weight: 700;
+                text-decoration: none !important;
+                transition: all 0.14s ease;
+            }
+
+            .t2q-pill-tab:hover {
+                border-color: #fdba74;
+                color: #c2410c;
+                background: #fff7ed;
+            }
+
+            .t2q-pill-tab.is-active {
+                background: #0f172a;
+                border-color: #0f172a;
+                color: #ffffff;
+            }
+
+            .t2q-pill-count {
+                padding: 0.04rem 0.38rem;
+                border-radius: 999px;
+                font-size: 0.64rem;
+                background: rgba(15, 23, 42, 0.08);
+                color: inherit;
+            }
+
+            .t2q-pill-tab.is-active .t2q-pill-count {
+                background: rgba(255, 255, 255, 0.18);
+                color: #ffffff;
+            }
+
+            .t2q-toolbar-right {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 0.45rem;
+                margin-left: auto;
+            }
+
+            .t2q-toolbar-right .wk-search-wrap {
+                width: 100%;
+                max-width: none;
+                flex: 1 1 210px;
+            }
+
+            .t2q-toolbar-right .wk-search-input {
+                width: 100%;
+                height: 34px;
+                font-size: 0.75rem;
+            }
+
+            .t2q-sync-form {
+                margin: 0;
+                flex-shrink: 0;
+            }
+
+            @media (min-width: 640px) {
+                .t2q-toolbar-right {
+                    flex-wrap: nowrap;
+                }
+
+                .t2q-toolbar-right .wk-search-wrap {
+                    width: 220px;
+                    flex: 0 0 220px;
+                }
+            }
+
+            @media (max-width: 639.98px) {
+                .t2q-toolbar-right {
+                    width: 100%;
+                }
+
+                .t2q-toolbar-right .wk-search-wrap {
+                    flex: 1 1 100%;
+                }
+
+                .t2q-toolbar-right .t2q-ghost-btn,
+                .t2q-toolbar-right .t2q-sync-form {
+                    flex: 1 1 auto;
+                }
+
+                .t2q-toolbar-right .t2q-ghost-btn,
+                .t2q-toolbar-right .t2q-sync-btn {
+                    width: 100%;
+                    justify-content: center;
+                }
+            }
+
+            .t2q-ghost-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.35rem;
+                height: 34px;
+                padding: 0 0.75rem;
+                border-radius: 9px;
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                color: #334155;
+                font-size: 0.73rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.14s ease;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+
+            .t2q-ghost-btn:hover {
+                background: #f8fafc;
+                border-color: #cbd5e1;
+                color: #0f172a;
+            }
+
+            .t2q-sync-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.35rem;
+                height: 34px;
+                padding: 0 0.8rem;
+                border-radius: 9px;
+                background: #fff7ed;
+                border: 1px solid #fed7aa;
+                color: #c2410c;
+                font-size: 0.73rem;
+                font-weight: 700;
+                cursor: pointer;
+                transition: all 0.14s ease;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+
+            .t2q-sync-btn:hover {
+                background: #ffedd5;
+                border-color: #fdba74;
+            }
+
+            /* Daftar Siswa Compact Expandable (Tanpa overflow-hidden agar dropdown bebas) */
+            .t2q-list-surface {
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 14px;
+                overflow: visible;
+                box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+            }
+
+            .t2q-list-head {
+                display: none;
+            }
+
+            @media (min-width: 992px) {
+                .t2q-list-head {
+                    display: grid;
+                    grid-template-columns: 36px minmax(200px, 1.2fr) minmax(175px, 1fr) minmax(175px, 1fr) minmax(185px, 1.05fr) 104px;
+                    gap: 0.75rem;
+                    align-items: center;
+                    padding: 0.62rem 1rem;
+                    background: #f8fafc;
+                    border-bottom: 1px solid #e2e8f0;
+                    border-radius: 13px 13px 0 0;
+                    font-size: 0.67rem;
+                    font-weight: 800;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                    color: #64748b;
+                }
+            }
+
+            .t2q-student-item {
+                position: relative;
+                z-index: 1;
+                border-bottom: 1px solid #f1f5f9;
+                transition: background-color 0.14s ease;
+            }
+
+            .t2q-student-item:last-child {
+                border-bottom: 0;
+            }
+
+            .t2q-student-item:last-child > .t2q-row-summary {
+                border-radius: 0 0 13px 13px;
+            }
+
+            .t2q-student-item.is-expanded > .t2q-row-summary {
+                border-radius: 0;
+                background: #fffcf8;
+                border-bottom: 1px dashed #fed7aa;
+            }
+
+            .t2q-student-item.has-open-ms {
+                z-index: 70;
+            }
+
+            .t2q-row-summary {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr);
+                gap: 0.65rem;
+                padding: 0.68rem 1rem;
+                align-items: center;
+                cursor: pointer;
+                transition: background-color 0.12s ease;
+            }
+
+            .t2q-row-summary:hover {
+                background: #fafbfc;
+            }
+
+            @media (min-width: 992px) {
+                .t2q-row-summary {
+                    grid-template-columns: 36px minmax(200px, 1.2fr) minmax(175px, 1fr) minmax(175px, 1fr) minmax(185px, 1.05fr) 104px;
+                    gap: 0.75rem;
+                }
+            }
+
+            .t2q-row-num {
+                display: none;
+            }
+
+            @media (min-width: 992px) {
+                .t2q-row-num {
+                    display: block;
+                    font-size: 0.74rem;
+                    font-weight: 700;
+                    color: #94a3b8;
+                }
+            }
+
+            .t2q-student-cell {
+                display: flex;
+                align-items: center;
+                gap: 0.62rem;
+                min-width: 0;
+            }
+
+            .t2q-student-avatar {
+                width: 32px;
+                height: 32px;
+                border-radius: 999px;
+                object-fit: cover;
+                flex-shrink: 0;
+            }
+
+            .t2q-student-initials {
+                width: 32px;
+                height: 32px;
+                border-radius: 999px;
+                background: #f1f5f9;
+                border: 1px solid #e2e8f0;
+                color: #334155;
+                font-size: 0.73rem;
+                font-weight: 800;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+            }
+
+            .t2q-cell-block {
+                min-width: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 0.14rem;
+            }
+
+            .t2q-mobile-label {
+                display: inline-block;
+                font-size: 0.62rem;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                color: #94a3b8;
+            }
+
+            @media (min-width: 992px) {
+                .t2q-mobile-label {
+                    display: none;
+                }
+            }
+
+            .t2q-mini-score {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.28rem;
+                font-size: 0.69rem;
+                font-weight: 700;
+                border-radius: 6px;
+                padding: 0.1rem 0.42rem;
+                font-variant-numeric: tabular-nums;
+                flex-shrink: 0;
+            }
+
+            .t2q-summary-tags {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 0.25rem;
+            }
+
+            .t2q-summary-pill {
+                font-size: 0.67rem;
+                font-weight: 600;
+                border-radius: 6px;
+                padding: 0.1rem 0.42rem;
+                background: #f1f5f9;
+                color: #475569;
+                white-space: nowrap;
+            }
+
+            .t2q-summary-pill.has-val {
+                background: #fff7ed;
+                border: 1px solid #fed7aa;
+                color: #9a3412;
+            }
+
+            .t2q-toggle-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.35rem;
+                height: 30px;
+                padding: 0 0.72rem;
+                border-radius: 8px;
+                border: 1px solid #e2e8f0;
+                background: #ffffff;
+                color: #334155;
+                font-size: 0.72rem;
+                font-weight: 700;
+                cursor: pointer;
+                transition: all 0.14s ease;
+                white-space: nowrap;
+            }
+
+            .t2q-toggle-btn:hover {
+                border-color: #fdba74;
+                color: #c2410c;
+                background: #fff7ed;
+            }
+
+            .t2q-student-item.is-expanded .t2q-toggle-btn {
+                background: #ea580c;
+                border-color: #ea580c;
+                color: #ffffff;
+            }
+
+            /* Panel Editor Expand-In-Place */
+            .t2q-row-drawer {
+                display: none;
+                background: #f8fafc;
+                padding: 0.9rem 1rem 0.95rem;
+                border-radius: 0 0 13px 13px;
+            }
+
+            .t2q-student-item.is-expanded .t2q-row-drawer {
+                display: block;
+            }
+
+            .t2q-drawer-grid {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr);
+                gap: 0.85rem;
+            }
+
+            @media (min-width: 992px) {
+                .t2q-drawer-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+            }
+
+            .t2q-channel-box {
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 0.85rem 0.95rem;
+                display: flex;
+                flex-direction: column;
+                gap: 0.65rem;
+                min-width: 0;
+            }
+
+            .t2q-snapshot-bar {
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
                 gap: 0.65rem;
+                padding-bottom: 0.58rem;
+                border-bottom: 1px dashed #e2e8f0;
             }
 
-            /* Searchable Multi-Select Dropdown */
+            .t2q-channel-kicker {
+                font-size: 0.64rem;
+                font-weight: 800;
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.35rem;
+                margin-bottom: 0.14rem;
+            }
+
+            .t2q-materi-title {
+                font-size: 0.83rem;
+                font-weight: 700;
+                color: #0f172a;
+                line-height: 1.3;
+            }
+
+            .t2q-materi-meta {
+                font-size: 0.67rem;
+                color: #64748b;
+                margin-top: 0.06rem;
+            }
+
+            .t2q-score-pill {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.38rem;
+                padding: 0.24rem 0.58rem;
+                border-radius: 8px;
+                font-variant-numeric: tabular-nums;
+                flex-shrink: 0;
+            }
+
+            .t2q-score-num {
+                font-size: 0.92rem;
+                font-weight: 800;
+                line-height: 1;
+            }
+
+            .t2q-score-code {
+                font-size: 0.65rem;
+                font-weight: 700;
+                padding-left: 0.36rem;
+                border-left: 1px solid currentColor;
+            }
+
+            .t2q-field-label {
+                font-size: 0.7rem;
+                font-weight: 700;
+                color: #334155;
+                margin-bottom: 0.24rem;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .t2q-field-hint {
+                font-size: 0.65rem;
+                font-weight: 500;
+                color: #94a3b8;
+            }
+
+            /* Searchable Multi-Select Trigger FIXED 1-BARIS (38px, tidak melar!) */
             .t2q-ms {
                 position: relative;
             }
 
             .t2q-ms-trigger {
                 width: 100%;
-                min-height: 38px;
+                height: 38px;
                 background: #ffffff;
                 border: 1px solid #cbd5e1;
-                border-radius: 10px;
-                padding: 0.34rem 2rem 0.34rem 0.58rem;
+                border-radius: 9px;
+                padding: 0 2rem 0 0.58rem;
                 display: flex;
-                flex-wrap: wrap;
                 align-items: center;
                 justify-content: flex-start;
-                gap: 0.28rem;
+                gap: 0.38rem;
                 cursor: pointer;
                 text-align: left;
                 position: relative;
+                overflow: hidden;
                 transition: border-color 0.15s ease, box-shadow 0.15s ease;
             }
 
@@ -126,7 +741,7 @@
 
             .t2q-ms.is-open .t2q-ms-trigger {
                 border-color: #ea580c;
-                box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.14);
+                box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.13);
             }
 
             .t2q-ms-trigger.is-disabled {
@@ -135,24 +750,110 @@
                 opacity: 0.78;
             }
 
+            .t2q-ms-summary {
+                display: flex;
+                align-items: center;
+                gap: 0.38rem;
+                min-width: 0;
+                flex: 1 1 auto;
+                overflow: hidden;
+            }
+
             .t2q-ms-placeholder {
                 font-size: 0.74rem;
                 color: #94a3b8;
-                padding: 0.08rem 0.15rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
                 user-select: none;
+            }
+
+            .t2q-ms-badge-count {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                background: #ea580c;
+                color: #ffffff;
+                font-size: 0.66rem;
+                font-weight: 800;
+                border-radius: 6px;
+                padding: 0.12rem 0.44rem;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+
+            .t2q-ms-preview-text {
+                font-size: 0.73rem;
+                font-weight: 600;
+                color: #1e293b;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                min-width: 0;
+            }
+
+            .t2q-ms-caret {
+                position: absolute;
+                right: 0.62rem;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #64748b;
+                font-size: 0.68rem;
+                pointer-events: none;
+                transition: transform 0.15s ease;
+            }
+
+            .t2q-ms.is-open .t2q-ms-caret {
+                transform: translateY(-50%) rotate(180deg);
+                color: #ea580c;
+            }
+
+            .t2q-ms-menu {
+                position: absolute;
+                left: 0;
+                right: 0;
+                top: calc(100% + 5px);
+                min-width: 260px;
+                background: #ffffff;
+                border: 1px solid #cbd5e1;
+                border-radius: 12px;
+                box-shadow: 0 20px 38px -10px rgba(15, 23, 42, 0.24);
+                z-index: 1050;
+                display: none;
+                overflow: hidden;
+            }
+
+            .t2q-ms.is-open .t2q-ms-menu {
+                display: block;
+            }
+
+            .t2q-ms.is-open-up .t2q-ms-menu {
+                top: auto;
+                bottom: calc(100% + 5px);
+            }
+
+            .t2q-ms-selected-drawer {
+                padding: 0.45rem 0.58rem;
+                border-bottom: 1px solid #f1f5f9;
+                background: #fffaf5;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.25rem;
+                max-height: 92px;
+                overflow-y: auto;
             }
 
             .t2q-ms-tag {
                 display: inline-flex;
                 align-items: center;
-                gap: 0.28rem;
+                gap: 0.26rem;
                 background: #fff7ed;
                 border: 1px solid #fed7aa;
                 color: #9a3412;
-                font-size: 0.69rem;
+                font-size: 0.67rem;
                 font-weight: 600;
-                border-radius: 7px;
-                padding: 0.14rem 0.42rem;
+                border-radius: 6px;
+                padding: 0.1rem 0.38rem;
                 line-height: 1.25;
                 max-width: 100%;
             }
@@ -172,47 +873,8 @@
                 color: #7c2d12;
             }
 
-            .t2q-ms-caret {
-                position: absolute;
-                right: 0.65rem;
-                top: 50%;
-                transform: translateY(-50%);
-                color: #64748b;
-                font-size: 0.72rem;
-                pointer-events: none;
-                transition: transform 0.15s ease;
-            }
-
-            .t2q-ms.is-open .t2q-ms-caret {
-                transform: translateY(-50%) rotate(180deg);
-                color: #ea580c;
-            }
-
-            .t2q-ms-menu {
-                position: absolute;
-                left: 0;
-                right: 0;
-                top: calc(100% + 5px);
-                background: #ffffff;
-                border: 1px solid #cbd5e1;
-                border-radius: 12px;
-                box-shadow: 0 18px 34px -10px rgba(15, 23, 42, 0.22);
-                z-index: 1050;
-                display: none;
-                overflow: hidden;
-            }
-
-            .t2q-ms.is-open .t2q-ms-menu {
-                display: block;
-            }
-
-            .t2q-ms.is-open-up .t2q-ms-menu {
-                top: auto;
-                bottom: calc(100% + 5px);
-            }
-
             .t2q-ms-search-wrap {
-                padding: 0.5rem 0.58rem;
+                padding: 0.48rem 0.56rem;
                 border-bottom: 1px solid #f1f5f9;
                 background: #f8fafc;
                 position: relative;
@@ -220,11 +882,11 @@
 
             .t2q-ms-search-wrap i {
                 position: absolute;
-                left: 1.15rem;
+                left: 1.12rem;
                 top: 50%;
                 transform: translateY(-50%);
                 color: #94a3b8;
-                font-size: 0.72rem;
+                font-size: 0.71rem;
                 pointer-events: none;
             }
 
@@ -234,8 +896,8 @@
                 border: 1px solid #cbd5e1;
                 border-radius: 8px;
                 background: #ffffff;
-                padding: 0.25rem 0.6rem 0.25rem 1.85rem;
-                font-size: 0.74rem;
+                padding: 0.22rem 0.58rem 0.22rem 1.8rem;
+                font-size: 0.73rem;
                 color: #0f172a;
                 outline: 0;
             }
@@ -246,21 +908,21 @@
             }
 
             .t2q-ms-list {
-                max-height: 205px;
+                max-height: 195px;
                 overflow-y: auto;
-                padding: 0.3rem;
+                padding: 0.28rem;
             }
 
             .t2q-ms-option {
                 width: 100%;
                 border: 0;
                 background: transparent;
-                border-radius: 8px;
-                padding: 0.38rem 0.55rem;
+                border-radius: 7px;
+                padding: 0.36rem 0.52rem;
                 display: flex;
                 align-items: center;
-                gap: 0.5rem;
-                font-size: 0.74rem;
+                gap: 0.48rem;
+                font-size: 0.73rem;
                 color: #1e293b;
                 text-align: left;
                 cursor: pointer;
@@ -287,7 +949,7 @@
                 align-items: center;
                 justify-content: center;
                 flex-shrink: 0;
-                font-size: 0.58rem;
+                font-size: 0.56rem;
                 color: #ffffff;
             }
 
@@ -301,13 +963,13 @@
                 border: 1px dashed #fdba74;
                 background: #fff7ed;
                 color: #c2410c;
-                border-radius: 8px;
-                padding: 0.4rem 0.55rem;
-                font-size: 0.73rem;
+                border-radius: 7px;
+                padding: 0.38rem 0.52rem;
+                font-size: 0.72rem;
                 font-weight: 600;
                 text-align: left;
                 cursor: pointer;
-                margin-bottom: 0.25rem;
+                margin-bottom: 0.24rem;
             }
 
             .t2q-ms-custom-add:hover {
@@ -315,28 +977,32 @@
             }
 
             .t2q-ms-footer {
-                padding: 0.38rem 0.6rem;
+                padding: 0.36rem 0.58rem;
                 border-top: 1px solid #f1f5f9;
                 background: #f8fafc;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                font-size: 0.68rem;
+                font-size: 0.67rem;
             }
 
             .t2q-desc-textarea {
-                font-size: 0.79rem;
-                line-height: 1.48;
-                border-radius: 10px;
-                border: 1px solid #cbd5e1;
-                background: #ffffff;
+                font-size: 0.78rem;
+                line-height: 1.52;
+                border-radius: 9px;
+                border: 1px solid #e2e8f0;
+                background: #f8fafc;
                 color: #0f172a;
+                padding: 0.5rem 0.68rem;
+                min-height: 76px;
                 resize: vertical;
+                transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
             }
 
             .t2q-desc-textarea:focus {
+                background: #ffffff;
                 border-color: #ea580c;
-                box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.12);
+                box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.11);
             }
 
             .t2q-desc-textarea:disabled {
@@ -344,26 +1010,14 @@
                 color: #475569;
             }
 
-            .t2q-scale-strip {
+            .t2q-drawer-foot {
                 display: flex;
-                flex-wrap: wrap;
                 align-items: center;
-                gap: 0.45rem;
-                background: #ffffff;
-                border: 1px solid #e2e8f0;
-                border-radius: 12px;
-                padding: 0.6rem 0.9rem;
-                margin-bottom: 0.95rem;
-            }
-
-            .t2q-scale-pill {
-                font-size: 0.7rem;
-                font-weight: 700;
-                border-radius: 8px;
-                padding: 0.24rem 0.58rem;
-                display: inline-flex;
-                align-items: center;
-                gap: 0.35rem;
+                justify-content: space-between;
+                gap: 0.5rem;
+                margin-top: 0.72rem;
+                padding-top: 0.62rem;
+                border-top: 1px solid #e2e8f0;
             }
 
             .t2q-save-bar {
@@ -373,21 +1027,37 @@
                 background: rgba(255, 255, 255, 0.96);
                 backdrop-filter: blur(8px);
                 border: 1px solid #e2e8f0;
-                border-radius: 14px;
-                padding: 0.8rem 1.15rem;
+                border-radius: 13px;
+                padding: 0.72rem 1.05rem;
                 box-shadow: 0 12px 28px -10px rgba(15, 23, 42, 0.18);
                 display: flex;
                 flex-wrap: wrap;
                 align-items: center;
                 justify-content: space-between;
-                gap: 0.75rem;
-                margin-top: 0.5rem;
+                gap: 0.7rem;
+                margin-top: 0.85rem;
+            }
+
+            .t2q-dirty-badge {
+                display: none;
+                align-items: center;
+                gap: 0.35rem;
+                background: #fff7ed;
+                border: 1px solid #fed7aa;
+                color: #c2410c;
+                font-size: 0.7rem;
+                font-weight: 700;
+                border-radius: 999px;
+                padding: 0.16rem 0.58rem;
+            }
+
+            .t2q-dirty-badge.is-visible {
+                display: inline-flex;
             }
         </style>
     @endPushOnce
 
     @php
-        $todayDate = \Carbon\Carbon::now();
         $displayName = $karyawanProfile?->nama_gelar ?? Auth::user()?->name ?? 'Guru T2Q';
         $isEligible = $isEligible ?? false;
         $ineligibleReason = $ineligibleReason ?? null;
@@ -409,572 +1079,716 @@
             'locked_count' => 0,
             'unlocked_count' => 0,
         ];
-        $tahsinKeunggulanPresets = \App\Models\Admin\T2q\RaporT2q::TAHSIN_KEUNGGULAN_PRESETS;
-        $tahsinPeningkatanPresets = \App\Models\Admin\T2q\RaporT2q::TAHSIN_PENINGKATAN_PRESETS;
-        $tahfizhKeunggulanPresets = \App\Models\Admin\T2q\RaporT2q::TAHFIDZ_KEUNGGULAN_PRESETS;
-        $tahfizhPeningkatanPresets = \App\Models\Admin\T2q\RaporT2q::TAHFIDZ_PENINGKATAN_PRESETS;
+        $komentarOptions = array_values(array_unique(array_filter(
+            $komentarOptions ?? \App\Models\Admin\DataMaster\KomentarT2q::DEFAULT_COMMENTS,
+            static fn ($v): bool => filled($v)
+        )));
     @endphp
 
     <div class="app-main__inner">
-        <!-- HERO BANNER -->
-        <div class="wk-hero">
-            <div class="wk-hero-glow"></div>
-            <div class="row align-items-center position-relative" style="z-index: 1;">
-                <div class="col-lg-8 mb-3 mb-lg-0">
-                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                        <span class="badge text-white px-2 py-1 font-weight-bold"
-                            style="background: rgba(234, 88, 12, 0.92); font-size: 11px; border-radius: 6px;">
-                            <i class="fa fa-file-signature mr-1"></i> GURU T2Q &bull; REKAP RAPOR SD
-                        </span>
-                        <span class="small" style="color: rgba(255, 255, 255, 0.72);">
-                            <i class="fa fa-calendar-alt mr-1"></i>
-                            {{ $todayDate->copy()->locale('id')->translatedFormat('l, d F Y') }}
-                        </span>
+        <div class="t2q-page-wrap">
+            <!-- HEADER MINIMALIS -->
+            <div class="t2q-head-bar">
+                <div class="t2q-head-left">
+                    <div class="t2q-head-icon">
+                        <i class="fa fa-file-signature"></i>
                     </div>
-
-                    <h3 class="font-weight-bold text-white mb-2">
-                        Rekap Nilai Terakhir &amp; Deskripsi Rapor T2Q ({{ $periodeLabel }})
-                    </h3>
-
-                    <p class="mb-3" style="color: rgba(255, 255, 255, 0.78); max-width: 680px; font-size: 0.86rem; line-height: 1.5;">
-                        Nilai dan materi <strong>Tahsin &amp; Tahfidz Al-Qur'an</strong> diambil otomatis dari catatan <strong>Yaumiyah terakhir</strong> siswa jenjang <strong>SD</strong> (skala predikat minimal 75: MB–SAB). Pilih satu atau beberapa aspek kelebihan &amp; peningkatan lewat dropdown pencarian sebelum finalisasi rapor.
-                    </p>
-
-                    <div class="d-flex flex-wrap align-items-center gap-2">
-                        @if ($activeTahunAjaran)
-                            <span class="badge px-3 py-2"
-                                style="background: rgba(255, 255, 255, 0.14); border: 1px solid rgba(255, 255, 255, 0.22); color: #ffffff; font-size: 0.74rem;">
-                                <i class="fa fa-graduation-cap text-warning mr-1"></i>
-                                {{ $activeTahunAjaran->full_label }}
+                    <div>
+                        <h3 class="t2q-head-title">
+                            <span>Rekap &amp; Deskripsi Rapor T2Q</span>
+                            <span class="t2q-unit-pill">
+                                <i class="fa fa-school"></i> Khusus SD &bull; {{ $periodeLabel }}
                             </span>
-                        @endif
-                        @if ($isEligible && $stats['total_sd'] > 0)
-                            <span class="badge px-3 py-2"
-                                style="background: rgba(16, 185, 129, 0.22); border: 1px solid rgba(52, 211, 153, 0.35); color: #ecfdf5; font-size: 0.74rem;">
-                                <i class="fa fa-users mr-1"></i>
-                                {{ $stats['total_sd'] }} Siswa SD
-                                @if ($nonSdCount > 0)
-                                    ({{ $nonSdCount }} non-SD disembunyikan)
-                                @endif
-                            </span>
-                        @endif
+                        </h3>
+                        <p class="t2q-head-sub">
+                            @if ($activeTahunAjaran)
+                                <strong>{{ $activeTahunAjaran->full_label }}</strong> &bull;
+                            @endif
+                            Pembimbing: <strong>{{ $displayName }}</strong>. Nilai &amp; materi otomatis diambil dari setoran Yaumiyah terakhir.
+                            @if ($nonSdCount > 0)
+                                ({{ $nonSdCount }} siswa non-SD disembunyikan)
+                            @endif
+                        </p>
                     </div>
                 </div>
 
-                <div class="col-lg-4">
-                    <div class="wk-team-card">
-                        <div class="text-uppercase font-weight-bold mb-2"
-                            style="font-size: 0.68rem; letter-spacing: 0.05em; color: #fb923c;">
-                            Periode Rapor Aktif
-                        </div>
-                        <div class="d-flex gap-2 mb-2">
-                            <a href="{{ route('guru-t2q.rapor.index', array_filter(['periode' => 'mid', 'tingkat' => $selectedTingkat])) }}"
-                                class="btn btn-sm flex-fill font-weight-bold {{ $isMid ? 'text-white' : 'btn-light text-dark' }}"
-                                style="{{ $isMid ? 'background: linear-gradient(135deg, #ea580c 0%, #d97706 100%); border-radius: 8px;' : 'border-radius: 8px;' }}">
-                                Mid Semester
-                            </a>
-                            <a href="{{ route('guru-t2q.rapor.index', array_filter(['periode' => 'semester', 'tingkat' => $selectedTingkat])) }}"
-                                class="btn btn-sm flex-fill font-weight-bold {{ ! $isMid ? 'text-white' : 'btn-light text-dark' }}"
-                                style="{{ ! $isMid ? 'background: linear-gradient(135deg, #ea580c 0%, #d97706 100%); border-radius: 8px;' : 'border-radius: 8px;' }}">
-                                Semester
-                            </a>
-                        </div>
-                        <div class="small" style="color: rgba(255, 255, 255, 0.74); font-size: 0.71rem; line-height: 1.4;">
-                            Pembimbing: <strong class="text-white">{{ $displayName }}</strong>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        @if (! $isEligible)
-            <div class="wk-empty-guard">
-                <div class="mx-auto mb-3 d-flex align-items-center justify-content-center"
-                    style="width: 58px; height: 58px; border-radius: 16px; background: #fff7ed; color: #ea580c; font-size: 1.5rem;">
-                    <i class="fa fa-quran"></i>
-                </div>
-                <h5 class="font-weight-bold text-dark mb-2">Belum Ada Daftar Bimbingan T2Q Aktif</h5>
-                <p class="small text-muted mb-3">
-                    Pada Tahun Ajaran aktif, NIPY Anda (<code>{{ $nipy ?: '-' }}</code>) belum tercatat pada daftar <strong>Anggota T2Q</strong>.
-                </p>
-                <a href="{{ route('guru-t2q.dashboard') }}" class="btn btn-sm text-white font-weight-semibold px-3"
-                    style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%); border-radius: 9px;">
-                    <i class="fa fa-arrow-left mr-1"></i> Kembali ke Dashboard
-                </a>
-            </div>
-        @elseif ($ineligibleReason === 'no_sd_students')
-            <div class="wk-empty-guard">
-                <div class="mx-auto mb-3 d-flex align-items-center justify-content-center"
-                    style="width: 58px; height: 58px; border-radius: 16px; background: #eff6ff; color: #2563eb; font-size: 1.5rem;">
-                    <i class="fa fa-school"></i>
-                </div>
-                <h5 class="font-weight-bold text-dark mb-2">Rekap Rapor T2Q Tersedia Khusus Jenjang SD</h5>
-                <p class="small text-muted mb-3">
-                    @if ($nonSdCount > 0)
-                        Seluruh {{ $nonSdCount }} siswa bimbingan T2Q Anda pada Tahun Ajaran aktif berasal dari jenjang non-SD. Fitur Rekap &amp; Deskripsi Rapor T2Q saat ini aktif untuk rapor jenjang <strong>SD</strong>.
-                    @else
-                        Belum ada siswa jenjang SD yang terdaftar dalam bimbingan T2Q Anda pada Tahun Ajaran aktif.
-                    @endif
-                </p>
-                <div class="d-flex flex-wrap justify-content-center gap-2">
-                    <a href="{{ route('guru-t2q.yaumiyah-tahsin.index') }}" class="btn btn-sm btn-outline-primary font-weight-semibold" style="border-radius: 9px;">
-                        <i class="fa fa-book-open mr-1"></i> Input Yaumiyah Tahsin
+                <div class="t2q-seg-control" role="tablist" aria-label="Pilih Periode Rapor T2Q">
+                    <a href="{{ route('guru-t2q.rapor.index', array_filter(['periode' => 'mid', 'tingkat' => $selectedTingkat])) }}"
+                        class="t2q-seg-btn {{ $isMid ? 'is-active' : '' }}">
+                        Mid Semester
                     </a>
-                    <a href="{{ route('guru-t2q.dashboard') }}" class="btn btn-sm text-white font-weight-semibold"
+                    <a href="{{ route('guru-t2q.rapor.index', array_filter(['periode' => 'semester', 'tingkat' => $selectedTingkat])) }}"
+                        class="t2q-seg-btn {{ ! $isMid ? 'is-active' : '' }}">
+                        Semester
+                    </a>
+                </div>
+            </div>
+
+            @if (! $isEligible)
+                <div class="wk-empty-guard">
+                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center"
+                        style="width: 58px; height: 58px; border-radius: 16px; background: #fff7ed; color: #ea580c; font-size: 1.5rem;">
+                        <i class="fa fa-quran"></i>
+                    </div>
+                    <h5 class="font-weight-bold text-dark mb-2">Belum Ada Daftar Bimbingan T2Q Aktif</h5>
+                    <p class="small text-muted mb-3">
+                        Pada Tahun Ajaran aktif, NIPY Anda (<code>{{ $nipy ?: '-' }}</code>) belum tercatat pada daftar <strong>Anggota T2Q</strong>.
+                    </p>
+                    <a href="{{ route('guru-t2q.dashboard') }}" class="btn btn-sm text-white font-weight-semibold px-3"
                         style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%); border-radius: 9px;">
                         <i class="fa fa-arrow-left mr-1"></i> Kembali ke Dashboard
                     </a>
                 </div>
-            </div>
-        @else
-            <!-- KPI STRIP -->
-            <div class="wk-kpi-grid">
-                <div class="wk-kpi-card">
-                    <div>
-                        <div class="wk-kpi-label">
-                            <span class="wk-kpi-dot" style="background: #2563eb;"></span> Siswa SD Bimbingan
-                        </div>
-                        <div class="wk-kpi-value">{{ $stats['total_sd'] }}</div>
-                        <div class="wk-kpi-sub">{{ count($tingkatTabs) }} tingkat SD aktif</div>
+            @elseif ($ineligibleReason === 'no_sd_students')
+                <div class="wk-empty-guard">
+                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center"
+                        style="width: 58px; height: 58px; border-radius: 16px; background: #eff6ff; color: #2563eb; font-size: 1.5rem;">
+                        <i class="fa fa-school"></i>
                     </div>
-                    <span class="wk-kpi-icon" style="background: #eff6ff; color: #2563eb;">
-                        <i class="fa fa-users"></i>
-                    </span>
-                </div>
-
-                <div class="wk-kpi-card">
-                    <div>
-                        <div class="wk-kpi-label">
-                            <span class="wk-kpi-dot" style="background: #ea580c;"></span> Nilai Akhir Tahsin
-                        </div>
-                        <div class="wk-kpi-value" style="color: #c2410c;">
-                            {{ $stats['tahsin_ready'] }} <span class="text-muted" style="font-size: 0.88rem; font-weight: 600;">/ {{ $stats['total_sd'] }}</span>
-                        </div>
-                        <div class="wk-kpi-sub">Setoran terakhir tersedia</div>
+                    <h5 class="font-weight-bold text-dark mb-2">Rekap Rapor T2Q Tersedia Khusus Jenjang SD</h5>
+                    <p class="small text-muted mb-3">
+                        @if ($nonSdCount > 0)
+                            Seluruh {{ $nonSdCount }} siswa bimbingan T2Q Anda pada Tahun Ajaran aktif berasal dari jenjang non-SD. Fitur Rekap &amp; Deskripsi Rapor T2Q saat ini aktif untuk rapor jenjang <strong>SD</strong>.
+                        @else
+                            Belum ada siswa jenjang SD yang terdaftar dalam bimbingan T2Q Anda pada Tahun Ajaran aktif.
+                        @endif
+                    </p>
+                    <div class="d-flex flex-wrap justify-content-center gap-2">
+                        <a href="{{ route('guru-t2q.yaumiyah-tahsin.index') }}" class="btn btn-sm btn-outline-primary font-weight-semibold" style="border-radius: 9px;">
+                            <i class="fa fa-book-open mr-1"></i> Input Yaumiyah Tahsin
+                        </a>
+                        <a href="{{ route('guru-t2q.dashboard') }}" class="btn btn-sm text-white font-weight-semibold"
+                            style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%); border-radius: 9px;">
+                            <i class="fa fa-arrow-left mr-1"></i> Kembali ke Dashboard
+                        </a>
                     </div>
-                    <span class="wk-kpi-icon" style="background: #fff7ed; color: #ea580c;">
-                        <i class="fa fa-book-open"></i>
-                    </span>
                 </div>
-
-                <div class="wk-kpi-card">
-                    <div>
-                        <div class="wk-kpi-label">
-                            <span class="wk-kpi-dot" style="background: #10b981;"></span> Nilai Akhir Tahfidz
+            @else
+                <!-- RINGKASAN PROGRES -->
+                <div class="t2q-mini-stats">
+                    <div class="t2q-stat-tile">
+                        <div>
+                            <div class="t2q-stat-label">Siswa SD</div>
+                            <div class="t2q-stat-val">{{ $stats['total_sd'] }}</div>
+                            <div class="t2q-stat-sub">{{ count($tingkatTabs) }} tingkat binaan</div>
                         </div>
-                        <div class="wk-kpi-value" style="color: #047857;">
-                            {{ $stats['tahfizh_ready'] }} <span class="text-muted" style="font-size: 0.88rem; font-weight: 600;">/ {{ $stats['total_sd'] }}</span>
-                        </div>
-                        <div class="wk-kpi-sub">Setoran terakhir tersedia</div>
+                        <span class="t2q-stat-dot" style="background: #eff6ff; color: #2563eb;">
+                            <i class="fa fa-users"></i>
+                        </span>
                     </div>
-                    <span class="wk-kpi-icon" style="background: #ecfdf5; color: #059669;">
-                        <i class="fa fa-quran"></i>
-                    </span>
-                </div>
 
-                <div class="wk-kpi-card">
-                    <div>
-                        <div class="wk-kpi-label">
-                            <span class="wk-kpi-dot" style="background: #8b5cf6;"></span> Rekap Tersimpan
+                    <div class="t2q-stat-tile">
+                        <div>
+                            <div class="t2q-stat-label">Tahsin Terisi</div>
+                            <div class="t2q-stat-val" style="color: #c2410c;">
+                                {{ $stats['tahsin_ready'] }} <span class="text-muted" style="font-size: 0.78rem; font-weight: 600;">/ {{ $stats['total_sd'] }}</span>
+                            </div>
+                            <div class="t2q-stat-sub">Dari setoran terakhir</div>
                         </div>
-                        <div class="wk-kpi-value" style="color: #6d28d9;">
-                            {{ $stats['deskripsi_saved'] }} <span class="text-muted" style="font-size: 0.88rem; font-weight: 600;">/ {{ $stats['total_sd'] }}</span>
-                        </div>
-                        <div class="wk-kpi-sub">
-                            {{ $stats['locked_count'] > 0 ? $stats['locked_count'].' siswa terkunci final' : 'Siap disimpan & difinalkan' }}
-                        </div>
+                        <span class="t2q-stat-dot" style="background: #fff7ed; color: #ea580c;">
+                            <i class="fa fa-book-open"></i>
+                        </span>
                     </div>
-                    <span class="wk-kpi-icon" style="background: #f5f3ff; color: #7c3aed;">
-                        <i class="fa fa-check-double"></i>
-                    </span>
-                </div>
-            </div>
 
-            @if (session('success'))
-                <div class="alert alert-success shadow-sm border-0 mb-3" style="border-radius: 12px;">
-                    <i class="fa fa-check-circle mr-1"></i> {{ session('success') }}
-                </div>
-            @endif
-
-            @if (isset($errors) && $errors->any())
-                <div class="alert alert-danger shadow-sm border-0 mb-3" style="border-radius: 12px;">
-                    <div class="font-weight-bold mb-1">
-                        <i class="fa fa-exclamation-triangle mr-1"></i> Periksa kembali pengisian Rekap Rapor T2Q:
+                    <div class="t2q-stat-tile">
+                        <div>
+                            <div class="t2q-stat-label">Tahfidz Terisi</div>
+                            <div class="t2q-stat-val" style="color: #047857;">
+                                {{ $stats['tahfizh_ready'] }} <span class="text-muted" style="font-size: 0.78rem; font-weight: 600;">/ {{ $stats['total_sd'] }}</span>
+                            </div>
+                            <div class="t2q-stat-sub">Dari setoran terakhir</div>
+                        </div>
+                        <span class="t2q-stat-dot" style="background: #ecfdf5; color: #059669;">
+                            <i class="fa fa-quran"></i>
+                        </span>
                     </div>
-                    <ul class="mb-0 pl-3 small">
-                        @foreach ($errors->all() as $err)
-                            <li>{{ $err }}</li>
-                        @endforeach
-                    </ul>
+
+                    <div class="t2q-stat-tile">
+                        <div>
+                            <div class="t2q-stat-label">Deskripsi Siap</div>
+                            <div class="t2q-stat-val" style="color: #6d28d9;">
+                                {{ $stats['deskripsi_saved'] }} <span class="text-muted" style="font-size: 0.78rem; font-weight: 600;">/ {{ $stats['total_sd'] }}</span>
+                            </div>
+                            <div class="t2q-stat-sub">
+                                {{ $stats['locked_count'] > 0 ? $stats['locked_count'].' terkunci final' : 'Belum difinalkan' }}
+                            </div>
+                        </div>
+                        <span class="t2q-stat-dot" style="background: #f5f3ff; color: #7c3aed;">
+                            <i class="fa fa-check-double"></i>
+                        </span>
+                    </div>
                 </div>
-            @endif
 
-            <!-- SKALA PREDIKAT REFERENSI (KKM 75) -->
-            <div class="t2q-scale-strip">
-                <span class="small font-weight-bold text-muted mr-1">
-                    <i class="fa fa-sliders-h text-warning mr-1"></i> Skala Predikat Rapor T2Q (Min. 75):
-                </span>
-                @foreach (array_reverse($predikatRanges) as $range)
-                    @php
-                        $pillCss = match ($range['predikat']) {
-                            'SAB' => 'background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;',
-                            'BSH' => 'background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;',
-                            'SB' => 'background: #ecfeff; color: #0e7490; border: 1px solid #a5f3fc;',
-                            default => 'background: #fffbeb; color: #b45309; border: 1px solid #fde68a;',
-                        };
-                    @endphp
-                    <span class="t2q-scale-pill" style="{{ $pillCss }}">
-                        <strong>{{ $range['predikat'] }}</strong>
-                        <span>{{ $range['nilai_min'] }}–{{ $range['nilai_max'] }} ({{ $range['keterangan'] }})</span>
-                    </span>
-                @endforeach
-            </div>
+                @if (session('success'))
+                    <div class="alert alert-success shadow-sm border-0 mb-3" style="border-radius: 12px;">
+                        <i class="fa fa-check-circle mr-1"></i> {{ session('success') }}
+                    </div>
+                @endif
 
-            <!-- PANEL FINALISASI T2Q -->
-            @include('guruT2q.partials._finalisasi_card', [
-                't2qFinalisasi' => $t2qFinalisasi,
-                'compact' => true,
-            ])
+                @if (isset($errors) && $errors->any())
+                    <div class="alert alert-danger shadow-sm border-0 mb-3" style="border-radius: 12px;">
+                        <div class="font-weight-bold mb-1">
+                            <i class="fa fa-exclamation-triangle mr-1"></i> Periksa kembali pengisian Rekap Rapor T2Q:
+                        </div>
+                        <ul class="mb-0 pl-3 small">
+                            @foreach ($errors->all() as $err)
+                                <li>{{ $err }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
 
-            <!-- TOOLBAR FILTER TINGKAT, SEARCH & GENERATE DRAF OTOMATIS -->
-            <div class="wk-surface mb-3">
-                <div class="p-3 d-flex flex-wrap align-items-center justify-content-between" style="gap: 0.75rem;">
-                    <div class="d-flex flex-wrap align-items-center" style="gap: 0.45rem;">
-                        <a href="{{ route('guru-t2q.rapor.index', ['periode' => $periode]) }}"
-                            class="wk-class-pill {{ $selectedTingkat === '' ? 'is-active' : '' }}">
-                            <span>Semua Tingkat SD</span>
-                            <span class="badge badge-pill {{ $selectedTingkat === '' ? 'badge-light text-dark' : 'badge-secondary' }}">
-                                {{ $stats['total_sd'] }}
+                <!-- ALUR PENGISIAN SINGKAT & SKALA PREDIKAT -->
+                <div class="t2q-guide-card">
+                    <div class="t2q-steps-flow">
+                        <span class="t2q-step-badge"><span class="t2q-step-num">1</span> Klik baris siswa</span>
+                        <i class="fa fa-chevron-right text-muted" style="font-size: 0.58rem;"></i>
+                        <span class="t2q-step-badge"><span class="t2q-step-num">2</span> Pilih kelebihan / kekurangan</span>
+                        <i class="fa fa-chevron-right text-muted" style="font-size: 0.58rem;"></i>
+                        <span class="t2q-step-badge"><span class="t2q-step-num">3</span> Simpan &amp; Finalkan</span>
+                    </div>
+
+                    <div class="t2q-scale-row">
+                        <span class="small font-weight-bold text-muted mr-1" style="font-size: 0.68rem;">
+                            Skala Predikat Rapor T2Q (Min. 75):
+                        </span>
+                        @foreach (array_reverse($predikatRanges) as $range)
+                            @php
+                                $pillCss = match ($range['predikat']) {
+                                    'SAB' => 'background: #ecfdf5; color: #047857;',
+                                    'BSH' => 'background: #eff6ff; color: #1d4ed8;',
+                                    'SB' => 'background: #ecfeff; color: #0e7490;',
+                                    default => 'background: #fffbeb; color: #b45309;',
+                                };
+                            @endphp
+                            <span class="t2q-scale-chip" style="{{ $pillCss }}" title="{{ $range['keterangan'] }}">
+                                <strong>{{ $range['predikat'] }}</strong> {{ $range['nilai_min'] }}–{{ $range['nilai_max'] }}
                             </span>
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- PANEL FINALISASI T2Q -->
+                @include('guruT2q.partials._finalisasi_card', [
+                    't2qFinalisasi' => $t2qFinalisasi,
+                    'compact' => true,
+                ])
+
+                <!-- TOOLBAR 1 BARIS HORIZONTAL -->
+                <div class="t2q-toolbar">
+                    <div class="t2q-tingkat-pills">
+                        <a href="{{ route('guru-t2q.rapor.index', ['periode' => $periode]) }}"
+                            class="t2q-pill-tab {{ $selectedTingkat === '' ? 'is-active' : '' }}">
+                            <span>Semua SD</span>
+                            <span class="t2q-pill-count">{{ $stats['total_sd'] }}</span>
                         </a>
                         @foreach ($tingkatTabs as $tKey => $tCount)
                             @php $isTingkatActive = $selectedTingkat === $tKey; @endphp
                             <a href="{{ route('guru-t2q.rapor.index', ['periode' => $periode, 'tingkat' => $tKey]) }}"
-                                class="wk-class-pill {{ $isTingkatActive ? 'is-active' : '' }}">
+                                class="t2q-pill-tab {{ $isTingkatActive ? 'is-active' : '' }}">
                                 <span>Tingkat {{ $tKey }}</span>
-                                <span class="badge badge-pill {{ $isTingkatActive ? 'badge-light text-dark' : 'badge-secondary' }}">
-                                    {{ $tCount }}
-                                </span>
+                                <span class="t2q-pill-count">{{ $tCount }}</span>
                             </a>
                         @endforeach
                     </div>
 
-                    <div class="d-flex flex-wrap align-items-center" style="gap: 0.55rem;">
+                    <div class="t2q-toolbar-right">
                         <div class="wk-search-wrap">
                             <i class="fa fa-search"></i>
                             <input type="text" id="t2qRaporSearch" class="wk-search-input"
-                                placeholder="Cari nama atau NIS siswa...">
+                                placeholder="Cari nama atau NIS...">
                         </div>
 
+                        @if ($rows->isNotEmpty())
+                            <button type="button" id="t2qToggleAllBtn" class="t2q-ghost-btn" title="Buka atau tutup seluruh editor siswa">
+                                <i class="fa fa-expand-alt"></i> <span>Buka Semua</span>
+                            </button>
+                        @endif
+
                         @if ($stats['unlocked_count'] > 0)
-                            <form method="POST" action="{{ route('guru-t2q.rapor.generate') }}" class="d-inline m-0">
+                            <form method="POST" action="{{ route('guru-t2q.rapor.generate') }}" class="t2q-sync-form">
                                 @csrf
                                 <input type="hidden" name="periode" value="{{ $periode }}">
                                 <input type="hidden" name="tingkat" value="{{ $selectedTingkat }}">
-                                <button type="submit" class="btn btn-sm font-weight-bold shadow-sm"
-                                    style="background: #fff7ed; color: #c2410c; border: 1px solid #fdba74; border-radius: 9px; padding: 0.42rem 0.85rem;">
-                                    <i class="fa fa-sync mr-1"></i> Tarik Nilai Terakhir &amp; Generate Draf
+                                <button type="submit" class="t2q-sync-btn"
+                                    title="Muat ulang nilai &amp; materi terakhir dari Yaumiyah lalu susun ulang draf deskripsi">
+                                    <i class="fa fa-sync"></i> <span>Sinkronkan Nilai Terbaru</span>
                                 </button>
                             </form>
                         @endif
                     </div>
                 </div>
-            </div>
 
-            <!-- DAFTAR SISWA & EDITOR REKAP RAPOR -->
-            <form method="POST" action="{{ route('guru-t2q.rapor.store') }}" id="t2qRaporBatchForm">
-                @csrf
-                <input type="hidden" name="periode" value="{{ $periode }}">
-                <input type="hidden" name="tingkat" value="{{ $selectedTingkat }}">
+                <!-- DAFTAR SISWA RINGKAS & COMPACT EXPANDABLE -->
+                <form method="POST" action="{{ route('guru-t2q.rapor.store') }}" id="t2qRaporBatchForm">
+                    @csrf
+                    <input type="hidden" name="periode" value="{{ $periode }}">
+                    <input type="hidden" name="tingkat" value="{{ $selectedTingkat }}">
 
-                @foreach ($rows as $idx => $row)
-                    @php
-                        /** @var \App\Models\Admin\DataMaster\AnggotaT2q $anggota */
-                        $anggota = $row['anggota'];
-                        /** @var \App\Models\Admin\DataMaster\Siswa|null $siswa */
-                        $siswa = $row['siswa'];
-                        $t2qId = (int) $anggota->id;
-                        $isLocked = (bool) ($row['is_locked'] ?? false);
-                        $midCutoff = $row['mid_cutoff_date'] ?? null;
-                        $tahsin = $row['tahsin'];
-                        $tahfizh = $row['tahfizh'];
-                        $namaSiswa = $siswa?->nama_lengkap ?? ($anggota->anggotaKelas?->siswa_nis ?? 'Siswa');
-                        $nisSiswa = $siswa?->nis ?? ($anggota->anggotaKelas?->siswa_nis ?? '-');
-                        $searchBlob = mb_strtolower(implode(' ', array_filter([
-                            $namaSiswa,
-                            $nisSiswa,
-                            'tingkat '.$anggota->tingkat,
-                            $tahsin['materi'] ?? null,
-                            $tahfizh['materi'] ?? null,
-                        ])));
-                    @endphp
+                    <div id="t2qSearchEmpty" class="wk-empty-guard d-none mb-3" style="padding: 2rem 1rem;">
+                        <i class="fa fa-search text-muted mb-2" style="font-size: 1.4rem;"></i>
+                        <div class="font-weight-bold text-dark small">Tidak ada siswa yang sesuai pencarian</div>
+                        <div class="text-muted" style="font-size: 0.74rem;">Coba ubah kata kunci nama atau NIS siswa.</div>
+                    </div>
 
-                    <div class="t2q-rapor-card {{ $isLocked ? 'is-locked' : '' }}" data-rapor-card="{{ $t2qId }}" data-search-text="{{ $searchBlob }}">
-                        <div class="t2q-rapor-head">
-                            <div class="d-flex align-items-center" style="gap: 0.7rem; min-width: 0;">
-                                <span class="badge badge-light border font-weight-bold text-muted px-2 py-1" style="border-radius: 8px;">
-                                    #{{ $idx + 1 }}
-                                </span>
-                                @if ($siswa?->avatar_url)
-                                    <img src="{{ $siswa->avatar_url }}" alt="{{ $namaSiswa }}" class="wk-avatar-thumb">
-                                @else
-                                    <div class="wk-avatar-fallback">
-                                        {{ $siswa?->inisial_nama ?? mb_strtoupper(mb_substr($namaSiswa, 0, 1)) }}
-                                    </div>
-                                @endif
-                                <div style="min-width: 0;">
-                                    <div class="font-weight-bold text-dark" style="font-size: 0.9rem; line-height: 1.25;">
-                                        {{ $namaSiswa }}
-                                    </div>
-                                    <div class="small text-muted" style="font-size: 0.73rem;">
-                                        NIS: <span class="font-weight-semibold">{{ $nisSiswa }}</span>
-                                        @if ($siswa?->jenis_kelamin_label)
-                                            &bull; {{ $siswa->jenis_kelamin_label }}
-                                        @endif
-                                        &bull; <span class="font-weight-semibold text-dark">Tingkat {{ $anggota->tingkat }}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="d-flex flex-wrap align-items-center" style="gap: 0.4rem;">
-                                @if ($midCutoff)
-                                    <span class="badge px-2 py-1" style="background: #eff6ff; color: #1d4ed8; border-radius: 8px; font-size: 0.7rem;">
-                                        <i class="fa fa-calendar-check mr-1"></i> Cut-off Mid: {{ \Carbon\Carbon::parse($midCutoff)->locale('id')->translatedFormat('d M Y') }}
-                                    </span>
-                                @endif
-                                @if (($tahsin['has_newer_yaumiyah'] ?? false) || ($tahfizh['has_newer_yaumiyah'] ?? false))
-                                    <span class="badge px-2 py-1" style="background: #fff7ed; color: #c2410c; border-radius: 8px; font-size: 0.7rem;">
-                                        <i class="fa fa-bolt mr-1"></i> Disinkronkan ke Setoran Terbaru
-                                    </span>
-                                @endif
-                                @if ($isLocked)
-                                    <span class="badge px-2 py-1 font-weight-bold" style="background: #dcfce7; color: #166534; border-radius: 8px; font-size: 0.72rem;">
-                                        <i class="fa fa-lock mr-1"></i> Terkunci (Final)
-                                    </span>
-                                @else
-                                    <span class="badge px-2 py-1" style="background: #f1f5f9; color: #475569; border-radius: 8px; font-size: 0.7rem;">
-                                        <i class="fa fa-pen mr-1"></i> Dapat Diedit
-                                    </span>
-                                @endif
-                            </div>
+                    <div class="t2q-list-surface">
+                        <div class="t2q-list-head">
+                            <div>No</div>
+                            <div>Siswa</div>
+                            <div>Tahsin Terakhir</div>
+                            <div>Tahfidz Terakhir</div>
+                            <div>Ringkasan Poin &amp; Status</div>
+                            <div class="text-right">Editor</div>
                         </div>
 
-                        <div class="t2q-rapor-body">
-                            @foreach ([
-                                ['key' => 'tahsin', 'title' => "TAHSIN AL-QUR'AN", 'icon' => 'fa-book-open', 'accent' => '#ea580c', 'data' => $tahsin, 'kPresets' => $tahsinKeunggulanPresets, 'pPresets' => $tahsinPeningkatanPresets, 'placeholderK' => 'Pilih kelebihan Tahsin (bisa >1)...', 'placeholderP' => 'Pilih peningkatan Tahsin (bisa >1)...'],
-                                ['key' => 'tahfizh', 'title' => "TAHFIDZ AL-QUR'AN", 'icon' => 'fa-quran', 'accent' => '#059669', 'data' => $tahfizh, 'kPresets' => $tahfizhKeunggulanPresets, 'pPresets' => $tahfizhPeningkatanPresets, 'placeholderK' => 'Pilih kelebihan Tahfidz (bisa >1)...', 'placeholderP' => 'Pilih peningkatan Tahfidz (bisa >1)...'],
-                            ] as $panel)
-                                @php
-                                    $ch = $panel['key'];
-                                    $d = $panel['data'];
-                                    $hasData = (bool) ($d['has_data'] ?? false);
-                                    $predCode = $d['predikat'] ?? null;
-                                    $predLabel = $d['predikat_label'] ?? null;
-                                    $predBadgeStyle = match ($predCode) {
-                                        'SAB' => 'background: #ecfdf5; color: #047857;',
-                                        'BSH' => 'background: #eff6ff; color: #1d4ed8;',
-                                        'SB' => 'background: #ecfeff; color: #0e7490;',
-                                        'MB' => 'background: #fffbeb; color: #b45309;',
-                                        default => 'background: #f1f5f9; color: #64748b;',
-                                    };
-                                    $kVal = (string) old("{$ch}.{$t2qId}.keunggulan", $d['keunggulan'] ?? '');
-                                    $pVal = (string) old("{$ch}.{$t2qId}.peningkatan", $d['peningkatan'] ?? '');
-                                    $kItems = \App\Models\Admin\T2q\RaporT2q::parseAspectList($kVal);
-                                    $pItems = \App\Models\Admin\T2q\RaporT2q::parseAspectList($pVal);
-                                    $kOptions = array_values(array_unique(array_merge($panel['kPresets'], $kItems)));
-                                    $pOptions = array_values(array_unique(array_merge($panel['pPresets'], $pItems)));
-                                    $descVal = old("{$ch}.{$t2qId}.deskripsi", $d['deskripsi'] ?? '');
-                                    $nilaiNum = $d['nilai'] ?? null;
-                                    $nilaiDisplay = $nilaiNum !== null ? number_format((float) $nilaiNum, 0) : '-';
-                                @endphp
+                        @foreach ($rows as $idx => $row)
+                            @php
+                                /** @var \App\Models\Admin\DataMaster\AnggotaT2q $anggota */
+                                $anggota = $row['anggota'];
+                                /** @var \App\Models\Admin\DataMaster\Siswa|null $siswa */
+                                $siswa = $row['siswa'];
+                                $t2qId = (int) $anggota->id;
+                                $isLocked = (bool) ($row['is_locked'] ?? false);
+                                $midCutoff = $row['mid_cutoff_date'] ?? null;
+                                $tahsin = $row['tahsin'];
+                                $tahfizh = $row['tahfizh'];
+                                $namaSiswa = $siswa?->nama_lengkap ?? ($anggota->anggotaKelas?->siswa_nis ?? 'Siswa');
+                                $nisSiswa = $siswa?->nis ?? ($anggota->anggotaKelas?->siswa_nis ?? '-');
+                                $searchBlob = mb_strtolower(implode(' ', array_filter([
+                                    $namaSiswa,
+                                    $nisSiswa,
+                                    'tingkat '.$anggota->tingkat,
+                                    $tahsin['materi'] ?? null,
+                                    $tahfizh['materi'] ?? null,
+                                ])));
 
-                                <div class="t2q-rapor-panel js-t2q-channel-panel"
-                                    data-mode="{{ $ch }}"
-                                    data-nilai="{{ $nilaiNum !== null ? $nilaiNum : '' }}"
-                                    data-predikat="{{ $predCode ?? '' }}"
-                                    data-materi="{{ $d['materi'] ?? '' }}">
-                                    <div class="t2q-panel-header">
-                                        <div class="font-weight-bold text-dark d-flex align-items-center" style="font-size: 0.78rem; gap: 0.4rem;">
-                                            <i class="fa {{ $panel['icon'] }}" style="color: {{ $panel['accent'] }};"></i>
-                                            <span>{{ $panel['title'] }}</span>
-                                            @if ($ch === 'tahfizh' && $hasData)
-                                                <span class="badge px-2 py-0" style="background: #f1f5f9; color: #475569; font-size: 0.65rem; border-radius: 6px;">
-                                                    {{ ($d['has_ayat'] ?? false) ? 'Konteks Ayat' : 'Surah Utuh' }}
-                                                </span>
-                                            @endif
-                                        </div>
+                                $tBadgeStyle = match ($tahsin['predikat'] ?? null) {
+                                    'SAB' => 'background: #ecfdf5; color: #047857;',
+                                    'BSH' => 'background: #eff6ff; color: #1d4ed8;',
+                                    'SB' => 'background: #ecfeff; color: #0e7490;',
+                                    'MB' => 'background: #fffbeb; color: #b45309;',
+                                    default => 'background: #f1f5f9; color: #64748b;',
+                                };
+                                $fBadgeStyle = match ($tahfizh['predikat'] ?? null) {
+                                    'SAB' => 'background: #ecfdf5; color: #047857;',
+                                    'BSH' => 'background: #eff6ff; color: #1d4ed8;',
+                                    'SB' => 'background: #ecfeff; color: #0e7490;',
+                                    'MB' => 'background: #fffbeb; color: #b45309;',
+                                    default => 'background: #f1f5f9; color: #64748b;',
+                                };
 
-                                        <div class="d-flex align-items-center" style="gap: 0.35rem;">
-                                            <span class="wk-badge-status" style="{{ $predBadgeStyle }} font-size: 0.7rem; padding: 0.18rem 0.55rem;">
-                                                Nilai: <strong>{{ $nilaiDisplay }}</strong>
-                                                @if ($predCode)
-                                                    &bull; {{ $predCode }} ({{ $predLabel }})
-                                                @endif
-                                            </span>
-                                        </div>
-                                    </div>
+                                $tInitialKeunggulan = \App\Models\Admin\T2q\RaporT2q::parseAspectList((string) old("tahsin.{$t2qId}.keunggulan", $tahsin['keunggulan'] ?? ''), $komentarOptions);
+                                $tInitialPeningkatan = \App\Models\Admin\T2q\RaporT2q::parseAspectList((string) old("tahsin.{$t2qId}.peningkatan", $tahsin['peningkatan'] ?? ''), $komentarOptions);
+                                $fInitialKeunggulan = \App\Models\Admin\T2q\RaporT2q::parseAspectList((string) old("tahfizh.{$t2qId}.keunggulan", $tahfizh['keunggulan'] ?? ''), $komentarOptions);
+                                $fInitialPeningkatan = \App\Models\Admin\T2q\RaporT2q::parseAspectList((string) old("tahfizh.{$t2qId}.peningkatan", $tahfizh['peningkatan'] ?? ''), $komentarOptions);
+                                $totalKeunggulanSelected = count($tInitialKeunggulan) + count($fInitialKeunggulan);
+                                $totalPeningkatanSelected = count($tInitialPeningkatan) + count($fInitialPeningkatan);
+                                $isSavedRecord = $row['saved'] instanceof \App\Models\Admin\T2q\RaporT2q;
+                            @endphp
 
-                                    <div class="t2q-materi-box">
+                            <div class="t2q-student-item js-t2q-student-item"
+                                data-rapor-card="{{ $t2qId }}"
+                                data-row-index="{{ $idx }}"
+                                data-search-text="{{ $searchBlob }}">
+                                <!-- BARIS RINGKAS (1 BARIS PER SISWA) -->
+                                <div class="t2q-row-summary js-t2q-row-summary">
+                                    <div class="t2q-row-num">{{ $idx + 1 }}.</div>
+
+                                    <div class="t2q-student-cell">
+                                        @if ($siswa?->avatar_url)
+                                            <img src="{{ $siswa->avatar_url }}" alt="{{ $namaSiswa }}" class="t2q-student-avatar">
+                                        @else
+                                            <div class="t2q-student-initials">
+                                                {{ $siswa?->inisial_nama ?? mb_strtoupper(mb_substr($namaSiswa, 0, 1)) }}
+                                            </div>
+                                        @endif
                                         <div style="min-width: 0;">
-                                            <div class="small text-muted" style="font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.04em;">
-                                                Materi Terakhir
+                                            <div class="font-weight-bold text-dark text-truncate" style="font-size: 0.84rem; line-height: 1.25;">
+                                                {{ $namaSiswa }}
                                             </div>
-                                            <div class="font-weight-bold text-dark text-truncate" style="font-size: 0.82rem;">
-                                                {{ $hasData && filled($d['materi'] ?? null) ? $d['materi'] : 'Belum ada setoran Yaumiyah' }}
+                                            <div class="text-muted text-truncate" style="font-size: 0.69rem;">
+                                                NIS {{ $nisSiswa }} &bull; Tingkat {{ $anggota->tingkat }}
                                             </div>
                                         </div>
-                                        @if (! empty($d['tanggal_formatted']))
-                                            <span class="badge badge-light border text-muted text-nowrap" style="font-size: 0.67rem;">
-                                                {{ $d['tanggal_formatted'] }}
+                                    </div>
+
+                                    <!-- Ringkasan Tahsin -->
+                                    <div class="t2q-cell-block">
+                                        <span class="t2q-mobile-label">Tahsin Terakhir</span>
+                                        <div class="d-flex align-items-center" style="gap: 0.4rem; min-width: 0;">
+                                            @if ($tahsin['has_data'] ?? false)
+                                                <span class="t2q-mini-score" style="{{ $tBadgeStyle }}">
+                                                    {{ $tahsin['nilai'] !== null ? number_format((float) $tahsin['nilai'], 0) : '-' }}
+                                                    @if ($tahsin['predikat'])
+                                                        <span>&bull; {{ $tahsin['predikat'] }}</span>
+                                                    @endif
+                                                </span>
+                                                <span class="font-weight-semibold text-dark text-truncate" style="font-size: 0.76rem;" title="{{ $tahsin['materi'] }}">
+                                                    {{ $tahsin['materi'] ?: '-' }}
+                                                </span>
+                                            @else
+                                                <span class="text-muted small" style="font-size: 0.72rem;">Belum ada setoran</span>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    <!-- Ringkasan Tahfidz -->
+                                    <div class="t2q-cell-block">
+                                        <span class="t2q-mobile-label">Tahfidz Terakhir</span>
+                                        <div class="d-flex align-items-center" style="gap: 0.4rem; min-width: 0;">
+                                            @if ($tahfizh['has_data'] ?? false)
+                                                <span class="t2q-mini-score" style="{{ $fBadgeStyle }}">
+                                                    {{ $tahfizh['nilai'] !== null ? number_format((float) $tahfizh['nilai'], 0) : '-' }}
+                                                    @if ($tahfizh['predikat'])
+                                                        <span>&bull; {{ $tahfizh['predikat'] }}</span>
+                                                    @endif
+                                                </span>
+                                                <span class="font-weight-semibold text-dark text-truncate" style="font-size: 0.76rem;" title="{{ $tahfizh['materi'] }}">
+                                                    {{ $tahfizh['materi'] ?: '-' }}
+                                                </span>
+                                            @else
+                                                <span class="text-muted small" style="font-size: 0.72rem;">Belum ada setoran</span>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    <!-- Ringkasan Poin & Status -->
+                                    <div class="t2q-cell-block">
+                                        <span class="t2q-mobile-label">Poin &amp; Status</span>
+                                        <div class="t2q-summary-tags">
+                                            <span class="t2q-summary-pill js-t2q-row-k-pill {{ $totalKeunggulanSelected > 0 ? 'has-val' : '' }}">
+                                                <span class="js-t2q-row-k-count">{{ $totalKeunggulanSelected }}</span> kelebihan
                                             </span>
-                                        @endif
-                                    </div>
-
-                                    <div class="row mb-2">
-                                        <div class="col-md-6 mb-2 mb-md-0">
-                                            <label class="small font-weight-bold text-slate-700 mb-1 d-block" style="font-size: 0.72rem;">
-                                                Terutama dalam <span class="text-muted font-weight-normal">(kelebihan)</span>
-                                            </label>
-                                            <div class="t2q-ms js-t2q-ms"
-                                                data-field-role="keunggulan"
-                                                data-placeholder="{{ $panel['placeholderK'] }}"
-                                                data-selected="{{ json_encode($kItems) }}"
-                                                data-options="{{ json_encode($kOptions) }}">
-                                                <input type="hidden"
-                                                    name="{{ $ch }}[{{ $t2qId }}][keunggulan]"
-                                                    value="{{ $kVal }}"
-                                                    class="js-t2q-ms-input js-t2q-keunggulan"
-                                                    @disabled($isLocked)>
-
-                                                <button type="button"
-                                                    class="t2q-ms-trigger js-t2q-ms-trigger {{ $isLocked ? 'is-disabled' : '' }}"
-                                                    aria-expanded="false"
-                                                    @disabled($isLocked)>
-                                                    <span class="t2q-ms-tags js-t2q-ms-tags d-flex flex-wrap align-items-center" style="gap: 0.25rem;"></span>
-                                                    <i class="fa fa-chevron-down t2q-ms-caret"></i>
-                                                </button>
-
-                                                <div class="t2q-ms-menu js-t2q-ms-menu">
-                                                    <div class="t2q-ms-search-wrap">
-                                                        <i class="fa fa-search"></i>
-                                                        <input type="text"
-                                                            class="t2q-ms-search js-t2q-ms-search"
-                                                            placeholder="Cari atau ketik poin baru...">
-                                                    </div>
-                                                    <div class="t2q-ms-list js-t2q-ms-list"></div>
-                                                    <div class="t2q-ms-footer">
-                                                        <span class="text-muted js-t2q-ms-count">0 dipilih</span>
-                                                        <div class="d-flex align-items-center" style="gap: 0.5rem;">
-                                                            <button type="button" class="btn btn-link btn-sm p-0 text-danger font-weight-bold js-t2q-ms-clear" style="font-size: 0.68rem;">Kosongkan</button>
-                                                            <button type="button" class="btn btn-link btn-sm p-0 text-primary font-weight-bold js-t2q-ms-done" style="font-size: 0.68rem;">Selesai</button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <label class="small font-weight-bold text-slate-700 mb-1 d-block" style="font-size: 0.72rem;">
-                                                Perlu peningkatan dalam <span class="text-muted font-weight-normal">(kekurangan)</span>
-                                            </label>
-                                            <div class="t2q-ms js-t2q-ms"
-                                                data-field-role="peningkatan"
-                                                data-placeholder="{{ $panel['placeholderP'] }}"
-                                                data-selected="{{ json_encode($pItems) }}"
-                                                data-options="{{ json_encode($pOptions) }}">
-                                                <input type="hidden"
-                                                    name="{{ $ch }}[{{ $t2qId }}][peningkatan]"
-                                                    value="{{ $pVal }}"
-                                                    class="js-t2q-ms-input js-t2q-peningkatan"
-                                                    @disabled($isLocked)>
-
-                                                <button type="button"
-                                                    class="t2q-ms-trigger js-t2q-ms-trigger {{ $isLocked ? 'is-disabled' : '' }}"
-                                                    aria-expanded="false"
-                                                    @disabled($isLocked)>
-                                                    <span class="t2q-ms-tags js-t2q-ms-tags d-flex flex-wrap align-items-center" style="gap: 0.25rem;"></span>
-                                                    <i class="fa fa-chevron-down t2q-ms-caret"></i>
-                                                </button>
-
-                                                <div class="t2q-ms-menu js-t2q-ms-menu">
-                                                    <div class="t2q-ms-search-wrap">
-                                                        <i class="fa fa-search"></i>
-                                                        <input type="text"
-                                                            class="t2q-ms-search js-t2q-ms-search"
-                                                            placeholder="Cari atau ketik poin baru...">
-                                                    </div>
-                                                    <div class="t2q-ms-list js-t2q-ms-list"></div>
-                                                    <div class="t2q-ms-footer">
-                                                        <span class="text-muted js-t2q-ms-count">0 dipilih</span>
-                                                        <div class="d-flex align-items-center" style="gap: 0.5rem;">
-                                                            <button type="button" class="btn btn-link btn-sm p-0 text-danger font-weight-bold js-t2q-ms-clear" style="font-size: 0.68rem;">Kosongkan</button>
-                                                            <button type="button" class="btn btn-link btn-sm p-0 text-primary font-weight-bold js-t2q-ms-done" style="font-size: 0.68rem;">Selesai</button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            <span class="t2q-summary-pill js-t2q-row-p-pill {{ $totalPeningkatanSelected > 0 ? 'has-val' : '' }}">
+                                                <span class="js-t2q-row-p-count">{{ $totalPeningkatanSelected }}</span> peningkatan
+                                            </span>
+                                            @if ($isLocked)
+                                                <span class="t2q-summary-pill" style="background: #dcfce7; color: #166534;">
+                                                    <i class="fa fa-lock mr-1"></i>Final
+                                                </span>
+                                            @elseif ($isSavedRecord)
+                                                <span class="t2q-summary-pill" style="background: #eff6ff; color: #1d4ed8;">Tersimpan</span>
+                                            @endif
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <div class="d-flex align-items-center justify-content-between mb-1">
-                                            <label class="small font-weight-bold text-slate-700 mb-0" style="font-size: 0.72rem;">
-                                                Deskripsi Rapor Final
-                                            </label>
-                                            @if (! $isLocked && $hasData)
-                                                <button type="button" class="btn btn-link btn-sm p-0 text-warning font-weight-bold js-t2q-reset-desc"
-                                                    style="font-size: 0.7rem;">
-                                                    <i class="fa fa-magic mr-1"></i> Susun Otomatis
+                                    <div class="text-right">
+                                        <button type="button" class="t2q-toggle-btn js-t2q-toggle-row" aria-expanded="false">
+                                            <span class="js-t2q-toggle-label">Atur</span>
+                                            <i class="fa fa-chevron-down js-t2q-toggle-icon" style="font-size: 0.62rem;"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- PANEL EDITOR DETAIL (EXPANDABLE IN-PLACE) -->
+                                <div class="t2q-row-drawer js-t2q-row-drawer">
+                                    <div class="t2q-drawer-grid">
+                                        @foreach ([
+                                            ['key' => 'tahsin', 'title' => "TAHSIN AL-QUR'AN", 'icon' => 'fa-book-open', 'accent' => '#ea580c', 'data' => $tahsin],
+                                            ['key' => 'tahfizh', 'title' => "TAHFIDZ AL-QUR'AN", 'icon' => 'fa-quran', 'accent' => '#059669', 'data' => $tahfizh],
+                                        ] as $panel)
+                                            @php
+                                                $ch = $panel['key'];
+                                                $d = $panel['data'];
+                                                $hasData = (bool) ($d['has_data'] ?? false);
+                                                $predCode = $d['predikat'] ?? null;
+                                                $predLabel = $d['predikat_label'] ?? null;
+                                                $predBadgeStyle = match ($predCode) {
+                                                    'SAB' => 'background: #ecfdf5; color: #047857;',
+                                                    'BSH' => 'background: #eff6ff; color: #1d4ed8;',
+                                                    'SB' => 'background: #ecfeff; color: #0e7490;',
+                                                    'MB' => 'background: #fffbeb; color: #b45309;',
+                                                    default => 'background: #f1f5f9; color: #64748b;',
+                                                };
+                                                $kVal = (string) old("{$ch}.{$t2qId}.keunggulan", $d['keunggulan'] ?? '');
+                                                $pVal = (string) old("{$ch}.{$t2qId}.peningkatan", $d['peningkatan'] ?? '');
+                                                $kItems = \App\Models\Admin\T2q\RaporT2q::parseAspectList($kVal, $komentarOptions);
+                                                $pItems = \App\Models\Admin\T2q\RaporT2q::parseAspectList($pVal, $komentarOptions);
+                                                $descVal = old("{$ch}.{$t2qId}.deskripsi", $d['deskripsi'] ?? '');
+                                                $nilaiNum = $d['nilai'] ?? null;
+                                                $nilaiDisplay = $nilaiNum !== null ? number_format((float) $nilaiNum, 0) : '-';
+                                                $aspectFields = [
+                                                    ['role' => 'keunggulan', 'label' => 'Kelebihan', 'val' => $kVal, 'items' => $kItems, 'placeholder' => 'Pilih kelebihan (bisa >1)...'],
+                                                    ['role' => 'peningkatan', 'label' => 'Perlu Ditingkatkan', 'val' => $pVal, 'items' => $pItems, 'placeholder' => 'Pilih kekurangan (bisa >1)...'],
+                                                ];
+                                            @endphp
+
+                                            <div class="t2q-channel-box js-t2q-channel-panel"
+                                                data-mode="{{ $ch }}"
+                                                data-nilai="{{ $nilaiNum !== null ? $nilaiNum : '' }}"
+                                                data-predikat="{{ $predCode ?? '' }}"
+                                                data-materi="{{ $d['materi'] ?? '' }}">
+                                                <div class="t2q-snapshot-bar">
+                                                    <div style="min-width: 0;">
+                                                        <div class="t2q-channel-kicker" style="color: {{ $panel['accent'] }};">
+                                                            <i class="fa {{ $panel['icon'] }}"></i>
+                                                            <span>{{ $panel['title'] }}</span>
+                                                        </div>
+                                                        <div class="t2q-materi-title text-truncate">
+                                                            {{ $hasData && filled($d['materi'] ?? null) ? $d['materi'] : 'Belum ada setoran Yaumiyah' }}
+                                                        </div>
+                                                        <div class="t2q-materi-meta">
+                                                            @if ($hasData)
+                                                                @if (! empty($d['tanggal_formatted']))
+                                                                    Setoran {{ $d['tanggal_formatted'] }}
+                                                                @else
+                                                                    Data tersimpan
+                                                                @endif
+                                                                @if ($ch === 'tahfizh')
+                                                                    &bull; {{ ($d['has_ayat'] ?? false) ? 'Progres ayat' : 'Surah utuh' }}
+                                                                @endif
+                                                            @else
+                                                                Input setoran di Yaumiyah agar tampil otomatis
+                                                            @endif
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="t2q-score-pill" style="{{ $predBadgeStyle }}" title="{{ $predLabel ?? 'Belum ada nilai' }}">
+                                                        <span class="t2q-score-num">{{ $nilaiDisplay }}</span>
+                                                        @if ($predCode)
+                                                            <span class="t2q-score-code">{{ $predCode }}</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+
+                                                <!-- 2 DROPDOWN FIXED-HEIGHT SEJAJAR -->
+                                                <div class="row">
+                                                    @foreach ($aspectFields as $af)
+                                                        <div class="col-md-6 {{ $loop->first ? 'mb-2 mb-md-0' : '' }}">
+                                                            <div class="t2q-field-label">
+                                                                <span>{{ $af['label'] }}</span>
+                                                                <span class="t2q-field-hint">Bisa &gt;1</span>
+                                                            </div>
+                                                            <div class="t2q-ms js-t2q-ms"
+                                                                data-field-role="{{ $af['role'] }}"
+                                                                data-placeholder="{{ $af['placeholder'] }}"
+                                                                data-selected="{{ json_encode($af['items']) }}">
+                                                                <input type="hidden"
+                                                                    name="{{ $ch }}[{{ $t2qId }}][{{ $af['role'] }}]"
+                                                                    value="{{ $af['val'] }}"
+                                                                    class="js-t2q-ms-input js-t2q-{{ $af['role'] }}"
+                                                                    @disabled($isLocked)>
+
+                                                                <button type="button"
+                                                                    class="t2q-ms-trigger js-t2q-ms-trigger {{ $isLocked ? 'is-disabled' : '' }}"
+                                                                    aria-expanded="false"
+                                                                    @disabled($isLocked)>
+                                                                    <span class="t2q-ms-summary js-t2q-ms-summary"></span>
+                                                                    <i class="fa fa-chevron-down t2q-ms-caret"></i>
+                                                                </button>
+
+                                                                <div class="t2q-ms-menu js-t2q-ms-menu">
+                                                                    <div class="t2q-ms-selected-drawer js-t2q-ms-selected-drawer d-none"></div>
+                                                                    <div class="t2q-ms-search-wrap">
+                                                                        <i class="fa fa-search"></i>
+                                                                        <input type="text"
+                                                                            class="t2q-ms-search js-t2q-ms-search"
+                                                                            placeholder="Cari atau ketik poin baru...">
+                                                                    </div>
+                                                                    <div class="t2q-ms-list js-t2q-ms-list"></div>
+                                                                    <div class="t2q-ms-footer">
+                                                                        <span class="text-muted js-t2q-ms-count">0 dipilih</span>
+                                                                        <div class="d-flex align-items-center" style="gap: 0.5rem;">
+                                                                            <button type="button" class="btn btn-link btn-sm p-0 text-danger font-weight-bold js-t2q-ms-clear" style="font-size: 0.67rem;">Kosongkan</button>
+                                                                            <button type="button" class="btn btn-link btn-sm p-0 text-primary font-weight-bold js-t2q-ms-done" style="font-size: 0.67rem;">Selesai</button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+
+                                                <div>
+                                                    <div class="t2q-field-label" style="margin-bottom: 0.22rem;">
+                                                        <span>Teks Deskripsi Rapor</span>
+                                                        @if (! $isLocked && $hasData)
+                                                            <button type="button" class="btn btn-link btn-sm p-0 text-warning font-weight-bold js-t2q-reset-desc"
+                                                                style="font-size: 0.68rem; text-decoration: none;">
+                                                                <i class="fa fa-magic mr-1"></i> Reset otomatis
+                                                            </button>
+                                                        @endif
+                                                    </div>
+                                                    <textarea name="{{ $ch }}[{{ $t2qId }}][deskripsi]"
+                                                        rows="3"
+                                                        class="form-control form-control-sm t2q-desc-textarea js-t2q-deskripsi"
+                                                        placeholder="{{ $hasData ? 'Kalimat deskripsi otomatis tampil di rapor...' : 'Belum ada nilai Yaumiyah pada periode ini.' }}"
+                                                        @disabled($isLocked)>{{ $descVal }}</textarea>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+
+                                    <div class="t2q-drawer-foot">
+                                        <div class="small text-muted" style="font-size: 0.71rem;">
+                                            @if ($midCutoff)
+                                                Cut-off Mid: {{ \Carbon\Carbon::parse($midCutoff)->locale('id')->translatedFormat('d M Y') }}
+                                            @else
+                                                Perubahan tersimpan saat Anda menekan <strong>Simpan Rekap &amp; Deskripsi Rapor</strong>.
+                                            @endif
+                                        </div>
+                                        <div class="d-flex align-items-center" style="gap: 0.4rem;">
+                                            @if ($idx > 0)
+                                                <button type="button" class="t2q-ghost-btn js-t2q-nav-btn" data-nav-step="-1" style="height: 29px; font-size: 0.71rem;">
+                                                    <i class="fa fa-arrow-left"></i> Sebelumnya
+                                                </button>
+                                            @endif
+                                            @if ($idx < $rows->count() - 1)
+                                                <button type="button" class="t2q-ghost-btn js-t2q-nav-btn" data-nav-step="1" style="height: 29px; font-size: 0.71rem;">
+                                                    Berikutnya <i class="fa fa-arrow-right"></i>
                                                 </button>
                                             @endif
                                         </div>
-                                        <textarea name="{{ $ch }}[{{ $t2qId }}][deskripsi]"
-                                            rows="3"
-                                            class="form-control form-control-sm t2q-desc-textarea js-t2q-deskripsi"
-                                            placeholder="{{ $hasData ? 'Kalimat deskripsi otomatis...' : 'Belum ada nilai Yaumiyah pada periode ini.' }}"
-                                            @disabled($isLocked)>{{ $descVal }}</textarea>
                                     </div>
                                 </div>
-                            @endforeach
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <div class="t2q-save-bar">
+                        <div class="d-flex flex-wrap align-items-center" style="gap: 0.55rem;">
+                            <span class="small text-muted">
+                                Menampilkan <strong>{{ $rows->count() }}</strong> siswa SD
+                            </span>
+                            <span id="t2qDirtyBadge" class="t2q-dirty-badge">
+                                <i class="fa fa-circle" style="font-size: 0.45rem;"></i> Perubahan belum disimpan
+                            </span>
                         </div>
-                    </div>
-                @endforeach
 
-                <div class="t2q-save-bar">
-                    <div class="small text-muted">
-                        <i class="fa fa-info-circle text-warning mr-1"></i>
-                        Menampilkan <strong>{{ $rows->count() }}</strong> siswa SD &bull; Pilih lebih dari 1 kelebihan/kekurangan via dropdown ber-pencarian.
+                        @if ($stats['unlocked_count'] > 0)
+                            <button type="submit" class="btn text-white font-weight-bold px-4 shadow-sm"
+                                style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 10px; font-size: 0.82rem;">
+                                <i class="fa fa-save mr-1"></i> Simpan Rekap &amp; Deskripsi Rapor
+                            </button>
+                        @else
+                            <span class="badge badge-success px-3 py-2 font-weight-bold" style="border-radius: 10px; font-size: 0.78rem;">
+                                <i class="fa fa-lock mr-1"></i> Seluruh Siswa Terkunci (Final)
+                            </span>
+                        @endif
                     </div>
-
-                    @if ($stats['unlocked_count'] > 0)
-                        <button type="submit" class="btn text-white font-weight-bold px-4 shadow-sm"
-                            style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 10px;">
-                            <i class="fa fa-save mr-1"></i> Simpan Rekap &amp; Deskripsi Rapor
-                        </button>
-                    @else
-                        <span class="badge badge-success px-3 py-2 font-weight-bold" style="border-radius: 10px; font-size: 0.78rem;">
-                            <i class="fa fa-lock mr-1"></i> Seluruh Siswa Terkunci (Final)
-                        </span>
-                    @endif
-                </div>
-            </form>
-        @endif
+                </form>
+            @endif
+        </div>
     </div>
 @endsection
 
 @push('js')
     <script>
         (function () {
+            const BASE_KOMENTAR_OPTIONS = @json($komentarOptions);
             const searchInput = document.getElementById('t2qRaporSearch');
-            const cards = document.querySelectorAll('[data-rapor-card]');
+            const searchEmpty = document.getElementById('t2qSearchEmpty');
+            const studentItems = Array.from(document.querySelectorAll('.js-t2q-student-item'));
+            const toggleAllBtn = document.getElementById('t2qToggleAllBtn');
+            const dirtyBadge = document.getElementById('t2qDirtyBadge');
+
+            function markDirty() {
+                if (dirtyBadge) {
+                    dirtyBadge.classList.add('is-visible');
+                }
+            }
+
+            function autoSizeTextarea(textarea) {
+                if (!textarea) return;
+                textarea.style.height = 'auto';
+                const targetHeight = Math.min(200, Math.max(76, textarea.scrollHeight + 2));
+                textarea.style.height = targetHeight + 'px';
+            }
+
+            function setItemExpanded(item, expand, scrollIntoView) {
+                if (!item) return;
+                item.classList.toggle('is-expanded', expand);
+                const toggleBtn = item.querySelector('.js-t2q-toggle-row');
+                const toggleLabel = item.querySelector('.js-t2q-toggle-label');
+                const toggleIcon = item.querySelector('.js-t2q-toggle-icon');
+
+                if (toggleBtn) toggleBtn.setAttribute('aria-expanded', expand ? 'true' : 'false');
+                if (toggleLabel) toggleLabel.textContent = expand ? 'Tutup' : 'Atur';
+                if (toggleIcon) {
+                    toggleIcon.classList.toggle('fa-chevron-down', !expand);
+                    toggleIcon.classList.toggle('fa-chevron-up', expand);
+                }
+
+                if (expand) {
+                    item.querySelectorAll('.js-t2q-deskripsi').forEach(autoSizeTextarea);
+                    if (scrollIntoView) {
+                        setTimeout(function () {
+                            item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        }, 30);
+                    }
+                }
+            }
+
+            function syncToggleAllButtonState() {
+                if (!toggleAllBtn || studentItems.length === 0) return;
+                const allOpen = studentItems.every(function (item) {
+                    return item.classList.contains('is-expanded');
+                });
+                const span = toggleAllBtn.querySelector('span');
+                const icon = toggleAllBtn.querySelector('i');
+                if (span) span.textContent = allOpen ? 'Tutup Semua' : 'Buka Semua';
+                if (icon) {
+                    icon.classList.toggle('fa-expand-alt', !allOpen);
+                    icon.classList.toggle('fa-compress-alt', allOpen);
+                }
+            }
+
+            studentItems.forEach(function (item) {
+                const summary = item.querySelector('.js-t2q-row-summary');
+                if (summary) {
+                    summary.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        const nextState = !item.classList.contains('is-expanded');
+                        closeAllDropdowns(null);
+                        setItemExpanded(item, nextState, false);
+                        syncToggleAllButtonState();
+                    });
+                }
+
+                item.querySelectorAll('.js-t2q-nav-btn').forEach(function (navBtn) {
+                    navBtn.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        const step = parseInt(this.getAttribute('data-nav-step') || '0', 10);
+                        const visibleItems = studentItems.filter(function (el) {
+                            return el.style.display !== 'none';
+                        });
+                        const curIdx = visibleItems.indexOf(item);
+                        const target = visibleItems[curIdx + step];
+                        if (!target) return;
+                        closeAllDropdowns(null);
+                        setItemExpanded(item, false, false);
+                        setItemExpanded(target, true, true);
+                        syncToggleAllButtonState();
+                    });
+                });
+            });
+
+            if (toggleAllBtn) {
+                toggleAllBtn.addEventListener('click', function () {
+                    const anyClosed = studentItems.some(function (item) {
+                        return !item.classList.contains('is-expanded');
+                    });
+                    closeAllDropdowns(null);
+                    studentItems.forEach(function (item) {
+                        setItemExpanded(item, anyClosed, false);
+                    });
+                    syncToggleAllButtonState();
+                });
+            }
 
             if (searchInput) {
                 searchInput.addEventListener('input', function () {
                     const q = String(this.value || '').trim().toLowerCase();
-                    cards.forEach(function (card) {
+                    let visibleCount = 0;
+                    studentItems.forEach(function (card) {
                         const haystack = String(card.getAttribute('data-search-text') || '');
-                        card.style.display = (q === '' || haystack.includes(q)) ? '' : 'none';
+                        const match = q === '' || haystack.includes(q);
+                        card.style.display = match ? '' : 'none';
+                        if (match) visibleCount++;
                     });
+                    if (searchEmpty) {
+                        searchEmpty.classList.toggle('d-none', visibleCount > 0 || studentItems.length === 0);
+                    }
                 });
             }
 
@@ -1018,8 +1832,21 @@
 
                 if (clean.length === 0) return '';
                 if (clean.length === 1) return clean[0];
-                if (clean.length === 2) return clean[0] + ' dan ' + clean[1];
-                return clean.slice(0, -1).join(', ') + ', dan ' + clean[clean.length - 1];
+
+                const hasComma = clean.some(function (item) { return item.includes(','); });
+                const hasDan = clean.some(function (item) { return /\bdan\b/i.test(item); });
+
+                if (clean.length === 2) {
+                    const glue = (hasComma || hasDan) ? ', serta ' : ' dan ';
+                    return clean[0] + glue + clean[1];
+                }
+
+                const head = clean.slice(0, -1);
+                const tail = clean[clean.length - 1];
+                if (hasComma) {
+                    return head.join('; ') + '; serta ' + tail;
+                }
+                return head.join(', ') + (hasDan ? ', serta ' : ', dan ') + tail;
             }
 
             function composeAutoDeskripsi(panel) {
@@ -1067,7 +1894,31 @@
                 const generated = composeAutoDeskripsi(panel);
                 if (generated !== '') {
                     descEl.value = generated;
+                    autoSizeTextarea(descEl);
                 }
+            }
+
+            function syncRowSummaryBadges(studentItem) {
+                if (!studentItem) return;
+                let kCount = 0;
+                let pCount = 0;
+
+                studentItem.querySelectorAll('.js-t2q-ms[data-field-role="keunggulan"]').forEach(function (ms) {
+                    kCount += Number(ms.getAttribute('data-selected-count') || '0');
+                });
+                studentItem.querySelectorAll('.js-t2q-ms[data-field-role="peningkatan"]').forEach(function (ms) {
+                    pCount += Number(ms.getAttribute('data-selected-count') || '0');
+                });
+
+                const kCountEl = studentItem.querySelector('.js-t2q-row-k-count');
+                const kPillEl = studentItem.querySelector('.js-t2q-row-k-pill');
+                const pCountEl = studentItem.querySelector('.js-t2q-row-p-count');
+                const pPillEl = studentItem.querySelector('.js-t2q-row-p-pill');
+
+                if (kCountEl) kCountEl.textContent = String(kCount);
+                if (kPillEl) kPillEl.classList.toggle('has-val', kCount > 0);
+                if (pCountEl) pCountEl.textContent = String(pCount);
+                if (pPillEl) pPillEl.classList.toggle('has-val', pCount > 0);
             }
 
             function closeAllDropdowns(exceptEl) {
@@ -1076,7 +1927,7 @@
                     ms.classList.remove('is-open', 'is-open-up');
                     const trig = ms.querySelector('.js-t2q-ms-trigger');
                     if (trig) trig.setAttribute('aria-expanded', 'false');
-                    const card = ms.closest('.t2q-rapor-card');
+                    const card = ms.closest('.js-t2q-student-item');
                     if (card) card.classList.remove('has-open-ms');
                 });
             }
@@ -1090,27 +1941,33 @@
             }
 
             document.querySelectorAll('.js-t2q-ms').forEach(function (ms) {
+                const studentItem = ms.closest('.js-t2q-student-item');
                 const panel = ms.closest('.js-t2q-channel-panel');
                 const hiddenInput = ms.querySelector('.js-t2q-ms-input');
                 const trigger = ms.querySelector('.js-t2q-ms-trigger');
-                const tagsContainer = ms.querySelector('.js-t2q-ms-tags');
+                const summaryEl = ms.querySelector('.js-t2q-ms-summary');
+                const selectedDrawerEl = ms.querySelector('.js-t2q-ms-selected-drawer');
                 const searchField = ms.querySelector('.js-t2q-ms-search');
                 const listEl = ms.querySelector('.js-t2q-ms-list');
                 const countEl = ms.querySelector('.js-t2q-ms-count');
                 const clearBtn = ms.querySelector('.js-t2q-ms-clear');
                 const doneBtn = ms.querySelector('.js-t2q-ms-done');
-                const placeholderText = ms.getAttribute('data-placeholder') || 'Pilih satu atau lebih aspek...';
+                const placeholderText = ms.getAttribute('data-placeholder') || 'Pilih atau cari poin...';
                 const isDisabled = !hiddenInput || hiddenInput.disabled;
 
                 let options = [];
                 let selected = [];
                 try {
-                    options = JSON.parse(ms.getAttribute('data-options') || '[]') || [];
                     selected = JSON.parse(ms.getAttribute('data-selected') || '[]') || [];
                 } catch (e) {
-                    options = [];
                     selected = [];
                 }
+                options = Array.isArray(BASE_KOMENTAR_OPTIONS) ? BASE_KOMENTAR_OPTIONS.slice() : [];
+                selected.forEach(function (item) {
+                    if (!options.some(function (o) { return String(o).toLowerCase() === String(item).toLowerCase(); })) {
+                        options.unshift(item);
+                    }
+                });
 
                 function hasSelected(item) {
                     const needle = String(item || '').toLowerCase();
@@ -1124,24 +1981,42 @@
                     if (hiddenInput) {
                         hiddenInput.value = joined;
                     }
+                    ms.setAttribute('data-selected-count', String(selected.length));
                     if (countEl) {
-                        countEl.textContent = selected.length + ' dipilih';
+                        countEl.textContent = selected.length + ' dipilih (' + joined.length + '/240)';
+                    }
+                    if (trigger) {
+                        trigger.title = joined || placeholderText;
                     }
                 }
 
-                function renderTags() {
-                    if (!tagsContainer) return;
-                    if (selected.length === 0) {
-                        tagsContainer.innerHTML = '<span class="t2q-ms-placeholder">' + escapeHtml(placeholderText) + '</span>';
-                        return;
+                function renderSummaryAndSelectedDrawer() {
+                    if (summaryEl) {
+                        if (selected.length === 0) {
+                            summaryEl.innerHTML = '<span class="t2q-ms-placeholder">' + escapeHtml(placeholderText) + '</span>';
+                        } else if (selected.length === 1) {
+                            summaryEl.innerHTML = '<span class="t2q-ms-badge-count">1</span>'
+                                + '<span class="t2q-ms-preview-text">' + escapeHtml(selected[0]) + '</span>';
+                        } else {
+                            summaryEl.innerHTML = '<span class="t2q-ms-badge-count">' + selected.length + ' dipilih</span>'
+                                + '<span class="t2q-ms-preview-text">' + escapeHtml(selected.join(' · ')) + '</span>';
+                        }
                     }
 
-                    tagsContainer.innerHTML = selected.map(function (item) {
-                        const removeBtn = isDisabled
-                            ? ''
-                            : '<span class="t2q-ms-tag-remove" role="button" tabindex="-1" data-remove-val="' + escapeHtml(item) + '" title="Hapus pilihan">&times;</span>';
-                        return '<span class="t2q-ms-tag"><span>' + escapeHtml(item) + '</span>' + removeBtn + '</span>';
-                    }).join('');
+                    if (selectedDrawerEl) {
+                        if (selected.length === 0) {
+                            selectedDrawerEl.classList.add('d-none');
+                            selectedDrawerEl.innerHTML = '';
+                        } else {
+                            selectedDrawerEl.classList.remove('d-none');
+                            selectedDrawerEl.innerHTML = selected.map(function (item) {
+                                const removeBtn = isDisabled
+                                    ? ''
+                                    : '<span class="t2q-ms-tag-remove" role="button" tabindex="-1" data-remove-val="' + escapeHtml(item) + '" title="Hapus pilihan">&times;</span>';
+                                return '<span class="t2q-ms-tag"><span>' + escapeHtml(item) + '</span>' + removeBtn + '</span>';
+                            }).join('');
+                        }
+                    }
                 }
 
                 function renderOptions(filterQuery) {
@@ -1190,7 +2065,7 @@
                         const candidate = formatIndonesianList(selected.concat([cleanVal]));
                         if (candidate.length > 240) {
                             if (window.toastr) {
-                                window.toastr.warning('Panjang maksimal aspek pengamatan tercapai (240 karakter).');
+                                window.toastr.warning('Panjang maksimal gabungan aspek tercapai (240 karakter).');
                             }
                             return;
                         }
@@ -1201,26 +2076,21 @@
                     }
 
                     syncHiddenAndCount();
-                    renderTags();
+                    renderSummaryAndSelectedDrawer();
                     renderOptions(searchField ? searchField.value : '');
+                    syncRowSummaryBadges(studentItem);
                     if (panel) {
                         updatePanelDescription(panel);
                     }
+                    markDirty();
                 }
 
                 syncHiddenAndCount();
-                renderTags();
+                renderSummaryAndSelectedDrawer();
                 renderOptions('');
 
                 if (trigger && !isDisabled) {
                     trigger.addEventListener('click', function (e) {
-                        const removeTarget = e.target.closest('.t2q-ms-tag-remove');
-                        if (removeTarget) {
-                            e.stopPropagation();
-                            toggleItem(removeTarget.getAttribute('data-remove-val') || '');
-                            return;
-                        }
-
                         e.stopPropagation();
                         const willOpen = !ms.classList.contains('is-open');
                         closeAllDropdowns(ms);
@@ -1228,10 +2098,9 @@
                         if (willOpen) {
                             const rect = trigger.getBoundingClientRect();
                             const spaceBelow = window.innerHeight - rect.bottom;
-                            ms.classList.toggle('is-open-up', spaceBelow < 270 && rect.top > spaceBelow);
+                            ms.classList.toggle('is-open-up', spaceBelow < 290 && rect.top > spaceBelow);
                             ms.classList.add('is-open');
-                            const card = ms.closest('.t2q-rapor-card');
-                            if (card) card.classList.add('has-open-ms');
+                            if (studentItem) studentItem.classList.add('has-open-ms');
                             trigger.setAttribute('aria-expanded', 'true');
                             if (searchField) {
                                 searchField.value = '';
@@ -1242,9 +2111,18 @@
                             }
                         } else {
                             ms.classList.remove('is-open', 'is-open-up');
-                            const card = ms.closest('.t2q-rapor-card');
-                            if (card) card.classList.remove('has-open-ms');
+                            if (studentItem) studentItem.classList.remove('has-open-ms');
                             trigger.setAttribute('aria-expanded', 'false');
+                        }
+                    });
+                }
+
+                if (selectedDrawerEl && !isDisabled) {
+                    selectedDrawerEl.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        const removeTarget = e.target.closest('.t2q-ms-tag-remove');
+                        if (removeTarget) {
+                            toggleItem(removeTarget.getAttribute('data-remove-val') || '');
                         }
                     });
                 }
@@ -1300,11 +2178,13 @@
                         e.stopPropagation();
                         selected = [];
                         syncHiddenAndCount();
-                        renderTags();
+                        renderSummaryAndSelectedDrawer();
                         renderOptions(searchField ? searchField.value : '');
+                        syncRowSummaryBadges(studentItem);
                         if (panel) {
                             updatePanelDescription(panel);
                         }
+                        markDirty();
                     });
                 }
 
@@ -1318,9 +2198,17 @@
 
             document.querySelectorAll('.js-t2q-channel-panel').forEach(function (panel) {
                 const resetBtn = panel.querySelector('.js-t2q-reset-desc');
+                const descEl = panel.querySelector('.js-t2q-deskripsi');
                 if (resetBtn) {
                     resetBtn.addEventListener('click', function () {
                         updatePanelDescription(panel);
+                        markDirty();
+                    });
+                }
+                if (descEl) {
+                    descEl.addEventListener('input', function () {
+                        autoSizeTextarea(this);
+                        markDirty();
                     });
                 }
             });

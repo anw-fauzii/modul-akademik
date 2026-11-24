@@ -11,6 +11,7 @@ use App\Models\Admin\DataMaster\Ekstrakurikuler;
 use App\Models\Admin\DataMaster\Jemputan;
 use App\Models\Admin\DataMaster\Karyawan;
 use App\Models\Admin\DataMaster\Kelas;
+use App\Models\Admin\DataMaster\KomentarT2q;
 use App\Models\Admin\DataMaster\Sekolah;
 use App\Models\Admin\DataMaster\Siswa;
 use App\Models\Admin\DataMaster\TahunAjaran;
@@ -70,6 +71,7 @@ class AppServiceProvider extends ServiceProvider
         Jemputan::class => AdminOnlyPolicy::class,
         Karyawan::class => AdminOnlyPolicy::class,
         Kelas::class => KelasPolicy::class,
+        KomentarT2q::class => AdminOnlyPolicy::class,
         Sekolah::class => AdminOnlyPolicy::class,
         Siswa::class => AdminOnlyPolicy::class,
         TahunAjaran::class => AdminOnlyPolicy::class,

@@ -587,12 +587,6 @@
             </div>
 
             <div class="page-title-actions d-flex flex-wrap align-items-center" style="gap: 0.65rem;">
-                @if ($isGuruT2qScope)
-                    <a href="{{ route('guru-t2q.dashboard') }}" class="filter-btn filter-btn-secondary" style="height: 2.2rem; min-height: 2.2rem;">
-                        <i class="fa fa-arrow-left text-warning"></i>
-                        <span>Dashboard</span>
-                    </a>
-                @endif
                 <div class="t2q-view-switch" role="navigation" aria-label="Pilih program matriks">
                     <a href="{{ route($tahsinMatriksRoute, $sharedQuery) }}"
                         class="t2q-view-pill {{ $isTahsin ? 'is-active' : '' }}">
