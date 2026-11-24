@@ -7,6 +7,7 @@ use App\Models\Admin\DataPelengkap\JenjangPendidikan;
 use App\Models\Admin\DataPelengkap\Pekerjaan;
 use App\Models\Admin\DataPelengkap\Penghasilan;
 use App\Models\Admin\DataPelengkap\Transportasi;
+use App\Models\Admin\Prestasi\PrestasiSiswa;
 use App\Models\Concerns\HasSqidRouteKey;
 use App\Models\User;
 use Database\Factories\Admin\DataMaster\SiswaFactory;
@@ -19,6 +20,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Facades\Storage;
@@ -217,6 +219,9 @@ class Siswa extends Model
         'pekerjaanWali:id,nama_pekerjaan',
         'penghasilanWali:id,nama_penghasilan',
         'berkebutuhanKhususWali:id,nama_berkebutuhan_khusus',
+        'prestasi:id,akademik_master_tahun_ajaran_id,nama_prestasi,kategori,tingkat,peringkat,penyelenggara,tanggal,keterangan,foto',
+        'prestasi.tahunAjaran:id,nama_tahun_ajaran,semester,is_active',
+        'prestasi.siswa:nis,akademik_master_kelas_id,nama_lengkap,avatar',
     ];
 
     /**
@@ -526,6 +531,24 @@ class Siswa extends Model
     public function anggotaKelas(): HasMany
     {
         return $this->hasMany(AnggotaKelas::class, 'siswa_nis', 'nis');
+    }
+
+    /**
+     * Relasi ke riwayat prestasi akademik maupun non-akademik siswa via tabel pivot.
+     */
+    public function prestasi(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            PrestasiSiswa::class,
+            'akademik_prestasi_siswa_anggota',
+            'siswa_nis',
+            'prestasi_siswa_id',
+            'nis',
+            'id'
+        )
+            ->orderByDesc('tanggal')
+            ->orderByDesc('id')
+            ->withTimestamps();
     }
 
     /**

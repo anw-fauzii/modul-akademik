@@ -434,6 +434,8 @@
         $backLabel = $backLabel ?? 'Kembali ke Daftar';
         $anggotaKelas = $anggotaKelas ?? null;
         $displayKelas = $anggotaKelas?->kelas ?? $siswa->kelas;
+        $prestasiList = $prestasiList
+            ?? ($siswa->relationLoaded('prestasi') ? $siswa->getRelation('prestasi') : collect());
 
         $keluargaGroups = [
             'ayah' => [
@@ -555,6 +557,11 @@
                                     <i class="fa fa-tag text-warning"></i> {{ $anggotaKelas->pendaftaran }}
                                 </span>
                             @endif
+                            @if ($prestasiList->isNotEmpty())
+                                <span class="siswa-chip">
+                                    <i class="fa fa-trophy text-warning"></i> {{ $prestasiList->count() }} Prestasi
+                                </span>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -613,6 +620,15 @@
                     <button type="button" class="siswa-tab-btn" role="tab"
                         aria-selected="false" aria-controls="panel-keluarga" data-siswa-tab="keluarga">
                         <i class="fa fa-users"></i> Orang Tua &amp; Wali
+                    </button>
+                    <button type="button" class="siswa-tab-btn" role="tab"
+                        aria-selected="false" aria-controls="panel-prestasi" data-siswa-tab="prestasi">
+                        <i class="fa fa-trophy"></i> Prestasi Siswa
+                        @if ($prestasiList->isNotEmpty())
+                            <span class="badge badge-warning text-dark ml-1" style="border-radius: 999px; font-size: 0.7rem;">
+                                {{ $prestasiList->count() }}
+                            </span>
+                        @endif
                     </button>
                 </div>
 
@@ -932,6 +948,131 @@
                             </div>
                         @endforeach
                     </div>
+                </section>
+
+                <!-- TAB 4: PRESTASI SISWA -->
+                <section id="panel-prestasi" class="siswa-tab-panel" role="tabpanel" data-siswa-panel="prestasi">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between mb-3" style="gap: 0.75rem;">
+                        <div>
+                            <div class="font-weight-bold text-slate-800" style="font-size: 0.95rem;">
+                                <i class="fa fa-trophy text-warning mr-1"></i> Riwayat Prestasi Akademik &amp; Non-Akademik
+                            </div>
+                            <div class="small text-muted">
+                                Daftar kejuaraan, penghargaan, serta catatan prestasi individu maupun beregu yang diraih siswa.
+                            </div>
+                        </div>
+
+                        @if ($showAdminLinks && Route::has('prestasi-siswa.create'))
+                            <a href="{{ route('prestasi-siswa.create', ['siswa_nis' => $siswa->sqid]) }}"
+                                class="btn btn-sm text-white font-weight-bold shadow-sm px-3"
+                                style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 8px;">
+                                <i class="fa fa-plus-circle mr-1"></i> Catat Prestasi Siswa Ini
+                            </a>
+                        @endif
+                    </div>
+
+                    @if ($prestasiList->isEmpty())
+                        <div class="text-center py-4 px-3 rounded" style="background: #f8fafc; border: 1.5px dashed #cbd5e1;">
+                            <i class="fa fa-trophy text-muted mb-2" style="font-size: 1.75rem;"></i>
+                            <div class="font-weight-bold text-slate-700 small">Belum Ada Data Prestasi Tercatat</div>
+                            <div class="text-muted" style="font-size: 0.76rem;">
+                                Prestasi akademik maupun non-akademik yang diinput untuk siswa ini akan langsung tampil di sini.
+                            </div>
+                        </div>
+                    @else
+                        <div class="siswa-grid-2">
+                            @foreach ($prestasiList as $itemPrestasi)
+                                @php
+                                    $taPrestasi = $itemPrestasi->relationLoaded('tahunAjaran') ? $itemPrestasi->tahunAjaran : null;
+                                    $anggotaPrestasi = $itemPrestasi->relationLoaded('siswa') ? $itemPrestasi->siswa : collect();
+                                    $rekanTim = $anggotaPrestasi
+                                        ->filter(static fn ($a): bool => (string) $a->nis !== (string) $siswa->nis)
+                                        ->pluck('nama_lengkap')
+                                        ->filter()
+                                        ->values();
+                                    $fotoPrestasiUrl = $itemPrestasi->foto_url;
+                                @endphp
+                                <div class="siswa-subcard d-flex flex-column justify-content-between" style="background: #ffffff;">
+                                    <div>
+                                        <div class="d-flex flex-wrap align-items-center justify-content-between mb-2" style="gap: 0.4rem;">
+                                            <div class="d-flex flex-wrap align-items-center" style="gap: 0.35rem;">
+                                                <span class="badge {{ $itemPrestasi->kategori_badge_class }} px-2 py-1">
+                                                    {{ $itemPrestasi->kategori_label }}
+                                                </span>
+                                                <span class="badge {{ $itemPrestasi->tingkat_badge_class }} px-2 py-1">
+                                                    Tingkat {{ $itemPrestasi->tingkat }}
+                                                </span>
+                                                <span class="badge badge-warning text-dark px-2 py-1 font-weight-bold">
+                                                    <i class="fa fa-award mr-1"></i> {{ $itemPrestasi->peringkat }}
+                                                </span>
+                                                @if ($itemPrestasi->is_beregu)
+                                                    <span class="badge badge-light border px-2 py-1 font-weight-bold">
+                                                        <i class="fa fa-users text-warning mr-1"></i> Beregu ({{ $anggotaPrestasi->count() }} Siswa)
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            <span class="small text-muted font-weight-600">
+                                                {{ $itemPrestasi->tanggal_formatted }}
+                                            </span>
+                                        </div>
+
+                                        <div class="d-flex align-items-start" style="gap: 0.85rem;">
+                                            @if ($fotoPrestasiUrl)
+                                                <a href="{{ $fotoPrestasiUrl }}" target="_blank" rel="noopener" class="flex-shrink-0"
+                                                    title="Buka foto dokumentasi">
+                                                    <img src="{{ $fotoPrestasiUrl }}" alt="{{ $itemPrestasi->nama_prestasi }}"
+                                                        style="width: 64px; height: 64px; border-radius: 10px; object-fit: cover; border: 1px solid #e2e8f0;">
+                                                </a>
+                                            @endif
+                                            <div style="min-width: 0; flex: 1;">
+                                                <div class="font-weight-bold text-slate-800" style="font-size: 0.94rem;">
+                                                    @if ($showAdminLinks && Route::has('prestasi-siswa.show') && $itemPrestasi->id)
+                                                        <a href="{{ route('prestasi-siswa.show', $itemPrestasi) }}"
+                                                            class="text-slate-800 text-decoration-none">
+                                                            {{ $itemPrestasi->nama_prestasi }}
+                                                        </a>
+                                                    @else
+                                                        {{ $itemPrestasi->nama_prestasi }}
+                                                    @endif
+                                                </div>
+                                                <div class="small text-muted mt-1">
+                                                    <i class="fa fa-building mr-1"></i> {{ $itemPrestasi->penyelenggara }}
+                                                    @if ($taPrestasi)
+                                                        &bull; TA {{ $taPrestasi->nama_tahun_ajaran }} (Sem {{ strtoupper($taPrestasi->semester) }})
+                                                    @endif
+                                                </div>
+                                                @if ($rekanTim->isNotEmpty())
+                                                    <div class="small text-slate-600 mt-1">
+                                                        <i class="fa fa-user-friends text-warning mr-1"></i>
+                                                        <strong>Rekan Tim:</strong> {{ $rekanTim->implode(', ') }}
+                                                    </div>
+                                                @endif
+                                                @if (filled($itemPrestasi->keterangan))
+                                                    <div class="mt-2 p-2 rounded small"
+                                                        style="background: #f8fafc; border-left: 3px solid #ea580c; color: #475569;">
+                                                        {{ $itemPrestasi->keterangan }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    @if ($showAdminLinks && $itemPrestasi->id)
+                                        <div class="d-flex justify-content-end mt-3 pt-2 border-top" style="gap: 0.45rem;">
+                                            <a href="{{ route('prestasi-siswa.show', $itemPrestasi) }}"
+                                                class="btn btn-sm btn-outline-secondary py-0 px-2" style="border-radius: 6px; font-size: 0.73rem;">
+                                                <i class="fa fa-eye mr-1"></i> Detail
+                                            </a>
+                                            <a href="{{ route('prestasi-siswa.edit', $itemPrestasi) }}"
+                                                class="btn btn-sm btn-outline-primary py-0 px-2" style="border-radius: 6px; font-size: 0.73rem;">
+                                                <i class="fa fa-edit mr-1"></i> Edit
+                                            </a>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
                 </section>
             </div>
         </div>

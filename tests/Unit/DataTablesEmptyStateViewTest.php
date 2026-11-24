@@ -29,6 +29,7 @@ class DataTablesEmptyStateViewTest extends TestCase
     #[TestWith(['admin.dataPelengkap.transportasi.index', 'transportasi', 3])]
     #[TestWith(['admin.dataPelengkap.jenjangPendidikan.index', 'jenjangPendidikan', 3])]
     #[TestWith(['admin.dataPelengkap.berkebutuhanKhusus.index', 'berkebutuhanKhusus', 3])]
+    #[TestWith(['admin.prestasi.prestasiSiswa.index', 'prestasi', 8])]
     public function test_empty_datatable_views_render_without_colspan_rows_in_tbody(
         string $viewName,
         string $variableName,

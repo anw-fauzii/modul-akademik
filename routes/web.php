@@ -31,6 +31,7 @@ use App\Http\Controllers\Admin\Penilaian\KkmController;
 use App\Http\Controllers\Admin\Penilaian\PenilaianTpController;
 use App\Http\Controllers\Admin\Penilaian\RaporController;
 use App\Http\Controllers\Admin\Presensi\PresensiSiswaController;
+use App\Http\Controllers\Admin\Prestasi\PrestasiSiswaController;
 use App\Http\Controllers\Admin\T2q\YaumiyahTahfizhController;
 use App\Http\Controllers\Admin\T2q\YaumiyahTahsinController;
 use App\Http\Controllers\Admin\TujuanPembelajaran\TujuanPembelajaranController;
@@ -410,5 +411,9 @@ Route::middleware(['auth', 'sso.check', 'nocache', 'sqid.decode'])->group(functi
         ->name('t2q.yaumiyah-tahfizh.store');
     Route::delete('/t2q/yaumiyah-tahfizh/{yaumiyah_tahfizh}', [YaumiyahTahfizhController::class, 'destroy'])
         ->name('t2q.yaumiyah-tahfizh.destroy');
+
+    // Prestasi Siswa
+    Route::resource('/prestasi/prestasi-siswa', PrestasiSiswaController::class)
+        ->parameters(['prestasi-siswa' => 'prestasi_siswa']);
 
 });

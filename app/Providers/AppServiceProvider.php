@@ -34,6 +34,7 @@ use App\Models\Admin\Penilaian\PenilaianFinalisasi;
 use App\Models\Admin\Penilaian\RekapMapel;
 use App\Models\Admin\Penilaian\SumatifBab;
 use App\Models\Admin\Presensi\PresensiSiswa;
+use App\Models\Admin\Prestasi\PrestasiSiswa;
 use App\Models\Admin\T2q\RaporT2q;
 use App\Models\Admin\T2q\YaumiyahTahfizh;
 use App\Models\Admin\T2q\YaumiyahTahsin;
@@ -95,6 +96,7 @@ class AppServiceProvider extends ServiceProvider
         PenilaianFinalisasi::class => PenilaianFinalisasiPolicy::class,
         RekapMapel::class => RekapMapelPolicy::class,
         PresensiSiswa::class => PresensiSiswaPolicy::class,
+        PrestasiSiswa::class => AdminOnlyPolicy::class,
         RaporT2q::class => RaporT2qPolicy::class,
         YaumiyahTahfizh::class => YaumiyahT2qPolicy::class,
         YaumiyahTahsin::class => YaumiyahT2qPolicy::class,
