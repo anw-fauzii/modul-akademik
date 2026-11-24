@@ -385,6 +385,8 @@ Route::middleware(['auth', 'sso.check', 'nocache', 'sqid.decode'])->group(functi
         ->name('presensi-siswa.bulk.store');
     Route::delete('/presensi/presensi-siswa/bulk', [PresensiSiswaController::class, 'bulkDestroy'])
         ->name('presensi-siswa.bulk.destroy');
+    Route::post('/presensi/presensi-siswa/sync-fingerspot', [PresensiSiswaController::class, 'syncFingerspot'])
+        ->name('presensi-siswa.sync-fingerspot');
     Route::resource('/presensi/presensi-siswa', PresensiSiswaController::class)
         ->except(['show', 'create', 'store'])
         ->parameters(['presensi-siswa' => 'presensi_siswa']);

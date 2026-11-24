@@ -40,4 +40,17 @@ return [
         'api_key' => env('PEGAWAI_API_KEY'),
     ],
 
+    'fingerspot' => [
+        'base_url' => rtrim((string) env('FINGERSPOT_BASE_URL', 'https://developer.fingerspot.io/api'), '/'),
+        'endpoint_path' => '/'.ltrim((string) env('FINGERSPOT_ENDPOINT_PATH', 'get_attlog'), '/'),
+        'api_token' => env('FINGERSPOT_API_TOKEN'),
+        'cloud_ids' => array_values(array_unique(array_filter(
+            array_map('trim', explode(',', (string) env('FINGERSPOT_CLOUD_IDS', ''))),
+            'strlen'
+        ))),
+        'timeout' => (int) env('FINGERSPOT_TIMEOUT', 30),
+        'retry_times' => (int) env('FINGERSPOT_RETRY_TIMES', 3),
+        'retry_sleep_ms' => (int) env('FINGERSPOT_RETRY_SLEEP_MS', 1000),
+    ],
+
 ];

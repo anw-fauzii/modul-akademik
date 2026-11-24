@@ -58,4 +58,9 @@ class PresensiSiswaPolicy extends BasePolicy
     {
         return $this->create($user, $kelasId);
     }
+
+    public function syncFingerspot(User $user): Response
+    {
+        return Response::deny('Sinkronisasi mesin Fingerspot hanya dapat dijalankan oleh Super Admin.');
+    }
 }

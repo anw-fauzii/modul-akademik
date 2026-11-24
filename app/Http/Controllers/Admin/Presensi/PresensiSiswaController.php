@@ -4,15 +4,18 @@ namespace App\Http\Controllers\Admin\Presensi;
 
 use App\Http\Controllers\Concerns\ManagesPresensiSiswaActions;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Presensi\FingerspotSyncRequest;
 use App\Http\Requests\Admin\Presensi\PresensiSiswaBulkDestroyRequest;
 use App\Http\Requests\Admin\Presensi\PresensiSiswaBulkRequest;
 use App\Http\Requests\Admin\Presensi\PresensiSiswaRequest;
 use App\Models\Admin\Presensi\PresensiSiswa;
+use App\Services\Admin\Presensi\FingerspotSyncService;
 use App\Services\Admin\Presensi\PresensiSiswaService;
 use App\Support\Sqid;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class PresensiSiswaController extends Controller
@@ -21,11 +24,13 @@ class PresensiSiswaController extends Controller
 
     public function __construct(
         private readonly PresensiSiswaService $presensiSiswaService,
+        private readonly ?FingerspotSyncService $fingerspotSyncService = null,
     ) {
         $this->middleware('role:super admin');
         $this->middleware('can:viewAny,'.PresensiSiswa::class)->only(['index', 'rekap', 'tahunan']);
         $this->middleware('can:create,'.PresensiSiswa::class)->only(['bulk', 'bulkStore']);
         $this->middleware('can:bulkDestroy,'.PresensiSiswa::class)->only(['bulkDestroy']);
+        $this->middleware('can:syncFingerspot,'.PresensiSiswa::class)->only(['syncFingerspot']);
         $this->middleware('can:update,presensi_siswa')->only(['edit', 'update']);
         $this->middleware('can:delete,presensi_siswa')->only(['destroy']);
     }
@@ -37,7 +42,10 @@ class PresensiSiswaController extends Controller
     {
         return view(
             'admin.presensi.presensiSiswa.index',
-            $this->presensiSiswaService->getIndexData($this->extractIndexFilters($request))
+            array_merge(
+                $this->presensiSiswaService->getIndexData($this->extractIndexFilters($request)),
+                ['fingerspotStatus' => $this->resolveFingerspotSyncService()->getConfigurationStatus()]
+            )
         );
     }
 
@@ -139,5 +147,63 @@ class PresensiSiswaController extends Controller
             'admin.presensi.presensiSiswa.tahunan',
             $this->presensiSiswaService->getTahunanData($this->extractTahunanFilters($request))
         );
+    }
+
+    /**
+     * Menarik data presensi dari mesin/API Fingerspot sesuai rentang tanggal ke presensi siswa.
+     */
+    public function syncFingerspot(FingerspotSyncRequest $request): RedirectResponse
+    {
+        $validated = $request->validated();
+        $redirectQuery = Sqid::encodeQueryParams($this->extractIndexRedirectQuery($request));
+
+        try {
+            $result = $this->resolveFingerspotSyncService()->syncDateRange(
+                (string) $validated['start_date'],
+                (string) $validated['end_date']
+            );
+        } catch (ValidationException $exception) {
+            return redirect()
+                ->route('presensi-siswa.index', $redirectQuery)
+                ->withErrors($exception->errors());
+        }
+
+        $periodLabel = $result['start_date'] === $result['end_date']
+            ? Carbon::parse($result['start_date'])->translatedFormat('d M Y')
+            : Carbon::parse($result['start_date'])->translatedFormat('d M Y').' s/d '.Carbon::parse($result['end_date'])->translatedFormat('d M Y');
+
+        if ($result['clouds_success'] === 0) {
+            return redirect()
+                ->route('presensi-siswa.index', $redirectQuery)
+                ->with('error', "Gagal menarik log Fingerspot ({$periodLabel}) dari {$result['clouds_total']} mesin. Periksa token/konektivitas API Fingerspot.");
+        }
+
+        $notes = [];
+        if ($result['skipped_existing'] > 0) {
+            $notes[] = "{$result['skipped_existing']} sudah tercatat";
+        }
+        if ($result['skipped_locked'] > 0) {
+            $notes[] = "{$result['skipped_locked']} dilewati (terkunci finalisasi)";
+        }
+        if ($result['unmatched_pins'] !== []) {
+            $notes[] = count($result['unmatched_pins']).' PIN/NIS belum terdaftar di kelas aktif';
+        }
+        if ($result['failed_clouds'] !== []) {
+            $notes[] = count($result['failed_clouds']).' mesin gagal dihubungi';
+        }
+
+        $message = "Sinkronisasi Fingerspot ({$periodLabel}) selesai: {$result['inserted']} presensi baru disimpan ({$result['hadir']} hadir, {$result['terlambat']} terlambat)"
+            .($notes !== [] ? ' — '.implode('; ', $notes).'.' : '.');
+
+        $flashKey = $result['failed_clouds'] !== [] ? 'warning' : 'success';
+
+        return redirect()
+            ->route('presensi-siswa.index', $redirectQuery)
+            ->with($flashKey, $message);
+    }
+
+    private function resolveFingerspotSyncService(): FingerspotSyncService
+    {
+        return $this->fingerspotSyncService ?? app(FingerspotSyncService::class);
     }
 }

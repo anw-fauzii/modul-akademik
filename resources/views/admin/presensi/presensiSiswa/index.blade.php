@@ -236,6 +236,13 @@
                     </div>
                 </div>
                 <div class="page-title-actions d-flex flex-wrap align-items-center" style="gap: 0.5rem;">
+                    @if (! $isWaliKelasScope && Route::has($presensiRoutePrefix.'.sync-fingerspot'))
+                        <button type="button" id="openFingerspotSyncModalBtn"
+                            class="btn btn-outline-dark bg-white shadow-sm font-weight-bold"
+                            style="border-radius: 8px; border-color: #cbd5e1;">
+                            <i class="fa fa-fingerprint text-warning mr-1"></i> Sinkronkan Fingerspot
+                        </button>
+                    @endif
                     <a href="{{ route($presensiRoutePrefix.'.bulk', \App\Support\Sqid::encodeQueryParams(array_filter([
                         'kelas_id' => ($filters['kelas_id'] ?? 0) > 0 ? $filters['kelas_id'] : null,
                         'tanggal' => ($filters['tanggal'] ?? '') !== '' ? $filters['tanggal'] : null,
@@ -249,6 +256,18 @@
         </div>
 
         <!-- JUDUL & INFORMASI KELAS & BULAN -->
+        @if (session('error'))
+            <div class="alert alert-danger shadow-sm border-0 mb-3" style="border-radius: 12px;">
+                <i class="fa fa-exclamation-triangle mr-1"></i> {{ session('error') }}
+            </div>
+        @endif
+
+        @if (session('warning'))
+            <div class="alert alert-warning shadow-sm border-0 mb-3" style="border-radius: 12px;">
+                <i class="fa fa-exclamation-circle mr-1"></i> {{ session('warning') }}
+            </div>
+        @endif
+
         @if (isset($errors) && $errors->any())
             <div class="alert alert-danger shadow-sm border-0 mb-3" style="border-radius: 12px;">
                 <i class="fa fa-lock mr-1"></i> {{ $errors->first() }}
@@ -780,6 +799,114 @@
             </form>
         </div>
     </div>
+
+    @if (! $isWaliKelasScope && Route::has($presensiRoutePrefix.'.sync-fingerspot'))
+        @php
+            $fingerspotCfg = $fingerspotStatus ?? [
+                'is_configured' => false,
+                'has_token' => false,
+                'cloud_count' => 0,
+            ];
+            $todayWib = \Carbon\Carbon::now('Asia/Jakarta')->toDateString();
+            $yesterdayWib = \Carbon\Carbon::now('Asia/Jakarta')->subDay()->toDateString();
+        @endphp
+        <!-- MODAL SINKRONISASI FINGERSPOT ADMIN -->
+        <div id="presensiFingerspotModal" class="presensi-detail-overlay" role="dialog" aria-modal="true"
+            aria-labelledby="presensiFingerspotModalTitle" aria-hidden="true">
+            <div class="presensi-detail-dialog" style="max-width: 480px;">
+                <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-3">
+                    <div>
+                        <h3 id="presensiFingerspotModalTitle" class="text-base font-extrabold text-slate-900 mb-0">
+                            <i class="fa fa-fingerprint text-warning mr-1.5"></i> Sinkronisasi Fingerspot
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-0.5 mb-0">
+                            Tarik log scan masuk dari mesin Fingerspot ke presensi kelas aktif.
+                        </p>
+                    </div>
+                    <button type="button" data-close-fingerspot-modal
+                        class="h-8 w-8 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-700 flex items-center justify-center cursor-pointer"
+                        aria-label="Tutup popup sinkronisasi Fingerspot">
+                        <i class="fa fa-times text-xs"></i>
+                    </button>
+                </div>
+
+                <form id="presensiFingerspotForm" method="POST" action="{{ route($presensiRoutePrefix.'.sync-fingerspot') }}">
+                    @csrf
+                    @foreach ($preservedRedirectFields as $field => $encodedVal)
+                        <input type="hidden" name="{{ $field }}" value="{{ $encodedVal }}">
+                    @endforeach
+
+                    <div class="p-5 space-y-4">
+                        @if ($fingerspotCfg['is_configured'])
+                            <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-xs text-emerald-800 flex items-center justify-between gap-2">
+                                <span>
+                                    <i class="fa fa-check-circle mr-1 text-emerald-600"></i>
+                                    Koneksi siap &bull; <strong>{{ $fingerspotCfg['cloud_count'] }}</strong> mesin Cloud ID terdaftar di <code>.env</code>.
+                                </span>
+                                <span class="badge badge-success">Siap</span>
+                            </div>
+                        @else
+                            <div class="rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-xs text-amber-900 flex items-start gap-2">
+                                <i class="fa fa-exclamation-triangle mt-0.5 shrink-0 text-amber-600"></i>
+                                <span>
+                                    Konfigurasi belum lengkap: pastikan <code>FINGERSPOT_API_TOKEN</code> dan <code>FINGERSPOT_CLOUD_IDS</code> telah diisi pada file <code>.env</code>.
+                                </span>
+                            </div>
+                        @endif
+
+                        <div class="row">
+                            <div class="col-sm-6 mb-2 mb-sm-0">
+                                <label for="fingerspotStartDate" class="filter-label">Tanggal Mulai</label>
+                                <input id="fingerspotStartDate" type="date" name="start_date" value="{{ $todayWib }}"
+                                    class="filter-control" required>
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="fingerspotEndDate" class="filter-label">Tanggal Akhir</label>
+                                <input id="fingerspotEndDate" type="date" name="end_date" value="{{ $todayWib }}"
+                                    class="filter-control" required>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                                Pilih Cepat Rentang Tanggal
+                            </div>
+                            <div class="flex flex-wrap gap-1.5">
+                                <button type="button"
+                                    class="js-fingerspot-date-chip inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 transition cursor-pointer"
+                                    data-start="{{ $todayWib }}" data-end="{{ $todayWib }}">
+                                    Hari Ini
+                                </button>
+                                <button type="button"
+                                    class="js-fingerspot-date-chip inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 transition cursor-pointer"
+                                    data-start="{{ $yesterdayWib }}" data-end="{{ $yesterdayWib }}">
+                                    Kemarin
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-600 space-y-1">
+                            <div><i class="fa fa-clock text-warning mr-1"></i> Hanya scan <strong>pertama</strong> per siswa per hari yang diambil (batas masuk <strong>{{ $batasJamMasuk }}</strong>).</div>
+                            <div><i class="fa fa-shield-alt text-success mr-1"></i> Presensi yang sudah ada atau dikunci finalisasi tidak ditimpa.</div>
+                        </div>
+                    </div>
+
+                    <div class="px-5 py-3.5 border-t border-slate-100 bg-slate-50/70 flex items-center justify-between gap-2">
+                        <button type="button" data-close-fingerspot-modal class="btn btn-sm btn-light border"
+                            style="border-radius: 8px;">
+                            Batal
+                        </button>
+                        <button type="submit" id="fingerspotSubmitBtn"
+                            class="btn btn-sm text-white font-weight-bold shadow-xs"
+                            style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 8px;"
+                            @disabled(! $fingerspotCfg['is_configured'])>
+                            <i class="fa fa-sync mr-1"></i> Mulai Sinkronisasi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
 @endsection
 
 @push('js')
@@ -1091,6 +1218,71 @@
                     closeBulkDeleteModal();
                 }
             });
+
+            @if (! $isWaliKelasScope && Route::has($presensiRoutePrefix.'.sync-fingerspot'))
+                const fingerspotModal = document.getElementById('presensiFingerspotModal');
+                const fingerspotForm = document.getElementById('presensiFingerspotForm');
+                const fingerspotStartInput = document.getElementById('fingerspotStartDate');
+                const fingerspotEndInput = document.getElementById('fingerspotEndDate');
+                const fingerspotSubmitBtn = document.getElementById('fingerspotSubmitBtn');
+                const openFingerspotBtn = document.getElementById('openFingerspotSyncModalBtn');
+
+                function openFingerspotModal() {
+                    if (!fingerspotModal) {
+                        return;
+                    }
+
+                    fingerspotModal.classList.add('is-open');
+                    fingerspotModal.setAttribute('aria-hidden', 'false');
+                    document.body.style.overflow = 'hidden';
+                }
+
+                function closeFingerspotModal() {
+                    if (!fingerspotModal) {
+                        return;
+                    }
+
+                    fingerspotModal.classList.remove('is-open');
+                    fingerspotModal.setAttribute('aria-hidden', 'true');
+                    document.body.style.overflow = '';
+                }
+
+                if (openFingerspotBtn) {
+                    openFingerspotBtn.addEventListener('click', openFingerspotModal);
+                }
+
+                if (fingerspotModal) {
+                    fingerspotModal.addEventListener('click', function (event) {
+                        if (event.target === fingerspotModal || event.target.closest('[data-close-fingerspot-modal]')) {
+                            closeFingerspotModal();
+                            return;
+                        }
+
+                        const chip = event.target.closest('.js-fingerspot-date-chip');
+                        if (chip) {
+                            if (fingerspotStartInput && chip.dataset.start) {
+                                fingerspotStartInput.value = chip.dataset.start;
+                            }
+                            if (fingerspotEndInput && chip.dataset.end) {
+                                fingerspotEndInput.value = chip.dataset.end;
+                            }
+                        }
+                    });
+                }
+
+                if (fingerspotForm && fingerspotSubmitBtn) {
+                    fingerspotForm.addEventListener('submit', function () {
+                        fingerspotSubmitBtn.disabled = true;
+                        fingerspotSubmitBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-1"></i> Menyinkronkan...';
+                    });
+                }
+
+                document.addEventListener('keydown', function (event) {
+                    if (event.key === 'Escape' && fingerspotModal && fingerspotModal.classList.contains('is-open')) {
+                        closeFingerspotModal();
+                    }
+                });
+            @endif
         })();
     </script>
 @endpush
