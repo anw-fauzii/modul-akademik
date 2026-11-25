@@ -120,7 +120,6 @@ class TujuanPembelajaranSheetImport implements SkipsEmptyRows, ToCollection, Wit
             }
 
             $elemen = $this->nullableCollapse($this->pick($row, ['elemen']));
-            $lingkupMateri = $this->nullableCollapse($this->pick($row, ['lingkup_materi', 'materi']));
             $status = $this->parseStatus($this->pick($row, ['status']));
 
             $compositeKey = implode('|', [
@@ -146,7 +145,6 @@ class TujuanPembelajaranSheetImport implements SkipsEmptyRows, ToCollection, Wit
                 'elemen' => $elemen !== null ? mb_substr($elemen, 0, 150) : null,
                 'kode_tp' => $kodeTp,
                 'tujuan_pembelajaran' => mb_substr($tujuanPembelajaran, 0, 2000),
-                'lingkup_materi' => $lingkupMateri !== null ? mb_substr($lingkupMateri, 0, 255) : null,
                 'urutan' => $urutan,
                 'status' => $status,
                 'created_at' => $now,
@@ -217,7 +215,6 @@ class TujuanPembelajaranSheetImport implements SkipsEmptyRows, ToCollection, Wit
                         'fase',
                         'elemen',
                         'tujuan_pembelajaran',
-                        'lingkup_materi',
                         'urutan',
                         'status',
                         'updated_at',

@@ -23,7 +23,6 @@ class TujuanPembelajaranRequest extends FormRequest
         $rawElemen = $this->input('elemen');
         $rawKode = $this->input('kode_tp');
         $rawTp = $this->input('tujuan_pembelajaran');
-        $rawMateri = $this->input('lingkup_materi');
         $rawUrutan = $this->input('urutan');
 
         $tingkatan = $this->normalizeCollapsedText($rawTingkatan);
@@ -50,7 +49,6 @@ class TujuanPembelajaranRequest extends FormRequest
             'elemen' => $this->normalizeNullableCollapsedText($rawElemen),
             'kode_tp' => is_string($rawKode) ? strtoupper(trim($rawKode)) : $rawKode,
             'tujuan_pembelajaran' => is_string($rawTp) ? trim($rawTp) : $rawTp,
-            'lingkup_materi' => $this->normalizeNullableCollapsedText($rawMateri),
             'urutan' => $urutan,
         ];
 
@@ -116,11 +114,6 @@ class TujuanPembelajaranRequest extends FormRequest
                 'string',
                 'max:2000',
             ],
-            'lingkup_materi' => [
-                'nullable',
-                'string',
-                'max:255',
-            ],
             'urutan' => [
                 'required',
                 'integer',
@@ -147,7 +140,6 @@ class TujuanPembelajaranRequest extends FormRequest
             'elemen' => 'Elemen',
             'kode_tp' => 'Kode TP',
             'tujuan_pembelajaran' => 'Tujuan Pembelajaran',
-            'lingkup_materi' => 'Lingkup Materi',
             'urutan' => 'Urutan',
             'status' => 'Status',
         ];
@@ -172,7 +164,6 @@ class TujuanPembelajaranRequest extends FormRequest
             'kode_tp.unique' => 'Kode TP tersebut sudah terdaftar pada semester, mata pelajaran, dan tingkatan yang sama.',
             'tujuan_pembelajaran.required' => 'Rumusan Tujuan Pembelajaran wajib diisi.',
             'tujuan_pembelajaran.max' => 'Tujuan Pembelajaran maksimal 2000 karakter.',
-            'lingkup_materi.max' => 'Lingkup materi maksimal 255 karakter.',
             'urutan.required' => 'Urutan tampil wajib diisi.',
             'urutan.integer' => 'Urutan tampil harus berupa angka.',
             'urutan.min' => 'Urutan tampil minimal 1.',

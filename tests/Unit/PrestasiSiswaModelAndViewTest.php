@@ -108,8 +108,34 @@ class PrestasiSiswaModelAndViewTest extends TestCase
         $siswaSqid = Sqid::encodeFor(Siswa::class, '202601001');
         $taSqid = Sqid::encodeFor(TahunAjaran::class, 7);
 
+        $emptyFilters = $service->normalizeFilters([
+            'tahun_ajaran_id' => 'invalid-sqid',
+            'kategori' => 'invalid',
+            'tingkat' => '   ',
+            'search' => '   ',
+        ]);
+        $this->assertFalse($service->hasActiveFilters($emptyFilters));
+        $this->assertFalse($emptyFilters['has_foto']);
+        $this->assertFalse($emptyFilters['show_all']);
+        $this->assertCount(0, $service->getFiltered($emptyFilters));
+
+        $showAllFilters = $service->normalizeFilters(['show_all' => '1']);
+        $this->assertTrue($showAllFilters['show_all']);
+        $this->assertTrue($service->hasActiveFilters($showAllFilters));
+
+        $hasFotoFilters = $service->normalizeFilters(['has_foto' => '1']);
+        $this->assertTrue($hasFotoFilters['has_foto']);
+        $this->assertTrue($service->hasActiveFilters($hasFotoFilters));
+        $this->assertStringContainsString('foto', strtolower($service->buildIndexQuery($hasFotoFilters)->toSql()));
+
+        $unitFilters = $service->normalizeFilters(['unit' => ' sd ']);
+        $this->assertSame('SD', $unitFilters['unit']);
+        $this->assertTrue($service->hasActiveFilters($unitFilters));
+        $this->assertStringContainsString('jenjang_kelas', strtolower($service->buildIndexQuery($unitFilters)->toSql()));
+
         $filters = $service->normalizeFilters([
             'tahun_ajaran_id' => $taSqid,
+            'unit' => 'tk',
             'kategori' => 'AKADEMIK',
             'tingkat' => 'Provinsi',
             'siswa_nis' => $siswaSqid,
@@ -117,6 +143,7 @@ class PrestasiSiswaModelAndViewTest extends TestCase
         ]);
 
         $this->assertSame('7', $filters['tahun_ajaran_id']);
+        $this->assertSame('TK', $filters['unit']);
         $this->assertSame('akademik', $filters['kategori']);
         $this->assertSame('Provinsi', $filters['tingkat']);
         $this->assertSame('202601001', $filters['siswa_nis']);
@@ -236,17 +263,28 @@ class PrestasiSiswaModelAndViewTest extends TestCase
             ->method('getIndexData')
             ->willReturn([
                 'prestasi' => new Collection([$prestasi]),
-                'statistics' => ['total' => 1, 'akademik' => 1, 'non_akademik' => 0, 'beregu' => 0, 'dengan_foto' => 0],
+                'statistics' => [
+                    'total' => 1,
+                    'akademik' => 1,
+                    'non_akademik' => 0,
+                    'beregu' => 0,
+                    'dengan_foto' => 0,
+                    'per_unit' => ['PG' => 0, 'TK' => 0, 'SD' => 1],
+                ],
                 'filters' => [
                     'tahun_ajaran_id' => 'all',
+                    'unit' => 'all',
                     'kategori' => 'all',
                     'tingkat' => 'all',
                     'siswa_nis' => '',
                     'search' => '',
+                    'has_foto' => false,
+                    'show_all' => false,
                 ],
                 'hasActiveFilter' => false,
                 'tahunAjaranOptions' => new Collection([$tahunAjaran]),
                 'activeTahunAjaran' => $tahunAjaran,
+                'unitOptions' => ['PG', 'TK', 'SD'],
                 'kategoriOptions' => PrestasiSiswa::KATEGORI_OPTIONS,
                 'tingkatOptions' => PrestasiSiswa::TINGKAT_PRESETS,
             ]);
@@ -397,6 +435,28 @@ class PrestasiSiswaModelAndViewTest extends TestCase
             $indexHtml = view('admin.prestasi.prestasiSiswa.index', [
                 'prestasi' => new Collection([$prestasiBeregu]),
                 'tahunAjaranOptions' => new Collection([$tahunAjaran]),
+                'activeTahunAjaran' => $tahunAjaran,
+                'hasActiveFilter' => true,
+            ])->render();
+
+            $unfilteredHtml = view('admin.prestasi.prestasiSiswa.index', [
+                'prestasi' => new Collection,
+                'tahunAjaranOptions' => new Collection([$tahunAjaran]),
+                'activeTahunAjaran' => $tahunAjaran,
+                'unitOptions' => ['PG', 'TK', 'SD'],
+                'hasActiveFilter' => false,
+                'statistics' => [
+                    'total' => 42,
+                    'akademik' => 25,
+                    'non_akademik' => 17,
+                    'beregu' => 9,
+                    'dengan_foto' => 30,
+                    'per_unit' => [
+                        'PG' => 5,
+                        'TK' => 12,
+                        'SD' => 25,
+                    ],
+                ],
             ])->render();
 
             $createHtml = view('admin.prestasi.prestasiSiswa.create', [
@@ -425,11 +485,23 @@ class PrestasiSiswaModelAndViewTest extends TestCase
         }
 
         $this->assertStringContainsString('prestasi-filter-grid', $indexHtml);
+        $this->assertStringContainsString('id="filter_unit"', $indexHtml);
         $this->assertStringContainsString('Lomba Cerdas Cermat PAI SD', $indexHtml);
         $this->assertStringContainsString('Beregu &bull; 2 Siswa', $indexHtml);
         $this->assertStringContainsString('js-prestasi-members', $indexHtml);
-        $this->assertStringContainsString('data-search="Tim Cerdas Cermat Garuda SD Aisyah Humaira, Zaid Al-Faruq 202601001 202601002"', $indexHtml);
+        $this->assertStringContainsString('data-search="Tim Cerdas Cermat Garuda SD Aisyah Humaira, Zaid Al-Faruq 202601001 202601002 SD"', $indexHtml);
         $this->assertStringContainsString('Tim Cerdas Cermat Garuda SD', $indexHtml);
+
+        $this->assertStringContainsString('Prestasi per Unit:', $unfilteredHtml);
+        $this->assertStringContainsString('prestasi-unit-strip', $unfilteredHtml);
+        $this->assertStringContainsString('unit=SD', $unfilteredHtml);
+        $this->assertStringContainsString('Pilih Filter untuk Menampilkan Daftar Prestasi', $unfilteredHtml);
+        $this->assertStringContainsString('Tampilkan TA Aktif (2026/2027 - Sem 1)', $unfilteredHtml);
+        $this->assertStringContainsString('Tampilkan Semua (42)', $unfilteredHtml);
+        $this->assertStringContainsString('show_all=1', $unfilteredHtml);
+        $this->assertStringContainsString('has_foto=1', $unfilteredHtml);
+        $this->assertStringNotContainsString('id="myTable3"', $unfilteredHtml);
+        $this->assertStringNotContainsString("initDataTables('#myTable3')", $unfilteredHtml);
 
         $this->assertStringContainsString('enctype="multipart/form-data"', $createHtml);
         $this->assertStringContainsString('js-prestasi-siswa-picker', $createHtml);

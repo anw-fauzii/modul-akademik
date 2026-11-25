@@ -462,21 +462,6 @@
                 @enderror
             </div>
 
-            <!-- Lingkup Materi (12/12) -->
-            <div class="tp-field tp-col-12">
-                <label for="lingkup_materi" class="tp-label">
-                    <span class="tp-label-main">Lingkup Materi</span>
-                    <span class="tp-opt-pill">Opsional</span>
-                </label>
-                <input name="lingkup_materi" id="lingkup_materi" type="text" maxlength="255"
-                    placeholder="Contoh: Bilangan Cacah 1-20, Operasi Penjumlahan Sederhana"
-                    class="form-control tp-control @error('lingkup_materi') is-invalid @enderror"
-                    value="{{ $val('lingkup_materi') }}">
-                @error('lingkup_materi')
-                    <div class="tp-error-msg">{{ $message }}</div>
-                @enderror
-            </div>
-
             <!-- Rumusan Tujuan Pembelajaran (12/12) -->
             <div class="tp-field tp-col-12">
                 <label for="tujuan_pembelajaran" class="tp-label">
@@ -487,7 +472,7 @@
                 <textarea name="tujuan_pembelajaran" id="tujuan_pembelajaran" rows="4" maxlength="2000" required
                     placeholder="Contoh: Peserta didik mampu membilang, membaca, dan menuliskan bilangan cacah sampai 20 dengan tepat."
                     class="form-control tp-control @error('tujuan_pembelajaran') is-invalid @enderror">{{ $val('tujuan_pembelajaran') }}</textarea>
-                <div class="tp-hint">Maksimal 2000 karakter. Gunakan kalimat kompetensi + lingkup materi yang jelas dan terukur.</div>
+                <div class="tp-hint">Maksimal 2000 karakter. Gunakan rumusan kompetensi tujuan pembelajaran yang jelas dan terukur.</div>
                 @error('tujuan_pembelajaran')
                     <div class="tp-error-msg">{{ $message }}</div>
                 @enderror

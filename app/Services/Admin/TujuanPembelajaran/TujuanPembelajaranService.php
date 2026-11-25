@@ -47,7 +47,6 @@ class TujuanPembelajaranService
                 'elemen',
                 'kode_tp',
                 'tujuan_pembelajaran',
-                'lingkup_materi',
                 'urutan',
                 'status',
                 'created_at',
@@ -95,7 +94,6 @@ class TujuanPembelajaranService
                     $nested->where($nested->qualifyColumn('kode_tp'), 'like', $likePattern)
                         ->orWhere($nested->qualifyColumn('tujuan_pembelajaran'), 'like', $likePattern)
                         ->orWhere($nested->qualifyColumn('elemen'), 'like', $likePattern)
-                        ->orWhere($nested->qualifyColumn('lingkup_materi'), 'like', $likePattern)
                         ->orWhereHas('mataPelajaran', static function (Builder $mpQuery) use ($likePattern): void {
                             $mpQuery->where('singkatan', 'like', $likePattern)
                                 ->orWhere('nama_mata_pelajaran', 'like', $likePattern);

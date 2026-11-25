@@ -128,7 +128,6 @@ class TujuanPembelajaranModelAndViewTest extends TestCase
             'elemen',
             'kode_tp',
             'tujuan_pembelajaran',
-            'lingkup_materi',
             'urutan',
             'status',
             'created_at',
@@ -157,7 +156,6 @@ class TujuanPembelajaranModelAndViewTest extends TestCase
             'elemen' => '  Bilangan   Cacah ',
             'kode_tp' => '  tp-01 ',
             'tujuan_pembelajaran' => '  Peserta didik mampu membilang bilangan cacah. ',
-            'lingkup_materi' => '   ',
             'urutan' => '',
             'status' => '0',
         ]);
@@ -172,11 +170,11 @@ class TujuanPembelajaranModelAndViewTest extends TestCase
         $this->assertSame('Bilangan Cacah', $request->input('elemen'));
         $this->assertSame('TP-01', $request->input('kode_tp'));
         $this->assertSame('Peserta didik mampu membilang bilangan cacah.', $request->input('tujuan_pembelajaran'));
-        $this->assertNull($request->input('lingkup_materi'));
         $this->assertSame(1, $request->input('urutan'));
         $this->assertFalse($request->input('status'));
 
         $rules = $request->rules();
+        $this->assertArrayNotHasKey('lingkup_materi', $rules);
         $hasScopedUniqueKode = false;
         foreach ($rules['kode_tp'] as $rule) {
             if ($rule instanceof Unique) {
@@ -308,12 +306,28 @@ class TujuanPembelajaranModelAndViewTest extends TestCase
         $tp->setRelation('tahunAjaran', $ta);
         $tp->setRelation('mataPelajaran', $mapel);
 
+        $tpLong = TujuanPembelajaran::make([
+            'akademik_master_tahun_ajaran_id' => 1,
+            'akademik_pelajaran_mata_pelajaran_id' => 2,
+            'tingkatan_kelas' => '1',
+            'fase' => 'A',
+            'elemen' => 'Aljabar',
+            'kode_tp' => 'MTK.1.2',
+            'tujuan_pembelajaran' => 'Peserta didik mampu mengidentifikasi, meniru, dan mengembangkan pola bilangan membesar dan mengecil serta menjelaskan penalarannya secara runtut di hadapan teman kelas.',
+            'lingkup_materi' => 'Pola Bilangan',
+            'urutan' => 2,
+            'status' => true,
+        ]);
+        $tpLong->id = 26;
+        $tpLong->setRelation('tahunAjaran', $ta);
+        $tpLong->setRelation('mataPelajaran', $mapel);
+
         Model::preventLazyLoading(true);
 
         try {
             $indexHtml = view('admin.tujuanPembelajaran.tujuanPembelajaran.index', [
-                'tujuanPembelajaran' => new Collection([$tp]),
-                'summary' => ['total' => 1, 'aktif' => 1, 'nonaktif' => 0, 'per_unit' => ['PG' => 0, 'TK' => 0, 'SD' => 1]],
+                'tujuanPembelajaran' => new Collection([$tp, $tpLong]),
+                'summary' => ['total' => 2, 'aktif' => 2, 'nonaktif' => 0, 'per_unit' => ['PG' => 0, 'TK' => 0, 'SD' => 2]],
                 'filters' => ['tahun_ajaran_id' => '1', 'unit' => '', 'mata_pelajaran_id' => '', 'tingkatan_kelas' => '', 'fase' => '', 'status' => 'all', 'search' => ''],
                 'tahunAjaranOptions' => new Collection([$ta]),
                 'mataPelajaranOptions' => new Collection([$mapel]),
@@ -344,9 +358,16 @@ class TujuanPembelajaranModelAndViewTest extends TestCase
         }
 
         $this->assertStringContainsString('MTK.1.1', $indexHtml);
+        $this->assertStringContainsString('MTK.1.2', $indexHtml);
+        $this->assertStringContainsString('filter-card', $indexHtml);
+        $this->assertStringContainsString('tp-col-mapel', $indexHtml);
+        $this->assertStringContainsString('tp-col-search', $indexHtml);
+        $this->assertStringContainsString('tp-desc-text is-clamped', $indexHtml);
+        $this->assertStringContainsString('js-tp-toggle-desc', $indexHtml);
         $this->assertStringContainsString('Matematika', $indexHtml);
         $this->assertStringContainsString('Bilangan', $indexHtml);
-        $this->assertStringContainsString('Bilangan Cacah 1-20', $indexHtml);
+        $this->assertStringNotContainsString('Lingkup Materi', $indexHtml);
+        $this->assertStringNotContainsString('Bilangan Cacah 1-20', $indexHtml);
         $this->assertStringContainsString(route('tujuan-pembelajaran.toggle-status', sqidFor('tujuan-pembelajaran.toggle-status', 25)), $indexHtml);
         $this->assertStringContainsString(route('tujuan-pembelajaran.edit', sqidFor('tujuan-pembelajaran.edit', 25)), $indexHtml);
         $this->assertStringContainsString(route('tujuan-pembelajaran.destroy', sqidFor('tujuan-pembelajaran.destroy', 25)), $indexHtml);
@@ -360,6 +381,7 @@ class TujuanPembelajaranModelAndViewTest extends TestCase
         $this->assertStringContainsString('tp-form-shell', $createHtml);
         $this->assertStringContainsString('tp-grid-12', $createHtml);
         $this->assertStringNotContainsString('col-md-1', $createHtml);
+        $this->assertStringNotContainsString('lingkup_materi', $createHtml);
         $this->assertStringContainsString('name="akademik_master_tahun_ajaran_id"', $createHtml);
         $this->assertStringContainsString('name="akademik_pelajaran_mata_pelajaran_id"', $createHtml);
         $this->assertStringContainsString('name="tingkatan_kelas"', $createHtml);
@@ -370,7 +392,8 @@ class TujuanPembelajaranModelAndViewTest extends TestCase
         $this->assertStringContainsString('tp-form-shell', $editHtml);
         $this->assertStringContainsString('tp-grid-12', $editHtml);
         $this->assertStringNotContainsString('col-md-1', $editHtml);
-        $this->assertStringContainsString('Bilangan Cacah 1-20', $editHtml);
+        $this->assertStringNotContainsString('lingkup_materi', $editHtml);
+        $this->assertStringContainsString('MTK.1.1', $editHtml);
         $this->assertStringContainsString(route('tujuan-pembelajaran.index'), view('layouts.sidebar')->render());
     }
 
@@ -399,7 +422,6 @@ class TujuanPembelajaranModelAndViewTest extends TestCase
             'elemen' => 'Bilangan',
             'kode_tp' => 'MTK.1.1',
             'tujuan_pembelajaran' => 'Peserta didik mampu membilang bilangan cacah sampai 20.',
-            'lingkup_materi' => 'Bilangan Cacah 1-20',
             'urutan' => 1,
             'status' => true,
         ]);
@@ -416,7 +438,8 @@ class TujuanPembelajaranModelAndViewTest extends TestCase
         }
 
         $this->assertSame(TujuanPembelajaranExport::HEADINGS, $export->headings());
-        $this->assertCount(13, $export->headings());
+        $this->assertNotContains('Lingkup Materi', $export->headings());
+        $this->assertCount(12, $export->headings());
         $this->assertSame('Tujuan Pembelajaran', $export->title());
         $this->assertArrayHasKey(1, TujuanPembelajaranExport::headerStyles());
         $this->assertSame([
@@ -430,7 +453,6 @@ class TujuanPembelajaranModelAndViewTest extends TestCase
             'Bilangan',
             'MTK.1.1',
             'Peserta didik mampu membilang bilangan cacah sampai 20.',
-            'Bilangan Cacah 1-20',
             1,
             'Aktif',
         ], $mapped);

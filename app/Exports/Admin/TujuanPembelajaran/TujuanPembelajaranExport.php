@@ -38,7 +38,6 @@ class TujuanPembelajaranExport implements FromQuery, ShouldAutoSize, WithHeading
         'Elemen',
         'Kode TP',
         'Tujuan Pembelajaran',
-        'Lingkup Materi',
         'Urutan',
         'Status',
     ];
@@ -86,7 +85,6 @@ class TujuanPembelajaranExport implements FromQuery, ShouldAutoSize, WithHeading
             (string) ($row->elemen ?? ''),
             (string) $row->kode_tp,
             (string) $row->tujuan_pembelajaran,
-            (string) ($row->lingkup_materi ?? ''),
             (int) $row->urutan,
             $row->status_label,
         ];

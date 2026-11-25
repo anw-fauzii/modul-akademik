@@ -2,8 +2,10 @@
 
 namespace App\Services\Admin\Prestasi;
 
+use App\Models\Admin\DataMaster\Kelas;
 use App\Models\Admin\DataMaster\Siswa;
 use App\Models\Admin\DataMaster\TahunAjaran;
+use App\Models\Admin\Pelajaran\MataPelajaran;
 use App\Models\Admin\Prestasi\PrestasiSiswa;
 use App\Support\Sqid;
 use Illuminate\Database\Eloquent\Builder;
@@ -23,10 +25,13 @@ class PrestasiSiswaService
      * @param  array<string, mixed>  $input
      * @return array{
      *     tahun_ajaran_id: string,
+     *     unit: string,
      *     kategori: string,
      *     tingkat: string,
      *     siswa_nis: string,
-     *     search: string
+     *     search: string,
+     *     has_foto: bool,
+     *     show_all: bool
      * }
      */
     public function normalizeFilters(array $input = []): array
@@ -39,6 +44,15 @@ class PrestasiSiswaService
                 $tahunAjaranId = (string) $decodedTa;
             } elseif (ctype_digit($rawTa) && (int) $rawTa > 0) {
                 $tahunAjaranId = (string) ((int) $rawTa);
+            }
+        }
+
+        $rawUnit = trim((string) ($input['unit'] ?? self::FILTER_ALL));
+        $unit = self::FILTER_ALL;
+        if ($rawUnit !== '' && strcasecmp($rawUnit, self::FILTER_ALL) !== 0) {
+            $normalizedUnit = strtoupper(preg_replace('/\s+/', ' ', $rawUnit) ?? '');
+            if ($normalizedUnit !== '') {
+                $unit = $normalizedUnit;
             }
         }
 
@@ -55,25 +69,40 @@ class PrestasiSiswaService
 
         return [
             'tahun_ajaran_id' => $tahunAjaranId,
+            'unit' => $unit,
             'kategori' => $kategori,
             'tingkat' => $tingkat,
             'siswa_nis' => $siswaNis,
             'search' => $search,
+            'has_foto' => filter_var($input['has_foto'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            'show_all' => filter_var($input['show_all'] ?? false, FILTER_VALIDATE_BOOLEAN),
         ];
     }
 
     /**
-     * Mengecek apakah ada filter non-default yang sedang aktif.
+     * Mengecek apakah ada filter non-default atau opsi tampilkan semua yang sedang aktif.
      *
-     * @param  array<string, string>  $filters
+     * @param  array{
+     *     tahun_ajaran_id?: string,
+     *     unit?: string,
+     *     kategori?: string,
+     *     tingkat?: string,
+     *     siswa_nis?: string,
+     *     search?: string,
+     *     has_foto?: bool,
+     *     show_all?: bool
+     * }  $filters
      */
     public function hasActiveFilters(array $filters): bool
     {
         return ($filters['tahun_ajaran_id'] ?? self::FILTER_ALL) !== self::FILTER_ALL
+            || ($filters['unit'] ?? self::FILTER_ALL) !== self::FILTER_ALL
             || ($filters['kategori'] ?? self::FILTER_ALL) !== self::FILTER_ALL
             || ($filters['tingkat'] ?? self::FILTER_ALL) !== self::FILTER_ALL
             || ($filters['siswa_nis'] ?? '') !== ''
-            || ($filters['search'] ?? '') !== '';
+            || ($filters['search'] ?? '') !== ''
+            || (bool) ($filters['has_foto'] ?? false)
+            || (bool) ($filters['show_all'] ?? false);
     }
 
     /**
@@ -107,6 +136,19 @@ class PrestasiSiswaService
             $query->where('akademik_master_tahun_ajaran_id', (int) $normalized['tahun_ajaran_id']);
         }
 
+        if ($normalized['unit'] !== self::FILTER_ALL) {
+            $unitCode = $normalized['unit'];
+            $unitVariants = array_values(array_unique([
+                $unitCode,
+                strtolower($unitCode),
+                ucfirst(strtolower($unitCode)),
+            ]));
+
+            $query->whereHas('siswa.kelas', static function (Builder $kelasQuery) use ($unitVariants): void {
+                $kelasQuery->whereIn('jenjang_kelas', $unitVariants);
+            });
+        }
+
         if ($normalized['kategori'] !== self::FILTER_ALL) {
             $query->where('kategori', $normalized['kategori']);
         }
@@ -137,20 +179,120 @@ class PrestasiSiswaService
             });
         }
 
+        if (! empty($normalized['has_foto'])) {
+            $query->whereNotNull('foto')
+                ->where('foto', '!=', '');
+        }
+
         return $query;
     }
 
     /**
-     * Mengambil data lengkap halaman indeks Prestasi Siswa beserta statistik dan opsi filter.
+     * Mengambil data prestasi siswa sesuai filter aktif (kosong jika belum ada filter).
+     *
+     * @param  array<string, mixed>  $filters
+     * @return Collection<int, PrestasiSiswa>
+     */
+    public function getFiltered(array $filters = []): Collection
+    {
+        $normalized = $this->normalizeFilters($filters);
+        if (! $this->hasActiveFilters($normalized)) {
+            return new Collection;
+        }
+
+        return $this->buildIndexQuery($normalized)->get();
+    }
+
+    /**
+     * Mengambil statistik ringkas seluruh prestasi serta distribusi per unit (PG, TK, SD) secara agregat ringan.
+     *
+     * @return array{
+     *     total: int,
+     *     akademik: int,
+     *     non_akademik: int,
+     *     beregu: int,
+     *     dengan_foto: int,
+     *     per_unit: array<string, int>
+     * }
+     */
+    public function getStatistics(): array
+    {
+        $anggotaCountsSub = DB::table('akademik_prestasi_siswa_anggota')
+            ->selectRaw('prestasi_siswa_id, COUNT(*) as anggota_count')
+            ->groupBy('prestasi_siswa_id');
+
+        $summary = PrestasiSiswa::query()
+            ->leftJoinSub($anggotaCountsSub, 'anggota_counts', static function ($join): void {
+                $join->on('anggota_counts.prestasi_siswa_id', '=', 'akademik_prestasi_siswa.id');
+            })
+            ->selectRaw("
+                COUNT(*) as total,
+                SUM(CASE WHEN akademik_prestasi_siswa.kategori = ? THEN 1 ELSE 0 END) as akademik,
+                SUM(CASE WHEN akademik_prestasi_siswa.kategori = ? THEN 1 ELSE 0 END) as non_akademik,
+                SUM(CASE WHEN COALESCE(anggota_counts.anggota_count, 0) > 1 THEN 1 ELSE 0 END) as beregu,
+                SUM(CASE WHEN akademik_prestasi_siswa.foto IS NOT NULL AND TRIM(akademik_prestasi_siswa.foto) <> '' THEN 1 ELSE 0 END) as dengan_foto
+            ", [
+                PrestasiSiswa::KATEGORI_AKADEMIK,
+                PrestasiSiswa::KATEGORI_NON_AKADEMIK,
+            ])
+            ->toBase()
+            ->first();
+
+        $unitRows = DB::table('akademik_prestasi_siswa_anggota')
+            ->join('akademik_master_siswa', 'akademik_master_siswa.nis', '=', 'akademik_prestasi_siswa_anggota.siswa_nis')
+            ->leftJoin('akademik_master_kelas', 'akademik_master_kelas.id', '=', 'akademik_master_siswa.akademik_master_kelas_id')
+            ->selectRaw('akademik_master_kelas.jenjang_kelas as jenjang, COUNT(DISTINCT akademik_prestasi_siswa_anggota.prestasi_siswa_id) as total')
+            ->groupBy('akademik_master_kelas.jenjang_kelas')
+            ->get();
+
+        $perUnit = array_fill_keys(MataPelajaran::UNIT_OPTIONS, 0);
+        foreach ($unitRows as $row) {
+            $unitCode = strtoupper(trim((string) ($row->jenjang ?? '')));
+            if ($unitCode === '') {
+                continue;
+            }
+            $perUnit[$unitCode] = ($perUnit[$unitCode] ?? 0) + (int) ($row->total ?? 0);
+        }
+        uksort($perUnit, static fn (string $a, string $b): int => Kelas::compareJenjangOrder($a, $b));
+
+        return [
+            'total' => (int) ($summary->total ?? 0),
+            'akademik' => (int) ($summary->akademik ?? 0),
+            'non_akademik' => (int) ($summary->non_akademik ?? 0),
+            'beregu' => (int) ($summary->beregu ?? 0),
+            'dengan_foto' => (int) ($summary->dengan_foto ?? 0),
+            'per_unit' => $perUnit,
+        ];
+    }
+
+    /**
+     * Mengambil data halaman indeks Prestasi Siswa dengan pola filter-first agar ringan saat data besar.
      *
      * @param  array<string, mixed>  $input
      * @return array{
      *     prestasi: Collection<int, PrestasiSiswa>,
-     *     statistics: array{total: int, akademik: int, non_akademik: int, beregu: int, dengan_foto: int},
-     *     filters: array{tahun_ajaran_id: string, kategori: string, tingkat: string, siswa_nis: string, search: string},
+     *     statistics: array{
+     *         total: int,
+     *         akademik: int,
+     *         non_akademik: int,
+     *         beregu: int,
+     *         dengan_foto: int,
+     *         per_unit: array<string, int>
+     *     },
+     *     filters: array{
+     *         tahun_ajaran_id: string,
+     *         unit: string,
+     *         kategori: string,
+     *         tingkat: string,
+     *         siswa_nis: string,
+     *         search: string,
+     *         has_foto: bool,
+     *         show_all: bool
+     *     },
      *     hasActiveFilter: bool,
      *     tahunAjaranOptions: Collection<int, TahunAjaran>,
      *     activeTahunAjaran: ?TahunAjaran,
+     *     unitOptions: list<string>,
      *     kategoriOptions: array<string, string>,
      *     tingkatOptions: list<string>
      * }
@@ -162,15 +304,18 @@ class PrestasiSiswaService
         $activeTahunAjaran = $tahunAjaranOptions->firstWhere('is_active', true);
 
         $filters = $this->normalizeFilters($input);
-        $prestasi = $this->buildIndexQuery($filters)->get();
+        $hasActiveFilter = $this->hasActiveFilters($filters);
+        $prestasi = $hasActiveFilter ? $this->getFiltered($filters) : new Collection;
+        $statistics = $this->getStatistics();
 
         return [
             'prestasi' => $prestasi,
-            'statistics' => $this->summarizeCollection($prestasi),
+            'statistics' => $statistics,
             'filters' => $filters,
-            'hasActiveFilter' => $this->hasActiveFilters($filters),
+            'hasActiveFilter' => $hasActiveFilter,
             'tahunAjaranOptions' => $tahunAjaranOptions,
             'activeTahunAjaran' => $activeTahunAjaran,
+            'unitOptions' => array_keys($statistics['per_unit']),
             'kategoriOptions' => PrestasiSiswa::KATEGORI_OPTIONS,
             'tingkatOptions' => PrestasiSiswa::TINGKAT_PRESETS,
         ];

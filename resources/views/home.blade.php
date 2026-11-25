@@ -5,443 +5,687 @@
 @endsection
 
 @section('content')
-<style>
-    /* Hero Banner */
-    .dashboard-hero {
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
-        border-radius: 16px;
-        padding: 28px 32px;
-        color: #ffffff;
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.25);
-    }
-    .hero-decor-circle {
-        position: absolute;
-        right: -30px;
-        top: -40px;
-        width: 220px;
-        height: 220px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(234, 88, 12, 0.25) 0%, rgba(234, 88, 12, 0) 70%);
-        pointer-events: none;
-    }
-    .hero-decor-circle-2 {
-        position: absolute;
-        right: 120px;
-        bottom: -60px;
-        width: 160px;
-        height: 160px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(217, 119, 6, 0.2) 0%, rgba(217, 119, 6, 0) 70%);
-        pointer-events: none;
-    }
+    @include('waliKelas.partials._styles')
 
-    /* Modern KPI Cards */
-    .kpi-card {
-        border-radius: 14px;
-        border: 1px solid #e2e8f0;
-        background: #ffffff;
-        padding: 20px 22px;
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
-    }
-    .kpi-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.08);
-        border-color: #cbd5e1;
-    }
-    .kpi-icon-box {
-        width: 50px;
-        height: 50px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 22px;
-        color: #ffffff;
-        flex-shrink: 0;
-    }
+    @pushOnce('css')
+        <style>
+            .adm-dock-bar {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 0.6rem;
+                margin-bottom: 1.05rem;
+            }
 
-    /* Content Cards */
-    .content-card {
-        border-radius: 14px;
-        border: 1px solid #e2e8f0;
-        background: #ffffff;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
-        margin-bottom: 24px;
-        overflow: hidden;
-    }
-    .content-card-header {
-        padding: 16px 20px;
-        border-bottom: 1px solid #f1f5f9;
-        background-color: #ffffff;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
+            @media (min-width: 640px) {
+                .adm-dock-bar {
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                }
+            }
 
-    /* Quick Jump Buttons */
-    .quick-jump-item {
-        display: flex;
-        align-items: center;
-        padding: 14px 16px;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        text-decoration: none !important;
-        color: #1e293b;
-        transition: all 0.2s ease;
-        height: 100%;
-    }
-    .quick-jump-item:hover {
-        background: #ffffff;
-        border-color: #ea580c;
-        color: #ea580c;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(234, 88, 12, 0.12);
-    }
-    .quick-jump-icon {
-        width: 44px;
-        height: 44px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-        margin-right: 14px;
-        flex-shrink: 0;
-        color: #ffffff;
-    }
-</style>
+            @media (min-width: 1180px) {
+                .adm-dock-bar {
+                    grid-template-columns: repeat(6, minmax(0, 1fr));
+                }
+            }
 
-@php
-    $jam = (int) date('H');
-    $salam = $jam < 11 ? 'Selamat Pagi' : ($jam < 15 ? 'Selamat Siang' : ($jam < 18 ? 'Selamat Sore' : 'Selamat Malam'));
-@endphp
+            .adm-dock-tile {
+                display: flex;
+                align-items: center;
+                gap: 0.62rem;
+                padding: 0.66rem 0.78rem;
+                border-radius: 13px;
+                border: 1px solid #e2e8f0;
+                background: #ffffff;
+                text-decoration: none !important;
+                transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+                box-shadow: 0 1px 2px rgba(15, 23, 42, 0.025);
+                min-width: 0;
+            }
 
-<div class="app-main__inner">
-    <!-- HERO WELCOME BANNER -->
-    <div class="dashboard-hero mb-4">
-        <div class="hero-decor-circle"></div>
-        <div class="hero-decor-circle-2"></div>
-        
-        <div class="row align-items-center position-relative" style="z-index: 1;">
-            <div class="col-lg-8 mb-3 mb-lg-0">
-                <div class="d-flex align-items-center mb-2">
-                    <span class="badge text-white px-2 py-1 mr-2 font-weight-bold"
-                        style="background: rgba(234, 88, 12, 0.9); font-size: 11px; border-radius: 6px;">
-                        <i class="pe-7s-study mr-1"></i> MODUL AKADEMIK
-                    </span>
-                    <span class="text-white-50 small">
-                        <i class="fa fa-calendar-alt mr-1"></i> {{ \Carbon\Carbon::now()->isoFormat('dddd, D MMMM Y') }}
-                    </span>
-                </div>
-                <h3 class="font-weight-bold text-white mb-2">
-                    {{ $salam }}, {{ Auth::user()->name }}!
-                </h3>
-                <p class="text-white-50 mb-3" style="max-width: 620px; font-size: 13.5px; line-height: 1.5;">
-                    Selamat datang di Dashboard Sistem Informasi Akademik Yayasan Prima Insani. Kelola data master tahun ajaran dan data pelengkap akademik secara terpusat, cepat, dan terpadu.
-                </p>
+            .adm-dock-tile:hover {
+                transform: translateY(-2px);
+                border-color: #fdba74;
+                box-shadow: 0 10px 20px -8px rgba(15, 23, 42, 0.1);
+            }
 
-                <div class="d-flex flex-wrap align-items-center">
-                    @if ($activeTahunAjaran)
-                        <div class="d-inline-flex align-items-center px-3 py-1.5 rounded mr-2 mb-2"
-                            style="background-color: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.2);">
-                            <i class="fa fa-graduation-cap text-warning mr-2"></i>
-                            <span class="small text-white">
-                                Tahun Ajaran Aktif: <strong>{{ $activeTahunAjaran->nama_tahun_ajaran }}</strong>
-                                <span class="badge badge-success ml-1">Semester {{ strtoupper($activeTahunAjaran->semester) }}</span>
-                            </span>
-                        </div>
-                    @else
-                        <div class="d-inline-flex align-items-center px-3 py-1.5 rounded mr-2 mb-2"
-                            style="background-color: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.3);">
-                            <i class="fa fa-exclamation-circle text-danger mr-2"></i>
-                            <span class="small text-white">
-                                Belum ada Tahun Ajaran aktif. Silakan pilih atau tambahkan tahun ajaran.
-                            </span>
-                        </div>
-                    @endif
-                </div>
-            </div>
+            .adm-dock-icon {
+                width: 34px;
+                height: 34px;
+                border-radius: 10px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.86rem;
+                flex-shrink: 0;
+            }
 
-            <div class="col-lg-4 text-lg-right">
-                <div class="d-flex flex-column flex-sm-row flex-lg-column justify-content-lg-end gap-2">
-                    <a href="{{ route('tahun-ajaran.create') }}" class="btn font-weight-bold text-white shadow mb-2"
-                        style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 8px; padding: 10px 18px;">
-                        <i class="fa fa-plus-circle mr-1"></i> Tambah Tahun Ajaran
-                    </a>
-                    <a href="{{ route('karyawan.index') }}" class="btn btn-outline-light btn-sm font-weight-bold py-2 mb-2"
-                        style="border-radius: 8px;">
-                        <i class="pe-7s-users mr-1"></i> Data Guru & Karyawan
-                    </a>
-                    <a href="{{ route('tahun-ajaran.index') }}" class="btn btn-outline-light btn-sm font-weight-bold py-2"
-                        style="border-radius: 8px;">
-                        <i class="pe-7s-date mr-1"></i> Kelola Tahun Ajaran
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
+            .adm-dock-meta {
+                min-width: 0;
+                flex: 1 1 auto;
+            }
 
-    <!-- KPI STATS SUMMARY ROW -->
-    <div class="row mb-4">
-        <!-- Card 1: Total Tahun Ajaran -->
-        <div class="col-md-6 col-xl-3 mb-3">
-            <div class="kpi-card">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div>
-                        <div class="text-uppercase text-muted font-weight-bold" style="font-size: 11px; letter-spacing: 0.5px;">
-                            Tahun Ajaran
-                        </div>
-                        <h2 class="font-weight-bold mb-0 text-slate-900 mt-1">
-                            {{ $totalTahunAjaran }}
-                        </h2>
-                    </div>
-                    <div class="kpi-icon-box shadow-sm" style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%);">
-                        <i class="pe-7s-date"></i>
-                    </div>
-                </div>
-                <div class="d-flex align-items-center justify-content-between pt-2 border-top" style="border-color: #f1f5f9 !important;">
-                    <span class="small text-muted">
-                        Status Aktif:
-                    </span>
-                    @if ($activeTahunAjaran)
-                        <span class="badge badge-success font-weight-bold">
-                            {{ $activeTahunAjaran->nama_tahun_ajaran }} (Sem {{ $activeTahunAjaran->semester }})
+            .adm-dock-title {
+                font-size: 0.75rem;
+                font-weight: 700;
+                color: #0f172a;
+                line-height: 1.25;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .adm-dock-sub {
+                font-size: 0.66rem;
+                color: #64748b;
+                line-height: 1.25;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                margin-top: 0.1rem;
+            }
+
+            .adm-bento-row {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr);
+                gap: 1rem;
+                align-items: start;
+            }
+
+            @media (min-width: 1024px) {
+                .adm-bento-row {
+                    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+                }
+            }
+
+            .adm-ghost-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.32rem;
+                padding: 0.3rem 0.62rem;
+                border-radius: 8px;
+                border: 1px solid #e2e8f0;
+                background: #f8fafc;
+                color: #334155;
+                font-size: 0.7rem;
+                font-weight: 700;
+                text-decoration: none !important;
+                white-space: nowrap;
+                transition: all 0.15s ease;
+            }
+
+            .adm-ghost-btn:hover {
+                background: #ffffff;
+                border-color: #cbd5e1;
+                color: #0f172a;
+            }
+
+            .adm-accent-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.32rem;
+                padding: 0.32rem 0.68rem;
+                border-radius: 8px;
+                border: 0;
+                background: linear-gradient(135deg, #ea580c 0%, #d97706 100%);
+                color: #ffffff !important;
+                font-size: 0.7rem;
+                font-weight: 700;
+                text-decoration: none !important;
+                white-space: nowrap;
+                box-shadow: 0 2px 6px rgba(234, 88, 12, 0.22);
+            }
+
+            .adm-unit-chip {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.32rem;
+                padding: 0.2rem 0.58rem;
+                border-radius: 999px;
+                border: 1px solid #e2e8f0;
+                background: #f8fafc;
+                color: #334155;
+                font-size: 0.69rem;
+                font-weight: 700;
+                text-decoration: none !important;
+                transition: all 0.14s ease;
+            }
+
+            .adm-unit-chip:hover {
+                border-color: #fdba74;
+                background: #fff7ed;
+                color: #c2410c;
+            }
+
+            .adm-metric-strip {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 0.55rem;
+                padding: 0.85rem 1.05rem;
+                border-bottom: 1px solid #f1f5f9;
+            }
+
+            @media (min-width: 640px) {
+                .adm-metric-strip {
+                    grid-template-columns: repeat(4, minmax(0, 1fr));
+                }
+            }
+
+            .adm-mini-metric {
+                display: block;
+                padding: 0.55rem 0.72rem;
+                border-radius: 10px;
+                border: 1px solid #f1f5f9;
+                background: #f8fafc;
+                text-decoration: none !important;
+                transition: border-color 0.14s ease, background-color 0.14s ease;
+            }
+
+            .adm-mini-metric:hover {
+                border-color: #fdba74;
+                background: #fff7ed;
+            }
+
+            .adm-list-item {
+                padding-bottom: 0.58rem;
+                margin-bottom: 0.58rem;
+                border-bottom: 1px solid #f1f5f9;
+            }
+
+            .adm-list-item:last-child {
+                padding-bottom: 0;
+                margin-bottom: 0;
+                border-bottom: 0;
+            }
+
+            .adm-info-subhead {
+                font-size: 0.68rem;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                color: #64748b;
+                margin-bottom: 0.5rem;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.35rem;
+            }
+
+            .adm-pill-chip {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.25rem;
+                padding: 0.14rem 0.5rem;
+                border-radius: 999px;
+                font-size: 0.66rem;
+                font-weight: 700;
+                white-space: nowrap;
+            }
+        </style>
+    @endPushOnce
+
+    @php
+        $todayDate = $todayDate ?? \Carbon\Carbon::now('Asia/Jakarta');
+        $jam = (int) $todayDate->format('H');
+        $salam = $jam < 11 ? 'Selamat Pagi' : ($jam < 15 ? 'Selamat Siang' : ($jam < 18 ? 'Selamat Sore' : 'Selamat Malam'));
+        $authUser = Auth::user();
+        $displayName = $authUser?->name ?? 'Administrator';
+
+        $activeTahunAjaran = $activeTahunAjaran ?? null;
+        $totalTahunAjaran = (int) ($totalTahunAjaran ?? 0);
+        $tahunAjaranList = $tahunAjaranList ?? collect();
+
+        $studentStats = $studentStats ?? [
+            'total' => 0,
+            'aktif' => 0,
+            'aktif_laki_laki' => 0,
+            'aktif_perempuan' => 0,
+            'punya_kelas' => 0,
+            'belum_punya_kelas' => 0,
+            'jenjang_aktif' => [],
+        ];
+        $totalKaryawan = (int) ($totalKaryawan ?? 0);
+        $totalSekolahAktif = (int) ($totalSekolahAktif ?? 0);
+        $activeClasses = $activeClasses ?? collect();
+        $kelasSummary = $kelasSummary ?? [
+            'total_kelas' => $activeClasses->count(),
+            'total_siswa_rombel' => 0,
+            'per_unit' => [],
+        ];
+        $presensiTodaySummary = $presensiTodaySummary ?? [
+            'total' => 0,
+            'hadir' => 0,
+            'terlambat' => 0,
+            'izin' => 0,
+            'sakit' => 0,
+            'alpa' => 0,
+            'belum' => 0,
+            'hadir_rate' => null,
+        ];
+        $operationalSummary = $operationalSummary ?? [
+            'mapel_aktif' => 0,
+            'tp_aktif' => 0,
+            'jadwal_aktif' => 0,
+            'ekskul_aktif' => 0,
+            'anggota_t2q' => 0,
+            't2q_tahsin_hari_ini' => 0,
+            't2q_tahfizh_hari_ini' => 0,
+            'finalisasi_final' => 0,
+        ];
+        $prestasiSummary = $prestasiSummary ?? [
+            'table_ready' => false,
+            'total' => 0,
+            'akademik' => 0,
+            'non_akademik' => 0,
+            'beregu' => 0,
+            'dengan_foto' => 0,
+            'per_unit' => [],
+        ];
+        $recentPrestasi = $recentPrestasi ?? collect();
+        $upcomingAgendas = $upcomingAgendas ?? collect();
+        $latestPengumuman = $latestPengumuman ?? collect();
+
+        $hadirHariIni = (int) ($presensiTodaySummary['hadir'] ?? 0) + (int) ($presensiTodaySummary['terlambat'] ?? 0);
+        $setoranT2qHariIni = (int) ($operationalSummary['t2q_tahsin_hari_ini'] ?? 0) + (int) ($operationalSummary['t2q_tahfizh_hari_ini'] ?? 0);
+        $jenjangAktifList = is_array($studentStats['jenjang_aktif'] ?? null) ? $studentStats['jenjang_aktif'] : [];
+    @endphp
+
+    <div class="app-main__inner">
+        <!-- 1. HERO HEADER COMPACT -->
+        <div class="wk-hero">
+            <div class="wk-hero-glow"></div>
+
+            <div class="row align-items-center position-relative" style="z-index: 1;">
+                <div class="col-lg-8 mb-3 mb-lg-0">
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                        <span class="badge text-white px-2 py-1 font-weight-bold"
+                            style="background: rgba(234, 88, 12, 0.92); font-size: 11px; border-radius: 6px;">
+                            <i class="fa fa-shield-alt mr-1"></i> PANEL ADMIN AKADEMIK
                         </span>
-                    @else
-                        <span class="badge badge-secondary font-weight-bold">Nonaktif</span>
-                    @endif
+                        <span class="small" style="color: rgba(255, 255, 255, 0.72);">
+                            <i class="fa fa-calendar-alt mr-1"></i>
+                            {{ $todayDate->copy()->locale('id')->translatedFormat('l, d F Y') }}
+                        </span>
+                    </div>
+
+                    <h3 class="font-weight-bold text-white mb-2">
+                        {{ $salam }}, {{ $displayName }}!
+                    </h3>
+
+                    <p class="mb-3" style="color: rgba(255, 255, 255, 0.78); max-width: 640px; font-size: 0.85rem; line-height: 1.5;">
+                        Pantau data peserta didik, rombongan belajar, presensi harian, capaian T2Q, prestasi siswa, dan agenda sekolah secara ringkas dalam satu panel.
+                    </p>
+
+                    <div class="d-flex flex-wrap align-items-center" style="gap: 0.45rem;">
+                        @if ($activeTahunAjaran)
+                            <span class="badge px-3 py-2"
+                                style="background: rgba(255, 255, 255, 0.14); border: 1px solid rgba(255, 255, 255, 0.22); color: #ffffff; font-size: 0.74rem;">
+                                <i class="fa fa-graduation-cap text-warning mr-1"></i>
+                                TA Aktif: {{ $activeTahunAjaran->full_label }}
+                            </span>
+                        @else
+                            <a href="{{ route('tahun-ajaran.index') }}" class="badge px-3 py-2 text-decoration-none"
+                                style="background: rgba(239, 68, 68, 0.25); border: 1px solid rgba(248, 113, 113, 0.45); color: #fee2e2; font-size: 0.74rem;">
+                                <i class="fa fa-exclamation-triangle mr-1"></i> Belum ada Tahun Ajaran aktif
+                            </a>
+                        @endif
+
+                        <span class="badge px-3 py-2"
+                            style="background: rgba(16, 185, 129, 0.22); border: 1px solid rgba(52, 211, 153, 0.35); color: #ecfdf5; font-size: 0.74rem;">
+                            <i class="fa fa-school mr-1"></i>
+                            {{ $totalSekolahAktif }} Profil Unit Aktif
+                        </span>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="wk-team-card">
+                        <div class="text-uppercase font-weight-bold mb-2"
+                            style="font-size: 0.65rem; letter-spacing: 0.06em; color: rgba(255, 255, 255, 0.68);">
+                            Aksi Operasional Cepat
+                        </div>
+                        <div class="d-flex flex-column" style="gap: 0.45rem;">
+                            <a href="{{ route('presensi-siswa.index') }}"
+                                class="btn btn-sm font-weight-bold text-white text-left d-flex align-items-center justify-content-between"
+                                style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%); border-radius: 8px; padding: 0.48rem 0.75rem;">
+                                <span><i class="fa fa-fingerprint mr-1"></i> Presensi &amp; Sync Fingerspot</span>
+                                <i class="fa fa-arrow-right" style="font-size: 0.7rem;"></i>
+                            </a>
+                            <div class="d-flex" style="gap: 0.45rem;">
+                                <a href="{{ route('prestasi-siswa.create') }}"
+                                    class="btn btn-sm btn-outline-light flex-fill font-weight-bold"
+                                    style="border-radius: 8px; font-size: 0.72rem;">
+                                    <i class="fa fa-trophy mr-1 text-warning"></i> Input Prestasi
+                                </a>
+                                <a href="{{ route('tahun-ajaran.index') }}"
+                                    class="btn btn-sm btn-outline-light flex-fill font-weight-bold"
+                                    style="border-radius: 8px; font-size: 0.72rem;">
+                                    <i class="fa fa-calendar mr-1"></i> Tahun Ajaran
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Card 2: Total Guru & Karyawan -->
-        <div class="col-md-6 col-xl-3 mb-3">
-            <div class="kpi-card">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div>
-                        <div class="text-uppercase text-muted font-weight-bold" style="font-size: 11px; letter-spacing: 0.5px;">
-                            Guru & Karyawan
-                        </div>
-                        <h2 class="font-weight-bold mb-0 text-slate-900 mt-1">
-                            {{ $totalKaryawan }}
-                        </h2>
-                    </div>
-                    <div class="kpi-icon-box shadow-sm" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);">
-                        <i class="pe-7s-users"></i>
+        <!-- 2. DOCK AKSES CEPAT MODUL UTAMA -->
+        <div class="adm-dock-bar">
+            <a href="{{ route('siswa.index') }}" class="adm-dock-tile">
+                <span class="adm-dock-icon" style="background: #eff6ff; color: #2563eb;">
+                    <i class="fa fa-user-graduate"></i>
+                </span>
+                <div class="adm-dock-meta">
+                    <div class="adm-dock-title">Data Siswa</div>
+                    <div class="adm-dock-sub">{{ number_format($studentStats['aktif']) }} siswa aktif</div>
+                </div>
+            </a>
+
+            <a href="{{ route('kelas.index') }}" class="adm-dock-tile">
+                <span class="adm-dock-icon" style="background: #ecfdf5; color: #059669;">
+                    <i class="fa fa-chalkboard"></i>
+                </span>
+                <div class="adm-dock-meta">
+                    <div class="adm-dock-title">Kelas &amp; Rombel</div>
+                    <div class="adm-dock-sub">{{ number_format($kelasSummary['total_kelas']) }} kelas aktif</div>
+                </div>
+            </a>
+
+            <a href="{{ route('presensi-siswa.index') }}" class="adm-dock-tile">
+                <span class="adm-dock-icon" style="background: #fff7ed; color: #ea580c;">
+                    <i class="fa fa-user-check"></i>
+                </span>
+                <div class="adm-dock-meta">
+                    <div class="adm-dock-title">Presensi Siswa</div>
+                    <div class="adm-dock-sub">{{ number_format($presensiTodaySummary['total']) }} log hari ini</div>
+                </div>
+            </a>
+
+            <a href="{{ route('t2q.yaumiyah-tahsin.index') }}" class="adm-dock-tile">
+                <span class="adm-dock-icon" style="background: #f0f9ff; color: #0284c7;">
+                    <i class="fa fa-book-open"></i>
+                </span>
+                <div class="adm-dock-meta">
+                    <div class="adm-dock-title">Yaumiyah T2Q</div>
+                    <div class="adm-dock-sub">{{ number_format($operationalSummary['anggota_t2q']) }} peserta</div>
+                </div>
+            </a>
+
+            <a href="{{ route('penilaian-rapor.index') }}" class="adm-dock-tile">
+                <span class="adm-dock-icon" style="background: #f5f3ff; color: #7c3aed;">
+                    <i class="fa fa-award"></i>
+                </span>
+                <div class="adm-dock-meta">
+                    <div class="adm-dock-title">Nilai &amp; Rapor</div>
+                    <div class="adm-dock-sub">{{ number_format($operationalSummary['finalisasi_final']) }} finalisasi</div>
+                </div>
+            </a>
+
+            <a href="{{ route('prestasi-siswa.index') }}" class="adm-dock-tile">
+                <span class="adm-dock-icon" style="background: #fef3c7; color: #d97706;">
+                    <i class="fa fa-trophy"></i>
+                </span>
+                <div class="adm-dock-meta">
+                    <div class="adm-dock-title">Prestasi Siswa</div>
+                    <div class="adm-dock-sub">
+                        {{ ! empty($prestasiSummary['table_ready']) ? number_format($prestasiSummary['total']).' prestasi' : 'Rekam prestasi' }}
                     </div>
                 </div>
-                <div class="d-flex align-items-center justify-content-between pt-2 border-top" style="border-color: #f1f5f9 !important;">
-                    <span class="small text-muted">Tenaga Pendidik:</span>
-                    <a href="{{ route('karyawan.index') }}" class="font-weight-bold text-primary small">
-                        Lihat Data <i class="fa fa-arrow-right ml-1"></i>
-                    </a>
-                </div>
-            </div>
+            </a>
         </div>
 
-        <!-- Card 3: Pekerjaan & Penghasilan Ortu -->
-        <div class="col-md-6 col-xl-3 mb-3">
-            <div class="kpi-card">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div>
-                        <div class="text-uppercase text-muted font-weight-bold" style="font-size: 11px; letter-spacing: 0.5px;">
-                            Pekerjaan & Penghasilan
-                        </div>
-                        <h2 class="font-weight-bold mb-0 text-slate-900 mt-1">
-                            {{ $totalPekerjaan + $totalPenghasilan }}
-                        </h2>
+        <!-- 3. 4 KARTU METRIK UTAMA -->
+        <div class="wk-kpi-grid">
+            <div class="wk-kpi-card">
+                <div>
+                    <div class="wk-kpi-label">
+                        <span class="wk-kpi-dot" style="background: #3b82f6;"></span> Siswa Aktif
                     </div>
-                    <div class="kpi-icon-box shadow-sm" style="background: linear-gradient(135deg, #10b981 0%, #047857 100%);">
-                        <i class="pe-7s-portfolio"></i>
+                    <div class="wk-kpi-value">{{ number_format($studentStats['aktif']) }}</div>
+                    <div class="wk-kpi-sub">
+                        {{ number_format($studentStats['aktif_laki_laki']) }} Laki-laki &bull; {{ number_format($studentStats['aktif_perempuan']) }} Perempuan
                     </div>
                 </div>
-                <div class="d-flex align-items-center justify-content-between pt-2 border-top" style="border-color: #f1f5f9 !important;">
-                    <span class="small text-muted">Rincian:</span>
-                    <span class="font-weight-bold text-emerald-600 small">
-                        {{ $totalPekerjaan }} Pekerjaan • {{ $totalPenghasilan }} Penghasilan
-                    </span>
-                </div>
+                <span class="wk-kpi-icon" style="background: #eff6ff; color: #2563eb;">
+                    <i class="fa fa-users"></i>
+                </span>
             </div>
-        </div>
 
-        <!-- Card 4: Penunjang Siswa Lainnya -->
-        <div class="col-md-6 col-xl-3 mb-3">
-            <div class="kpi-card">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div>
-                        <div class="text-uppercase text-muted font-weight-bold" style="font-size: 11px; letter-spacing: 0.5px;">
-                            Data Penunjang Siswa
-                        </div>
-                        <h2 class="font-weight-bold mb-0 text-slate-900 mt-1">
-                            {{ $totalJenjangPendidikan + $totalTransportasi + $totalBerkebutuhanKhusus }}
-                        </h2>
+            <div class="wk-kpi-card">
+                <div>
+                    <div class="wk-kpi-label">
+                        <span class="wk-kpi-dot" style="background: #10b981;"></span> Rombel &amp; Pendidik
                     </div>
-                    <div class="kpi-icon-box shadow-sm" style="background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);">
-                        <i class="pe-7s-study"></i>
+                    <div class="wk-kpi-value" style="color: #047857;">
+                        {{ number_format($kelasSummary['total_kelas']) }} <span style="font-size: 0.85rem; font-weight: 600; color: #64748b;">Kelas</span>
                     </div>
-                </div>
-                <div class="d-flex align-items-center justify-content-between pt-2 border-top" style="border-color: #f1f5f9 !important;">
-                    <span class="small text-muted">Jenjang / Trans / Khusus:</span>
-                    <span class="font-weight-bold text-purple-600 small">
-                        {{ $totalJenjangPendidikan }} / {{ $totalTransportasi }} / {{ $totalBerkebutuhanKhusus }}
-                    </span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODUL DATA PELENGKAP QUICK JUMP CARDS -->
-    <div class="content-card mb-4">
-        <div class="content-card-header">
-            <div>
-                <h6 class="font-weight-bold text-slate-900 mb-0">
-                    <i class="pe-7s-keypad mr-1 text-orange-600"></i> Modul Data Pelengkap Akademik
-                </h6>
-                <span class="text-muted small">Pintasan cepat untuk mengelola data referensi dan formulir siswa/wali</span>
-            </div>
-        </div>
-        <div class="p-3">
-            <div class="row">
-                <!-- 1. Berkebutuhan Khusus -->
-                <div class="col-lg col-md-4 col-sm-6 mb-2">
-                    <a href="{{ route('berkebutuhan-khusus.index') }}" class="quick-jump-item">
-                        <div class="quick-jump-icon shadow-sm" style="background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);">
-                            <i class="pe-7s-id"></i>
-                        </div>
-                        <div>
-                            <div class="font-weight-bold text-slate-900" style="font-size: 13px;">Kebutuhan Khusus</div>
-                            <span class="text-muted small">{{ $totalBerkebutuhanKhusus }} Data</span>
-                        </div>
-                    </a>
-                </div>
-
-                <!-- 2. Jenjang Pendidikan -->
-                <div class="col-lg col-md-4 col-sm-6 mb-2">
-                    <a href="{{ route('jenjang-pendidikan.index') }}" class="quick-jump-item">
-                        <div class="quick-jump-icon shadow-sm" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);">
-                            <i class="pe-7s-study"></i>
-                        </div>
-                        <div>
-                            <div class="font-weight-bold text-slate-900" style="font-size: 13px;">Jenjang Pendidikan</div>
-                            <span class="text-muted small">{{ $totalJenjangPendidikan }} Data</span>
-                        </div>
-                    </a>
-                </div>
-
-                <!-- 3. Pekerjaan -->
-                <div class="col-lg col-md-4 col-sm-6 mb-2">
-                    <a href="{{ route('pekerjaan.index') }}" class="quick-jump-item">
-                        <div class="quick-jump-icon shadow-sm" style="background: linear-gradient(135deg, #10b981 0%, #047857 100%);">
-                            <i class="pe-7s-portfolio"></i>
-                        </div>
-                        <div>
-                            <div class="font-weight-bold text-slate-900" style="font-size: 13px;">Pekerjaan</div>
-                            <span class="text-muted small">{{ $totalPekerjaan }} Data</span>
-                        </div>
-                    </a>
-                </div>
-
-                <!-- 4. Penghasilan -->
-                <div class="col-lg col-md-4 col-sm-6 mb-2">
-                    <a href="{{ route('penghasilan.index') }}" class="quick-jump-item">
-                        <div class="quick-jump-icon shadow-sm" style="background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);">
-                            <i class="pe-7s-cash"></i>
-                        </div>
-                        <div>
-                            <div class="font-weight-bold text-slate-900" style="font-size: 13px;">Penghasilan</div>
-                            <span class="text-muted small">{{ $totalPenghasilan }} Data</span>
-                        </div>
-                    </a>
-                </div>
-
-                <!-- 5. Transportasi -->
-                <div class="col-lg col-md-4 col-sm-6 mb-2">
-                    <a href="{{ route('transportasi.index') }}" class="quick-jump-item">
-                        <div class="quick-jump-icon shadow-sm" style="background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);">
-                            <i class="pe-7s-car"></i>
-                        </div>
-                        <div>
-                            <div class="font-weight-bold text-slate-900" style="font-size: 13px;">Transportasi</div>
-                            <span class="text-muted small">{{ $totalTransportasi }} Data</span>
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MAIN TWO-COLUMN SECTION -->
-    <div class="row">
-        <!-- LEFT COLUMN: Tahun Ajaran Overview Table -->
-        <div class="col-lg-7 mb-4">
-            <div class="content-card h-100">
-                <div class="content-card-header">
-                    <div>
-                        <h6 class="font-weight-bold text-slate-900 mb-0">
-                            <i class="pe-7s-date mr-1 text-orange-600"></i> Ringkasan Tahun Ajaran
-                        </h6>
-                        <span class="text-muted small">Daftar periode tahun akademik dan semester</span>
-                    </div>
-                    <div>
-                        <a href="{{ route('tahun-ajaran.index') }}" class="btn btn-sm btn-outline-primary" style="border-radius: 6px;">
-                            Lihat Semua <i class="fa fa-arrow-right ml-1"></i>
+                    <div class="wk-kpi-sub">
+                        <a href="{{ route('karyawan.index') }}" class="text-success font-weight-bold text-decoration-none">
+                            {{ number_format($totalKaryawan) }} Guru/Staf
                         </a>
+                        &bull; {{ number_format($kelasSummary['total_siswa_rombel']) }} siswa rombel
                     </div>
                 </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover table-striped mb-0">
-                            <thead class="bg-slate-50 text-slate-600">
+                <span class="wk-kpi-icon" style="background: #ecfdf5; color: #059669;">
+                    <i class="fa fa-user-tie"></i>
+                </span>
+            </div>
+
+            <div class="wk-kpi-card">
+                <div>
+                    <div class="wk-kpi-label">
+                        <span class="wk-kpi-dot" style="background: #ea580c;"></span> Presensi Hari Ini
+                    </div>
+                    <div class="wk-kpi-value" style="color: #c2410c;">
+                        {{ number_format($hadirHariIni) }}<span style="font-size: 0.85rem; font-weight: 600; color: #64748b;"> / {{ number_format($kelasSummary['total_siswa_rombel']) }}</span>
+                    </div>
+                    <div class="wk-kpi-sub">
+                        Terlambat {{ $presensiTodaySummary['terlambat'] }} &bull; Izin {{ $presensiTodaySummary['izin'] }} &bull; Sakit {{ $presensiTodaySummary['sakit'] }} &bull; Alpa {{ $presensiTodaySummary['alpa'] }}
+                    </div>
+                </div>
+                <span class="wk-kpi-icon" style="background: #fff7ed; color: #ea580c;">
+                    <i class="fa fa-user-check"></i>
+                </span>
+            </div>
+
+            <div class="wk-kpi-card">
+                <div>
+                    <div class="wk-kpi-label">
+                        <span class="wk-kpi-dot" style="background: #8b5cf6;"></span> Setoran T2Q Hari Ini
+                    </div>
+                    <div class="wk-kpi-value" style="color: #6d28d9;">
+                        {{ number_format($setoranT2qHariIni) }} <span style="font-size: 0.85rem; font-weight: 600; color: #64748b;">Log</span>
+                    </div>
+                    <div class="wk-kpi-sub">
+                        Tahsin {{ number_format($operationalSummary['t2q_tahsin_hari_ini']) }} &bull; Tahfizh {{ number_format($operationalSummary['t2q_tahfizh_hari_ini']) }}
+                    </div>
+                </div>
+                <span class="wk-kpi-icon" style="background: #f5f3ff; color: #7c3aed;">
+                    <i class="fa fa-quran"></i>
+                </span>
+            </div>
+        </div>
+
+        <!-- 4. BENTO WORKSPACE -->
+        <div class="adm-bento-row">
+            <!-- KOLOM KIRI -->
+            <div>
+                <!-- SEBARAN KELAS PER UNIT -->
+                <div class="wk-surface">
+                    <div class="wk-surface-head">
+                        <div>
+                            <h6 class="wk-surface-title">Sebaran Unit &amp; Kelas Tahun Ajaran Aktif</h6>
+                            <div class="text-muted small">
+                                @if ($activeTahunAjaran)
+                                    Periode {{ $activeTahunAjaran->full_label }} &bull; {{ number_format($kelasSummary['total_kelas']) }} kelas terdata
+                                @else
+                                    Belum ada tahun ajaran berstatus aktif.
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-wrap align-items-center" style="gap: 0.45rem;">
+                            <div class="wk-search-wrap" style="max-width: 195px;">
+                                <i class="fa fa-search"></i>
+                                <input type="text" id="admClassSearch" class="wk-search-input" placeholder="Cari kelas / wali...">
+                            </div>
+                            <a href="{{ route('kelas.index') }}" class="adm-ghost-btn">
+                                Semua Kelas <i class="fa fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    @if (! empty($kelasSummary['per_unit']) || ! empty($jenjangAktifList))
+                        <div class="px-3 py-2 bg-slate-50 border-bottom d-flex flex-wrap align-items-center" style="gap: 0.4rem; border-color: #f1f5f9 !important;">
+                            <span class="small font-weight-bold text-muted text-uppercase mr-1" style="font-size: 0.66rem;">Per Unit:</span>
+                            @forelse ($kelasSummary['per_unit'] as $unitCode => $unitRow)
+                                <a href="{{ route('kelas.index', ['jenjang' => $unitCode]) }}" class="adm-unit-chip">
+                                    <span>{{ $unitCode }}</span>
+                                    <span class="text-muted font-weight-normal">{{ $unitRow['kelas'] }} Kls &bull; {{ $unitRow['siswa'] }} Sis</span>
+                                </a>
+                            @empty
+                                @foreach ($jenjangAktifList as $jKey => $jCount)
+                                    @if ($jKey !== 'BELUM_DITEMPATKAN')
+                                        <a href="{{ route('siswa.index', ['status' => \App\Models\Admin\DataMaster\Siswa::STATUS_AKTIF, 'jenjang' => $jKey]) }}" class="adm-unit-chip">
+                                            <span>{{ $jKey }}</span>
+                                            <span class="text-muted font-weight-normal">{{ number_format($jCount) }} Siswa</span>
+                                        </a>
+                                    @endif
+                                @endforeach
+                            @endforelse
+                        </div>
+                    @endif
+
+                    <div class="wk-scroll-body" style="max-height: 310px;">
+                        <table class="wk-table" id="admClassTable">
+                            <thead>
                                 <tr>
-                                    <th style="width: 5%;">No</th>
-                                    <th>Tahun Ajaran</th>
-                                    <th>Semester</th>
-                                    <th class="text-center">Status</th>
-                                    <th style="width: 15%; text-align: center;">Aksi</th>
+                                    <th>Kelas</th>
+                                    <th>Unit</th>
+                                    <th>Wali Kelas</th>
+                                    <th class="text-center">Siswa</th>
+                                    <th class="text-right">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @php $no = 1; @endphp
-                                @forelse ($listTahunAjaran as $item)
-                                    <tr>
-                                        <td>{{ $no++ }}</td>
-                                        <td><strong>{{ $item->nama_tahun_ajaran }}</strong></td>
+                                @forelse ($activeClasses as $kelasItem)
+                                    @php
+                                        $waliModel = $kelasItem->relationLoaded('waliKelas') ? $kelasItem->waliKelas : null;
+                                        $pendampingModel = $kelasItem->relationLoaded('pendamping') ? $kelasItem->pendamping : null;
+                                        $searchRow = strtolower(trim(
+                                            $kelasItem->nama_kelas.' '.
+                                            $kelasItem->jenjang_kelas.' '.
+                                            ($waliModel?->nama_gelar ?? '').' '.
+                                            ($pendampingModel?->nama_gelar ?? '')
+                                        ));
+                                    @endphp
+                                    <tr data-adm-class-row data-search="{{ $searchRow }}">
                                         <td>
-                                            <span class="badge badge-info">
-                                                {{ strtoupper($item->semester) }}
+                                            <div class="font-weight-bold text-slate-800">{{ $kelasItem->nama_kelas }}</div>
+                                            <div class="small text-muted" style="font-size: 0.69rem;">Tingkat {{ $kelasItem->tingkatan_kelas ?: '-' }}</div>
+                                        </td>
+                                        <td>
+                                            <span class="badge {{ $kelasItem->jenjang_badge_class }} px-2 py-1" style="font-size: 0.68rem;">
+                                                {{ strtoupper((string) $kelasItem->jenjang_kelas) }}
                                             </span>
                                         </td>
-                                        <td class="text-center">
-                                            @if ($item->is_active)
-                                                <span class="badge badge-success">Aktif</span>
-                                            @else
-                                                <span class="badge badge-secondary">Nonaktif</span>
+                                        <td>
+                                            <div class="text-slate-700 font-weight-600" style="font-size: 0.77rem;">
+                                                {{ $waliModel?->nama_gelar ?? '-' }}
+                                            </div>
+                                            @if ($pendampingModel)
+                                                <div class="small text-muted" style="font-size: 0.67rem;">
+                                                    Pendamping: {{ $pendampingModel->nama_gelar }}
+                                                </div>
                                             @endif
                                         </td>
-                                        <td class="text-center">
-                                            <a href="{{ route('tahun-ajaran.edit', $item) }}"
-                                                class="btn btn-xs btn-primary shadow-sm"
-                                                style="border-radius: 4px; padding: 3px 8px;"
-                                                title="Edit">
-                                                <i class="fa fa-edit"></i>
+                                        <td class="text-center font-weight-bold text-slate-800">
+                                            {{ number_format((int) ($kelasItem->anggota_kelas_count ?? 0)) }}
+                                        </td>
+                                        <td class="text-right">
+                                            <a href="{{ route('kelas.show', $kelasItem) }}" class="adm-ghost-btn">
+                                                Detail
                                             </a>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="text-center text-muted py-4">
-                                            <i class="fa fa-info-circle mr-1"></i> Belum ada data tahun ajaran.
-                                            <a href="{{ route('tahun-ajaran.create') }}" class="text-primary font-weight-bold ml-1">
-                                                Tambah Baru Sekarang
+                                        <td colspan="5" class="text-center text-muted py-4 small">
+                                            Belum ada kelas terdaftar pada Tahun Ajaran aktif.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- KURIKULUM & RINGKASAN TAHUN AJARAN -->
+                <div class="wk-surface mb-0">
+                    <div class="wk-surface-head">
+                        <div>
+                            <h6 class="wk-surface-title">Kurikulum &amp; Periode Tahun Ajaran</h6>
+                            <div class="text-muted small">{{ $totalTahunAjaran }} periode tersimpan</div>
+                        </div>
+                        <a href="{{ route('tahun-ajaran.create') }}" class="adm-accent-btn">
+                            <i class="fa fa-plus"></i> Tambah Tahun Ajaran
+                        </a>
+                    </div>
+
+                    <div class="adm-metric-strip">
+                        <a href="{{ route('mata-pelajaran.index') }}" class="adm-mini-metric">
+                            <div class="small text-muted font-weight-bold" style="font-size: 0.66rem;">MATA PELAJARAN</div>
+                            <div class="font-weight-bold text-slate-800" style="font-size: 1.05rem;">{{ number_format($operationalSummary['mapel_aktif']) }}</div>
+                        </a>
+                        <a href="{{ route('tujuan-pembelajaran.index') }}" class="adm-mini-metric">
+                            <div class="small text-muted font-weight-bold" style="font-size: 0.66rem;">TUJUAN PEMBELAJARAN</div>
+                            <div class="font-weight-bold text-slate-800" style="font-size: 1.05rem;">{{ number_format($operationalSummary['tp_aktif']) }}</div>
+                        </a>
+                        <a href="{{ route('jadwal-pelajaran.index') }}" class="adm-mini-metric">
+                            <div class="small text-muted font-weight-bold" style="font-size: 0.66rem;">JADWAL AKTIF</div>
+                            <div class="font-weight-bold text-slate-800" style="font-size: 1.05rem;">{{ number_format($operationalSummary['jadwal_aktif']) }}</div>
+                        </a>
+                        <a href="{{ route('ekstrakurikuler.index') }}" class="adm-mini-metric">
+                            <div class="small text-muted font-weight-bold" style="font-size: 0.66rem;">EKSTRAKURIKULER</div>
+                            <div class="font-weight-bold text-slate-800" style="font-size: 1.05rem;">{{ number_format($operationalSummary['ekskul_aktif']) }}</div>
+                        </a>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="wk-table">
+                            <thead>
+                                <tr>
+                                    <th>Tahun Ajaran</th>
+                                    <th>Semester</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($tahunAjaranList as $taItem)
+                                    <tr>
+                                        <td class="font-weight-bold text-slate-800">{{ $taItem->nama_tahun_ajaran }}</td>
+                                        <td>
+                                            <span class="badge badge-info px-2 py-1" style="font-size: 0.67rem;">
+                                                {{ $taItem->semester_label }}
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            @if ($taItem->is_active)
+                                                <span class="badge badge-success px-2 py-1" style="font-size: 0.67rem;">Aktif</span>
+                                            @else
+                                                <span class="badge badge-secondary px-2 py-1" style="font-size: 0.67rem;">Nonaktif</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-right">
+                                            <a href="{{ route('tahun-ajaran.edit', $taItem) }}" class="adm-ghost-btn">
+                                                Edit
                                             </a>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-3 small">
+                                            Belum ada data tahun ajaran.
                                         </td>
                                     </tr>
                                 @endforelse
@@ -450,93 +694,160 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- RIGHT COLUMN: Panduan & Pintasan Input Cepat -->
-        <div class="col-lg-5 mb-4">
-            <!-- Card Panduan Operasional -->
-            <div class="content-card mb-4">
-                <div class="content-card-header">
-                    <div>
-                        <h6 class="font-weight-bold text-slate-900 mb-0">
-                            <i class="pe-7s-info mr-1 text-primary"></i> Informasi & Panduan Akademik
-                        </h6>
-                        <span class="text-muted small">Petunjuk kelola data akademik sistem</span>
+            <!-- KOLOM KANAN -->
+            <div>
+                <!-- SOROTAN PRESTASI SISWA -->
+                <div class="wk-surface">
+                    <div class="wk-surface-head">
+                        <div>
+                            <h6 class="wk-surface-title">Sorotan Prestasi Siswa</h6>
+                            <div class="text-muted small">
+                                @if (! empty($prestasiSummary['table_ready']))
+                                    {{ number_format($prestasiSummary['akademik']) }} akademik &bull; {{ number_format($prestasiSummary['non_akademik']) }} non-akademik
+                                @else
+                                    Modul pendataan prestasi siswa
+                                @endif
+                            </div>
+                        </div>
+                        <a href="{{ route('prestasi-siswa.index') }}" class="adm-ghost-btn">
+                            Kelola <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </div>
+
+                    @if (! empty($prestasiSummary['table_ready']) && ! empty($prestasiSummary['per_unit']))
+                        <div class="px-3 py-2 bg-slate-50 border-bottom d-flex flex-wrap align-items-center" style="gap: 0.35rem; border-color: #f1f5f9 !important;">
+                            @foreach ($prestasiSummary['per_unit'] as $pUnit => $pCount)
+                                <a href="{{ route('prestasi-siswa.index', ['unit' => $pUnit]) }}" class="adm-unit-chip">
+                                    <span>{{ $pUnit }}</span>
+                                    <span class="text-muted font-weight-normal">{{ number_format($pCount) }}</span>
+                                </a>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    <div class="p-3">
+                        @if (empty($prestasiSummary['table_ready']))
+                            <div class="text-muted small py-2">
+                                Modul Prestasi Siswa siap digunakan setelah menjalankan <code class="text-slate-700">php artisan migrate</code>.
+                            </div>
+                        @elseif ($recentPrestasi->isNotEmpty())
+                            @foreach ($recentPrestasi as $prestasiItem)
+                                @php
+                                    $anggotaList = $prestasiItem->relationLoaded('siswa') ? $prestasiItem->siswa : collect();
+                                    $pCount = $anggotaList->count();
+                                    $cleanNote = trim(preg_replace('/\s+/', ' ', (string) $prestasiItem->keterangan) ?? '');
+                                    $pSubLabel = $pCount > 1
+                                        ? ($cleanNote !== '' ? \Illuminate\Support\Str::limit($cleanNote, 36).' • ' : '').'Beregu ('.$pCount.' Siswa)'
+                                        : $prestasiItem->daftar_siswa_ringkas;
+                                @endphp
+                                <div class="adm-list-item">
+                                    <div class="d-flex align-items-start justify-content-between" style="gap: 0.5rem;">
+                                        <div style="min-width: 0;">
+                                            <a href="{{ route('prestasi-siswa.show', $prestasiItem) }}"
+                                                class="font-weight-bold text-slate-800 text-decoration-none d-block text-truncate"
+                                                style="font-size: 0.79rem;">
+                                                {{ $prestasiItem->nama_prestasi }}
+                                            </a>
+                                            <div class="small text-muted text-truncate" style="font-size: 0.7rem;">
+                                                {{ $pSubLabel }} &bull; {{ $prestasiItem->tanggal_formatted }}
+                                            </div>
+                                        </div>
+                                        <span class="adm-pill-chip flex-shrink-0" style="background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa;">
+                                            {{ $prestasiItem->peringkat }}
+                                        </span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @else
+                            <div class="text-center py-3">
+                                <div class="text-muted small mb-2">Belum ada prestasi siswa tercatat.</div>
+                                <a href="{{ route('prestasi-siswa.create') }}" class="adm-accent-btn">
+                                    <i class="fa fa-plus"></i> Catat Prestasi
+                                </a>
+                            </div>
+                        @endif
                     </div>
                 </div>
-                <div class="p-3">
-                    <div class="d-flex align-items-start mb-3 pb-3 border-bottom">
-                        <div class="kpi-icon-box mr-3" style="width: 38px; height: 38px; font-size: 16px; background: rgba(234, 88, 12, 0.1); color: #ea580c;">
-                            <i class="pe-7s-check"></i>
-                        </div>
-                        <div>
-                            <h6 class="font-weight-bold text-slate-900 mb-1" style="font-size: 13.5px;">Tahun Ajaran Aktif</h6>
-                            <p class="text-muted small mb-0">
-                                Pastikan hanya ada 1 (satu) Tahun Ajaran yang berstatus <strong>Aktif</strong> agar proses administrasi dan pencatatan nilai terhubung ke periode yang tepat.
-                            </p>
+
+                <!-- AGENDA & PENGUMUMAN TERBARU -->
+                <div class="wk-surface mb-0">
+                    <div class="wk-surface-head">
+                        <h6 class="wk-surface-title">Agenda &amp; Pengumuman</h6>
+                        <div class="d-flex align-items-center" style="gap: 0.35rem;">
+                            <a href="{{ route('agenda-sekolah.index') }}" class="adm-ghost-btn">Agenda</a>
+                            <a href="{{ route('pengumuman.index') }}" class="adm-ghost-btn">Pengumuman</a>
                         </div>
                     </div>
 
-                    <div class="d-flex align-items-start mb-3 pb-3 border-bottom">
-                        <div class="kpi-icon-box mr-3" style="width: 38px; height: 38px; font-size: 16px; background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
-                            <i class="pe-7s-network"></i>
+                    <div class="p-3">
+                        <div class="adm-info-subhead">
+                            <span><i class="fa fa-calendar-day text-primary mr-1"></i> Agenda Mendatang</span>
+                            <span>{{ $upcomingAgendas->count() }} terdekat</span>
                         </div>
-                        <div>
-                            <h6 class="font-weight-bold text-slate-900 mb-1" style="font-size: 13.5px;">Kelengkapan Data Pelengkap</h6>
-                            <p class="text-muted small mb-0">
-                                Data referensi (Pekerjaan, Penghasilan, Jenjang Pendidikan, Transportasi, Kebutuhan Khusus) menjadi dasar pilihan pada formulir data siswa dan wali.
-                            </p>
-                        </div>
-                    </div>
+                        @forelse ($upcomingAgendas as $agendaItem)
+                            <div class="adm-list-item">
+                                <div class="d-flex align-items-start justify-content-between" style="gap: 0.5rem;">
+                                    <div style="min-width: 0;">
+                                        <div class="font-weight-bold text-slate-800 text-truncate" style="font-size: 0.78rem;">
+                                            {{ $agendaItem->nama_agenda }}
+                                        </div>
+                                        <div class="small text-muted" style="font-size: 0.69rem;">
+                                            {{ $agendaItem->tanggal_formatted }}
+                                            @if ($agendaItem->jam_formatted !== '-')
+                                                &bull; {{ $agendaItem->jam_formatted }}
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <span class="badge {{ $agendaItem->unit_badge_class }} px-2 py-1 flex-shrink-0" style="font-size: 0.64rem;">
+                                        {{ $agendaItem->unit }}
+                                    </span>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="text-muted small mb-3">Belum ada agenda mendatang.</div>
+                        @endforelse
 
-                    <div class="d-flex align-items-start">
-                        <div class="kpi-icon-box mr-3" style="width: 38px; height: 38px; font-size: 16px; background: rgba(16, 185, 129, 0.1); color: #10b981;">
-                            <i class="pe-7s-shield"></i>
+                        <div class="adm-info-subhead mt-3 pt-2 border-top" style="border-color: #f1f5f9 !important;">
+                            <span><i class="fa fa-bullhorn text-warning mr-1"></i> Pengumuman Terbaru</span>
+                            <span>{{ $latestPengumuman->count() }} terbaru</span>
                         </div>
-                        <div>
-                            <h6 class="font-weight-bold text-slate-900 mb-1" style="font-size: 13.5px;">Integritas & Keamanan Data</h6>
-                            <p class="text-muted small mb-0">
-                                Setiap perubahan tersimpan secara aman dengan proteksi CSRF dan validasi unik pada tiap kode dan entitas data.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Card Tambah Data Cepat -->
-            <div class="content-card">
-                <div class="content-card-header">
-                    <div>
-                        <h6 class="font-weight-bold text-slate-900 mb-0">
-                            <i class="pe-7s-plus mr-1 text-emerald-600"></i> Tambah Data Cepat
-                        </h6>
-                        <span class="text-muted small">Buat entri baru langsung dari dashboard</span>
-                    </div>
-                </div>
-                <div class="p-3">
-                    <div class="d-flex flex-wrap gap-2">
-                        <a href="{{ route('tahun-ajaran.create') }}" class="btn btn-sm btn-outline-secondary mr-2 mb-2" style="border-radius: 8px;">
-                            <i class="fa fa-plus-circle text-orange-600 mr-1"></i> Tahun Ajaran
-                        </a>
-                        <a href="{{ route('berkebutuhan-khusus.create') }}" class="btn btn-sm btn-outline-secondary mr-2 mb-2" style="border-radius: 8px;">
-                            <i class="fa fa-plus-circle text-orange-600 mr-1"></i> Kebutuhan Khusus
-                        </a>
-                        <a href="{{ route('jenjang-pendidikan.create') }}" class="btn btn-sm btn-outline-secondary mr-2 mb-2" style="border-radius: 8px;">
-                            <i class="fa fa-plus-circle text-orange-600 mr-1"></i> Jenjang Pendidikan
-                        </a>
-                        <a href="{{ route('pekerjaan.create') }}" class="btn btn-sm btn-outline-secondary mr-2 mb-2" style="border-radius: 8px;">
-                            <i class="fa fa-plus-circle text-orange-600 mr-1"></i> Pekerjaan
-                        </a>
-                        <a href="{{ route('penghasilan.create') }}" class="btn btn-sm btn-outline-secondary mr-2 mb-2" style="border-radius: 8px;">
-                            <i class="fa fa-plus-circle text-orange-600 mr-1"></i> Penghasilan
-                        </a>
-                        <a href="{{ route('transportasi.create') }}" class="btn btn-sm btn-outline-secondary mr-2 mb-2" style="border-radius: 8px;">
-                            <i class="fa fa-plus-circle text-orange-600 mr-1"></i> Transportasi
-                        </a>
+                        @forelse ($latestPengumuman as $pengumumanItem)
+                            <div class="adm-list-item">
+                                <div class="font-weight-bold text-slate-800 text-truncate" style="font-size: 0.78rem;">
+                                    {{ $pengumumanItem->judul }}
+                                </div>
+                                <div class="small text-muted text-truncate" style="font-size: 0.7rem;">
+                                    {{ $pengumumanItem->ringkasan_isi }}
+                                </div>
+                            </div>
+                        @empty
+                            <div class="text-muted small">Belum ada pengumuman terbaru.</div>
+                        @endforelse
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 @endsection
+
+@push('js')
+    <script>
+        (function() {
+            const searchInput = document.getElementById('admClassSearch');
+            const rows = Array.from(document.querySelectorAll('[data-adm-class-row]'));
+
+            if (!searchInput || rows.length === 0) {
+                return;
+            }
+
+            searchInput.addEventListener('input', function() {
+                const keyword = this.value.trim().toLowerCase();
+                rows.forEach(function(row) {
+                    const haystack = row.getAttribute('data-search') || '';
+                    row.style.display = keyword === '' || haystack.includes(keyword) ? '' : 'none';
+                });
+            });
+        })();
+    </script>
+@endpush

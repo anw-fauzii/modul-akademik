@@ -806,11 +806,10 @@
                     </div>
                 </div>
 
-                <!-- Prestasi Siswa Dropdown -->
-                <div class="has-submenu relative group/submenu">
-                    <button type="button" data-sidebar-toggle="submenu-prestasi"
-                        aria-expanded="{{ $isPrestasiActive ? 'true' : 'false' }}"
-                        class="w-full group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all {{ $isPrestasiActive ? $menuActiveClass : $menuInactiveClass }}">
+                <!-- Prestasi Siswa -->
+                <div class="relative group/tooltip">
+                    <a href="{{ route('prestasi-siswa.index') }}"
+                        class="group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all {{ $isPrestasiActive ? $menuActiveClass : $menuInactiveClass }}">
                         <div class="flex items-center gap-3">
                             <svg class="h-4 w-4 shrink-0 {{ $isPrestasiActive ? $menuIconActiveClass : $menuIconInactiveClass }}"
                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -819,25 +818,8 @@
                             </svg>
                             <span class="menu-text">Prestasi Siswa</span>
                         </div>
-                        <svg class="menu-chevron h-3.5 w-3.5 transition-transform duration-200 {{ $isPrestasiActive ? 'text-white rotate-180' : 'text-slate-400 group-hover:text-white' }}"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </button>
-                    <div id="submenu-prestasi"
-                        class="{{ $isPrestasiActive ? '' : 'hidden' }} submenu-flyout mt-1 space-y-1 pl-4 border-l border-slate-800 ml-5 py-1">
-                        <div class="flyout-header hidden">
-                            <span>Prestasi Siswa</span>
-                        </div>
-                        <a href="{{ route('prestasi-siswa.index') }}"
-                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->routeIs('prestasi-siswa.index', 'prestasi-siswa.show', 'prestasi-siswa.edit') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
-                            Daftar Prestasi Siswa
-                        </a>
-                        <a href="{{ route('prestasi-siswa.create') }}"
-                            class="block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {{ request()->routeIs('prestasi-siswa.create') ? 'text-orange-400 bg-orange-500/10 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
-                            Tambah Prestasi
-                        </a>
-                    </div>
+                    </a>
+                    <div class="sidebar-tooltip">Prestasi Siswa</div>
                 </div>
                 </nav>
             </div>

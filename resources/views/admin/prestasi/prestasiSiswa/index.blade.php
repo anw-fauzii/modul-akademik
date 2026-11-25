@@ -17,6 +17,29 @@
             border-radius: 14px;
             box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
             height: 100%;
+            text-decoration: none !important;
+            color: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .prestasi-stat-card:hover {
+            transform: translateY(-2px);
+            border-color: #f97316;
+            box-shadow: 0 10px 20px -6px rgba(234, 88, 12, 0.16);
+        }
+
+        .prestasi-stat-card.is-active-filter {
+            border-color: #ea580c;
+            background: #fff7ed;
+            box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.14);
+        }
+
+        .prestasi-prompt-card {
+            border: 2px dashed #cbd5e1;
+            border-radius: 14px;
+            background: #ffffff;
+            padding: 2.5rem 1.5rem;
+            text-align: center;
         }
 
         .prestasi-stat-label {
@@ -53,6 +76,39 @@
             flex-shrink: 0;
         }
 
+        .prestasi-unit-strip {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+        }
+
+        .prestasi-unit-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 9999px;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            color: #334155;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-decoration: none !important;
+            transition: all 0.15s ease;
+        }
+
+        .prestasi-unit-pill:hover,
+        .prestasi-unit-pill.is-active {
+            background: #ea580c;
+            border-color: #ea580c;
+            color: #ffffff;
+        }
+
         .prestasi-filter-grid {
             display: grid;
             grid-template-columns: minmax(0, 1fr);
@@ -64,11 +120,19 @@
             .prestasi-filter-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
+
+            .prestasi-filter-search {
+                grid-column: span 2;
+            }
         }
 
         @media (min-width: 992px) {
             .prestasi-filter-grid {
-                grid-template-columns: minmax(210px, 1.35fr) minmax(150px, 0.85fr) minmax(160px, 0.9fr) minmax(210px, 1.3fr);
+                grid-template-columns: minmax(185px, 1.2fr) minmax(115px, 0.7fr) minmax(135px, 0.8fr) minmax(145px, 0.85fr) minmax(195px, 1.25fr);
+            }
+
+            .prestasi-filter-search {
+                grid-column: auto;
             }
         }
 
@@ -176,17 +240,22 @@
     @php
         $prestasi = $prestasi ?? collect();
         $tahunAjaranOptions = $tahunAjaranOptions ?? collect();
+        $activeTaModel = $activeTahunAjaran ?? $tahunAjaranOptions->firstWhere('is_active', true);
+        $unitOptions = $unitOptions ?? \App\Models\Admin\Pelajaran\MataPelajaran::UNIT_OPTIONS;
         $kategoriOptions = $kategoriOptions ?? \App\Models\Admin\Prestasi\PrestasiSiswa::KATEGORI_OPTIONS;
         $tingkatOptions = $tingkatOptions ?? \App\Models\Admin\Prestasi\PrestasiSiswa::TINGKAT_PRESETS;
         $allFilterKey = \App\Services\Admin\Prestasi\PrestasiSiswaService::FILTER_ALL;
         $filters = $filters ?? [
             'tahun_ajaran_id' => $allFilterKey,
+            'unit' => $allFilterKey,
             'kategori' => $allFilterKey,
             'tingkat' => $allFilterKey,
             'siswa_nis' => '',
             'search' => '',
+            'has_foto' => false,
+            'show_all' => false,
         ];
-        $hasActiveFilter = $hasActiveFilter ?? false;
+        $hasFilter = $hasActiveFilter ?? true;
         $statistics = $statistics ?? [
             'total' => $prestasi->count(),
             'akademik' => $prestasi->where('kategori', \App\Models\Admin\Prestasi\PrestasiSiswa::KATEGORI_AKADEMIK)->count(),
@@ -194,6 +263,17 @@
             'beregu' => $prestasi->filter(fn ($p) => (bool) $p->is_beregu)->count(),
             'dengan_foto' => $prestasi->filter(fn ($p) => filled($p->foto))->count(),
         ];
+        $unitStats = isset($statistics['per_unit']) && is_array($statistics['per_unit'])
+            ? $statistics['per_unit']
+            : array_fill_keys($unitOptions, 0);
+        $isShowAllActive = ! empty($filters['show_all'])
+            && ($filters['tahun_ajaran_id'] ?? $allFilterKey) === $allFilterKey
+            && ($filters['unit'] ?? $allFilterKey) === $allFilterKey
+            && ($filters['kategori'] ?? $allFilterKey) === $allFilterKey
+            && ($filters['tingkat'] ?? $allFilterKey) === $allFilterKey
+            && ($filters['siswa_nis'] ?? '') === ''
+            && ($filters['search'] ?? '') === ''
+            && empty($filters['has_foto']);
     @endphp
 
     <div class="app-main__inner">
@@ -225,57 +305,76 @@
         <!-- STATISTIK RINGKAS -->
         <div class="row mb-3">
             <div class="col-sm-6 col-lg-3 mb-2 mb-lg-0">
-                <div class="prestasi-stat-card">
+                <a href="{{ route('prestasi-siswa.index', ['show_all' => 1]) }}"
+                    class="prestasi-stat-card {{ $isShowAllActive ? 'is-active-filter' : '' }}">
                     <div>
                         <div class="prestasi-stat-label">Total Prestasi</div>
-                        <div class="prestasi-stat-value">{{ $statistics['total'] }}</div>
+                        <div class="prestasi-stat-value">{{ number_format($statistics['total']) }}</div>
                         <div class="prestasi-stat-sub">{{ $statistics['beregu'] }} beregu / {{ max(0, $statistics['total'] - $statistics['beregu']) }} individu</div>
                     </div>
                     <span class="prestasi-stat-icon" style="background: #fff7ed; color: #ea580c;">
                         <i class="fa fa-trophy"></i>
                     </span>
-                </div>
+                </a>
             </div>
 
             <div class="col-sm-6 col-lg-3 mb-2 mb-lg-0">
-                <div class="prestasi-stat-card">
+                <a href="{{ route('prestasi-siswa.index', ['kategori' => \App\Models\Admin\Prestasi\PrestasiSiswa::KATEGORI_AKADEMIK]) }}"
+                    class="prestasi-stat-card {{ ($filters['kategori'] ?? $allFilterKey) === \App\Models\Admin\Prestasi\PrestasiSiswa::KATEGORI_AKADEMIK ? 'is-active-filter' : '' }}">
                     <div>
                         <div class="prestasi-stat-label">Kategori Akademik</div>
-                        <div class="prestasi-stat-value" style="color: #1d4ed8;">{{ $statistics['akademik'] }}</div>
+                        <div class="prestasi-stat-value" style="color: #1d4ed8;">{{ number_format($statistics['akademik']) }}</div>
                         <div class="prestasi-stat-sub">Sains, olimpiade &amp; mapel</div>
                     </div>
                     <span class="prestasi-stat-icon" style="background: #eff6ff; color: #2563eb;">
                         <i class="fa fa-graduation-cap"></i>
                     </span>
-                </div>
+                </a>
             </div>
 
             <div class="col-sm-6 col-lg-3 mb-2 mb-sm-0">
-                <div class="prestasi-stat-card">
+                <a href="{{ route('prestasi-siswa.index', ['kategori' => \App\Models\Admin\Prestasi\PrestasiSiswa::KATEGORI_NON_AKADEMIK]) }}"
+                    class="prestasi-stat-card {{ ($filters['kategori'] ?? $allFilterKey) === \App\Models\Admin\Prestasi\PrestasiSiswa::KATEGORI_NON_AKADEMIK ? 'is-active-filter' : '' }}">
                     <div>
                         <div class="prestasi-stat-label">Non-Akademik</div>
-                        <div class="prestasi-stat-value" style="color: #047857;">{{ $statistics['non_akademik'] }}</div>
+                        <div class="prestasi-stat-value" style="color: #047857;">{{ number_format($statistics['non_akademik']) }}</div>
                         <div class="prestasi-stat-sub">Olahraga, seni, tahfidz &amp; ekskul</div>
                     </div>
                     <span class="prestasi-stat-icon" style="background: #ecfdf5; color: #059669;">
                         <i class="fa fa-medal"></i>
                     </span>
-                </div>
+                </a>
             </div>
 
             <div class="col-sm-6 col-lg-3">
-                <div class="prestasi-stat-card">
+                <a href="{{ route('prestasi-siswa.index', ['has_foto' => 1]) }}"
+                    class="prestasi-stat-card {{ ! empty($filters['has_foto']) ? 'is-active-filter' : '' }}">
                     <div>
                         <div class="prestasi-stat-label">Dokumentasi Foto</div>
-                        <div class="prestasi-stat-value" style="color: #6d28d9;">{{ $statistics['dengan_foto'] }}</div>
+                        <div class="prestasi-stat-value" style="color: #6d28d9;">{{ number_format($statistics['dengan_foto']) }}</div>
                         <div class="prestasi-stat-sub">Piagam / foto penyerahan</div>
                     </div>
                     <span class="prestasi-stat-icon" style="background: #f5f3ff; color: #7c3aed;">
                         <i class="fa fa-camera"></i>
                     </span>
-                </div>
+                </a>
             </div>
         </div>
+
+        @if (! empty($unitStats))
+            <div class="prestasi-unit-strip mb-3 shadow-sm">
+                <span class="small font-weight-bold text-uppercase text-muted mr-1">
+                    <i class="fa fa-school text-warning mr-1"></i> Prestasi per Unit:
+                </span>
+                @foreach ($unitStats as $unitKey => $unitCount)
+                    <a href="{{ route('prestasi-siswa.index', ['unit' => $unitKey]) }}"
+                        class="prestasi-unit-pill {{ ($filters['unit'] ?? $allFilterKey) === $unitKey ? 'is-active' : '' }}">
+                        <span>{{ $unitKey }}</span>
+                        <span class="badge badge-light">{{ number_format($unitCount) }}</span>
+                    </a>
+                @endforeach
+            </div>
+        @endif
 
         <!-- FILTER & PENCARIAN -->
         <div class="filter-card">
@@ -283,14 +382,22 @@
                 <div class="filter-card-title">
                     <span class="filter-card-icon"><i class="fa fa-sliders-h"></i></span>
                     <span>Filter &amp; Pencarian Prestasi Siswa</span>
-                    @if ($hasActiveFilter)
+                    @if ($hasFilter)
                         <span class="badge badge-primary">Filter Aktif</span>
                     @endif
+                    @if (! empty($filters['has_foto']))
+                        <span class="badge badge-info">Dengan Foto</span>
+                    @endif
+                    @if (($filters['siswa_nis'] ?? '') !== '')
+                        <span class="badge badge-warning text-dark">NIS: {{ $filters['siswa_nis'] }}</span>
+                    @endif
                 </div>
-                <span class="filter-count-pill">
-                    <i class="fa fa-trophy text-warning"></i>
-                    Menampilkan: <strong>{{ $prestasi->count() }}</strong> prestasi
-                </span>
+                @if ($hasFilter)
+                    <span class="filter-count-pill">
+                        <i class="fa fa-trophy text-warning"></i>
+                        Menampilkan: <strong>{{ number_format($prestasi->count()) }}</strong> prestasi
+                    </span>
+                @endif
             </div>
             <div class="filter-card-body">
                 <form method="GET" action="{{ route('prestasi-siswa.index') }}">
@@ -307,6 +414,22 @@
                                         @selected((string) ($filters['tahun_ajaran_id'] ?? '') === (string) $ta->id)>
                                         {{ $ta->nama_tahun_ajaran }} - Sem {{ strtoupper($ta->semester) }}
                                         {{ $ta->is_active ? '(Aktif)' : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="filter_unit" class="filter-label">Unit</label>
+                            <select name="unit" id="filter_unit" class="filter-control">
+                                <option value="{{ $allFilterKey }}"
+                                    @selected(($filters['unit'] ?? $allFilterKey) === $allFilterKey)>
+                                    Semua Unit
+                                </option>
+                                @foreach ($unitOptions as $uOpt)
+                                    <option value="{{ $uOpt }}"
+                                        @selected(($filters['unit'] ?? $allFilterKey) === $uOpt)>
+                                        {{ $uOpt }}@if (isset($unitStats[$uOpt])) ({{ number_format($unitStats[$uOpt]) }})@endif
                                     </option>
                                 @endforeach
                             </select>
@@ -344,7 +467,7 @@
                             </select>
                         </div>
 
-                        <div>
+                        <div class="prestasi-filter-search">
                             <label for="filter_search" class="filter-label">Cari Siswa / Tim / Prestasi</label>
                             <input type="text" name="search" id="filter_search" class="filter-control"
                                 placeholder="Nama siswa, tim, lomba, penyelenggara..."
@@ -354,34 +477,62 @@
 
                     <div class="filter-footer">
                         <div class="small text-muted">
-                            @if ($hasActiveFilter)
+                            @if ($hasFilter)
+                                <i class="fa fa-check-circle text-success mr-1"></i>
                                 Filter aktif diterapkan pada daftar prestasi di bawah.
                             @else
-                                Saring data berdasarkan tahun ajaran, kategori, tingkat, atau kata kunci.
+                                <i class="fa fa-info-circle text-primary mr-1"></i>
+                                Pilih filter di atas atau klik salah satu unit / kartu statistik untuk menampilkan daftar prestasi.
                             @endif
                         </div>
 
                         <div class="d-flex flex-wrap align-items-center" style="gap: 0.5rem;">
-                            @if ($hasActiveFilter)
-                                <a href="{{ route('prestasi-siswa.index') }}" class="filter-btn filter-btn-secondary">
-                                    <i class="fa fa-sync-alt"></i> Reset Filter
-                                </a>
-                            @else
-                                <a href="{{ route('prestasi-siswa.index') }}" class="filter-btn filter-btn-secondary">
-                                    <i class="fa fa-list"></i> Semua Data
-                                </a>
-                            @endif
                             <button type="submit" class="filter-btn filter-btn-primary">
                                 <i class="fa fa-filter"></i> Terapkan Filter
                             </button>
+                            <a href="{{ route('prestasi-siswa.index', ['show_all' => 1]) }}" class="filter-btn filter-btn-secondary">
+                                <i class="fa fa-list"></i> Tampilkan Semua
+                            </a>
+                            @if ($hasFilter)
+                                <a href="{{ route('prestasi-siswa.index') }}" class="filter-btn filter-btn-secondary">
+                                    <i class="fa fa-sync-alt"></i> Reset Filter
+                                </a>
+                            @endif
                         </div>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- TABEL DAFTAR PRESTASI -->
-        <div class="main-card card mb-3 shadow-sm border-0">
+        @if (! $hasFilter)
+            <div class="prestasi-prompt-card shadow-sm mb-3">
+                <div class="mb-2" style="font-size: 2rem; color: #ea580c;">
+                    <i class="fa fa-filter"></i>
+                </div>
+                <h5 class="font-weight-bold text-slate-800 mb-1">
+                    Pilih Filter untuk Menampilkan Daftar Prestasi
+                </h5>
+                <p class="text-muted small mb-3" style="max-width: 560px; margin-left: auto; margin-right: auto;">
+                    Agar halaman tetap ringan saat data prestasi siswa semakin banyak, daftar tabel belum dimuat otomatis. Gunakan filter di atas, klik pill unit, atau gunakan pintasan cepat di bawah.
+                </p>
+                <div class="d-flex flex-wrap justify-content-center" style="gap: 0.5rem;">
+                    @if ($activeTaModel)
+                        <a href="{{ route('prestasi-siswa.index', ['tahun_ajaran_id' => $activeTaModel->sqid]) }}"
+                            class="btn text-white font-weight-bold shadow-sm"
+                            style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 8px;">
+                            <i class="fa fa-calendar-check mr-1"></i>
+                            Tampilkan TA Aktif ({{ $activeTaModel->nama_tahun_ajaran }} - Sem {{ strtoupper($activeTaModel->semester) }})
+                        </a>
+                    @endif
+                    <a href="{{ route('prestasi-siswa.index', ['show_all' => 1]) }}"
+                        class="btn btn-light border font-weight-bold shadow-sm" style="border-radius: 8px;">
+                        <i class="fa fa-trophy mr-1 text-warning"></i> Tampilkan Semua ({{ number_format($statistics['total']) }})
+                    </a>
+                </div>
+            </div>
+        @else
+            <!-- TABEL DAFTAR PRESTASI -->
+            <div class="main-card card mb-3 shadow-sm border-0">
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="mb-0 table table-hover table-striped align-middle" id="myTable3">
@@ -409,6 +560,12 @@
                                     $teamDisplayTitle = $cleanKeterangan !== ''
                                         ? \Illuminate\Support\Str::limit($cleanKeterangan, 44)
                                         : 'Tim Beregu';
+                                    $teamUnits = $siswaCollection
+                                        ->map(static fn ($anggota): string => strtoupper(trim((string) ($anggota->relationLoaded('kelas') ? $anggota->kelas?->jenjang_kelas : ''))))
+                                        ->filter()
+                                        ->unique()
+                                        ->sort(static fn (string $a, string $b): int => \App\Models\Admin\DataMaster\Kelas::compareJenjangOrder($a, $b))
+                                        ->values();
                                     $membersPayload = $siswaCount > 1
                                         ? $siswaCollection->map(static function ($anggota): array {
                                             $kelasModel = $anggota->relationLoaded('kelas') ? $anggota->kelas : null;
@@ -423,7 +580,7 @@
                                             ];
                                         })->values()->all()
                                         : [];
-                                    $searchCellText = trim($cleanKeterangan.' '.$item->daftar_siswa_ringkas.' '.$siswaCollection->pluck('nis')->implode(' '));
+                                    $searchCellText = trim($cleanKeterangan.' '.$item->daftar_siswa_ringkas.' '.$siswaCollection->pluck('nis')->implode(' ').' '.$teamUnits->implode(' '));
                                 @endphp
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
@@ -441,7 +598,7 @@
                                                         title="{{ $cleanKeterangan !== '' ? $cleanKeterangan : $item->daftar_siswa_ringkas }}">
                                                         {{ $teamDisplayTitle }}
                                                     </a>
-                                                    <div class="mt-1">
+                                                    <div class="d-flex flex-wrap align-items-center mt-1" style="gap: 0.3rem;">
                                                         <button type="button"
                                                             class="prestasi-beregu-trigger js-prestasi-members"
                                                             data-title="{{ $item->nama_prestasi }}"
@@ -450,6 +607,11 @@
                                                             <i class="fa fa-users"></i>
                                                             <span>Beregu &bull; {{ $siswaCount }} Siswa</span>
                                                         </button>
+                                                        @foreach ($teamUnits as $teamUnit)
+                                                            <span class="badge badge-light border text-slate-700" style="font-size: 0.67rem;">
+                                                                {{ $teamUnit }}
+                                                            </span>
+                                                        @endforeach
                                                     </div>
                                                 </div>
                                             </div>
@@ -566,13 +728,16 @@
                 </div>
             </div>
         </div>
+        @endif
     </div>
 @endsection
 
 @push('js')
     <script>
         $(document).ready(function() {
-            initDataTables('#myTable3');
+            @if ($hasFilter)
+                initDataTables('#myTable3');
+            @endif
 
             function escapeHtml(str) {
                 return $('<div>').text(String(str ?? '')).html();

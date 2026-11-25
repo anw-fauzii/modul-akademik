@@ -28,10 +28,13 @@ class PrestasiSiswaController extends Controller
             'admin.prestasi.prestasiSiswa.index',
             $this->service->getIndexData($request->only([
                 'tahun_ajaran_id',
+                'unit',
                 'kategori',
                 'tingkat',
                 'siswa_nis',
                 'search',
+                'has_foto',
+                'show_all',
             ]))
         );
     }

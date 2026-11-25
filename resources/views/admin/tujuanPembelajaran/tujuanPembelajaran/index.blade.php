@@ -95,32 +95,125 @@
                 flex-shrink: 0;
             }
 
-            .tp-filter-bar {
-                background: #ffffff;
-                border: 1px solid #e2e8f0;
-                border-radius: 16px;
-                padding: 0.9rem 1.1rem;
-                margin-bottom: 1rem;
-                box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
-            }
-
             .tp-filter-grid {
                 display: grid;
-                grid-template-columns: repeat(1, minmax(0, 1fr));
-                gap: 0.75rem;
+                grid-template-columns: minmax(0, 1fr);
+                gap: 0.85rem;
                 align-items: end;
+            }
+
+            .tp-col-ta,
+            .tp-col-unit,
+            .tp-col-mapel,
+            .tp-col-tingkat,
+            .tp-col-status,
+            .tp-col-search {
+                min-width: 0;
             }
 
             @media (min-width: 640px) {
                 .tp-filter-grid {
                     grid-template-columns: repeat(2, minmax(0, 1fr));
                 }
+
+                .tp-col-mapel,
+                .tp-col-search {
+                    grid-column: span 2;
+                }
             }
 
-            @media (min-width: 1120px) {
+            @media (min-width: 992px) {
                 .tp-filter-grid {
-                    grid-template-columns: 1.3fr 0.68fr 1.25fr 0.78fr 0.75fr 1.45fr;
+                    grid-template-columns: repeat(12, minmax(0, 1fr));
                 }
+
+                .tp-col-ta {
+                    grid-column: span 4;
+                }
+
+                .tp-col-unit {
+                    grid-column: span 2;
+                }
+
+                .tp-col-mapel {
+                    grid-column: span 6;
+                }
+
+                .tp-col-tingkat {
+                    grid-column: span 3;
+                }
+
+                .tp-col-status {
+                    grid-column: span 3;
+                }
+
+                .tp-col-search {
+                    grid-column: span 6;
+                }
+            }
+
+            .tp-table thead th {
+                font-size: 0.72rem;
+                text-transform: uppercase;
+                letter-spacing: 0.03em;
+                color: #475569;
+                background: #f8fafc;
+                border-bottom: 1px solid #e2e8f0;
+                white-space: nowrap;
+            }
+
+            .tp-desc-wrap {
+                min-width: 220px;
+                max-width: 360px;
+            }
+
+            .tp-desc-text {
+                font-size: 0.83rem;
+                line-height: 1.48;
+                color: #334155;
+                white-space: normal;
+                word-break: break-word;
+            }
+
+            .tp-desc-text.is-clamped {
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+
+            .tp-desc-wrap.is-expanded .tp-desc-text.is-clamped {
+                display: block;
+                -webkit-line-clamp: unset;
+                overflow: visible;
+            }
+
+            .tp-readmore-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.25rem;
+                margin-top: 0.28rem;
+                padding: 0.1rem 0.5rem;
+                border-radius: 999px;
+                border: 1px solid #fed7aa;
+                background: #fff7ed;
+                color: #c2410c;
+                font-size: 0.69rem;
+                font-weight: 700;
+                cursor: pointer;
+                transition: background-color 0.15s ease, border-color 0.15s ease;
+            }
+
+            .tp-readmore-btn:hover {
+                background: #ffedd5;
+                border-color: #fdba74;
+            }
+
+            .tp-elemen-wrap {
+                min-width: 150px;
+                max-width: 220px;
+                white-space: normal;
+                word-break: break-word;
             }
 
             .tp-code-chip {
@@ -360,87 +453,102 @@
         </div>
 
         <!-- FILTER BAR -->
-        <div class="tp-filter-bar">
-            <form method="GET" action="{{ route('tujuan-pembelajaran.index') }}" id="tpFilterForm" class="tp-filter-grid">
-                <div>
-                    <label for="filter_tahun_ajaran" class="filter-label">Tahun Ajaran / Semester</label>
-                    <select name="tahun_ajaran_id" id="filter_tahun_ajaran" class="filter-control js-tp-autosubmit">
-                        <option value="all" @selected(($filters['tahun_ajaran_id'] ?? 'all') === 'all')>
-                            Semua Semester
-                        </option>
-                        @foreach ($tahunAjaranOptions as $ta)
-                            <option value="{{ $ta->sqid }}"
-                                @selected((string) ($filters['tahun_ajaran_id'] ?? '') === (string) $ta->id)>
-                                {{ $ta->full_label }}{{ $ta->is_active ? ' (Aktif)' : '' }}
+        <div class="filter-card">
+            <div class="filter-card-header">
+                <div class="filter-card-title">
+                    <span class="filter-card-icon"><i class="fa fa-sliders-h"></i></span>
+                    <span>Filter &amp; Pencarian Tujuan Pembelajaran</span>
+                    @if ($hasActiveFilter)
+                        <span class="badge badge-primary">Filter Aktif</span>
+                    @endif
+                </div>
+                <span class="filter-count-pill">
+                    <i class="fa fa-check-circle text-warning"></i>
+                    <strong>{{ number_format($tujuanPembelajaran->count()) }}</strong> butir TP
+                </span>
+            </div>
+            <div class="filter-card-body">
+                <form method="GET" action="{{ route('tujuan-pembelajaran.index') }}" id="tpFilterForm" class="tp-filter-grid">
+                    <div class="tp-col-ta">
+                        <label for="filter_tahun_ajaran" class="filter-label">Tahun Ajaran</label>
+                        <select name="tahun_ajaran_id" id="filter_tahun_ajaran" class="filter-control js-tp-autosubmit">
+                            <option value="all" @selected(($filters['tahun_ajaran_id'] ?? 'all') === 'all')>
+                                Semua Semester
                             </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label for="filter_unit" class="filter-label">Unit</label>
-                    <select name="unit" id="filter_unit" class="filter-control js-tp-unit-change">
-                        <option value="">Semua</option>
-                        @foreach ($unitOptions as $unitOption)
-                            <option value="{{ $unitOption }}" @selected($selectedUnit === $unitOption)>
-                                {{ $unitOption }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label for="filter_mapel" class="filter-label">Mata Pelajaran</label>
-                    <select name="mata_pelajaran_id" id="filter_mapel" class="filter-control js-tp-autosubmit">
-                        <option value="">Semua Mata Pelajaran</option>
-                        @foreach ($mataPelajaranOptions as $mapelOpt)
-                            <option value="{{ $mapelOpt->sqid }}"
-                                @selected((string) ($filters['mata_pelajaran_id'] ?? '') === (string) $mapelOpt->id)>
-                                [{{ strtoupper((string) $mapelOpt->unit) }}] {{ $mapelOpt->singkatan }} - {{ $mapelOpt->nama_mata_pelajaran }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label for="filter_tingkatan" class="filter-label">Tingkatan</label>
-                    <select name="tingkatan_kelas" id="filter_tingkatan" class="filter-control js-tp-autosubmit">
-                        <option value="">Semua</option>
-                        @foreach ($tingkatanOptions as $tingkatOpt)
-                            <option value="{{ $tingkatOpt }}"
-                                @selected((string) ($filters['tingkatan_kelas'] ?? '') === (string) $tingkatOpt)>
-                                {{ ctype_digit((string) $tingkatOpt) ? 'Kelas '.$tingkatOpt : $tingkatOpt }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label for="filter_status" class="filter-label">Status</label>
-                    <select name="status" id="filter_status" class="filter-control js-tp-autosubmit">
-                        <option value="all" @selected(($filters['status'] ?? 'all') === 'all')>Semua</option>
-                        <option value="1" @selected(($filters['status'] ?? '') === '1')>Aktif</option>
-                        <option value="0" @selected(($filters['status'] ?? '') === '0')>Nonaktif</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label for="filter_search" class="filter-label">Cari Kode / Elemen / Materi / TP</label>
-                    <div class="filter-search-group">
-                        <input type="text" name="search" id="filter_search" class="filter-control"
-                            placeholder="Kode TP, elemen, lingkup materi..." value="{{ $filters['search'] ?? '' }}">
-                        <button type="submit" class="filter-btn filter-btn-primary filter-btn-icon" title="Terapkan Filter">
-                            <i class="fa fa-search"></i>
-                        </button>
-                        @if ($hasActiveFilter)
-                            <a href="{{ route('tujuan-pembelajaran.index', \App\Support\Sqid::encodeQueryParams(['tahun_ajaran_id' => $filters['tahun_ajaran_id'] ?? 'all'])) }}"
-                                class="filter-btn filter-btn-secondary filter-btn-icon" title="Reset Filter">
-                                <i class="fa fa-undo"></i>
-                            </a>
-                        @endif
+                            @foreach ($tahunAjaranOptions as $ta)
+                                <option value="{{ $ta->sqid }}"
+                                    @selected((string) ($filters['tahun_ajaran_id'] ?? '') === (string) $ta->id)>
+                                    {{ $ta->full_label }}{{ $ta->is_active ? ' (Aktif)' : '' }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
-                </div>
-            </form>
+
+                    <div class="tp-col-unit">
+                        <label for="filter_unit" class="filter-label">Unit</label>
+                        <select name="unit" id="filter_unit" class="filter-control js-tp-unit-change">
+                            <option value="">Semua</option>
+                            @foreach ($unitOptions as $unitOption)
+                                <option value="{{ $unitOption }}" @selected($selectedUnit === $unitOption)>
+                                    {{ $unitOption }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="tp-col-mapel">
+                        <label for="filter_mapel" class="filter-label">Mata Pelajaran</label>
+                        <select name="mata_pelajaran_id" id="filter_mapel" class="filter-control js-tp-autosubmit">
+                            <option value="">Semua Mata Pelajaran</option>
+                            @foreach ($mataPelajaranOptions as $mapelOpt)
+                                <option value="{{ $mapelOpt->sqid }}"
+                                    @selected((string) ($filters['mata_pelajaran_id'] ?? '') === (string) $mapelOpt->id)>
+                                    [{{ strtoupper((string) $mapelOpt->unit) }}] {{ $mapelOpt->singkatan }} - {{ $mapelOpt->nama_mata_pelajaran }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="tp-col-tingkat">
+                        <label for="filter_tingkatan" class="filter-label">Tingkatan</label>
+                        <select name="tingkatan_kelas" id="filter_tingkatan" class="filter-control js-tp-autosubmit">
+                            <option value="">Semua</option>
+                            @foreach ($tingkatanOptions as $tingkatOpt)
+                                <option value="{{ $tingkatOpt }}"
+                                    @selected((string) ($filters['tingkatan_kelas'] ?? '') === (string) $tingkatOpt)>
+                                    {{ ctype_digit((string) $tingkatOpt) ? 'Kelas '.$tingkatOpt : $tingkatOpt }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="tp-col-status">
+                        <label for="filter_status" class="filter-label">Status</label>
+                        <select name="status" id="filter_status" class="filter-control js-tp-autosubmit">
+                            <option value="all" @selected(($filters['status'] ?? 'all') === 'all')>Semua</option>
+                            <option value="1" @selected(($filters['status'] ?? '') === '1')>Aktif</option>
+                            <option value="0" @selected(($filters['status'] ?? '') === '0')>Nonaktif</option>
+                        </select>
+                    </div>
+
+                    <div class="tp-col-search">
+                        <label for="filter_search" class="filter-label">Cari Kode / Elemen / TP</label>
+                        <div class="filter-search-group">
+                            <input type="text" name="search" id="filter_search" class="filter-control"
+                                placeholder="Kode TP, elemen, tujuan pembelajaran..." value="{{ $filters['search'] ?? '' }}">
+                            <button type="submit" class="filter-btn filter-btn-primary filter-btn-icon" title="Terapkan Filter">
+                                <i class="fa fa-search"></i>
+                            </button>
+                            @if ($hasActiveFilter)
+                                <a href="{{ route('tujuan-pembelajaran.index', \App\Support\Sqid::encodeQueryParams(['tahun_ajaran_id' => $filters['tahun_ajaran_id'] ?? 'all'])) }}"
+                                    class="filter-btn filter-btn-secondary filter-btn-icon" title="Reset Filter">
+                                    <i class="fa fa-undo"></i>
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
 
         <!-- TABEL DAFTAR TP -->
@@ -451,23 +559,23 @@
                     Daftar Tujuan Pembelajaran
                 </span>
                 <span style="font-size: 0.76rem; color: #64748b; font-weight: 600;">
-                    {{ $tujuanPembelajaran->count() }} butir TP
+                    {{ number_format($tujuanPembelajaran->count()) }} butir TP
                 </span>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="mb-0 table table-hover align-middle" id="myTable3">
+                    <table class="mb-0 table table-hover align-middle tp-table" id="myTable3">
                         <thead>
                             <tr>
-                                <th style="width: 5%;">No</th>
+                                <th class="text-center" style="width: 44px;">No</th>
                                 <th style="width: 10%;">Kode TP</th>
-                                <th style="width: 16%;">Mata Pelajaran</th>
-                                <th class="text-center" style="width: 11%;">Tingkat &amp; Fase</th>
-                                <th style="width: 18%;">Elemen &amp; Lingkup Materi</th>
-                                <th>Tujuan Pembelajaran</th>
-                                <th class="text-center" style="width: 7%;">Urutan</th>
-                                <th class="text-center" style="width: 10%;">Status</th>
-                                <th style="width: 72px; text-align: center;">Aksi</th>
+                                <th style="min-width: 150px;">Mata Pelajaran</th>
+                                <th class="text-center" style="white-space: nowrap;">Tingkat &amp; Fase</th>
+                                <th style="min-width: 150px;">Elemen</th>
+                                <th style="min-width: 240px;">Tujuan Pembelajaran</th>
+                                <th class="text-center" style="width: 68px;">Urutan</th>
+                                <th class="text-center" style="width: 96px;">Status</th>
+                                <th style="width: 68px; text-align: center;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -475,10 +583,12 @@
                                 @php
                                     $mapel = $item->relationLoaded('mataPelajaran') ? $item->mataPelajaran : null;
                                     $tahunAjaran = $item->relationLoaded('tahunAjaran') ? $item->tahunAjaran : null;
+                                    $cleanTpText = trim(preg_replace('/\s+/', ' ', (string) $item->tujuan_pembelajaran) ?? '');
+                                    $isLongTp = mb_strlen($cleanTpText) > 90;
                                 @endphp
                                 <tr>
-                                    <td>{{ $loop->iteration }}</td>
-                                    <td>
+                                    <td class="text-center">{{ $loop->iteration }}</td>
+                                    <td style="white-space: nowrap;">
                                         <span class="tp-code-chip">{{ $item->kode_tp }}</span>
                                     </td>
                                     <td>
@@ -496,7 +606,7 @@
                                             <span class="text-muted">-</span>
                                         @endif
                                     </td>
-                                    <td class="text-center">
+                                    <td class="text-center" style="white-space: nowrap;">
                                         <div class="font-weight-bold text-slate-800" style="font-size: 0.82rem;">
                                             {{ $item->tingkatan_label }}
                                         </div>
@@ -507,23 +617,27 @@
                                         @endif
                                     </td>
                                     <td>
-                                        @if (filled($item->elemen))
-                                            <div class="font-weight-bold text-slate-800" style="font-size: 0.8rem;">
-                                                {{ $item->elemen }}
-                                            </div>
-                                        @endif
-                                        @if (filled($item->lingkup_materi))
-                                            <div class="small text-muted {{ filled($item->elemen) ? 'mt-0.5' : '' }}">
-                                                {{ $item->lingkup_materi }}
-                                            </div>
-                                        @endif
-                                        @if (! filled($item->elemen) && ! filled($item->lingkup_materi))
-                                            <span class="text-muted">-</span>
-                                        @endif
+                                        <div class="tp-elemen-wrap">
+                                            @if (filled($item->elemen))
+                                                <div class="font-weight-bold text-slate-800" style="font-size: 0.8rem;">
+                                                    {{ $item->elemen }}
+                                                </div>
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
+                                        </div>
                                     </td>
-                                    <td>
-                                        <div class="text-slate-700" style="font-size: 0.84rem; line-height: 1.45;">
-                                            {{ $item->tujuan_pembelajaran }}
+                                    <td data-search="{{ $cleanTpText }}">
+                                        <div class="tp-desc-wrap" title="{{ $cleanTpText }}">
+                                            <div class="tp-desc-text {{ $isLongTp ? 'is-clamped' : '' }}">
+                                                {{ $item->tujuan_pembelajaran }}
+                                            </div>
+                                            @if ($isLongTp)
+                                                <button type="button" class="tp-readmore-btn js-tp-toggle-desc" aria-expanded="false">
+                                                    <i class="fa fa-chevron-down"></i>
+                                                    <span>Selengkapnya</span>
+                                                </button>
+                                            @endif
                                         </div>
                                     </td>
                                     <td class="text-center">
@@ -709,6 +823,24 @@
                 selectEl.addEventListener('change', function () {
                     filterForm.submit();
                 });
+            });
+
+            document.addEventListener('click', function (e) {
+                const toggleBtn = e.target.closest('.js-tp-toggle-desc');
+                if (!toggleBtn) {
+                    return;
+                }
+
+                const wrap = toggleBtn.closest('.tp-desc-wrap');
+                if (!wrap) {
+                    return;
+                }
+
+                const isExpanded = wrap.classList.toggle('is-expanded');
+                toggleBtn.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+                toggleBtn.innerHTML = isExpanded
+                    ? '<i class="fa fa-chevron-up"></i><span>Ringkas</span>'
+                    : '<i class="fa fa-chevron-down"></i><span>Selengkapnya</span>';
             });
         });
     </script>
