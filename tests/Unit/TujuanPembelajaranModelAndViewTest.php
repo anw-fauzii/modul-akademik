@@ -362,6 +362,10 @@ class TujuanPembelajaranModelAndViewTest extends TestCase
         $this->assertStringContainsString('filter-card', $indexHtml);
         $this->assertStringContainsString('tp-col-mapel', $indexHtml);
         $this->assertStringContainsString('tp-col-search', $indexHtml);
+        $this->assertStringContainsString('Kode &amp; Mapel', $indexHtml);
+        $this->assertStringContainsString('Tingkat &amp; Elemen', $indexHtml);
+        $this->assertStringContainsString('tp-order-tag', $indexHtml);
+        $this->assertStringContainsString('tp-elemen-chip', $indexHtml);
         $this->assertStringContainsString('tp-desc-text is-clamped', $indexHtml);
         $this->assertStringContainsString('js-tp-toggle-desc', $indexHtml);
         $this->assertStringContainsString('Matematika', $indexHtml);

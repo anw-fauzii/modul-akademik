@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\DataMaster\KaryawanController;
 use App\Http\Controllers\Admin\DataMaster\KelasController;
 use App\Http\Controllers\Admin\DataMaster\SekolahController;
 use App\Http\Controllers\Admin\DataMaster\SiswaController;
+use App\Http\Controllers\Admin\DataMaster\SiswaMutasiController;
 use App\Http\Controllers\Admin\DataMaster\TahunAjaranController;
 use App\Http\Controllers\Admin\DataMaster\TargetCapaianController;
 use App\Http\Controllers\Admin\DataMaster\TitimangsaController;
@@ -264,6 +265,19 @@ Route::middleware(['auth', 'sso.check', 'nocache', 'sqid.decode'])->group(functi
         ->except(['show'])
         ->parameters(['target-capaian' => 'target_capaian']);
     Route::resource('/data-master/siswa', SiswaController::class);
+    Route::middleware('role:super admin')
+        ->prefix('/data-master/siswa-mutasi')
+        ->name('siswa-mutasi.')
+        ->group(function (): void {
+            Route::get('/', [SiswaMutasiController::class, 'index'])->name('index');
+            Route::get('/kelulusan', [SiswaMutasiController::class, 'kelulusanForm'])->name('kelulusan.create');
+            Route::post('/kelulusan', [SiswaMutasiController::class, 'kelulusanStore'])->name('kelulusan.store');
+            Route::get('/mutasi-keluar', [SiswaMutasiController::class, 'mutasiKeluarForm'])->name('keluar.create');
+            Route::post('/mutasi-keluar', [SiswaMutasiController::class, 'mutasiKeluarStore'])->name('keluar.store');
+            Route::get('/mutasi-masuk', [SiswaMutasiController::class, 'mutasiMasukForm'])->name('masuk.create');
+            Route::post('/mutasi-masuk', [SiswaMutasiController::class, 'mutasiMasukStore'])->name('masuk.store');
+            Route::post('/{siswa_mutasi}/batalkan', [SiswaMutasiController::class, 'batalkan'])->name('batalkan');
+        });
     Route::get('/data-master/karyawan', [KaryawanController::class, 'index'])->name('karyawan.index');
     Route::get('/data-master/karyawan/{karyawan}', [KaryawanController::class, 'show'])->name('karyawan.show');
     Route::get('/data-master/karyawan/{karyawan}/foto', [KaryawanController::class, 'foto'])->name('karyawan.foto');

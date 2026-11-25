@@ -14,6 +14,7 @@ use App\Models\Admin\DataMaster\Kelas;
 use App\Models\Admin\DataMaster\KomentarT2q;
 use App\Models\Admin\DataMaster\Sekolah;
 use App\Models\Admin\DataMaster\Siswa;
+use App\Models\Admin\DataMaster\SiswaMutasi;
 use App\Models\Admin\DataMaster\TahunAjaran;
 use App\Models\Admin\DataMaster\TargetCapaian;
 use App\Models\Admin\DataMaster\Titimangsa;
@@ -97,6 +98,7 @@ class AppServiceProvider extends ServiceProvider
         RekapMapel::class => RekapMapelPolicy::class,
         PresensiSiswa::class => PresensiSiswaPolicy::class,
         PrestasiSiswa::class => AdminOnlyPolicy::class,
+        SiswaMutasi::class => AdminOnlyPolicy::class,
         RaporT2q::class => RaporT2qPolicy::class,
         YaumiyahTahfizh::class => YaumiyahT2qPolicy::class,
         YaumiyahTahsin::class => YaumiyahT2qPolicy::class,

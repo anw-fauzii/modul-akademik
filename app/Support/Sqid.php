@@ -12,6 +12,7 @@ use App\Models\Admin\DataMaster\Karyawan;
 use App\Models\Admin\DataMaster\Kelas;
 use App\Models\Admin\DataMaster\Sekolah;
 use App\Models\Admin\DataMaster\Siswa;
+use App\Models\Admin\DataMaster\SiswaMutasi;
 use App\Models\Admin\DataMaster\TahunAjaran;
 use App\Models\Admin\DataMaster\TargetCapaian;
 use App\Models\Admin\DataMaster\Titimangsa;
@@ -87,6 +88,7 @@ final class Sqid
         32 => YaumiyahTahsin::class,
         33 => PenilaianFinalisasi::class,
         34 => PrestasiSiswa::class,
+        35 => SiswaMutasi::class,
     ];
 
     /**
@@ -124,6 +126,9 @@ final class Sqid
         'redirect_kelas_id' => Kelas::class,
         'redirect_tahun_ajaran_id' => TahunAjaran::class,
         'karyawan_nipy' => Karyawan::class,
+        'siswa_mutasi_id' => SiswaMutasi::class,
+        'kelas_asal_id' => Kelas::class,
+        'kelas_tujuan_id' => Kelas::class,
     ];
 
     /**

@@ -159,18 +159,24 @@
                 color: #475569;
                 background: #f8fafc;
                 border-bottom: 1px solid #e2e8f0;
+                padding: 0.75rem 0.9rem;
                 white-space: nowrap;
             }
 
+            .tp-table tbody td {
+                padding: 0.85rem 0.9rem;
+                border-bottom: 1px solid #f1f5f9;
+                vertical-align: top;
+            }
+
             .tp-desc-wrap {
-                min-width: 220px;
-                max-width: 360px;
+                min-width: 240px;
             }
 
             .tp-desc-text {
-                font-size: 0.83rem;
-                line-height: 1.48;
-                color: #334155;
+                font-size: 0.84rem;
+                line-height: 1.55;
+                color: #1e293b;
                 white-space: normal;
                 word-break: break-word;
             }
@@ -192,8 +198,8 @@
                 display: inline-flex;
                 align-items: center;
                 gap: 0.25rem;
-                margin-top: 0.28rem;
-                padding: 0.1rem 0.5rem;
+                margin-top: 0.3rem;
+                padding: 0.1rem 0.52rem;
                 border-radius: 999px;
                 border: 1px solid #fed7aa;
                 background: #fff7ed;
@@ -209,9 +215,30 @@
                 border-color: #fdba74;
             }
 
-            .tp-elemen-wrap {
-                min-width: 150px;
-                max-width: 220px;
+            .tp-order-tag {
+                display: inline-flex;
+                align-items: center;
+                padding: 0.16rem 0.45rem;
+                border-radius: 6px;
+                background: #f1f5f9;
+                border: 1px solid #e2e8f0;
+                color: #475569;
+                font-size: 0.69rem;
+                font-weight: 700;
+                font-variant-numeric: tabular-nums;
+            }
+
+            .tp-elemen-chip {
+                display: inline-block;
+                margin-top: 0.35rem;
+                padding: 0.16rem 0.52rem;
+                border-radius: 6px;
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                color: #334155;
+                font-size: 0.72rem;
+                font-weight: 600;
+                max-width: 190px;
                 white-space: normal;
                 word-break: break-word;
             }
@@ -227,22 +254,6 @@
                 background: #fff7ed;
                 border: 1px solid #fed7aa;
                 color: #c2410c;
-                font-variant-numeric: tabular-nums;
-            }
-
-            .tp-order-pill {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                min-width: 1.75rem;
-                height: 1.65rem;
-                padding: 0 0.45rem;
-                border-radius: 8px;
-                background: #f8fafc;
-                border: 1px solid #e2e8f0;
-                color: #334155;
-                font-size: 0.74rem;
-                font-weight: 700;
                 font-variant-numeric: tabular-nums;
             }
 
@@ -567,15 +578,12 @@
                     <table class="mb-0 table table-hover align-middle tp-table" id="myTable3">
                         <thead>
                             <tr>
-                                <th class="text-center" style="width: 44px;">No</th>
-                                <th style="width: 10%;">Kode TP</th>
-                                <th style="min-width: 150px;">Mata Pelajaran</th>
-                                <th class="text-center" style="white-space: nowrap;">Tingkat &amp; Fase</th>
-                                <th style="min-width: 150px;">Elemen</th>
+                                <th class="text-center" style="width: 48px;">No</th>
+                                <th style="min-width: 195px; width: 22%;">Kode &amp; Mapel</th>
+                                <th style="min-width: 165px; width: 18%;">Tingkat &amp; Elemen</th>
                                 <th style="min-width: 240px;">Tujuan Pembelajaran</th>
-                                <th class="text-center" style="width: 68px;">Urutan</th>
-                                <th class="text-center" style="width: 96px;">Status</th>
-                                <th style="width: 68px; text-align: center;">Aksi</th>
+                                <th class="text-center" style="width: 105px;">Status</th>
+                                <th style="width: 72px; text-align: center;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -584,48 +592,49 @@
                                     $mapel = $item->relationLoaded('mataPelajaran') ? $item->mataPelajaran : null;
                                     $tahunAjaran = $item->relationLoaded('tahunAjaran') ? $item->tahunAjaran : null;
                                     $cleanTpText = trim(preg_replace('/\s+/', ' ', (string) $item->tujuan_pembelajaran) ?? '');
-                                    $isLongTp = mb_strlen($cleanTpText) > 90;
+                                    $isLongTp = mb_strlen($cleanTpText) > 130;
+                                    $mapelSearch = $mapel
+                                        ? $item->kode_tp.' '.$mapel->unit.' '.$mapel->singkatan.' '.$mapel->nama_mata_pelajaran
+                                        : $item->kode_tp;
                                 @endphp
                                 <tr>
-                                    <td class="text-center">{{ $loop->iteration }}</td>
-                                    <td style="white-space: nowrap;">
-                                        <span class="tp-code-chip">{{ $item->kode_tp }}</span>
-                                    </td>
-                                    <td>
+                                    <td class="text-center text-muted font-weight-600">{{ $loop->iteration }}</td>
+                                    <td data-search="{{ $mapelSearch }}"
+                                        data-order="{{ sprintf('%03d-%s', (int) $item->urutan, (string) $item->kode_tp) }}">
+                                        <div class="d-flex flex-wrap align-items-center" style="gap: 0.35rem;">
+                                            <span class="tp-code-chip">{{ $item->kode_tp }}</span>
+                                            <span class="tp-order-tag" title="Urutan tampil ke-{{ $item->urutan }}">#{{ $item->urutan }}</span>
+                                        </div>
                                         @if ($mapel)
-                                            <div class="font-weight-bold text-slate-800" style="font-size: 0.83rem;">
+                                            <div class="font-weight-bold text-slate-800 mt-1" style="font-size: 0.83rem;">
                                                 {{ $mapel->nama_mata_pelajaran }}
                                             </div>
-                                            <div class="small text-muted">
+                                            <div class="small text-muted" style="font-size: 0.72rem;">
                                                 {{ strtoupper((string) $mapel->unit) }}
                                                 @if ($tahunAjaran)
                                                     &middot; {{ $tahunAjaran->full_label }}
                                                 @endif
                                             </div>
                                         @else
-                                            <span class="text-muted">-</span>
-                                        @endif
-                                    </td>
-                                    <td class="text-center" style="white-space: nowrap;">
-                                        <div class="font-weight-bold text-slate-800" style="font-size: 0.82rem;">
-                                            {{ $item->tingkatan_label }}
-                                        </div>
-                                        @if (filled($item->fase))
-                                            <span class="badge {{ $item->fase_badge_class }} mt-1" style="font-size: 0.68rem;">
-                                                {{ $item->fase_label }}
-                                            </span>
+                                            <span class="text-muted small d-block mt-1">-</span>
                                         @endif
                                     </td>
                                     <td>
-                                        <div class="tp-elemen-wrap">
-                                            @if (filled($item->elemen))
-                                                <div class="font-weight-bold text-slate-800" style="font-size: 0.8rem;">
-                                                    {{ $item->elemen }}
-                                                </div>
-                                            @else
-                                                <span class="text-muted">-</span>
+                                        <div class="d-flex flex-wrap align-items-center" style="gap: 0.35rem;">
+                                            <span class="font-weight-bold text-slate-800" style="font-size: 0.82rem;">
+                                                {{ $item->tingkatan_label }}
+                                            </span>
+                                            @if (filled($item->fase))
+                                                <span class="badge {{ $item->fase_badge_class }}" style="font-size: 0.67rem;">
+                                                    {{ $item->fase_label }}
+                                                </span>
                                             @endif
                                         </div>
+                                        @if (filled($item->elemen))
+                                            <div>
+                                                <span class="tp-elemen-chip">{{ $item->elemen }}</span>
+                                            </div>
+                                        @endif
                                     </td>
                                     <td data-search="{{ $cleanTpText }}">
                                         <div class="tp-desc-wrap" title="{{ $cleanTpText }}">
@@ -639,9 +648,6 @@
                                                 </button>
                                             @endif
                                         </div>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="tp-order-pill">{{ $item->urutan }}</span>
                                     </td>
                                     <td class="text-center">
                                         <form action="{{ route('tujuan-pembelajaran.toggle-status', $item) }}" method="POST"

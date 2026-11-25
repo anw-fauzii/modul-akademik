@@ -167,6 +167,14 @@ class Siswa extends Model
      */
     public const STATUS_AKTIF = 'Aktif';
 
+    public const STATUS_NONAKTIF = 'Nonaktif';
+
+    public const STATUS_LULUS = 'Lulus';
+
+    public const STATUS_PINDAH = 'Pindah';
+
+    public const STATUS_KELUAR = 'Keluar';
+
     /**
      * Pilihan status keaktifan siswa.
      *
@@ -174,10 +182,10 @@ class Siswa extends Model
      */
     public const STATUS_OPTIONS = [
         self::STATUS_AKTIF,
-        'Nonaktif',
-        'Lulus',
-        'Pindah',
-        'Keluar',
+        self::STATUS_NONAKTIF,
+        self::STATUS_LULUS,
+        self::STATUS_PINDAH,
+        self::STATUS_KELUAR,
     ];
 
     /**
@@ -222,6 +230,17 @@ class Siswa extends Model
         'prestasi:id,akademik_master_tahun_ajaran_id,nama_prestasi,kategori,tingkat,peringkat,penyelenggara,tanggal,keterangan,foto',
         'prestasi.tahunAjaran:id,nama_tahun_ajaran,semester,is_active',
         'prestasi.siswa:nis,akademik_master_kelas_id,nama_lengkap,avatar',
+    ];
+
+    /**
+     * Relasi riwayat mutasi & kelulusan siswa (dimuat terpisah bila tabel mutasi tersedia).
+     *
+     * @var list<string>
+     */
+    public const MUTASI_DETAIL_RELATIONS = [
+        'mutasiRiwayat.tahunAjaran:id,nama_tahun_ajaran,semester,is_active',
+        'mutasiRiwayat.kelasAsal:id,nama_kelas,jenjang_kelas,tingkatan_kelas',
+        'mutasiRiwayat.kelasTujuan:id,nama_kelas,jenjang_kelas,tingkatan_kelas',
     ];
 
     /**
@@ -549,6 +568,16 @@ class Siswa extends Model
             ->orderByDesc('tanggal')
             ->orderByDesc('id')
             ->withTimestamps();
+    }
+
+    /**
+     * Relasi ke ledger riwayat mutasi & kelulusan siswa.
+     */
+    public function mutasiRiwayat(): HasMany
+    {
+        return $this->hasMany(SiswaMutasi::class, 'siswa_nis', 'nis')
+            ->orderByDesc('tanggal_efektif')
+            ->orderByDesc('id');
     }
 
     /**

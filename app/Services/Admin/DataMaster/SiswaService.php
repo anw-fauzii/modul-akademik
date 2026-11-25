@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 class SiswaService
@@ -344,7 +345,13 @@ class SiswaService
      */
     public function loadDetail(Siswa $siswa): Siswa
     {
-        return $siswa->load(Siswa::DETAIL_RELATIONS);
+        $relations = Siswa::DETAIL_RELATIONS;
+
+        if (Schema::hasTable('akademik_siswa_mutasi')) {
+            $relations = [...$relations, ...Siswa::MUTASI_DETAIL_RELATIONS];
+        }
+
+        return $siswa->load($relations);
     }
 
     /**

@@ -436,6 +436,8 @@
         $displayKelas = $anggotaKelas?->kelas ?? $siswa->kelas;
         $prestasiList = $prestasiList
             ?? ($siswa->relationLoaded('prestasi') ? $siswa->getRelation('prestasi') : collect());
+        $mutasiList = $mutasiList
+            ?? ($siswa->relationLoaded('mutasiRiwayat') ? $siswa->getRelation('mutasiRiwayat') : collect());
 
         $keluargaGroups = [
             'ayah' => [
@@ -627,6 +629,15 @@
                         @if ($prestasiList->isNotEmpty())
                             <span class="badge badge-warning text-dark ml-1" style="border-radius: 999px; font-size: 0.7rem;">
                                 {{ $prestasiList->count() }}
+                            </span>
+                        @endif
+                    </button>
+                    <button type="button" class="siswa-tab-btn" role="tab"
+                        aria-selected="false" aria-controls="panel-mutasi" data-siswa-tab="mutasi">
+                        <i class="fa fa-exchange-alt"></i> Riwayat Mutasi
+                        @if ($mutasiList->isNotEmpty())
+                            <span class="badge badge-light border ml-1" style="border-radius: 999px; font-size: 0.7rem;">
+                                {{ $mutasiList->count() }}
                             </span>
                         @endif
                     </button>
@@ -1071,6 +1082,126 @@
                                     @endif
                                 </div>
                             @endforeach
+                        </div>
+                    @endif
+                </section>
+
+                <!-- Tab 5: Riwayat Mutasi & Kelulusan -->
+                <section id="panel-mutasi" class="siswa-tab-panel" data-siswa-panel="mutasi">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3" style="gap: 0.65rem;">
+                        <div>
+                            <h6 class="font-weight-bold mb-1" style="color: #0f172a;">
+                                Jejak Status, Mutasi &amp; Kelulusan Siswa
+                            </h6>
+                            <p class="small text-muted mb-0">
+                                Mencatat perpindahan masuk/keluar, kelulusan alumni, serta riwayat pembatalan yang teraudit.
+                            </p>
+                        </div>
+                        @if ($showAdminLinks && \Illuminate\Support\Facades\Route::has('siswa-mutasi.index'))
+                            <a href="{{ route('siswa-mutasi.index', ['search' => $siswa->nis]) }}"
+                                class="btn btn-sm btn-outline-primary font-weight-bold" style="border-radius: 8px;">
+                                <i class="fa fa-exchange-alt mr-1"></i> Kelola di Mutasi &amp; Kelulusan
+                            </a>
+                        @endif
+                    </div>
+
+                    @if ($mutasiList->isEmpty())
+                        <div class="text-center py-4 px-3 border rounded" style="background: #f8fafc; border-color: #e2e8f0 !important;">
+                            <i class="fa fa-history text-muted mb-2" style="font-size: 1.75rem; opacity: 0.6;"></i>
+                            <div class="font-weight-bold text-slate-700">Belum Ada Catatan Mutasi / Kelulusan</div>
+                            <div class="small text-muted mt-1">
+                                Siswa ini belum memiliki transaksi mutasi masuk, pindah, keluar, nonaktif, atau kelulusan di ledger.
+                            </div>
+                        </div>
+                    @else
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered mb-0" style="font-size: 0.84rem;">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Tanggal Efektif</th>
+                                        <th>Kategori</th>
+                                        <th>Tahun Ajaran</th>
+                                        <th>Kelas Asal / Tujuan</th>
+                                        <th>Dokumen &amp; Keterangan</th>
+                                        <th>Status Audit</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($mutasiList as $itemMutasi)
+                                        @php
+                                            $mutasiTa = $itemMutasi->relationLoaded('tahunAjaran') ? $itemMutasi->tahunAjaran : null;
+                                            $mutasiKelasAsal = $itemMutasi->relationLoaded('kelasAsal') ? $itemMutasi->kelasAsal : null;
+                                            $mutasiKelasTujuan = $itemMutasi->relationLoaded('kelasTujuan') ? $itemMutasi->kelasTujuan : null;
+                                        @endphp
+                                        <tr class="{{ $itemMutasi->is_dibatalkan ? 'table-secondary' : '' }}">
+                                            <td class="text-nowrap font-weight-bold">
+                                                {{ $itemMutasi->tanggal_efektif?->translatedFormat('d M Y') ?? '-' }}
+                                            </td>
+                                            <td class="text-nowrap">
+                                                <span class="badge {{ $itemMutasi->kategori_badge_class }}">
+                                                    {{ $itemMutasi->kategori_label }}
+                                                </span>
+                                                @if ($itemMutasi->unit)
+                                                    <span class="badge badge-light border ml-1">{{ $itemMutasi->unit }}</span>
+                                                @endif
+                                                <div class="text-muted mt-1" style="font-size: 0.72rem;">
+                                                    {{ $itemMutasi->status_sebelum ?? 'Baru' }} &rarr; {{ $itemMutasi->status_sesudah }}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                @if ($mutasiTa)
+                                                    {{ $mutasiTa->nama_tahun_ajaran }}
+                                                    <div class="text-muted" style="font-size: 0.72rem;">{{ $mutasiTa->semester }}</div>
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if ($mutasiKelasAsal)
+                                                    <div><span class="text-muted">Asal:</span> {{ $mutasiKelasAsal->nama_kelas }}</div>
+                                                @endif
+                                                @if ($mutasiKelasTujuan)
+                                                    <div><span class="text-muted">Tujuan:</span> {{ $mutasiKelasTujuan->nama_kelas }}</div>
+                                                @endif
+                                                @if (! $mutasiKelasAsal && ! $mutasiKelasTujuan)
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if ($itemMutasi->sekolah_asal_tujuan)
+                                                    <div class="font-weight-bold">{{ $itemMutasi->sekolah_asal_tujuan }}</div>
+                                                @endif
+                                                @if ($itemMutasi->nomor_surat)
+                                                    <div class="small text-muted">No. Surat: {{ $itemMutasi->nomor_surat }}</div>
+                                                @endif
+                                                @if ($itemMutasi->nomor_ijazah)
+                                                    <div class="small text-muted">No. Ijazah/SKL: {{ $itemMutasi->nomor_ijazah }}</div>
+                                                @endif
+                                                @if ($itemMutasi->alasan)
+                                                    <div class="small text-dark mt-1">{{ $itemMutasi->alasan }}</div>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if ($itemMutasi->is_dibatalkan)
+                                                    <span class="badge badge-danger">Dibatalkan</span>
+                                                    <div class="small text-muted mt-1">
+                                                        Oleh {{ $itemMutasi->dibatalkan_by_name ?? 'Admin' }}
+                                                        ({{ $itemMutasi->dibatalkan_at?->format('d/m/Y H:i') }})
+                                                    </div>
+                                                    @if ($itemMutasi->alasan_batal)
+                                                        <div class="small text-danger mt-1">Alasan: {{ $itemMutasi->alasan_batal }}</div>
+                                                    @endif
+                                                @else
+                                                    <span class="badge badge-success">Aktif</span>
+                                                    @if ($itemMutasi->created_by_name)
+                                                        <div class="small text-muted mt-1">Oleh {{ $itemMutasi->created_by_name }}</div>
+                                                    @endif
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
                     @endif
                 </section>

@@ -65,7 +65,7 @@
                 $isWaliEkskulActive = request()->routeIs('wali-kelas.ekstrakurikuler.*');
                 $isWaliT2qActive = request()->routeIs('wali-kelas.t2q.*');
                 $isMasterSekolahActive = request()->is('data-master/sekolah*', 'data-master/tahun-ajaran*', 'data-master/titimangsa*');
-                $isMasterSdmActive = request()->is('data-master/siswa*', 'data-master/karyawan*');
+                $isMasterSdmActive = request()->is('data-master/siswa', 'data-master/siswa/*', 'data-master/siswa-mutasi*', 'data-master/karyawan*');
                 $isMasterProgramActive = request()->is(
                     'data-master/kelas*',
                     'data-master/anggota-kelas*',
@@ -421,7 +421,12 @@
                             [
                                 'label' => 'Siswa',
                                 'route' => 'siswa.index',
-                                'active' => request()->is('data-master/siswa*'),
+                                'active' => request()->is('data-master/siswa', 'data-master/siswa/*'),
+                            ],
+                            [
+                                'label' => 'Mutasi & Kelulusan',
+                                'route' => 'siswa-mutasi.index',
+                                'active' => request()->is('data-master/siswa-mutasi*'),
                             ],
                             [
                                 'label' => 'Guru & Karyawan',

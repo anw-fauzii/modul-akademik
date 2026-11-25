@@ -38,6 +38,8 @@ class SidebarViewTest extends TestCase
     #[TestWith(['/data-master/tahun-ajaran', 'master-sekolah'])]
     #[TestWith(['/data-master/titimangsa', 'master-sekolah'])]
     #[TestWith(['/data-master/siswa', 'master-sdm'])]
+    #[TestWith(['/data-master/siswa-mutasi', 'master-sdm'])]
+    #[TestWith(['/data-master/siswa-mutasi/kelulusan', 'master-sdm'])]
     #[TestWith(['/data-master/karyawan', 'master-sdm'])]
     #[TestWith(['/data-master/kelas', 'master-program'])]
     #[TestWith(['/data-master/anggota-kelas', 'master-program'])]
@@ -133,6 +135,28 @@ class SidebarViewTest extends TestCase
         $this->assertMenuState($xpath, $penilaianButton, $expectedActiveMenu === 'penilaian', true);
         $this->assertMenuState($xpath, $t2qButton, $expectedActiveMenu === 't2q', true);
         $this->assertMenuState($xpath, $prestasiLink, $expectedActiveMenu === 'prestasi', false);
+    }
+
+    public function test_siswa_mutasi_submenu_active_state_does_not_collide_with_siswa_menu(): void
+    {
+        $xpath = $this->renderSidebarForUri('/data-master/siswa-mutasi');
+
+        $siswaLink = $this->querySingleElement(
+            $xpath,
+            sprintf('//nav//a[@href="%s"]', route('siswa.index'))
+        );
+        $mutasiLink = $this->querySingleElement(
+            $xpath,
+            sprintf('//nav//a[@href="%s"]', route('siswa-mutasi.index'))
+        );
+
+        $siswaClasses = $this->splitClasses($siswaLink->getAttribute('class'));
+        $mutasiClasses = $this->splitClasses($mutasiLink->getAttribute('class'));
+
+        $this->assertContains('text-orange-400', $mutasiClasses);
+        $this->assertContains('bg-orange-500/10', $mutasiClasses);
+        $this->assertNotContains('text-orange-400', $siswaClasses);
+        $this->assertContains('text-slate-400', $siswaClasses);
     }
 
     /**

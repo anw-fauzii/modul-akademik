@@ -21,7 +21,7 @@
     <i class="pe-7s-notebook mr-1"></i> Data Akademik & Layanan
 </h6>
 <div class="row">
-    <div class="col-md-4">
+    <div class="col-md-{{ ($hideMutasiHandledFields ?? false) ? '12' : '4' }}">
         <div class="position-relative form-group">
             <label for="nis" class="font-weight-bold">
                 NIS <span class="text-danger">*</span>
@@ -35,62 +35,64 @@
         </div>
     </div>
 
-    <div class="col-md-4">
-        <div class="position-relative form-group">
-            <label for="jenis_pendaftaran" class="font-weight-bold">Jenis Pendaftaran</label>
-            <select name="jenis_pendaftaran" id="jenis_pendaftaran"
-                class="form-control @error('jenis_pendaftaran') is-invalid @enderror">
-                <option value="">-- Pilih Jenis Pendaftaran --</option>
-                @foreach (\App\Models\Admin\DataMaster\Siswa::JENIS_PENDAFTARAN_OPTIONS as $option)
-                    <option value="{{ $option }}" @selected((string) $val('jenis_pendaftaran') === $option)>
-                        {{ $option }}
-                    </option>
-                @endforeach
-            </select>
-            @error('jenis_pendaftaran')
-                <div class="invalid-feedback" style="font-style: italic; font-size: 0.75rem;">{{ $message }}</div>
-            @enderror
+    @unless ($hideMutasiHandledFields ?? false)
+        <div class="col-md-4">
+            <div class="position-relative form-group">
+                <label for="jenis_pendaftaran" class="font-weight-bold">Jenis Pendaftaran</label>
+                <select name="jenis_pendaftaran" id="jenis_pendaftaran"
+                    class="form-control @error('jenis_pendaftaran') is-invalid @enderror">
+                    <option value="">-- Pilih Jenis Pendaftaran --</option>
+                    @foreach (\App\Models\Admin\DataMaster\Siswa::JENIS_PENDAFTARAN_OPTIONS as $option)
+                        <option value="{{ $option }}" @selected((string) $val('jenis_pendaftaran') === $option)>
+                            {{ $option }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('jenis_pendaftaran')
+                    <div class="invalid-feedback" style="font-style: italic; font-size: 0.75rem;">{{ $message }}</div>
+                @enderror
+            </div>
         </div>
-    </div>
 
-    <div class="col-md-4">
-        <div class="position-relative form-group">
-            <label for="status" class="font-weight-bold">
-                Status Siswa <span class="text-danger">*</span>
-            </label>
-            <select name="status" id="status" class="form-control @error('status') is-invalid @enderror" required>
-                @foreach (\App\Models\Admin\DataMaster\Siswa::STATUS_OPTIONS as $option)
-                    <option value="{{ $option }}" @selected((string) $val('status', 'Aktif') === $option)>
-                        {{ $option }}
-                    </option>
-                @endforeach
-            </select>
-            @error('status')
-                <div class="invalid-feedback" style="font-style: italic; font-size: 0.75rem;">{{ $message }}</div>
-            @enderror
+        <div class="col-md-4">
+            <div class="position-relative form-group">
+                <label for="status" class="font-weight-bold">
+                    Status Siswa <span class="text-danger">*</span>
+                </label>
+                <select name="status" id="status" class="form-control @error('status') is-invalid @enderror" required>
+                    @foreach (\App\Models\Admin\DataMaster\Siswa::STATUS_OPTIONS as $option)
+                        <option value="{{ $option }}" @selected((string) $val('status', 'Aktif') === $option)>
+                            {{ $option }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('status')
+                    <div class="invalid-feedback" style="font-style: italic; font-size: 0.75rem;">{{ $message }}</div>
+                @enderror
+            </div>
         </div>
-    </div>
 
-    <div class="col-md-6">
-        <div class="position-relative form-group">
-            <label for="akademik_master_kelas_id" class="font-weight-bold">Kelas</label>
-            <select name="akademik_master_kelas_id" id="akademik_master_kelas_id"
-                class="form-control @error('akademik_master_kelas_id') is-invalid @enderror">
-                <option value="">-- Pilih Kelas --</option>
-                @foreach ($kelas as $itemKelas)
-                    <option value="{{ $itemKelas->id }}" @selected((string) $val('akademik_master_kelas_id') === (string) $itemKelas->id)>
-                        {{ $itemKelas->nama_kelas }} ({{ $itemKelas->jenjang_kelas }})
-                        @if ($itemKelas->tahunAjaran)
-                            - {{ $itemKelas->tahunAjaran->nama_tahun_ajaran }}
-                        @endif
-                    </option>
-                @endforeach
-            </select>
-            @error('akademik_master_kelas_id')
-                <div class="invalid-feedback" style="font-style: italic; font-size: 0.75rem;">{{ $message }}</div>
-            @enderror
+        <div class="col-md-6">
+            <div class="position-relative form-group">
+                <label for="akademik_master_kelas_id" class="font-weight-bold">Kelas</label>
+                <select name="akademik_master_kelas_id" id="akademik_master_kelas_id"
+                    class="form-control @error('akademik_master_kelas_id') is-invalid @enderror">
+                    <option value="">-- Pilih Kelas --</option>
+                    @foreach ($kelas as $itemKelas)
+                        <option value="{{ $itemKelas->id }}" @selected((string) $val('akademik_master_kelas_id') === (string) $itemKelas->id)>
+                            {{ $itemKelas->nama_kelas }} ({{ $itemKelas->jenjang_kelas }})
+                            @if ($itemKelas->tahunAjaran)
+                                - {{ $itemKelas->tahunAjaran->nama_tahun_ajaran }}
+                            @endif
+                        </option>
+                    @endforeach
+                </select>
+                @error('akademik_master_kelas_id')
+                    <div class="invalid-feedback" style="font-style: italic; font-size: 0.75rem;">{{ $message }}</div>
+                @enderror
+            </div>
         </div>
-    </div>
+    @endunless
 
     <div class="col-md-6">
         <div class="position-relative form-group">
@@ -619,6 +621,6 @@
 <div class="form-group mt-3">
     <button type="submit" class="btn btn-xl text-white shadow-sm font-weight-bold px-4" id="submitBtn"
         style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%) !important; border-radius: 8px; border: none;">
-        <i class="fa fa-save mr-1"></i> Simpan
+        <i class="fa fa-save mr-1"></i> {{ $submitLabel ?? 'Simpan' }}
     </button>
 </div>
