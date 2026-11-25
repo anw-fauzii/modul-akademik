@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             AngkaArabSeeder::class,
             SurahAlquranSeeder::class,
             KomentarT2qSeeder::class,
+            KomentarRaporSeeder::class,
         ]);
     }
 }

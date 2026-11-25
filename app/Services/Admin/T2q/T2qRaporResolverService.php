@@ -118,6 +118,8 @@ class T2qRaporResolverService
                 'saved' => $saved,
                 'is_locked' => $isLocked,
                 'mid_cutoff_date' => $midCutoffByAnggota[$t2qId] ?? null,
+                'catatan_t2q' => $saved?->catatan_t2q,
+                'updated_by_name' => $saved?->updated_by_name,
                 'tahsin' => $this->resolveChannel(
                     RaporT2q::MODE_TAHSIN,
                     $saved,
@@ -185,7 +187,9 @@ class T2qRaporResolverService
                 (string) ($tahfizh['deskripsi'] ?? '') ?: null,
                 $actor?->id ?? $saved?->updated_by_user_id,
                 $saved,
-                $now
+                $now,
+                $saved?->catatan_t2q,
+                $actor?->name ?? $saved?->updated_by_name
             );
         }
 
@@ -219,7 +223,9 @@ class T2qRaporResolverService
         ?string $tahfizhDeskripsi,
         ?int $actorId,
         ?RaporT2q $saved,
-        \DateTimeInterface $now
+        \DateTimeInterface $now,
+        ?string $catatanT2q = null,
+        ?string $actorName = null
     ): array {
         return [
             'akademik_master_tahun_ajaran_id' => $tahunAjaranId,
@@ -239,7 +245,9 @@ class T2qRaporResolverService
             'tahfizh_keunggulan' => $tahfizhKeunggulan,
             'tahfizh_peningkatan' => $tahfizhPeningkatan,
             'tahfizh_deskripsi' => $tahfizhDeskripsi,
+            'catatan_t2q' => $catatanT2q,
             'updated_by_user_id' => $actorId,
+            'updated_by_name' => $actorName,
             'created_at' => $saved?->created_at ?? $now,
             'updated_at' => $now,
         ];
@@ -272,7 +280,9 @@ class T2qRaporResolverService
                     'tahfizh_keunggulan',
                     'tahfizh_peningkatan',
                     'tahfizh_deskripsi',
+                    'catatan_t2q',
                     'updated_by_user_id',
+                    'updated_by_name',
                     'updated_at',
                 ]
             );

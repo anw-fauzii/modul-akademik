@@ -1383,6 +1383,8 @@
                                 $fInitialPeningkatan = \App\Models\Admin\T2q\RaporT2q::parseAspectList((string) old("tahfizh.{$t2qId}.peningkatan", $tahfizh['peningkatan'] ?? ''), $komentarOptions);
                                 $totalKeunggulanSelected = count($tInitialKeunggulan) + count($fInitialKeunggulan);
                                 $totalPeningkatanSelected = count($tInitialPeningkatan) + count($fInitialPeningkatan);
+                                $catatanT2qVal = (string) old("catatan_t2q.{$t2qId}", $row['catatan_t2q'] ?? '');
+                                $hasCatatanT2q = trim($catatanT2qVal) !== '';
                                 $isSavedRecord = $row['saved'] instanceof \App\Models\Admin\T2q\RaporT2q;
                             @endphp
 
@@ -1462,6 +1464,9 @@
                                             <span class="t2q-summary-pill js-t2q-row-p-pill {{ $totalPeningkatanSelected > 0 ? 'has-val' : '' }}">
                                                 <span class="js-t2q-row-p-count">{{ $totalPeningkatanSelected }}</span> peningkatan
                                             </span>
+                                            @if ($hasCatatanT2q)
+                                                <span class="t2q-summary-pill" style="background: #fff7ed; color: #c2410c;">+ Komentar</span>
+                                            @endif
                                             @if ($isLocked)
                                                 <span class="t2q-summary-pill" style="background: #dcfce7; color: #166534;">
                                                     <i class="fa fa-lock mr-1"></i>Final
@@ -1617,6 +1622,32 @@
                                                 </div>
                                             </div>
                                         @endforeach
+                                    </div>
+
+                                    <div class="mt-2 p-2.5 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                                        <div class="d-flex flex-wrap justify-content-between align-items-center mb-1" style="gap: 0.4rem;">
+                                            <label class="small font-weight-bold text-dark mb-0" style="font-size: 0.74rem;">
+                                                <i class="fa fa-comment-dots text-warning mr-1"></i> Komentar / Catatan Guru T2Q (Opsional di Rapor)
+                                            </label>
+                                            @if (! $isLocked)
+                                                <div class="d-flex flex-wrap align-items-center" style="gap: 0.3rem;">
+                                                    <button type="button" class="btn btn-outline-secondary py-0 px-2 js-t2q-preset-note" style="font-size: 0.66rem; border-radius: 6px;"
+                                                        data-preset="Alhamdulillah, ananda bersemangat mengikuti pembelajaran Tahsin dan Tahfidz. Tetap istiqomah murojaah bersama orang tua di rumah.">
+                                                        + Apresiasi &amp; Murojaah
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-secondary py-0 px-2 js-t2q-preset-note" style="font-size: 0.66rem; border-radius: 6px;"
+                                                        data-preset="Mohon pendampingan rutin ayah/bunda di rumah untuk mengulang bacaan dan hafalan agar target capaian lebih optimal.">
+                                                        + Pendampingan Orang Tua
+                                                    </button>
+                                                </div>
+                                            @endif
+                                        </div>
+                                        <textarea name="catatan_t2q[{{ $t2qId }}]"
+                                            rows="2"
+                                            class="form-control form-control-sm js-t2q-catatan-note"
+                                            style="font-size: 0.76rem;"
+                                            placeholder="Catatan pembinaan personal Guru T2Q untuk siswa/orang tua (ditampilkan di PDF Rapor bila diisi)..."
+                                            @disabled($isLocked)>{{ $catatanT2qVal }}</textarea>
                                     </div>
 
                                     <div class="t2q-drawer-foot">
@@ -2211,6 +2242,22 @@
                         markDirty();
                     });
                 }
+            });
+
+            document.querySelectorAll('.js-t2q-student-item').forEach(function (item) {
+                const catatanEl = item.querySelector('.js-t2q-catatan-note');
+                if (catatanEl) {
+                    catatanEl.addEventListener('input', markDirty);
+                }
+
+                item.querySelectorAll('.js-t2q-preset-note').forEach(function (presetBtn) {
+                    presetBtn.addEventListener('click', function () {
+                        const presetText = this.getAttribute('data-preset') || '';
+                        if (!catatanEl || catatanEl.disabled || !presetText) return;
+                        catatanEl.value = presetText;
+                        markDirty();
+                    });
+                });
             });
 
             document.addEventListener('click', function (e) {

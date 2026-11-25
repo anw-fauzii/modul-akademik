@@ -11,6 +11,7 @@ use App\Models\Admin\DataMaster\Ekstrakurikuler;
 use App\Models\Admin\DataMaster\Jemputan;
 use App\Models\Admin\DataMaster\Karyawan;
 use App\Models\Admin\DataMaster\Kelas;
+use App\Models\Admin\DataMaster\KomentarRapor;
 use App\Models\Admin\DataMaster\KomentarT2q;
 use App\Models\Admin\DataMaster\Sekolah;
 use App\Models\Admin\DataMaster\Siswa;
@@ -30,6 +31,7 @@ use App\Models\Admin\Pelajaran\JamPelajaran;
 use App\Models\Admin\Pelajaran\KelompokPelajaran;
 use App\Models\Admin\Pelajaran\MataPelajaran;
 use App\Models\Admin\Penilaian\AspekTp;
+use App\Models\Admin\Penilaian\CatatanRaporWali;
 use App\Models\Admin\Penilaian\Kkm;
 use App\Models\Admin\Penilaian\PenilaianFinalisasi;
 use App\Models\Admin\Penilaian\RekapMapel;
@@ -43,6 +45,7 @@ use App\Models\Admin\TujuanPembelajaran\TujuanPembelajaran;
 use App\Policies\AdminOnlyPolicy;
 use App\Policies\AnggotaKelasPolicy;
 use App\Policies\AspekTpPolicy;
+use App\Policies\CatatanRaporWaliPolicy;
 use App\Policies\EkstrakurikulerPolicy;
 use App\Policies\JadwalPelajaranPolicy;
 use App\Policies\KelasPolicy;
@@ -73,6 +76,7 @@ class AppServiceProvider extends ServiceProvider
         Jemputan::class => AdminOnlyPolicy::class,
         Karyawan::class => AdminOnlyPolicy::class,
         Kelas::class => KelasPolicy::class,
+        KomentarRapor::class => AdminOnlyPolicy::class,
         KomentarT2q::class => AdminOnlyPolicy::class,
         Sekolah::class => AdminOnlyPolicy::class,
         Siswa::class => AdminOnlyPolicy::class,
@@ -95,6 +99,7 @@ class AppServiceProvider extends ServiceProvider
         SumatifBab::class => SumatifBabPolicy::class,
         TujuanPembelajaran::class => TujuanPembelajaranPolicy::class,
         PenilaianFinalisasi::class => PenilaianFinalisasiPolicy::class,
+        CatatanRaporWali::class => CatatanRaporWaliPolicy::class,
         RekapMapel::class => RekapMapelPolicy::class,
         PresensiSiswa::class => PresensiSiswaPolicy::class,
         PrestasiSiswa::class => AdminOnlyPolicy::class,

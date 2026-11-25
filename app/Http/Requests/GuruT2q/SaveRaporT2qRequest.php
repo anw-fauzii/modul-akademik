@@ -31,6 +31,8 @@ class SaveRaporT2qRequest extends FormRequest
             'tahfizh.*.keunggulan' => ['nullable', 'string', 'max:255'],
             'tahfizh.*.peningkatan' => ['nullable', 'string', 'max:255'],
             'tahfizh.*.deskripsi' => ['nullable', 'string', 'max:1500'],
+            'catatan_t2q' => ['nullable', 'array'],
+            'catatan_t2q.*' => ['nullable', 'string', 'max:1500'],
         ];
     }
 
@@ -43,6 +45,7 @@ class SaveRaporT2qRequest extends FormRequest
             'periode.in' => 'Periode rapor T2Q harus Mid Semester atau Semester.',
             'tahsin.*.deskripsi.max' => 'Deskripsi Tahsin maksimal 1.500 karakter.',
             'tahfizh.*.deskripsi.max' => 'Deskripsi Tahfidz maksimal 1.500 karakter.',
+            'catatan_t2q.*.max' => 'Catatan pembinaan Guru T2Q maksimal 1.500 karakter.',
         ];
     }
 }

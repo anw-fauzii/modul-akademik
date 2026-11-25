@@ -14,6 +14,7 @@
         $rekapCountByAnggota = $rekapCountByAnggota ?? [];
         $ekskulCountByAnggota = $ekskulCountByAnggota ?? [];
         $t2qCountByAnggota = $t2qCountByAnggota ?? [];
+        $catatanCountByAnggota = $catatanCountByAnggota ?? [];
         $presensiByAnggota = $presensiByAnggota ?? [];
         $totalSdMapels = $totalSdMapels ?? 0;
         $isSd = $isSd ?? false;
@@ -179,6 +180,7 @@
                         <div class="small text-muted">
                             Wali Kelas: <strong>{{ $selectedKelas->waliKelas?->nama_gelar ?? ($selectedKelas->karyawan_nipy ?: '-') }}</strong>
                             &bull; {{ $students->count() }} siswa
+                            &bull; Catatan Wali: <strong>{{ count($catatanCountByAnggota) }}/{{ $students->count() }}</strong> terisi
                         </div>
                     </div>
                     @if (! $isSd)
@@ -231,6 +233,9 @@
                                         @endif
                                         <td class="text-center small text-muted">
                                             {{ $ekskulCount }} Ekskul &bull; {{ $t2qCount > 0 ? 'Ada T2Q' : 'Non-T2Q' }}
+                                            @if (! empty($catatanCountByAnggota[$anggota->id]))
+                                                <div><span class="badge badge-info mt-1">Catatan Wali ✓</span></div>
+                                            @endif
                                         </td>
                                         <td class="text-center small">
                                             S: <strong>{{ $absen['sakit'] }}</strong> &bull;

@@ -34,7 +34,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'tahfizh_keunggulan',
     'tahfizh_peningkatan',
     'tahfizh_deskripsi',
+    'catatan_t2q',
     'updated_by_user_id',
+    'updated_by_name',
 ])]
 #[Table('akademik_t2q_rekap_rapor')]
 class RaporT2q extends Model

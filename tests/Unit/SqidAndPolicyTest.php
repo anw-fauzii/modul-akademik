@@ -53,7 +53,7 @@ class SqidAndPolicyTest extends TestCase
 
     public function test_every_routable_model_roundtrips_and_is_type_isolated(): void
     {
-        $this->assertCount(35, Sqid::TYPE_MAP);
+        $this->assertCount(38, Sqid::TYPE_MAP);
 
         foreach (Sqid::TYPE_MAP as $class) {
             $key = Sqid::usesStringKey($class) ? 'AB-001' : 42;

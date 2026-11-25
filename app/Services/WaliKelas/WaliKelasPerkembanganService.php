@@ -24,11 +24,13 @@ class WaliKelasPerkembanganService
     public function __construct(
         protected ?WaliKelasScopeService $scopeService = null,
         protected ?AnggotaKelasService $anggotaKelasService = null,
-        protected ?PenilaianFinalisasiService $finalisasiService = null
+        protected ?PenilaianFinalisasiService $finalisasiService = null,
+        protected ?RaporCatatanWaliService $catatanWaliService = null
     ) {
         $this->scopeService ??= new WaliKelasScopeService;
         $this->anggotaKelasService ??= new AnggotaKelasService;
         $this->finalisasiService ??= new PenilaianFinalisasiService($this->scopeService);
+        $this->catatanWaliService ??= new RaporCatatanWaliService($this->scopeService, $this->anggotaKelasService);
     }
 
     /**
@@ -386,12 +388,27 @@ class WaliKelasPerkembanganService
 
         $presensiMap = $this->buildPresensiSummaryByAnggota([(int) $anggotaKelas->id]);
         $presensiStats = $presensiMap[$anggotaKelas->id] ?? $this->emptyPresensiCounts();
+        $canEditCatatanWali = ! $onlyTaughtMapels;
+        $catatanPayload = $canEditCatatanWali
+            ? [
+                'canEditCatatanWali' => true,
+                'catatanWali' => $this->catatanWaliService->loadCatatanMapForAnggotaIds([(int) $anggotaKelas->id], $periode)[(int) $anggotaKelas->id] ?? null,
+                'komentarTemplates' => $this->catatanWaliService->loadActiveTemplates((string) $selectedKelas->jenjang_kelas),
+                'catatanActorRoleLabel' => $this->catatanWaliService->resolveActorRoleLabel($user, $selectedKelas),
+            ]
+            : [
+                'canEditCatatanWali' => false,
+                'catatanWali' => null,
+                'komentarTemplates' => collect(),
+                'catatanActorRoleLabel' => 'Wali Kelas',
+            ];
 
         $isSd = strtoupper(trim((string) $selectedKelas->jenjang_kelas)) === Kkm::TARGET_UNIT;
         if (! $isSd || $activeTahunAjaran === null) {
             return [
                 ...$scope,
                 ...$scopeLinks,
+                ...$catatanPayload,
                 'periode' => $periode,
                 'isSd' => false,
                 'anggotaKelas' => $anggotaKelas,
@@ -529,6 +546,7 @@ class WaliKelasPerkembanganService
         return [
             ...$scope,
             ...$scopeLinks,
+            ...$catatanPayload,
             'periode' => $periode,
             'isSd' => true,
             'anggotaKelas' => $anggotaKelas,

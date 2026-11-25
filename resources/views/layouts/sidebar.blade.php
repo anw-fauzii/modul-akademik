@@ -60,6 +60,7 @@
                 $isWaliAnggotaActive = request()->routeIs('wali-kelas.anggota-kelas.*');
                 $isWaliJadwalActive = request()->routeIs('wali-kelas.jadwal-pelajaran.*');
                 $isWaliPerkembanganActive = request()->routeIs('wali-kelas.perkembangan-siswa.*');
+                $isWaliCatatanActive = request()->routeIs('wali-kelas.catatan-rapor.*');
                 $isWaliPresensiActive = request()->routeIs('wali-kelas.presensi-siswa.*');
                 $isWaliPenilaianActive = request()->routeIs('wali-kelas.penilaian-tp.*', 'wali-kelas.penilaian-rekap.*');
                 $isWaliEkskulActive = request()->routeIs('wali-kelas.ekstrakurikuler.*');
@@ -74,7 +75,7 @@
                     'data-master/jemputan*',
                     'data-master/anggota-jemputan*'
                 );
-                $isMasterT2qActive = request()->is('data-master/anggota-t2q*', 'data-master/daftar-jilid*', 'data-master/target-capaian*');
+                $isMasterT2qActive = request()->is('data-master/anggota-t2q*', 'data-master/daftar-jilid*', 'data-master/target-capaian*', 'data-master/bank-komentar*');
                 $isDataPelengkapActive = request()->is('data-pelengkap*');
                 $isInformasiActive = request()->is('informasi*');
                 $isPelajaranActive = request()->is('pelajaran*');
@@ -125,6 +126,12 @@
                                 'route' => 'wali-kelas.perkembangan-siswa.index',
                                 'active' => $isWaliPerkembanganActive,
                                 'icon' => 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
+                            ],
+                            [
+                                'label' => 'Catatan Rapor',
+                                'route' => 'wali-kelas.catatan-rapor.index',
+                                'active' => $isWaliCatatanActive,
+                                'icon' => 'M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z',
                             ],
                             [
                                 'label' => 'Penilaian Ekstrakurikuler',
@@ -478,6 +485,11 @@
                                 'label' => 'Target Capaian',
                                 'route' => 'target-capaian.index',
                                 'active' => request()->is('data-master/target-capaian*'),
+                            ],
+                            [
+                                'label' => 'Bank Komentar Rapor',
+                                'route' => 'bank-komentar.index',
+                                'active' => request()->is('data-master/bank-komentar*'),
                             ],
                         ],
                     ],

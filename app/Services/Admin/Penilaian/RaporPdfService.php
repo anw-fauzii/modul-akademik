@@ -19,6 +19,7 @@ use App\Services\Admin\DataMaster\AnggotaKelasService;
 use App\Services\Admin\DataMaster\SekolahService;
 use App\Services\Admin\DataMaster\TitimangsaService;
 use App\Services\Admin\T2q\T2qRaporResolverService;
+use App\Services\WaliKelas\RaporCatatanWaliService;
 use App\Services\WaliKelas\WaliKelasScopeService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -69,7 +70,8 @@ class RaporPdfService
         protected ?AnggotaKelasService $anggotaKelasService = null,
         protected ?WaliKelasScopeService $scopeService = null,
         protected ?PenilaianFinalisasiService $finalisasiService = null,
-        protected ?T2qRaporResolverService $t2qRaporResolver = null
+        protected ?T2qRaporResolverService $t2qRaporResolver = null,
+        protected ?RaporCatatanWaliService $catatanWaliService = null
     ) {
         $this->sekolahService ??= new SekolahService;
         $this->titimangsaService ??= new TitimangsaService;
@@ -77,6 +79,7 @@ class RaporPdfService
         $this->scopeService ??= new WaliKelasScopeService;
         $this->finalisasiService ??= new PenilaianFinalisasiService;
         $this->t2qRaporResolver ??= new T2qRaporResolverService;
+        $this->catatanWaliService ??= new RaporCatatanWaliService;
     }
 
     /**
@@ -145,6 +148,7 @@ class RaporPdfService
                 'rekapCountByAnggota' => [],
                 'ekskulCountByAnggota' => [],
                 't2qCountByAnggota' => [],
+                'catatanCountByAnggota' => [],
                 'presensiByAnggota' => [],
                 'totalSdMapels' => 0,
             ];
@@ -212,6 +216,7 @@ class RaporPdfService
             'rekapCountByAnggota' => $rekapCountByAnggota,
             'ekskulCountByAnggota' => $ekskulCountByAnggota,
             't2qCountByAnggota' => $t2qCountByAnggota,
+            'catatanCountByAnggota' => $this->catatanWaliService->loadFilledStatusByAnggotaIds($anggotaIds, $periode),
             'presensiByAnggota' => $this->buildPresensiSummaryByAnggota($anggotaIds),
             'totalSdMapels' => $totalSdMapels,
             'readiness' => $this->finalisasiService->getClassReadiness($selectedKelas, $periode, auth()->user()),
@@ -395,6 +400,7 @@ class RaporPdfService
             : [];
 
         $presensiByAnggota = $this->buildPresensiSummaryByAnggota($anggotaIds);
+        $catatanByAnggota = $this->catatanWaliService->loadCatatanMapForAnggotaIds($anggotaIds, $periode);
         $sekolah = $this->sekolahService->resolveByJenjang((string) $kelas->jenjang_kelas);
         $titimangsa = $this->titimangsaService->resolveForKelas($kelas, $periode);
         $fase = $this->resolveFase((string) $kelas->tingkatan_kelas);
@@ -412,7 +418,8 @@ class RaporPdfService
             $ekskulByAnggota,
             $t2qByAnggota,
             $t2qRaporByT2qId,
-            $presensiByAnggota
+            $presensiByAnggota,
+            $catatanByAnggota
         ): array {
             $rawGroups = array_map(static function (array $group) use ($anggota, $rekapLookup): array {
                 $rows = array_map(static function (array $row) use ($anggota, $rekapLookup): array {
@@ -449,6 +456,7 @@ class RaporPdfService
                 't2q' => $t2qItem,
                 't2qRapor' => $t2qItem instanceof AnggotaT2q ? ($t2qRaporByT2qId[(int) $t2qItem->id] ?? null) : null,
                 'presensi' => $presensiByAnggota[$anggota->id] ?? ['sakit' => 0, 'izin' => 0, 'alpa' => 0],
+                'catatanWali' => $catatanByAnggota[$anggota->id] ?? null,
             ];
         })->values()->all();
 

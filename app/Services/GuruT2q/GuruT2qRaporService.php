@@ -133,6 +133,7 @@ class GuruT2qRaporService
                 'saved' => $resolved['saved'],
                 'is_locked' => $isLocked,
                 'mid_cutoff_date' => $resolved['mid_cutoff_date'],
+                'catatan_t2q' => $resolved['catatan_t2q'] ?? null,
                 'tahsin' => $tahsin,
                 'tahfizh' => $tahfizh,
             ];
@@ -199,7 +200,12 @@ class GuruT2qRaporService
 
         $tahsinInputs = is_array($validated['tahsin'] ?? null) ? $validated['tahsin'] : [];
         $tahfizhInputs = is_array($validated['tahfizh'] ?? null) ? $validated['tahfizh'] : [];
-        $rowIds = array_values(array_unique(array_map('intval', array_merge(array_keys($tahsinInputs), array_keys($tahfizhInputs)))));
+        $catatanInputs = is_array($validated['catatan_t2q'] ?? null) ? $validated['catatan_t2q'] : [];
+        $rowIds = array_values(array_unique(array_map('intval', array_merge(
+            array_keys($tahsinInputs),
+            array_keys($tahfizhInputs),
+            array_keys($catatanInputs)
+        ))));
 
         foreach ($rowIds as $submittedId) {
             if (! $sdMap->has($submittedId)) {
@@ -255,6 +261,9 @@ class GuruT2qRaporService
                 : $this->cleanOptionalText($tahfizhRow['peningkatan']);
             $fDeskripsi = $this->cleanOptionalText($fIn['deskripsi'] ?? null)
                 ?? RaporT2q::buildAutoDeskripsi(RaporT2q::MODE_TAHFIZH, $tahfizhRow['nilai'], $tahfizhRow['materi'], $fKeunggulan, $fPeningkatan);
+            $catatanT2q = array_key_exists($t2qId, $catatanInputs)
+                ? $this->cleanOptionalText($catatanInputs[$t2qId])
+                : $this->cleanOptionalText($saved?->catatan_t2q);
 
             $upserts[] = $this->resolverService->buildUpsertRow(
                 (int) $activeTa->id,
@@ -270,7 +279,9 @@ class GuruT2qRaporService
                 $fDeskripsi,
                 $user->id,
                 $saved,
-                $now
+                $now,
+                $catatanT2q,
+                $user->name
             );
         }
 

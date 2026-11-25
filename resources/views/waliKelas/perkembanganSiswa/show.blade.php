@@ -190,6 +190,97 @@
             </div>
         </div>
 
+        @if ($canEditCatatanWali ?? false)
+            @php
+                $catatanWaliObj = $catatanWali ?? null;
+                $komentarTemplatesList = $komentarTemplates ?? collect();
+                $catatanText = old('catatan', $catatanWaliObj?->catatan ?? '');
+            @endphp
+            <div class="wk-surface mb-3">
+                <div class="wk-surface-head">
+                    <div>
+                        <h6 class="wk-surface-title mb-0">
+                            <i class="fa fa-comment-dots text-warning mr-1"></i>
+                            Catatan Wali Kelas / Pendamping ({{ $isMid ? 'Mid Semester' : 'Semester' }})
+                        </h6>
+                        <div class="small text-muted">
+                            Tampil di kotak CATATAN WALI KELAS pada PDF Nilai Rapor (opsional / tidak memblokir cetak PDF).
+                        </div>
+                    </div>
+                    @if ($catatanWaliObj?->updated_by_name)
+                        <span class="badge badge-light border text-muted" style="font-size: 0.71rem;">
+                            Diisi {{ $catatanWaliObj->updated_by_name }} ({{ $catatanWaliObj->updated_by_role_label ?? 'Wali Kelas' }})
+                        </span>
+                    @endif
+                </div>
+                <div class="p-3">
+                    @if (session('success'))
+                        <div class="alert alert-success alert-dismissible fade show py-2 small" role="alert">
+                            <i class="fa fa-check-circle mr-1"></i> {{ session('success') }}
+                            <button type="button" class="close py-1" data-dismiss="alert" aria-label="Tutup">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    @endif
+                    <form method="POST" action="{{ route('wali-kelas.catatan-rapor.update-single', $anggotaKelas) }}">
+                        @csrf
+                        @method('PUT')
+                        <input type="hidden" name="periode" value="{{ $periode }}">
+
+                        @if ($komentarTemplatesList->isNotEmpty())
+                            <div class="form-group mb-2">
+                                <select name="komentar_rapor_id" id="singleCatatanTemplateSelect"
+                                    class="form-control form-control-sm" style="max-width: 360px;">
+                                    <option value="">-- Pilih Template Komentar Cepat (Opsional) --</option>
+                                    @foreach ($komentarTemplatesList as $tpl)
+                                        <option value="{{ $tpl->sqid }}"
+                                            data-body="{{ $tpl->renderForSiswa($siswa->nama_lengkap) }}"
+                                            @selected((string) old('komentar_rapor_id', $catatanWaliObj?->komentar_rapor_id) === (string) $tpl->id || (string) old('komentar_rapor_id', $catatanWaliObj?->komentar_rapor_id) === (string) $tpl->sqid)>
+                                            {{ $tpl->judul }} ({{ $tpl->kategori_label }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endif
+
+                        <div class="form-group mb-2">
+                            <textarea name="catatan" id="singleCatatanTextarea" rows="3"
+                                class="form-control form-control-sm"
+                                placeholder="Tuliskan komentar/catatan wali kelas atau pendamping untuk {{ $siswa->nama_lengkap }}...">{{ $catatanText }}</textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{{ route('wali-kelas.catatan-rapor.index', ['kelas_id' => $selectedKelas->sqid, 'periode' => $periode]) }}"
+                                class="small font-weight-semibold text-primary">
+                                <i class="fa fa-list mr-1"></i> Kelola seluruh kelas
+                            </a>
+                            <button type="submit" class="btn btn-sm text-white font-weight-bold px-3 shadow-sm"
+                                style="background: linear-gradient(135deg, #ea580c 0%, #d97706 100%); border: none; border-radius: 8px;">
+                                <i class="fa fa-save mr-1"></i> Simpan Catatan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            @if ($komentarTemplatesList->isNotEmpty())
+                @pushOnce('js')
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const sel = document.getElementById('singleCatatanTemplateSelect');
+                            const box = document.getElementById('singleCatatanTextarea');
+                            if (sel && box) {
+                                sel.addEventListener('change', function() {
+                                    const opt = this.options[this.selectedIndex];
+                                    const body = opt ? opt.getAttribute('data-body') : '';
+                                    if (body) box.value = body;
+                                });
+                            }
+                        });
+                    </script>
+                @endPushOnce
+            @endif
+        @endif
+
         @if ($isSd)
             @foreach ($subjectDetails as $item)
                 @php

@@ -2,12 +2,16 @@
 
 namespace Tests\Unit;
 
+use App\Models\User;
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Facade;
 use PHPUnit\Framework\Attributes\TestWith;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class SidebarViewTest extends TestCase
@@ -49,6 +53,7 @@ class SidebarViewTest extends TestCase
     #[TestWith(['/data-master/anggota-t2q', 'master-t2q'])]
     #[TestWith(['/data-master/daftar-jilid', 'master-t2q'])]
     #[TestWith(['/data-master/target-capaian', 'master-t2q'])]
+    #[TestWith(['/data-master/bank-komentar', 'master-t2q'])]
     #[TestWith(['/data-pelengkap/pekerjaan', 'data-pelengkap'])]
     #[TestWith(['/informasi/agenda-sekolah', 'informasi'])]
     #[TestWith(['/informasi/pengumuman', 'informasi'])]
@@ -157,6 +162,32 @@ class SidebarViewTest extends TestCase
         $this->assertContains('bg-orange-500/10', $mutasiClasses);
         $this->assertNotContains('text-orange-400', $siswaClasses);
         $this->assertContains('text-slate-400', $siswaClasses);
+    }
+
+    public function test_wali_kelas_sidebar_renders_and_highlights_catatan_rapor_menu(): void
+    {
+        $role = new Role;
+        $role->setRawAttributes(['id' => 2, 'name' => 'wali kelas', 'guard_name' => 'web']);
+
+        $waliUser = new User;
+        $waliUser->setRawAttributes(['id' => 99, 'name' => 'Wali Test', 'email' => 'wali@primainsani.sch.id']);
+        $waliUser->setRelation('roles', new Collection([$role]));
+        $waliUser->setRelation('permissions', new Collection);
+
+        Auth::setUser($waliUser);
+
+        try {
+            $xpath = $this->renderSidebarForUri('/wali-kelas/catatan-rapor');
+        } finally {
+            Auth::logout();
+        }
+
+        $catatanLink = $this->querySingleElement(
+            $xpath,
+            sprintf('//nav//a[@href="%s"]', route('wali-kelas.catatan-rapor.index'))
+        );
+
+        $this->assertMenuState($xpath, $catatanLink, true, false);
     }
 
     /**

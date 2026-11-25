@@ -54,6 +54,8 @@
             $t2q = $entry['t2q'];
             $t2qRapor = $entry['t2qRapor'] ?? null;
             $presensi = $entry['presensi'];
+            $catatanWali = $entry['catatanWali'] ?? null;
+            $catatanWaliText = trim((string) ($catatanWali?->catatan ?? ''));
             $sectionIdx = 0;
         @endphp
 
@@ -256,6 +258,18 @@
                                     <div class="desc-text">{{ $tahfizhDeskripsiText }}</div>
                                 </td>
                             </tr>
+                            @php
+                                $catatanT2qText = is_array($t2qRapor) ? trim((string) ($t2qRapor['catatan_t2q'] ?? '')) : '';
+                            @endphp
+                            @if ($catatanT2qText !== '')
+                                <tr>
+                                    <td colspan="4" style="background: #f8fafc; padding: 5px 7px;">
+                                        <div class="desc-text">
+                                            <strong>Catatan Guru T2Q:</strong> {!! nl2br(e($catatanT2qText)) !!}
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endif
                         </tbody>
                     </table>
                 </div>
@@ -289,7 +303,11 @@
                                 {{ $nextSectionLetter($sectionIdx++) }}. CATATAN WALI KELAS
                             </div>
                             <div class="notes-box">
-                                &nbsp;
+                                @if ($catatanWaliText !== '')
+                                    {!! nl2br(e($catatanWaliText)) !!}
+                                @else
+                                    &nbsp;
+                                @endif
                             </div>
                         </td>
                     </tr>

@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\DataMaster\AnggotaEkstrakurikulerController;
 use App\Http\Controllers\Admin\DataMaster\AnggotaJemputanController;
 use App\Http\Controllers\Admin\DataMaster\AnggotaKelasController;
 use App\Http\Controllers\Admin\DataMaster\AnggotaT2qController;
+use App\Http\Controllers\Admin\DataMaster\BankKomentarController;
 use App\Http\Controllers\Admin\DataMaster\DaftarJilidController;
 use App\Http\Controllers\Admin\DataMaster\EkstrakurikulerController;
 use App\Http\Controllers\Admin\DataMaster\JemputanController;
@@ -50,6 +51,7 @@ use App\Http\Controllers\GuruT2q\YaumiyahTahsinController as GuruT2qYaumiyahTahs
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SSOController;
 use App\Http\Controllers\WaliKelas\AnggotaKelasController as WaliKelasAnggotaKelasController;
+use App\Http\Controllers\WaliKelas\CatatanRaporController as WaliKelasCatatanRaporController;
 use App\Http\Controllers\WaliKelas\DashboardController as WaliKelasDashboardController;
 use App\Http\Controllers\WaliKelas\JadwalPelajaranController as WaliKelasJadwalPelajaranController;
 use App\Http\Controllers\WaliKelas\PenilaianEkstrakurikulerController as WaliKelasPenilaianEkstrakurikulerController;
@@ -84,6 +86,12 @@ Route::middleware(['auth', 'sso.check', 'nocache', 'sqid.decode'])->group(functi
         ->name('wali-kelas.perkembangan-siswa.index');
     Route::get('/wali-kelas/perkembangan-siswa/{anggota_kelas}', [WaliKelasPerkembanganSiswaController::class, 'show'])
         ->name('wali-kelas.perkembangan-siswa.show');
+    Route::get('/wali-kelas/catatan-rapor', [WaliKelasCatatanRaporController::class, 'index'])
+        ->name('wali-kelas.catatan-rapor.index');
+    Route::post('/wali-kelas/catatan-rapor', [WaliKelasCatatanRaporController::class, 'store'])
+        ->name('wali-kelas.catatan-rapor.store');
+    Route::put('/wali-kelas/catatan-rapor/{anggota_kelas}', [WaliKelasCatatanRaporController::class, 'updateSingle'])
+        ->name('wali-kelas.catatan-rapor.update-single');
     Route::get('/wali-kelas/presensi-siswa/tahunan', [WaliKelasPresensiSiswaController::class, 'tahunan'])
         ->name('wali-kelas.presensi-siswa.tahunan');
     Route::get('/wali-kelas/presensi-siswa/rekap', [WaliKelasPresensiSiswaController::class, 'rekap'])
@@ -264,6 +272,19 @@ Route::middleware(['auth', 'sso.check', 'nocache', 'sqid.decode'])->group(functi
     Route::resource('/data-master/target-capaian', TargetCapaianController::class)
         ->except(['show'])
         ->parameters(['target-capaian' => 'target_capaian']);
+    Route::middleware('role:super admin')
+        ->prefix('/data-master/bank-komentar')
+        ->name('bank-komentar.')
+        ->group(function (): void {
+            Route::get('/', [BankKomentarController::class, 'index'])->name('index');
+            Route::post('/wali', [BankKomentarController::class, 'storeWali'])->name('wali.store');
+            Route::put('/wali/{komentar_rapor}', [BankKomentarController::class, 'updateWali'])->name('wali.update');
+            Route::post('/wali/{komentar_rapor}/toggle', [BankKomentarController::class, 'toggleWali'])->name('wali.toggle');
+            Route::delete('/wali/{komentar_rapor}', [BankKomentarController::class, 'destroyWali'])->name('wali.destroy');
+            Route::post('/t2q', [BankKomentarController::class, 'storeT2q'])->name('t2q.store');
+            Route::put('/t2q/{komentar_t2q}', [BankKomentarController::class, 'updateT2q'])->name('t2q.update');
+            Route::delete('/t2q/{komentar_t2q}', [BankKomentarController::class, 'destroyT2q'])->name('t2q.destroy');
+        });
     Route::resource('/data-master/siswa', SiswaController::class);
     Route::middleware('role:super admin')
         ->prefix('/data-master/siswa-mutasi')

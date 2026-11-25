@@ -10,6 +10,8 @@ use App\Models\Admin\DataMaster\Ekstrakurikuler;
 use App\Models\Admin\DataMaster\Jemputan;
 use App\Models\Admin\DataMaster\Karyawan;
 use App\Models\Admin\DataMaster\Kelas;
+use App\Models\Admin\DataMaster\KomentarRapor;
+use App\Models\Admin\DataMaster\KomentarT2q;
 use App\Models\Admin\DataMaster\Sekolah;
 use App\Models\Admin\DataMaster\Siswa;
 use App\Models\Admin\DataMaster\SiswaMutasi;
@@ -28,6 +30,7 @@ use App\Models\Admin\Pelajaran\JamPelajaran;
 use App\Models\Admin\Pelajaran\KelompokPelajaran;
 use App\Models\Admin\Pelajaran\MataPelajaran;
 use App\Models\Admin\Penilaian\AspekTp;
+use App\Models\Admin\Penilaian\CatatanRaporWali;
 use App\Models\Admin\Penilaian\Kkm;
 use App\Models\Admin\Penilaian\PenilaianFinalisasi;
 use App\Models\Admin\Penilaian\RekapMapel;
@@ -89,6 +92,9 @@ final class Sqid
         33 => PenilaianFinalisasi::class,
         34 => PrestasiSiswa::class,
         35 => SiswaMutasi::class,
+        36 => CatatanRaporWali::class,
+        37 => KomentarRapor::class,
+        38 => KomentarT2q::class,
     ];
 
     /**
