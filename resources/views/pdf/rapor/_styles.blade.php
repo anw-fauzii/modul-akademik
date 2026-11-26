@@ -265,7 +265,9 @@
         min-height: 60px;
         padding: 6px 8px;
         font-size: 8.2pt;
+        line-height: 1.44;
         color: #334155;
+        text-align: justify;
     }
 
     /* Tanda Tangan & Titimangsa */

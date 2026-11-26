@@ -42,6 +42,7 @@ use App\Http\Controllers\GuruMapel\JadwalPelajaranController as GuruMapelJadwalP
 use App\Http\Controllers\GuruMapel\PenilaianEkstrakurikulerController as GuruMapelPenilaianEkstrakurikulerController;
 use App\Http\Controllers\GuruMapel\PenilaianTpController as GuruMapelPenilaianTpController;
 use App\Http\Controllers\GuruMapel\PerkembanganSiswaController as GuruMapelPerkembanganSiswaController;
+use App\Http\Controllers\GuruT2q\CatatanRaporT2qController as GuruT2qCatatanRaporController;
 use App\Http\Controllers\GuruT2q\DashboardController as GuruT2qDashboardController;
 use App\Http\Controllers\GuruT2q\FinalisasiT2qController as GuruT2qFinalisasiController;
 use App\Http\Controllers\GuruT2q\PenilaianEkstrakurikulerController as GuruT2qPenilaianEkstrakurikulerController;
@@ -236,6 +237,10 @@ Route::middleware(['auth', 'sso.check', 'nocache', 'sqid.decode'])->group(functi
         ->name('guru-t2q.rapor.store');
     Route::post('/guru-t2q/rapor/generate', [GuruT2qRaporController::class, 'generate'])
         ->name('guru-t2q.rapor.generate');
+    Route::get('/guru-t2q/catatan-rapor', [GuruT2qCatatanRaporController::class, 'index'])
+        ->name('guru-t2q.catatan-rapor.index');
+    Route::post('/guru-t2q/catatan-rapor', [GuruT2qCatatanRaporController::class, 'store'])
+        ->name('guru-t2q.catatan-rapor.store');
     Route::post('/guru-t2q/finalisasi', [GuruT2qFinalisasiController::class, 'finalize'])
         ->name('guru-t2q.finalisasi.finalize');
     Route::post('/guru-t2q/finalisasi/unlock', [GuruT2qFinalisasiController::class, 'unlock'])

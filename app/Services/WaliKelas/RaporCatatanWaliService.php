@@ -17,6 +17,7 @@ use App\Services\Admin\T2q\T2qRaporResolverService;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\ValidationException;
 
 class RaporCatatanWaliService
 {
@@ -89,10 +90,9 @@ class RaporCatatanWaliService
         }
 
         $fallback = new EloquentCollection;
-        foreach (KomentarRapor::DEFAULT_TEMPLATES as $idx => $tpl) {
+        foreach (KomentarRapor::DEFAULT_TEMPLATES as $tpl) {
             $model = new KomentarRapor;
             $model->setRawAttributes([
-                'id' => $idx + 1,
                 'judul' => $tpl['judul'],
                 'kategori' => $tpl['kategori'],
                 'jenjang' => $tpl['jenjang'],
@@ -251,6 +251,7 @@ class RaporCatatanWaliService
             'periode' => $periode,
             'periodeOptions' => $periodeOptions,
             'isSd' => $isSd,
+            'isStorageReady' => Schema::hasTable('akademik_rapor_catatan_wali'),
             'templates' => $this->loadActiveTemplates((string) $selectedKelas->jenjang_kelas),
             'studentRows' => $studentRows,
             'stats' => [
@@ -277,6 +278,12 @@ class RaporCatatanWaliService
         array $catatanMap,
         array $templateIdMap = []
     ): array {
+        if (! Schema::hasTable('akademik_rapor_catatan_wali')) {
+            throw ValidationException::withMessages([
+                'catatan' => ['Tabel penyimpanan catatan rapor (akademik_rapor_catatan_wali) belum tersedia di database. Jalankan php artisan migrate terlebih dahulu.'],
+            ]);
+        }
+
         $auth = $this->scopeService->authorizeKelasIdForUser($user, $kelasId);
         /** @var Kelas $selectedKelas */
         $selectedKelas = $auth['selectedKelas'];
@@ -296,6 +303,19 @@ class RaporCatatanWaliService
             ->map(static fn ($id): int => (int) $id)
             ->flip()
             ->all();
+
+        $submittedTemplateIds = array_values(array_unique(array_filter(
+            array_map(static fn (mixed $v): int => (int) $v, $templateIdMap),
+            static fn (int $id): bool => $id > 0
+        )));
+        $validTemplateIds = ($submittedTemplateIds !== [] && Schema::hasTable('akademik_master_komentar_rapor'))
+            ? KomentarRapor::query()
+                ->whereIn('id', $submittedTemplateIds)
+                ->pluck('id')
+                ->map(static fn ($id): int => (int) $id)
+                ->flip()
+                ->all()
+            : [];
 
         $existingByAnggota = CatatanRaporWali::query()
             ->whereIn('anggota_kelas_id', array_keys($validAnggotaIds) ?: [0])
@@ -325,9 +345,12 @@ class RaporCatatanWaliService
                 $filledCount++;
             }
 
-            $templateId = isset($templateIdMap[$anggotaId]) && (int) $templateIdMap[$anggotaId] > 0
-                ? (int) $templateIdMap[$anggotaId]
-                : $existing?->komentar_rapor_id;
+            $rawTemplateId = isset($templateIdMap[$anggotaId]) ? (int) $templateIdMap[$anggotaId] : 0;
+            $templateId = ($rawTemplateId > 0 && isset($validTemplateIds[$rawTemplateId]))
+                ? $rawTemplateId
+                : ($existing?->komentar_rapor_id && isset($validTemplateIds[(int) $existing->komentar_rapor_id])
+                    ? (int) $existing->komentar_rapor_id
+                    : null);
 
             $upserts[] = [
                 'akademik_master_tahun_ajaran_id' => (int) $activeTa->id,
@@ -381,6 +404,12 @@ class RaporCatatanWaliService
         ?string $catatan,
         ?int $komentarRaporId = null
     ): ?CatatanRaporWali {
+        if (! Schema::hasTable('akademik_rapor_catatan_wali')) {
+            throw ValidationException::withMessages([
+                'catatan' => ['Tabel penyimpanan catatan rapor (akademik_rapor_catatan_wali) belum tersedia di database. Jalankan php artisan migrate terlebih dahulu.'],
+            ]);
+        }
+
         $auth = $this->scopeService->authorizeAnggotaKelasForUser($user, $anggotaKelas);
         /** @var Kelas $selectedKelas */
         $selectedKelas = $auth['selectedKelas'];
@@ -393,6 +422,10 @@ class RaporCatatanWaliService
         $periode = $this->normalizePeriode($periodeInput);
         $cleanText = $this->cleanText($catatan);
         $roleLabel = $this->resolveActorRoleLabel($user, $selectedKelas);
+
+        $safeTemplateId = ($komentarRaporId !== null && $komentarRaporId > 0 && Schema::hasTable('akademik_master_komentar_rapor'))
+            ? (KomentarRapor::query()->whereKey($komentarRaporId)->exists() ? $komentarRaporId : null)
+            : null;
 
         if ($cleanText === null) {
             CatatanRaporWali::query()
@@ -417,7 +450,7 @@ class RaporCatatanWaliService
             [
                 'akademik_master_tahun_ajaran_id' => (int) $activeTa->id,
                 'catatan' => $cleanText,
-                'komentar_rapor_id' => $komentarRaporId,
+                'komentar_rapor_id' => $safeTemplateId,
                 'updated_by_user_id' => $user->id,
                 'updated_by_name' => $user->name,
                 'updated_by_role_label' => $roleLabel,

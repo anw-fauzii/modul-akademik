@@ -53,6 +53,10 @@
             $ekskulRows = $entry['ekskulRows'];
             $t2q = $entry['t2q'];
             $t2qRapor = $entry['t2qRapor'] ?? null;
+            $catatanT2qText = is_array($t2qRapor) ? trim((string) ($t2qRapor['catatan_t2q'] ?? '')) : '';
+            $guruT2qNama = ($t2q && $t2q->relationLoaded('guruT2q') && $t2q->guruT2q)
+                ? trim((string) $t2q->guruT2q->nama_gelar)
+                : trim((string) (is_array($t2qRapor) ? ($t2qRapor['updated_by_name'] ?? '') : ''));
             $presensi = $entry['presensi'];
             $catatanWali = $entry['catatanWali'] ?? null;
             $catatanWaliText = trim((string) ($catatanWali?->catatan ?? ''));
@@ -258,18 +262,6 @@
                                     <div class="desc-text">{{ $tahfizhDeskripsiText }}</div>
                                 </td>
                             </tr>
-                            @php
-                                $catatanT2qText = is_array($t2qRapor) ? trim((string) ($t2qRapor['catatan_t2q'] ?? '')) : '';
-                            @endphp
-                            @if ($catatanT2qText !== '')
-                                <tr>
-                                    <td colspan="4" style="background: #f8fafc; padding: 5px 7px;">
-                                        <div class="desc-text">
-                                            <strong>Catatan Guru T2Q:</strong> {!! nl2br(e($catatanT2qText)) !!}
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endif
                         </tbody>
                     </table>
                 </div>
@@ -279,7 +271,7 @@
             <table class="split-table">
                 <tbody>
                     <tr>
-                        <td style="width: 38%; padding-right: 12px;">
+                        <td style="width: 35%; padding-right: 12px;">
                             <div class="section-heading uppercase" style="margin-top: 4px;">
                                 {{ $nextSectionLetter($sectionIdx++) }}. KETIDAKHADIRAN
                             </div>
@@ -298,7 +290,7 @@
                                 </tr>
                             </table>
                         </td>
-                        <td style="width: 62%;">
+                        <td style="width: 65%;">
                             <div class="section-heading uppercase" style="margin-top: 4px;">
                                 {{ $nextSectionLetter($sectionIdx++) }}. CATATAN WALI KELAS
                             </div>
@@ -313,6 +305,27 @@
                     </tr>
                 </tbody>
             </table>
+
+            @if ($t2q || $catatanT2qText !== '')
+                <!-- CATATAN GURU T2Q -->
+                <div class="section-keep-together" style="margin-top: 6px;">
+                    <div class="section-heading uppercase" style="margin-top: 4px;">
+                        {{ $nextSectionLetter($sectionIdx++) }}. CATATAN GURU T2Q
+                        @if ($guruT2qNama !== '')
+                            <span class="muted" style="font-weight: normal; text-transform: none; font-size: 7.6pt;">
+                                ({{ $guruT2qNama }})
+                            </span>
+                        @endif
+                    </div>
+                    <div class="notes-box">
+                        @if ($catatanT2qText !== '')
+                            {!! nl2br(e($catatanT2qText)) !!}
+                        @else
+                            &nbsp;
+                        @endif
+                    </div>
+                </div>
+            @endif
 
             <!-- TANDA TANGAN & TITIMANGSA -->
             <div class="ttd-wrap">

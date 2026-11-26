@@ -255,6 +255,12 @@ class WaliKelasPerkembanganTest extends TestCase
         $this->assertStringContainsString('data-wk-tab="mapel"', $indexHtml);
         $this->assertStringContainsString('Ringkasan Mapel', $indexHtml);
         $this->assertStringContainsString('id="wkPerkembanganTable"', $indexHtml);
+        $this->assertStringContainsString('wk-leger-toolbar', $indexHtml);
+        $this->assertStringContainsString('wk-leger-legend', $indexHtml);
+        $this->assertStringContainsString('wk-score-chip', $indexHtml);
+        $this->assertStringContainsString('js-wk-density-btn', $indexHtml);
+        $this->assertStringContainsString('Perlu Pendampingan', $indexHtml);
+        $this->assertStringContainsString('KKM 75', $indexHtml);
         $this->assertStringContainsString(route('wali-kelas.perkembangan-siswa.show', ['anggota_kelas' => sqidFor('wali-kelas.perkembangan-siswa.show', 301), 'periode' => 'mid']), $indexHtml);
         $this->assertStringContainsString('fa-ellipsis-v', $indexHtml);
         $this->assertStringContainsString('action-dropdown-item', $indexHtml);

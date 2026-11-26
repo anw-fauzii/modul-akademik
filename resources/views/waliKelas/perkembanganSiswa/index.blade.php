@@ -227,6 +227,441 @@
                 color: #c2410c;
                 box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
             }
+
+            /* === LEGER SISWA: RAPIH UNTUK BANYAK SISWA & BANYAK MAPEL === */
+            .wk-leger-toolbar {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.65rem;
+                padding: 0.72rem 1.1rem;
+                background: #f8fafc;
+                border-bottom: 1px solid #e2e8f0;
+            }
+
+            .wk-leger-filters {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 0.38rem;
+            }
+
+            .wk-leger-filter-pill {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.35rem;
+                padding: 0.3rem 0.72rem;
+                border-radius: 999px;
+                border: 1px solid #cbd5e1;
+                background: #ffffff;
+                color: #475569;
+                font-size: 0.73rem;
+                font-weight: 700;
+                cursor: pointer;
+                transition: all 0.14s ease;
+                white-space: nowrap;
+            }
+
+            .wk-leger-filter-pill:hover {
+                border-color: #94a3b8;
+                color: #0f172a;
+            }
+
+            .wk-leger-filter-pill.is-active {
+                background: #0f172a;
+                border-color: #0f172a;
+                color: #ffffff;
+            }
+
+            .wk-leger-filter-pill.is-alert.is-active {
+                background: #dc2626;
+                border-color: #dc2626;
+                color: #ffffff;
+            }
+
+            .wk-leger-filter-count {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 18px;
+                height: 18px;
+                padding: 0 0.34rem;
+                border-radius: 999px;
+                font-size: 0.65rem;
+                font-weight: 800;
+                background: #f1f5f9;
+                color: #334155;
+            }
+
+            .wk-leger-filter-pill.is-active .wk-leger-filter-count {
+                background: rgba(255, 255, 255, 0.22);
+                color: #ffffff;
+            }
+
+            .wk-density-seg {
+                display: inline-flex;
+                align-items: center;
+                padding: 2px;
+                border-radius: 9px;
+                background: #e2e8f0;
+                gap: 2px;
+            }
+
+            .wk-density-btn {
+                border: 0;
+                background: transparent;
+                color: #475569;
+                font-size: 0.71rem;
+                font-weight: 700;
+                padding: 0.24rem 0.65rem;
+                border-radius: 7px;
+                cursor: pointer;
+                transition: all 0.14s ease;
+                white-space: nowrap;
+            }
+
+            .wk-density-btn.is-active {
+                background: #ffffff;
+                color: #0f172a;
+                box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+            }
+
+            .wk-leger-legend {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.5rem 1rem;
+                padding: 0.52rem 1.1rem;
+                background: #ffffff;
+                border-bottom: 1px solid #f1f5f9;
+                font-size: 0.71rem;
+                color: #64748b;
+            }
+
+            .wk-legend-items {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 0.75rem;
+            }
+
+            .wk-legend-dot {
+                display: inline-block;
+                width: 9px;
+                height: 9px;
+                border-radius: 3px;
+                margin-right: 0.28rem;
+                vertical-align: -1px;
+            }
+
+            .wk-leger-body {
+                padding: 0.85rem 1.1rem 1rem;
+            }
+
+            .wk-leger-table-slot:not(:has(> .dataTables_wrapper)) {
+                overflow: auto;
+                max-height: 66vh;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                background: #ffffff;
+            }
+
+            .wk-leger-scroll {
+                grid-column: 1 / -1 !important;
+                width: 100% !important;
+                max-height: 66vh;
+                overflow: auto;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                background: #ffffff;
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            }
+
+            #wkPerkembanganTable,
+            #wkPerkembanganTable_wrapper table.dataTable {
+                border-collapse: separate !important;
+                border-spacing: 0 !important;
+                margin: 0 !important;
+                border: 0 !important;
+                border-radius: 0 !important;
+                overflow: visible !important;
+                width: 100% !important;
+                font-variant-numeric: tabular-nums;
+            }
+
+            #wkPerkembanganTable thead th,
+            #wkPerkembanganTable_wrapper table.dataTable thead th {
+                position: sticky;
+                top: 0;
+                z-index: 15;
+                background: #f8fafc !important;
+                color: #475569 !important;
+                font-size: 0.68rem !important;
+                font-weight: 800 !important;
+                text-transform: uppercase;
+                letter-spacing: 0.03em !important;
+                padding: 0.58rem 0.65rem !important;
+                border-top: 0 !important;
+                border-bottom: 1.5px solid #cbd5e1 !important;
+                white-space: nowrap !important;
+                vertical-align: middle !important;
+            }
+
+            #wkPerkembanganTable_wrapper table.dataTable thead th.sorting,
+            #wkPerkembanganTable_wrapper table.dataTable thead th.sorting_asc,
+            #wkPerkembanganTable_wrapper table.dataTable thead th.sorting_desc {
+                padding-right: 1.45rem !important;
+            }
+
+            #wkPerkembanganTable thead th.wk-col-mapel,
+            #wkPerkembanganTable_wrapper table.dataTable thead th.wk-col-mapel {
+                min-width: 74px;
+                text-align: center;
+                padding-left: 0.55rem !important;
+            }
+
+            #wkPerkembanganTable thead th.wk-col-mapel.is-mine-col,
+            #wkPerkembanganTable_wrapper table.dataTable thead th.wk-col-mapel.is-mine-col {
+                background: #fff7ed !important;
+                color: #c2410c !important;
+            }
+
+            .wk-th-kkm {
+                display: block;
+                font-size: 0.58rem;
+                font-weight: 600;
+                color: #94a3b8;
+                text-transform: none;
+                letter-spacing: 0;
+                margin-top: 1px;
+            }
+
+            #wkPerkembanganTable tbody td,
+            #wkPerkembanganTable_wrapper table.dataTable tbody td {
+                background-color: #ffffff;
+                padding: 0.52rem 0.58rem !important;
+                border-top: 0 !important;
+                border-bottom: 1px solid #f1f5f9 !important;
+                vertical-align: middle !important;
+                transition: background-color 0.12s ease;
+            }
+
+            #wkPerkembanganTable tbody tr:last-child td {
+                border-bottom: 0 !important;
+            }
+
+            #wkPerkembanganTable tbody tr:nth-child(even) td {
+                background-color: #fafbfc;
+            }
+
+            #wkPerkembanganTable tbody tr:hover td {
+                background-color: #fff7ed !important;
+            }
+
+            .wk-student-name-link {
+                font-size: 0.81rem;
+                font-weight: 700;
+                color: #0f172a;
+                text-decoration: none !important;
+                display: block;
+                max-width: 175px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                line-height: 1.25;
+            }
+
+            .wk-student-name-link:hover {
+                color: #c2410c;
+            }
+
+            .wk-student-nis {
+                font-size: 0.68rem;
+                color: #64748b;
+                line-height: 1.2;
+                margin-top: 1px;
+            }
+
+            .wk-att-rate {
+                font-size: 0.79rem;
+                font-weight: 800;
+                line-height: 1.2;
+            }
+
+            .wk-att-detail {
+                font-size: 0.63rem;
+                color: #64748b;
+                white-space: nowrap;
+                letter-spacing: -0.01em;
+                margin-top: 2px;
+            }
+
+            .wk-score-chip {
+                display: inline-flex;
+                align-items: baseline;
+                justify-content: center;
+                gap: 0.22rem;
+                padding: 0.2rem 0.44rem;
+                border-radius: 7px;
+                font-size: 0.76rem;
+                line-height: 1.15;
+                white-space: nowrap;
+                min-width: 52px;
+            }
+
+            .wk-score-chip.is-pass {
+                background: #f0fdf4;
+                border: 1px solid #bbf7d0;
+                color: #166534;
+                font-weight: 700;
+            }
+
+            .wk-score-chip.is-fail {
+                background: #fef2f2;
+                border: 1px solid #fca5a5;
+                color: #b91c1c;
+                font-weight: 800;
+            }
+
+            .wk-score-pred {
+                font-size: 0.62rem;
+                font-weight: 700;
+                opacity: 0.82;
+            }
+
+            .wk-score-empty {
+                color: #cbd5e1;
+                font-weight: 600;
+                font-size: 0.78rem;
+            }
+
+            .wk-tuntas-pill {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.25rem;
+                padding: 0.2rem 0.5rem;
+                border-radius: 999px;
+                font-size: 0.69rem;
+                font-weight: 700;
+                white-space: nowrap;
+            }
+
+            .wk-tuntas-pill.is-ok {
+                background: #ecfdf5;
+                color: #047857;
+                border: 1px solid #a7f3d0;
+            }
+
+            .wk-tuntas-pill.is-warn {
+                background: #fef2f2;
+                color: #b91c1c;
+                border: 1px solid #fecaca;
+            }
+
+            .wk-rata-pill {
+                display: inline-block;
+                min-width: 44px;
+                padding: 0.22rem 0.48rem;
+                border-radius: 8px;
+                background: #f1f5f9;
+                color: #0f172a;
+                font-size: 0.8rem;
+                font-weight: 800;
+            }
+
+            /* Sticky Kolom Kiri (No & Siswa) + Kolom Kanan (Aksi) */
+            @media (min-width: 640px) {
+                #wkPerkembanganTable th:nth-child(1),
+                #wkPerkembanganTable tbody td:not(.dataTables_empty):nth-child(1) {
+                    position: sticky;
+                    left: 0;
+                    width: 44px;
+                    min-width: 44px;
+                    max-width: 44px;
+                    text-align: center;
+                }
+
+                #wkPerkembanganTable th:nth-child(2),
+                #wkPerkembanganTable tbody td:not(.dataTables_empty):nth-child(2) {
+                    position: sticky;
+                    left: 44px;
+                    min-width: 215px;
+                    max-width: 250px;
+                    border-right: 1px solid #e2e8f0 !important;
+                    box-shadow: 5px 0 10px -6px rgba(15, 23, 42, 0.14);
+                }
+
+                #wkPerkembanganTable tbody td:not(.dataTables_empty):nth-child(1),
+                #wkPerkembanganTable tbody td:not(.dataTables_empty):nth-child(2) {
+                    z-index: 8;
+                }
+
+                #wkPerkembanganTable thead th:nth-child(1),
+                #wkPerkembanganTable thead th:nth-child(2) {
+                    z-index: 25;
+                }
+            }
+
+            @media (min-width: 768px) {
+                #wkPerkembanganTable th:last-child,
+                #wkPerkembanganTable tbody td:not(.dataTables_empty):last-child {
+                    position: sticky;
+                    right: 0;
+                    min-width: 66px;
+                    border-left: 1px solid #e2e8f0 !important;
+                    box-shadow: -5px 0 10px -6px rgba(15, 23, 42, 0.12);
+                }
+
+                #wkPerkembanganTable tbody td:not(.dataTables_empty):last-child {
+                    z-index: 8;
+                }
+
+                #wkPerkembanganTable thead th:last-child {
+                    z-index: 24;
+                }
+            }
+
+            /* Mode Padat untuk Kelas Besar & Banyak Mapel */
+            .wk-leger-wrap.is-compact #wkPerkembanganTable thead th,
+            .wk-leger-wrap.is-compact #wkPerkembanganTable_wrapper table.dataTable thead th {
+                padding: 0.42rem 0.45rem !important;
+                font-size: 0.63rem !important;
+            }
+
+            .wk-leger-wrap.is-compact #wkPerkembanganTable_wrapper table.dataTable thead th.sorting,
+            .wk-leger-wrap.is-compact #wkPerkembanganTable_wrapper table.dataTable thead th.sorting_asc,
+            .wk-leger-wrap.is-compact #wkPerkembanganTable_wrapper table.dataTable thead th.sorting_desc {
+                padding-right: 1.3rem !important;
+            }
+
+            .wk-leger-wrap.is-compact #wkPerkembanganTable tbody td,
+            .wk-leger-wrap.is-compact #wkPerkembanganTable_wrapper table.dataTable tbody td {
+                padding: 0.34rem 0.42rem !important;
+            }
+
+            .wk-leger-wrap.is-compact .wk-avatar-thumb,
+            .wk-leger-wrap.is-compact .wk-avatar-fallback {
+                width: 28px;
+                height: 28px;
+                border-radius: 8px;
+                font-size: 0.66rem;
+            }
+
+            .wk-leger-wrap.is-compact .wk-student-name-link {
+                font-size: 0.77rem;
+            }
+
+            .wk-leger-wrap.is-compact .wk-score-chip {
+                padding: 0.14rem 0.34rem;
+                font-size: 0.72rem;
+                min-width: 46px;
+            }
+
+            .wk-leger-wrap.is-compact .wk-att-detail {
+                display: none;
+            }
         </style>
     @endPushOnce
 
@@ -452,8 +887,25 @@
             @endif
 
             <!-- TAB 1: LEGER PERKEMBANGAN SELURUH SISWA -->
+            @php
+                $kkmByMapelId = $mapelSummaries
+                    ->mapWithKeys(static fn (array $ms): array => [
+                        (int) ($ms['mapel']->id ?? 0) => [
+                            'kkm' => $ms['kkm'] ?? null,
+                            'is_mine' => (bool) ($ms['is_taught_by_user'] ?? false),
+                        ],
+                    ])
+                    ->all();
+                $totalLedgerCount = $studentRows->count();
+                $attentionLedgerCount = $isSd
+                    ? $studentRows->filter(static fn (array $r): bool => (int) ($r['belum_tuntas_count'] ?? 0) > 0)->count()
+                    : 0;
+                $lowAttendanceLedgerCount = $studentRows->filter(
+                    static fn (array $r): bool => ($r['presensi']['hadir_rate'] ?? null) !== null && (float) $r['presensi']['hadir_rate'] < 85
+                )->count();
+            @endphp
             <div id="wkTabPanelLeger" data-wk-panel="leger" role="tabpanel">
-                <div class="wk-surface">
+                <div class="wk-surface wk-leger-wrap" id="wkLegerWrap">
                     <div class="wk-surface-head">
                         <div>
                             <h6 class="wk-surface-title">
@@ -497,143 +949,222 @@
                         @endif
                     </div>
 
-                <div class="p-3 p-md-4">
-                    <div class="table-responsive">
-                        <table class="mb-0 table table-hover align-middle datatable-ordered" id="wkPerkembanganTable"
-                            data-search-placeholder="Cari nama siswa..."
-                            data-empty-table="Belum ada siswa terdaftar di kelas {{ $selectedKelas->nama_kelas }}.">
-                            <thead>
-                                <tr>
-                                    <th class="text-center" style="width: 46px;" data-orderable="false" data-searchable="false">No</th>
-                                    <th>Siswa</th>
-                                    <th class="text-center" data-searchable="false">Kehadiran</th>
-                                    @if ($isSd)
-                                        @foreach ($mapels as $mp)
-                                            <th class="text-center" data-searchable="false" title="{{ $mp->nama_mata_pelajaran }}">
-                                                {{ $mp->singkatan ?: \Illuminate\Support\Str::limit($mp->nama_mata_pelajaran, 8) }}
-                                            </th>
-                                        @endforeach
-                                        <th class="text-center" data-searchable="false">Ketuntasan</th>
-                                        <th class="text-center" data-searchable="false">Rata NA</th>
-                                    @endif
-                                    <th class="text-center" style="width: 72px; text-align: center;" data-orderable="false" data-searchable="false">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($studentRows as $idx => $row)
-                                    @php
-                                        $anggota = $row['anggota'];
-                                        $siswa = $anggota->siswa;
-                                        $siswaName = $siswa?->nama_lengkap ?? $anggota->siswa_nis;
-                                        $presensi = $row['presensi'];
-                                        $detailUrl = route($perkembanganRoutePrefix.'.show', ['anggota_kelas' => $anggota, 'periode' => $periode]);
-                                    @endphp
+                    @if ($totalLedgerCount > 0)
+                        <div class="wk-leger-toolbar">
+                            <div class="wk-leger-filters" role="group" aria-label="Filter Cepat Leger Siswa">
+                                <button type="button" class="wk-leger-filter-pill is-active js-wk-leger-filter" data-filter="all">
+                                    <span>Semua Siswa</span>
+                                    <span class="wk-leger-filter-count">{{ $totalLedgerCount }}</span>
+                                </button>
+                                @if ($isSd)
+                                    <button type="button" class="wk-leger-filter-pill is-alert js-wk-leger-filter" data-filter="attention">
+                                        <i class="fa fa-exclamation-triangle" style="font-size: 0.65rem;"></i>
+                                        <span>Perlu Pendampingan</span>
+                                        <span class="wk-leger-filter-count">{{ $attentionLedgerCount }}</span>
+                                    </button>
+                                @endif
+                                <button type="button" class="wk-leger-filter-pill is-alert js-wk-leger-filter" data-filter="low_attendance">
+                                    <i class="fa fa-user-clock" style="font-size: 0.65rem;"></i>
+                                    <span>Kehadiran &lt; 85%</span>
+                                    <span class="wk-leger-filter-count">{{ $lowAttendanceLedgerCount }}</span>
+                                </button>
+                            </div>
+
+                            <div class="d-flex align-items-center" style="gap: 0.5rem;">
+                                <span class="small text-muted font-weight-semibold" style="font-size: 0.7rem;">Tampilan:</span>
+                                <div class="wk-density-seg" role="group" aria-label="Kerapatan Tabel Leger">
+                                    <button type="button" class="wk-density-btn is-active js-wk-density-btn" data-density="comfortable">
+                                        Nyaman
+                                    </button>
+                                    <button type="button" class="wk-density-btn js-wk-density-btn" data-density="compact">
+                                        Padat
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="wk-leger-legend">
+                            <div class="wk-legend-items">
+                                @if ($isSd)
+                                    <span><span class="wk-legend-dot" style="background: #dcfce7; border: 1px solid #86efac;"></span>Tuntas KKM</span>
+                                    <span><span class="wk-legend-dot" style="background: #fee2e2; border: 1px solid #fca5a5;"></span>Perlu Pendampingan (&lt; KKM)</span>
+                                    <span><span class="text-muted font-weight-bold mr-1">&mdash;</span>Belum Dinilai</span>
+                                @else
+                                    <span><span class="wk-legend-dot" style="background: #dcfce7; border: 1px solid #86efac;"></span>Kehadiran &ge; 85%</span>
+                                    <span><span class="wk-legend-dot" style="background: #fee2e2; border: 1px solid #fca5a5;"></span>Kehadiran &lt; 85%</span>
+                                @endif
+                            </div>
+                            <div class="small text-muted" style="font-size: 0.69rem;">
+                                <i class="fa fa-arrows-alt-h mr-1 text-warning"></i>
+                                Kolom <strong>No &amp; Siswa</strong> terkunci di kiri saat tabel digeser
+                            </div>
+                        </div>
+                    @endif
+
+                    <div class="wk-leger-body">
+                        <div class="wk-leger-table-slot">
+                            <table class="mb-0 table table-hover align-middle datatable-ordered" id="wkPerkembanganTable"
+                                data-search-placeholder="Cari nama atau NIS siswa..."
+                                data-empty-table="Belum ada siswa terdaftar di kelas {{ $selectedKelas->nama_kelas }}.">
+                                <thead>
                                     <tr>
-                                        <td class="text-center text-muted font-weight-semibold">{{ $idx + 1 }}</td>
-                                        <td>
-                                            <div class="d-flex align-items-center" style="gap: 0.65rem;">
-                                                @if ($siswa?->avatar_url)
-                                                    <img src="{{ $siswa->avatar_url }}" alt="{{ $siswaName }}" class="wk-avatar-thumb">
-                                                @else
-                                                    <div class="wk-avatar-fallback">
-                                                        {{ $siswa?->inisial_nama ?? 'S' }}
-                                                    </div>
-                                                @endif
-                                                <div style="min-width: 0;">
-                                                    <a href="{{ $detailUrl }}" class="font-weight-bold text-dark text-decoration-none d-block"
-                                                        style="font-size: 0.83rem;">
-                                                        {{ $siswaName }}
-                                                    </a>
-                                                    <div class="small text-muted" style="font-size: 0.7rem;">
-                                                        NIS: {{ $anggota->siswa_nis }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="text-center">
-                                            <div class="font-weight-bold" style="font-size: 0.8rem; color: {{ ($presensi['hadir_rate'] ?? 100) < 85 ? '#b91c1c' : '#047857' }};">
-                                                {{ $presensi['hadir_rate'] !== null ? $presensi['hadir_rate'].'%' : '-' }}
-                                            </div>
-                                            <div class="text-muted" style="font-size: 0.66rem;">
-                                                H:{{ $presensi['hadir'] }} T:{{ $presensi['terlambat'] }} I:{{ $presensi['izin'] }} S:{{ $presensi['sakit'] }} A:{{ $presensi['alpa'] }}
-                                            </div>
-                                        </td>
+                                        <th class="text-center" data-orderable="false" data-searchable="false">No</th>
+                                        <th>Siswa</th>
+                                        <th class="text-center" data-searchable="false" title="Persentase Kehadiran &amp; Rekap (H=Hadir, T=Terlambat, I=Izin, S=Sakit, A=Alpa)">Kehadiran</th>
                                         @if ($isSd)
                                             @foreach ($mapels as $mp)
                                                 @php
-                                                    $cell = $row['mapel_cells'][$mp->id] ?? ['nilai' => null, 'predikat' => null, 'tuntas' => null];
+                                                    $mpMeta = $kkmByMapelId[(int) $mp->id] ?? ['kkm' => null, 'is_mine' => false];
+                                                    $kkmText = $mpMeta['kkm'] !== null ? rtrim(rtrim(number_format((float) $mpMeta['kkm'], 2, '.', ''), '0'), '.') : null;
                                                 @endphp
-                                                <td class="text-center">
-                                                    @if ($cell['nilai'] !== null)
-                                                        <span class="badge px-2 py-1"
-                                                            style="font-size: 0.73rem; font-weight: 700; background: {{ $cell['tuntas'] === false ? '#fee2e2' : '#dcfce7' }}; color: {{ $cell['tuntas'] === false ? '#991b1b' : '#166534' }};">
-                                                            {{ rtrim(rtrim(number_format((float) $cell['nilai'], 1, '.', ''), '0'), '.') }}
-                                                            @if ($cell['predikat'])
-                                                                ({{ $cell['predikat'] }})
-                                                            @endif
+                                                <th class="text-center wk-col-mapel {{ $mpMeta['is_mine'] ? 'is-mine-col' : '' }}"
+                                                    data-searchable="false"
+                                                    title="{{ $mp->nama_mata_pelajaran }}{{ $kkmText !== null ? ' • KKM '.$kkmText : '' }}">
+                                                    <span>{{ $mp->singkatan ?: \Illuminate\Support\Str::limit($mp->nama_mata_pelajaran, 8) }}</span>
+                                                    @if ($kkmText !== null)
+                                                        <span class="wk-th-kkm">KKM {{ $kkmText }}</span>
+                                                    @endif
+                                                </th>
+                                            @endforeach
+                                            <th class="text-center" data-searchable="false">Ketuntasan</th>
+                                            <th class="text-center" data-searchable="false">Rata NA</th>
+                                        @endif
+                                        <th class="text-center" style="text-align: center;" data-orderable="false" data-searchable="false">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($studentRows as $idx => $row)
+                                        @php
+                                            $anggota = $row['anggota'];
+                                            $siswa = $anggota->siswa;
+                                            $siswaName = $siswa?->nama_lengkap ?? $anggota->siswa_nis;
+                                            $presensi = $row['presensi'];
+                                            $hadirRate = $presensi['hadir_rate'] ?? null;
+                                            $needsAttention = $isSd && (int) ($row['belum_tuntas_count'] ?? 0) > 0;
+                                            $lowAttendance = $hadirRate !== null && (float) $hadirRate < 85;
+                                            $detailUrl = route($perkembanganRoutePrefix.'.show', ['anggota_kelas' => $anggota, 'periode' => $periode]);
+                                            $dinilaiCnt = (int) ($row['dinilai_count'] ?? 0);
+                                            $tuntasCnt = (int) ($row['tuntas_count'] ?? 0);
+                                            $belumTuntasCnt = (int) ($row['belum_tuntas_count'] ?? 0);
+                                            $tuntasOrder = $dinilaiCnt > 0 ? round(($tuntasCnt / $dinilaiCnt) * 100, 2) : -1;
+                                        @endphp
+                                        <tr data-needs-attention="{{ $needsAttention ? '1' : '0' }}"
+                                            data-low-attendance="{{ $lowAttendance ? '1' : '0' }}">
+                                            <td class="text-center text-muted font-weight-semibold">{{ $idx + 1 }}</td>
+                                            <td>
+                                                <div class="d-flex align-items-center" style="gap: 0.55rem;">
+                                                    @if ($siswa?->avatar_url)
+                                                        <img src="{{ $siswa->avatar_url }}" alt="{{ $siswaName }}" class="wk-avatar-thumb">
+                                                    @else
+                                                        <div class="wk-avatar-fallback">
+                                                            {{ $siswa?->inisial_nama ?? 'S' }}
+                                                        </div>
+                                                    @endif
+                                                    <div style="min-width: 0; flex: 1;">
+                                                        <a href="{{ $detailUrl }}" class="wk-student-name-link" title="{{ $siswaName }}">
+                                                            {{ $siswaName }}
+                                                        </a>
+                                                        <div class="wk-student-nis">
+                                                            NIS {{ $anggota->siswa_nis }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center"
+                                                data-order="{{ $hadirRate !== null ? $hadirRate : -1 }}"
+                                                title="Hadir: {{ $presensi['hadir'] }} • Terlambat: {{ $presensi['terlambat'] }} • Izin: {{ $presensi['izin'] }} • Sakit: {{ $presensi['sakit'] }} • Alpa: {{ $presensi['alpa'] }}">
+                                                <div class="wk-att-rate" style="color: {{ $lowAttendance ? '#b91c1c' : '#047857' }};">
+                                                    {{ $hadirRate !== null ? $hadirRate.'%' : '-' }}
+                                                </div>
+                                                <div class="wk-att-detail">
+                                                    H{{ $presensi['hadir'] }}&bull;T{{ $presensi['terlambat'] }}&bull;I{{ $presensi['izin'] }}&bull;S{{ $presensi['sakit'] }}&bull;A{{ $presensi['alpa'] }}
+                                                </div>
+                                            </td>
+                                            @if ($isSd)
+                                                @foreach ($mapels as $mp)
+                                                    @php
+                                                        $cell = $row['mapel_cells'][$mp->id] ?? ['nilai' => null, 'predikat' => null, 'tuntas' => null];
+                                                        $scoreDisplay = $cell['nilai'] !== null
+                                                            ? rtrim(rtrim(number_format((float) $cell['nilai'], 1, '.', ''), '0'), '.')
+                                                            : null;
+                                                    @endphp
+                                                    <td class="text-center" data-order="{{ $cell['nilai'] !== null ? $cell['nilai'] : -1 }}">
+                                                        @if ($scoreDisplay !== null)
+                                                            <span class="wk-score-chip {{ $cell['tuntas'] === false ? 'is-fail' : 'is-pass' }}"
+                                                                title="{{ $mp->nama_mata_pelajaran }} &bull; Nilai {{ $scoreDisplay }}{{ $cell['predikat'] ? ' ('.$cell['predikat'].')' : '' }}{{ $cell['tuntas'] === false ? ' — Belum Tuntas KKM' : ' — Tuntas KKM' }}">
+                                                                <span>{{ $scoreDisplay }}</span>
+                                                                @if ($cell['predikat'])
+                                                                    <span class="wk-score-pred">{{ $cell['predikat'] }}</span>
+                                                                @endif
+                                                            </span>
+                                                        @else
+                                                            <span class="wk-score-empty" title="{{ $mp->nama_mata_pelajaran }}: Belum ada nilai">&mdash;</span>
+                                                        @endif
+                                                    </td>
+                                                @endforeach
+                                                <td class="text-center" data-order="{{ $tuntasOrder }}">
+                                                    @if ($dinilaiCnt > 0)
+                                                        <span class="wk-tuntas-pill {{ $belumTuntasCnt > 0 ? 'is-warn' : 'is-ok' }}"
+                                                            title="{{ $tuntasCnt }} dari {{ $dinilaiCnt }} mata pelajaran tuntas KKM">
+                                                            {{ $tuntasCnt }}/{{ $dinilaiCnt }}
+                                                            <span>{{ $belumTuntasCnt > 0 ? '('.$belumTuntasCnt.' Kurang)' : 'Tuntas' }}</span>
                                                         </span>
                                                     @else
-                                                        <span class="text-muted small">-</span>
+                                                        <span class="wk-score-empty">&mdash;</span>
                                                     @endif
                                                 </td>
-                                            @endforeach
+                                                <td class="text-center" data-order="{{ $row['rata_rapor'] !== null ? $row['rata_rapor'] : -1 }}">
+                                                    @if ($row['rata_rapor'] !== null)
+                                                        <span class="wk-rata-pill">{{ number_format((float) $row['rata_rapor'], 1) }}</span>
+                                                    @else
+                                                        <span class="wk-score-empty">&mdash;</span>
+                                                    @endif
+                                                </td>
+                                            @endif
                                             <td class="text-center">
-                                                @if ($row['dinilai_count'] > 0)
-                                                    <span class="badge {{ $row['belum_tuntas_count'] > 0 ? 'badge-warning text-dark' : 'badge-success' }} px-2 py-1" style="font-size: 0.7rem;">
-                                                        {{ $row['tuntas_count'] }}/{{ $row['dinilai_count'] }} Tuntas
-                                                    </span>
+                                                @if ($canPrintRapor)
+                                                    <x-action-dropdown>
+                                                        <a href="{{ $detailUrl }}" class="action-dropdown-item" role="menuitem">
+                                                            <i class="fa fa-chart-area text-primary action-item-icon"></i>
+                                                            <span>Detail Perkembangan</span>
+                                                        </a>
+                                                        <div class="action-dropdown-divider"></div>
+                                                        <a href="{{ route('wali-kelas.rapor.identitas.siswa', $anggota) }}" target="_blank" class="action-dropdown-item" role="menuitem">
+                                                            <i class="fa fa-id-card text-info action-item-icon"></i>
+                                                            <span>Cetak Identitas (PDF)</span>
+                                                        </a>
+                                                        @if ($isSd)
+                                                            @if ($canPrintNilai)
+                                                                <a href="{{ route('wali-kelas.rapor.nilai.siswa', ['anggota_kelas' => $anggota, 'periode' => $periode]) }}" target="_blank" class="action-dropdown-item" role="menuitem">
+                                                                    <i class="fa fa-file-pdf text-danger action-item-icon"></i>
+                                                                    <span>Cetak Nilai Rapor (PDF)</span>
+                                                                </a>
+                                                            @else
+                                                                <button type="button"
+                                                                    class="action-dropdown-item text-muted js-wk-tab-btn js-blocked-print-trigger"
+                                                                    role="menuitem"
+                                                                    data-wk-tab="kesiapan"
+                                                                    data-blocked-toast="Cetak Nilai Rapor belum dapat dilakukan: masih ada {{ $pendingCountRapor }} komponen yang belum difinalkan.">
+                                                                    <i class="fa fa-lock text-warning action-item-icon"></i>
+                                                                    <span>Cetak Nilai Rapor ({{ $pendingCountRapor }} Belum Final)</span>
+                                                                </button>
+                                                            @endif
+                                                        @endif
+                                                    </x-action-dropdown>
                                                 @else
-                                                    <span class="text-muted small">-</span>
+                                                    <a href="{{ $detailUrl }}" class="btn btn-xs btn-light border font-weight-semibold px-2 py-1"
+                                                        style="border-radius: 7px; font-size: 0.7rem;">
+                                                        Detail
+                                                    </a>
                                                 @endif
                                             </td>
-                                            <td class="text-center font-weight-bold text-dark" style="font-size: 0.85rem;">
-                                                {{ $row['rata_rapor'] !== null ? number_format((float) $row['rata_rapor'], 1) : '-' }}
-                                            </td>
-                                        @endif
-                                        <td class="text-center">
-                                            @if ($canPrintRapor)
-                                                <x-action-dropdown>
-                                                    <a href="{{ $detailUrl }}" class="action-dropdown-item" role="menuitem">
-                                                        <i class="fa fa-chart-area text-primary action-item-icon"></i>
-                                                        <span>Detail Perkembangan</span>
-                                                    </a>
-                                                    <div class="action-dropdown-divider"></div>
-                                                    <a href="{{ route('wali-kelas.rapor.identitas.siswa', $anggota) }}" target="_blank" class="action-dropdown-item" role="menuitem">
-                                                        <i class="fa fa-id-card text-info action-item-icon"></i>
-                                                        <span>Cetak Identitas (PDF)</span>
-                                                    </a>
-                                                    @if ($isSd)
-                                                        @if ($canPrintNilai)
-                                                            <a href="{{ route('wali-kelas.rapor.nilai.siswa', ['anggota_kelas' => $anggota, 'periode' => $periode]) }}" target="_blank" class="action-dropdown-item" role="menuitem">
-                                                                <i class="fa fa-file-pdf text-danger action-item-icon"></i>
-                                                                <span>Cetak Nilai Rapor (PDF)</span>
-                                                            </a>
-                                                        @else
-                                                            <button type="button"
-                                                                class="action-dropdown-item text-muted js-wk-tab-btn js-blocked-print-trigger"
-                                                                role="menuitem"
-                                                                data-wk-tab="kesiapan"
-                                                                data-blocked-toast="Cetak Nilai Rapor belum dapat dilakukan: masih ada {{ $pendingCountRapor }} komponen yang belum difinalkan.">
-                                                                <i class="fa fa-lock text-warning action-item-icon"></i>
-                                                                <span>Cetak Nilai Rapor ({{ $pendingCountRapor }} Belum Final)</span>
-                                                            </button>
-                                                        @endif
-                                                    @endif
-                                                </x-action-dropdown>
-                                            @else
-                                                <a href="{{ $detailUrl }}" class="btn btn-xs btn-light border font-weight-semibold px-2 py-1"
-                                                    style="border-radius: 7px; font-size: 0.7rem;">
-                                                    Detail
-                                                </a>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-            </div>
             </div>
 
             @if ($hasMapelTab)
@@ -828,6 +1359,95 @@
                             activateTab(savedTab);
                         }
                     } catch (e) {}
+
+                    // === LEGER: SCROLL TERISOLASI, FILTER CEPAT, & MODE PADAT ===
+                    const legerWrap = document.getElementById('wkLegerWrap');
+                    const filterBtns = document.querySelectorAll('.js-wk-leger-filter');
+                    const densityBtns = document.querySelectorAll('.js-wk-density-btn');
+                    const densityStorageKey = 'wk_leger_density';
+                    let activeLegerFilter = 'all';
+
+                    function applyDensity(mode) {
+                        if (!legerWrap) return;
+                        const isCompact = mode === 'compact';
+                        legerWrap.classList.toggle('is-compact', isCompact);
+                        densityBtns.forEach(function (btn) {
+                            btn.classList.toggle('is-active', btn.dataset.density === (isCompact ? 'compact' : 'comfortable'));
+                        });
+                        try {
+                            sessionStorage.setItem(densityStorageKey, isCompact ? 'compact' : 'comfortable');
+                        } catch (e) {}
+                    }
+
+                    densityBtns.forEach(function (btn) {
+                        btn.addEventListener('click', function () {
+                            applyDensity(btn.dataset.density);
+                        });
+                    });
+
+                    try {
+                        const savedDensity = sessionStorage.getItem(densityStorageKey);
+                        if (savedDensity === 'compact') {
+                            applyDensity('compact');
+                        }
+                    } catch (e) {}
+
+                    function setupLegerEnhancements() {
+                        const $tbl = window.jQuery ? window.jQuery('#wkPerkembanganTable') : null;
+                        if ($tbl && $tbl.length && window.jQuery.fn.dataTable && window.jQuery.fn.dataTable.isDataTable($tbl)) {
+                            if (!$tbl.parent().hasClass('wk-leger-scroll')) {
+                                $tbl.wrap('<div class="wk-leger-scroll"></div>');
+                            }
+
+                            const dtApi = $tbl.DataTable();
+                            window.jQuery.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+                                if (!settings.nTable || settings.nTable.id !== 'wkPerkembanganTable') {
+                                    return true;
+                                }
+                                if (activeLegerFilter === 'all') {
+                                    return true;
+                                }
+                                const rowNode = dtApi.row(dataIndex).node();
+                                if (!rowNode) return true;
+                                if (activeLegerFilter === 'attention') {
+                                    return rowNode.dataset.needsAttention === '1';
+                                }
+                                if (activeLegerFilter === 'low_attendance') {
+                                    return rowNode.dataset.lowAttendance === '1';
+                                }
+                                return true;
+                            });
+                        }
+
+                        filterBtns.forEach(function (btn) {
+                            btn.addEventListener('click', function () {
+                                activeLegerFilter = btn.dataset.filter || 'all';
+                                filterBtns.forEach(function (pill) {
+                                    pill.classList.toggle('is-active', pill === btn);
+                                });
+
+                                if ($tbl && $tbl.length && window.jQuery.fn.dataTable && window.jQuery.fn.dataTable.isDataTable($tbl)) {
+                                    $tbl.DataTable().draw();
+                                    return;
+                                }
+
+                                document.querySelectorAll('#wkPerkembanganTable tbody tr').forEach(function (tr) {
+                                    const show = activeLegerFilter === 'all'
+                                        || (activeLegerFilter === 'attention' && tr.dataset.needsAttention === '1')
+                                        || (activeLegerFilter === 'low_attendance' && tr.dataset.lowAttendance === '1');
+                                    tr.style.display = show ? '' : 'none';
+                                });
+                            });
+                        });
+                    }
+
+                    if (window.jQuery) {
+                        window.jQuery(setupLegerEnhancements);
+                    } else if (document.readyState === 'loading') {
+                        document.addEventListener('DOMContentLoaded', setupLegerEnhancements);
+                    } else {
+                        setupLegerEnhancements();
+                    }
                 })();
             </script>
         @endPushOnce

@@ -3,6 +3,7 @@
 namespace App\Services\GuruT2q;
 
 use App\Models\Admin\DataMaster\AnggotaT2q;
+use App\Models\Admin\DataMaster\KomentarRapor;
 use App\Models\Admin\DataMaster\KomentarT2q;
 use App\Models\Admin\DataMaster\TahunAjaran;
 use App\Models\Admin\Penilaian\Kkm;
@@ -11,7 +12,9 @@ use App\Models\Admin\T2q\RaporT2q;
 use App\Models\User;
 use App\Services\Admin\T2q\T2qRaporResolverService;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 
 class GuruT2qRaporService
@@ -55,6 +58,7 @@ class GuruT2qRaporService
                 'rows' => collect(),
                 'nonSdCount' => 0,
                 't2qFinalisasi' => [],
+                'catatanStorageReady' => $this->resolverService->hasCatatanStorage(),
                 'stats' => $this->emptyStats(),
             ];
         }
@@ -167,6 +171,7 @@ class GuruT2qRaporService
                 'locked_count' => $lockedCount,
                 'unlocked_count' => $unlockedCount,
             ],
+            'catatanStorageReady' => $this->resolverService->hasCatatanStorage(),
         ];
     }
 
@@ -211,6 +216,15 @@ class GuruT2qRaporService
             if (! $sdMap->has($submittedId)) {
                 abort(403, 'Anda hanya dapat menyimpan rekap rapor siswa T2Q jenjang SD bimbingan Anda.');
             }
+        }
+
+        $hasNonEmptyCatatan = collect($catatanInputs)->contains(
+            fn (mixed $value): bool => $this->cleanMultilineText($value) !== null
+        );
+        if ($hasNonEmptyCatatan && ! $this->resolverService->hasCatatanStorage()) {
+            throw ValidationException::withMessages([
+                'catatan_t2q' => 'Kolom catatan Guru T2Q belum tersedia di database. Jalankan php artisan migrate terlebih dahulu.',
+            ]);
         }
 
         $hasAnyUnlocked = collect($resolvedByAnggota)->contains(static fn (array $r): bool => ! ($r['is_locked'] ?? false));
@@ -262,8 +276,8 @@ class GuruT2qRaporService
             $fDeskripsi = $this->cleanOptionalText($fIn['deskripsi'] ?? null)
                 ?? RaporT2q::buildAutoDeskripsi(RaporT2q::MODE_TAHFIZH, $tahfizhRow['nilai'], $tahfizhRow['materi'], $fKeunggulan, $fPeningkatan);
             $catatanT2q = array_key_exists($t2qId, $catatanInputs)
-                ? $this->cleanOptionalText($catatanInputs[$t2qId])
-                : $this->cleanOptionalText($saved?->catatan_t2q);
+                ? $this->cleanMultilineText($catatanInputs[$t2qId])
+                : $this->cleanMultilineText($saved?->catatan_t2q);
 
             $upserts[] = $this->resolverService->buildUpsertRow(
                 (int) $activeTa->id,
@@ -281,7 +295,7 @@ class GuruT2qRaporService
                 $saved,
                 $now,
                 $catatanT2q,
-                $user->name
+                $catatanT2q !== null ? $user->name : ($saved?->updated_by_name ?? $user->name)
             );
         }
 
@@ -353,7 +367,9 @@ class GuruT2qRaporService
                 $tahfizh['auto_deskripsi'],
                 $user->id,
                 $saved,
-                $now
+                $now,
+                $this->cleanMultilineText($saved?->catatan_t2q),
+                $saved?->updated_by_name ?? $user->name
             );
         }
 
@@ -373,6 +389,331 @@ class GuruT2qRaporService
         return [
             'generated_count' => count($upserts),
             'periode_label' => $periodeLabel,
+        ];
+    }
+
+    /**
+     * Memuat workspace khusus Catatan / Komentar Guru T2Q (lintas jenjang bimbingan, tanpa drawer tertutup).
+     *
+     * @return array<string, mixed>
+     */
+    public function getCatatanWorkspaceData(User $user, string $periodeInput = PeriodeTp::PERIODE_MID, string $tingkatFilter = ''): array
+    {
+        $scope = $this->scopeService->getActiveScopeForUser($user, true);
+        $activeTa = $scope['activeTahunAjaran'];
+        $nipy = (string) ($scope['nipy'] ?? '');
+        $karyawanProfile = $scope['karyawanProfile'] ?? null;
+        $periode = $this->resolverService->normalizePeriode($periodeInput);
+        $catatanStorageReady = $this->resolverService->hasCatatanStorage();
+        $templates = $this->loadCatatanTemplateOptions();
+
+        if (! $scope['isEligible'] || ! $activeTa instanceof TahunAjaran) {
+            return [
+                'isEligible' => false,
+                'ineligibleReason' => $scope['ineligibleReason'],
+                'nipy' => $nipy,
+                'karyawanProfile' => $karyawanProfile,
+                'activeTahunAjaran' => $activeTa,
+                'periode' => $periode,
+                'periodeOptions' => PeriodeTp::PERIODE_OPTIONS,
+                'tingkatTabs' => [],
+                'selectedTingkat' => '',
+                'rows' => collect(),
+                'templates' => $templates,
+                't2qFinalisasi' => [],
+                'catatanStorageReady' => $catatanStorageReady,
+                'stats' => [
+                    'total_students' => 0,
+                    'filled_count' => 0,
+                    'empty_count' => 0,
+                    'locked_count' => 0,
+                    'unlocked_count' => 0,
+                ],
+            ];
+        }
+
+        $allMembers = $scope['anggotaT2qList'];
+        $tingkatTabs = [];
+
+        foreach ($allMembers as $member) {
+            $tKey = AnggotaT2q::normalizeTingkat($member->tingkat);
+            if ($tKey !== '') {
+                $tingkatTabs[$tKey] = ($tingkatTabs[$tKey] ?? 0) + 1;
+            }
+        }
+
+        uksort($tingkatTabs, static fn (string $a, string $b): int => AnggotaT2q::compareTingkatOrder($a, $b));
+
+        $requestedTingkat = AnggotaT2q::normalizeTingkat($tingkatFilter);
+        $selectedTingkat = ($requestedTingkat !== '' && isset($tingkatTabs[$requestedTingkat]))
+            ? $requestedTingkat
+            : '';
+
+        $resolvedByAnggota = $this->resolverService->resolveForAnggotaT2qList(
+            $allMembers,
+            (int) $activeTa->id,
+            $periode
+        );
+
+        $rows = [];
+        $filledCount = 0;
+        $lockedCount = 0;
+        $unlockedCount = 0;
+
+        foreach ($allMembers as $member) {
+            $normTingkat = AnggotaT2q::normalizeTingkat($member->tingkat);
+            if ($selectedTingkat !== '' && $normTingkat !== $selectedTingkat) {
+                continue;
+            }
+
+            $t2qId = (int) $member->id;
+            $resolved = $resolvedByAnggota[$t2qId] ?? null;
+            $isLocked = (bool) ($resolved['is_locked'] ?? false);
+            $catatanText = $this->cleanMultilineText($resolved['catatan_t2q'] ?? null);
+            $jenjang = strtoupper(trim((string) ($member->anggotaKelas?->kelas?->jenjang_kelas ?? '')));
+
+            if ($catatanText !== null) {
+                $filledCount++;
+            }
+            if ($isLocked) {
+                $lockedCount++;
+            } else {
+                $unlockedCount++;
+            }
+
+            $rows[] = [
+                'anggota_t2q' => $member,
+                'anggota_kelas' => $member->anggotaKelas,
+                'siswa' => $member->anggotaKelas?->siswa,
+                'kelas' => $member->anggotaKelas?->kelas,
+                'is_sd' => $jenjang === Kkm::TARGET_UNIT,
+                'is_locked' => $isLocked,
+                'tahsin' => $resolved['tahsin'] ?? ['has_data' => false, 'materi' => null, 'nilai' => null, 'predikat' => null],
+                'tahfizh' => $resolved['tahfizh'] ?? ['has_data' => false, 'materi' => null, 'nilai' => null, 'predikat' => null],
+                'catatan_t2q' => $catatanText,
+                'saved' => $resolved['saved'] ?? null,
+            ];
+        }
+
+        $totalStudents = count($rows);
+
+        return [
+            'isEligible' => true,
+            'ineligibleReason' => null,
+            'nipy' => $nipy,
+            'karyawanProfile' => $karyawanProfile,
+            'activeTahunAjaran' => $activeTa,
+            'periode' => $periode,
+            'periodeOptions' => PeriodeTp::PERIODE_OPTIONS,
+            'tingkatTabs' => $tingkatTabs,
+            'selectedTingkat' => $selectedTingkat,
+            'rows' => collect($rows),
+            'templates' => $templates,
+            't2qFinalisasi' => $this->scopeService->getFinalisasiSummaryForUser(
+                (int) $activeTa->id,
+                $scope['supervisedKelasIds']
+            ),
+            'catatanStorageReady' => $catatanStorageReady,
+            'stats' => [
+                'total_students' => $totalStudents,
+                'filled_count' => $filledCount,
+                'empty_count' => max(0, $totalStudents - $filledCount),
+                'locked_count' => $lockedCount,
+                'unlocked_count' => $unlockedCount,
+            ],
+        ];
+    }
+
+    /**
+     * Menyimpan batch Catatan / Komentar Guru T2Q tanpa menimpa deskripsi Tahsin/Tahfidz yang sudah ada.
+     *
+     * @param  array<string, mixed>  $validated
+     * @return array{saved_count: int, periode: string, periode_label: string}
+     */
+    public function saveCatatanBatch(User $user, array $validated): array
+    {
+        if (! $this->resolverService->hasCatatanStorage()) {
+            throw ValidationException::withMessages([
+                'catatan_t2q' => 'Kolom catatan_t2q belum tersedia di database. Jalankan php artisan migrate terlebih dahulu.',
+            ]);
+        }
+
+        $scope = $this->scopeService->getActiveScopeForUser($user, true);
+        $activeTa = $scope['activeTahunAjaran'];
+
+        if (! $scope['isEligible'] || ! $activeTa instanceof TahunAjaran) {
+            abort(403, 'Anda belum memiliki siswa bimbingan T2Q pada Tahun Ajaran aktif.');
+        }
+
+        $periode = $this->resolverService->normalizePeriode((string) ($validated['periode'] ?? PeriodeTp::PERIODE_MID));
+        $periodeLabel = PeriodeTp::PERIODE_OPTIONS[$periode] ?? strtoupper($periode);
+
+        $memberMap = $scope['anggotaT2qList']->keyBy('id');
+        if ($memberMap->isEmpty()) {
+            throw ValidationException::withMessages([
+                'catatan_t2q' => 'Belum ada siswa bimbingan T2Q pada Tahun Ajaran aktif.',
+            ]);
+        }
+
+        $catatanInputs = is_array($validated['catatan_t2q'] ?? null) ? $validated['catatan_t2q'] : [];
+        $submittedIds = array_values(array_unique(array_map('intval', array_keys($catatanInputs))));
+
+        foreach ($submittedIds as $submittedId) {
+            if (! $memberMap->has($submittedId)) {
+                abort(403, 'Anda hanya dapat menyimpan catatan untuk siswa bimbingan T2Q Anda.');
+            }
+        }
+
+        $targetMembers = new EloquentCollection(
+            collect($submittedIds)
+                ->map(static fn (int $id): ?AnggotaT2q => $memberMap->get($id))
+                ->filter(static fn (?AnggotaT2q $m): bool => $m instanceof AnggotaT2q)
+                ->values()
+                ->all()
+        );
+
+        if ($targetMembers->isEmpty()) {
+            return [
+                'saved_count' => 0,
+                'periode' => $periode,
+                'periode_label' => $periodeLabel,
+            ];
+        }
+
+        $resolvedByAnggota = $this->resolverService->resolveForAnggotaT2qList(
+            $targetMembers,
+            (int) $activeTa->id,
+            $periode
+        );
+
+        $now = now();
+        $upserts = [];
+
+        foreach ($targetMembers as $member) {
+            $t2qId = (int) $member->id;
+            $resolved = $resolvedByAnggota[$t2qId] ?? null;
+            if ($resolved === null) {
+                continue;
+            }
+
+            if ($resolved['is_locked'] ?? false) {
+                $nama = $member->anggotaKelas?->siswa?->nama_lengkap ?? "Anggota #{$t2qId}";
+                throw ValidationException::withMessages([
+                    'finalisasi' => "Data T2Q {$nama} periode {$periodeLabel} sudah difinalisasi sehingga catatan tidak dapat diubah.",
+                ]);
+            }
+
+            /** @var RaporT2q|null $saved */
+            $saved = $resolved['saved'];
+            $catatanText = $this->cleanMultilineText($catatanInputs[$t2qId] ?? null);
+
+            // Hindari membuat baris kosong baru jika catatan belum pernah disimpan dan tetap kosong.
+            if ($saved === null && $catatanText === null) {
+                continue;
+            }
+
+            $tahsinRow = $resolved['tahsin'];
+            $tahfizhRow = $resolved['tahfizh'];
+
+            $upserts[] = $this->resolverService->buildUpsertRow(
+                (int) $activeTa->id,
+                $t2qId,
+                $periode,
+                $tahsinRow,
+                $tahfizhRow,
+                $this->cleanOptionalText($tahsinRow['keunggulan'] ?? null),
+                $this->cleanOptionalText($tahsinRow['peningkatan'] ?? null),
+                $this->cleanOptionalText($tahsinRow['deskripsi'] ?? null),
+                $this->cleanOptionalText($tahfizhRow['keunggulan'] ?? null),
+                $this->cleanOptionalText($tahfizhRow['peningkatan'] ?? null),
+                $this->cleanOptionalText($tahfizhRow['deskripsi'] ?? null),
+                $user->id,
+                $saved,
+                $now,
+                $catatanText,
+                $user->name
+            );
+        }
+
+        if ($upserts !== []) {
+            DB::transaction(fn () => $this->resolverService->upsertRows($upserts));
+        }
+
+        return [
+            'saved_count' => count($upserts),
+            'periode' => $periode,
+            'periode_label' => $periodeLabel,
+        ];
+    }
+
+    /**
+     * Memuat daftar template komentar untuk halaman Catatan Guru T2Q (kombinasi preset T2Q + Bank Komentar aktif).
+     *
+     * @return Collection<int, object{id: ?int, judul: string, kategori: string, isi_komentar: string, source: string}>
+     */
+    private function loadCatatanTemplateOptions(): Collection
+    {
+        $presets = collect($this->buildDefaultCatatanPresets());
+
+        try {
+            if (Schema::hasTable('akademik_master_komentar_rapor')) {
+                $dbTemplates = KomentarRapor::query()
+                    ->active()
+                    ->ordered()
+                    ->get()
+                    ->map(static fn (KomentarRapor $item): object => (object) [
+                        'id' => (int) $item->id,
+                        'judul' => $item->judul,
+                        'kategori' => $item->kategori_label,
+                        'isi_komentar' => $item->isi_komentar,
+                        'source' => 'bank',
+                    ]);
+
+                if ($dbTemplates->isNotEmpty()) {
+                    return $presets->concat($dbTemplates)->values();
+                }
+            }
+        } catch (\Throwable) {
+            // Gunakan preset bawaan T2Q saat database belum termigrasi atau sedang mode uji unit.
+        }
+
+        return $presets;
+    }
+
+    /**
+     * @return list<object{id: ?int, judul: string, kategori: string, isi_komentar: string, source: string}>
+     */
+    private function buildDefaultCatatanPresets(): array
+    {
+        return [
+            (object) [
+                'id' => null,
+                'judul' => 'T2Q - Apresiasi Istiqomah Setoran',
+                'kategori' => 'Apresiasi T2Q',
+                'isi_komentar' => 'Alhamdulillah, {nama} menunjukkan ketekunan, adab, dan semangat yang baik dalam mengikuti pembelajaran T2Q serta istiqomah menyetorkan bacaan dan hafalan.',
+                'source' => 'preset',
+            ],
+            (object) [
+                'id' => null,
+                'judul' => 'T2Q - Penguatan Murojaah di Rumah',
+                'kategori' => 'Pendampingan',
+                'isi_komentar' => 'Capaian T2Q {nama} sudah baik. Mohon dukungan ayah/bunda di rumah untuk mendampingi murojaah harian agar kelancaran bacaan dan kekuatan hafalan semakin terjaga.',
+                'source' => 'preset',
+            ],
+            (object) [
+                'id' => null,
+                'judul' => 'T2Q - Fokus Makhraj & Tajwid',
+                'kategori' => 'Pembinaan',
+                'isi_komentar' => 'Ananda {nama} terus menunjukkan kemajuan selama bimbingan T2Q. Perlu latihan rutin pada ketepatan makharijul huruf dan panjang bacaan (mad) sesuai kaidah tajwid.',
+                'source' => 'preset',
+            ],
+            (object) [
+                'id' => null,
+                'judul' => 'T2Q - Siap Lanjut Target Berikutnya',
+                'kategori' => 'Motivasi T2Q',
+                'isi_komentar' => 'MasyaAllah, capaian tahsin dan tahfidz {nama} sangat membanggakan pada periode ini. Pertahankan semangat murojaah dan bersiap melangkah ke target capaian berikutnya.',
+                'source' => 'preset',
+            ],
         ];
     }
 
@@ -432,6 +773,13 @@ class GuruT2qRaporService
     private function cleanOptionalText(mixed $raw): ?string
     {
         $text = trim(preg_replace('/\s+/', ' ', (string) ($raw ?? '')) ?? '');
+
+        return $text !== '' ? $text : null;
+    }
+
+    private function cleanMultilineText(mixed $raw): ?string
+    {
+        $text = trim(str_replace(["\r\n", "\r"], "\n", (string) ($raw ?? '')));
 
         return $text !== '' ? $text : null;
     }

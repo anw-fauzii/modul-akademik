@@ -467,6 +467,14 @@
                         'color' => '#0891b2',
                     ],
                     [
+                        'title' => 'Catatan Rapor T2Q',
+                        'sub' => 'Komentar Mid & Semester',
+                        'url' => route('guru-t2q.catatan-rapor.index'),
+                        'icon' => 'fa-comment-dots',
+                        'bg' => '#fef3c7',
+                        'color' => '#d97706',
+                    ],
+                    [
                         'title' => 'Ekstrakurikuler',
                         'sub' => ($stats['ekskul_count'] ?? $assignedEkskuls->count()) > 0
                             ? ($stats['ekskul_count'] ?? $assignedEkskuls->count()).' ekskul binaan'

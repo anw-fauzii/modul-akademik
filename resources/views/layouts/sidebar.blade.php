@@ -52,6 +52,7 @@
                 $isGuruT2qMatriksActive = request()->routeIs('guru-t2q.yaumiyah-*.matriks');
                 $isGuruT2qStatistikActive = request()->routeIs('guru-t2q.yaumiyah-*.statistik');
                 $isGuruT2qRaporActive = request()->routeIs('guru-t2q.rapor.*');
+                $isGuruT2qCatatanActive = request()->routeIs('guru-t2q.catatan-rapor.*');
                 $isGuruT2qEkskulActive = request()->routeIs('guru-t2q.ekstrakurikuler.*');
                 $isGuruMapelJadwalActive = request()->routeIs('guru-mapel.jadwal-pelajaran.*');
                 $isGuruMapelPerkembanganActive = request()->routeIs('guru-mapel.perkembangan-siswa.*');
@@ -364,6 +365,12 @@
                                 'route' => 'guru-t2q.rapor.index',
                                 'active' => $isGuruT2qRaporActive,
                                 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
+                            ],
+                            [
+                                'label' => 'Catatan Rapor T2Q',
+                                'route' => 'guru-t2q.catatan-rapor.index',
+                                'active' => $isGuruT2qCatatanActive,
+                                'icon' => 'M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z',
                             ],
                             [
                                 'label' => 'Penilaian Ekstrakurikuler',

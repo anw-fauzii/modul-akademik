@@ -69,7 +69,7 @@ class SaveCatatanRaporWaliRequest extends FormRequest
             'catatan' => ['nullable', 'array'],
             'catatan.*' => ['nullable', 'string', 'max:2000'],
             'komentar_rapor_id' => ['nullable', 'array'],
-            'komentar_rapor_id.*' => ['nullable', 'integer', 'exists:akademik_master_komentar_rapor,id'],
+            'komentar_rapor_id.*' => ['nullable', 'integer'],
         ];
     }
 

@@ -11,9 +11,29 @@ use App\Models\Admin\T2q\YaumiyahTahsin;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 
 class T2qRaporResolverService
 {
+    private ?bool $catatanStorageAvailable = null;
+
+    /**
+     * Memeriksa ketersediaan kolom `catatan_t2q` pada tabel rekap rapor T2Q.
+     */
+    public function hasCatatanStorage(): bool
+    {
+        if ($this->catatanStorageAvailable !== null) {
+            return $this->catatanStorageAvailable;
+        }
+
+        try {
+            return $this->catatanStorageAvailable = Schema::hasTable('akademik_t2q_rekap_rapor')
+                && Schema::hasColumn('akademik_t2q_rekap_rapor', 'catatan_t2q');
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
     /**
      * Menyelesaikan data Rapor T2Q (nilai terakhir, materi, predikat, deskripsi, dan status kunci) untuk sekumpulan Anggota T2Q tanpa N+1.
      *
@@ -260,31 +280,48 @@ class T2qRaporResolverService
      */
     public function upsertRows(array $upserts): void
     {
-        foreach (array_chunk($upserts, 200) as $chunk) {
+        if ($upserts === []) {
+            return;
+        }
+
+        $includeCatatan = $this->hasCatatanStorage();
+        $updateColumns = [
+            'akademik_master_tahun_ajaran_id',
+            'tahsin_yaumiyah_id',
+            'tahsin_materi',
+            'tahsin_nilai',
+            'tahsin_predikat',
+            'tahsin_keunggulan',
+            'tahsin_peningkatan',
+            'tahsin_deskripsi',
+            'tahfizh_yaumiyah_id',
+            'tahfizh_materi',
+            'tahfizh_nilai',
+            'tahfizh_predikat',
+            'tahfizh_keunggulan',
+            'tahfizh_peningkatan',
+            'tahfizh_deskripsi',
+            'updated_by_user_id',
+            'updated_at',
+        ];
+
+        $normalizedUpserts = $upserts;
+        if ($includeCatatan) {
+            array_splice($updateColumns, 15, 0, ['catatan_t2q']);
+            array_splice($updateColumns, 17, 0, ['updated_by_name']);
+        } else {
+            $normalizedUpserts = array_map(static function (array $row): array {
+                unset($row['catatan_t2q'], $row['updated_by_name']);
+
+                return $row;
+            }, $upserts);
+        }
+
+        foreach (array_chunk($normalizedUpserts, 200) as $chunk) {
             RaporT2q::query()->upsert(
                 $chunk,
                 ['anggota_t2q_id', 'periode'],
-                [
-                    'akademik_master_tahun_ajaran_id',
-                    'tahsin_yaumiyah_id',
-                    'tahsin_materi',
-                    'tahsin_nilai',
-                    'tahsin_predikat',
-                    'tahsin_keunggulan',
-                    'tahsin_peningkatan',
-                    'tahsin_deskripsi',
-                    'tahfizh_yaumiyah_id',
-                    'tahfizh_materi',
-                    'tahfizh_nilai',
-                    'tahfizh_predikat',
-                    'tahfizh_keunggulan',
-                    'tahfizh_peningkatan',
-                    'tahfizh_deskripsi',
-                    'catatan_t2q',
-                    'updated_by_user_id',
-                    'updated_by_name',
-                    'updated_at',
-                ]
+                $updateColumns
             );
         }
     }

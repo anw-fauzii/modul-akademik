@@ -3,9 +3,11 @@
 namespace Tests\Unit;
 
 use App\Http\Controllers\Admin\DataMaster\BankKomentarController;
+use App\Http\Controllers\GuruT2q\CatatanRaporT2qController;
 use App\Http\Controllers\WaliKelas\CatatanRaporController;
 use App\Http\Requests\Admin\DataMaster\KomentarRaporRequest;
 use App\Http\Requests\Admin\DataMaster\KomentarT2qRequest;
+use App\Http\Requests\GuruT2q\SaveCatatanRaporT2qRequest;
 use App\Http\Requests\GuruT2q\SaveRaporT2qRequest;
 use App\Http\Requests\WaliKelas\SaveCatatanRaporWaliRequest;
 use App\Http\Requests\WaliKelas\SaveSingleCatatanRaporWaliRequest;
@@ -21,22 +23,29 @@ use App\Models\Admin\DataMaster\TahunAjaran;
 use App\Models\Admin\DataMaster\Titimangsa;
 use App\Models\Admin\Penilaian\CatatanRaporWali;
 use App\Models\Admin\Penilaian\PeriodeTp;
+use App\Models\Admin\T2q\RaporT2q;
 use App\Models\User;
 use App\Policies\CatatanRaporWaliPolicy;
 use App\Services\Admin\DataMaster\BankKomentarService;
+use App\Services\Admin\T2q\T2qRaporResolverService;
+use App\Services\GuruT2q\GuruT2qRaporService;
+use App\Services\GuruT2q\GuruT2qScopeService;
 use App\Services\WaliKelas\RaporCatatanWaliService;
 use App\Support\Sqid;
 use DOMDocument;
 use DOMXPath;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Validation\Rules\Exists;
 use Illuminate\Validation\Rules\Unique;
+use Illuminate\Validation\ValidationException;
 use ReflectionMethod;
 use Spatie\Permission\Models\Role;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 class RaporKomentarModelAndViewTest extends TestCase
@@ -188,6 +197,15 @@ class RaporKomentarModelAndViewTest extends TestCase
         ]);
         $this->invokePrepareForValidation($t2qMasterReq);
         $this->assertFalse(Validator::make($t2qMasterReq->all(), $this->stripDbRules($t2qMasterReq->rules()))->fails());
+
+        // Pastikan request tidak gagal validasi meskipun template belum ter-seed / komentar_rapor_id tidak ada di DB
+        $this->assertArrayNotHasKey('exists', $batchReq->rules()['komentar_rapor_id.*']);
+        $this->assertFalse(Validator::make([
+            'kelas_id' => 8,
+            'periode' => PeriodeTp::PERIODE_MID,
+            'catatan' => [55 => 'Catatan tanpa template DB'],
+            'komentar_rapor_id' => [55 => null],
+        ], $this->stripDbRules($batchReq->rules()))->fails());
     }
 
     public function test_catatan_views_and_rapor_pdf_render_without_lazy_loading(): void
@@ -408,13 +426,217 @@ class RaporKomentarModelAndViewTest extends TestCase
         $this->assertSame(0, $xpath->query('//table[@id="myTable6"]/tbody//*[@colspan]')->length);
 
         $this->assertStringContainsString('Ananda Nadia Putri sangat antusias pada kegiatan kelas.', $pdfHtml);
-        $this->assertStringContainsString('Catatan Guru T2Q:', $pdfHtml);
+        $this->assertStringContainsString('CATATAN GURU T2Q', $pdfHtml);
         $this->assertStringContainsString('Tetap semangat murojaah bersama orang tua.', $pdfHtml);
+        $this->assertMatchesRegularExpression('/\.notes-box\s*\{[^}]*text-align:\s*justify;/s', $pdfHtml);
 
         $this->assertStringContainsString('Catatan Wali:', $adminRaporHtml);
         $this->assertStringContainsString('Catatan Wali ✓', $adminRaporHtml);
 
         $this->assertStringContainsString('Catatan Wali Kelas / Pendamping (Mid Semester)', $perkembanganShowHtml);
+    }
+
+    public function test_guru_t2q_catatan_rapor_controller_request_service_and_view(): void
+    {
+        $controller = new CatatanRaporT2qController(app(GuruT2qRaporService::class));
+        $middlewares = collect($controller->getMiddleware())->pluck('middleware')->all();
+        $this->assertContains('role:super admin|guru t2q', $middlewares);
+
+        $sqid81 = Sqid::encodeFor(AnggotaT2q::class, 81);
+        $request = new SaveCatatanRaporT2qRequest;
+        $request->replace([
+            'periode' => 'MID',
+            'tingkat' => 'jilid 4',
+            'catatan_t2q' => [
+                (string) $sqid81 => "  Alhamdulillah bacaan lancar.\r\nTerus semangat murojaah! ",
+                '99' => '   ',
+            ],
+        ]);
+        $this->invokePrepareForValidation($request);
+
+        $validator = Validator::make($request->all(), $this->stripDbRules($request->rules()));
+        $this->assertFalse($validator->fails());
+        $this->assertSame(PeriodeTp::PERIODE_MID, $request->input('periode'));
+        $this->assertSame("Alhamdulillah bacaan lancar.\nTerus semangat murojaah!", $request->input('catatan_t2q.81'));
+        $this->assertNull($request->input('catatan_t2q.99'));
+
+        $tooLongValidator = Validator::make([
+            'periode' => PeriodeTp::PERIODE_MID,
+            'catatan_t2q' => [81 => str_repeat('a', 1501)],
+        ], $this->stripDbRules($request->rules()));
+        $this->assertTrue($tooLongValidator->fails());
+
+        $user = $this->makeUserWithRole('guru t2q', 'T2Q-11');
+        $karyawan = Karyawan::make(['nipy' => 'T2Q-11', 'nama_lengkap' => 'Ustadz Farhan', 'gelar' => 'S.Pd.I']);
+        $ta = new TahunAjaran;
+        $ta->setRawAttributes(['id' => 4, 'nama_tahun_ajaran' => '2026/2027', 'semester' => '1', 'is_active' => true]);
+
+        $kelasSd = new Kelas;
+        $kelasSd->setRawAttributes(['id' => 9, 'nama_kelas' => '4A', 'jenjang_kelas' => 'SD', 'tingkatan_kelas' => '4']);
+        $siswaSd = Siswa::make(['nis' => '202604001', 'nama_lengkap' => 'Nadia Putri', 'jenis_kelamin' => 'P']);
+        $akSd = new AnggotaKelas;
+        $akSd->setRawAttributes(['id' => 55, 'siswa_nis' => '202604001', 'akademik_master_kelas_id' => 9]);
+        $akSd->setRelation('siswa', $siswaSd);
+        $akSd->setRelation('kelas', $kelasSd);
+        $t2qSd = new AnggotaT2q;
+        $t2qSd->setRawAttributes(['id' => 81, 'anggota_kelas_id' => 55, 'karyawan_nipy' => 'T2Q-11', 'tingkat' => 'Jilid 4']);
+        $t2qSd->setRelation('anggotaKelas', $akSd);
+
+        $kelasTk = new Kelas;
+        $kelasTk->setRawAttributes(['id' => 10, 'nama_kelas' => 'TK B1', 'jenjang_kelas' => 'TK', 'tingkatan_kelas' => 'TK B']);
+        $siswaTk = Siswa::make(['nis' => '202600002', 'nama_lengkap' => 'Zayd Ibrahim', 'jenis_kelamin' => 'L']);
+        $akTk = new AnggotaKelas;
+        $akTk->setRawAttributes(['id' => 56, 'siswa_nis' => '202600002', 'akademik_master_kelas_id' => 10]);
+        $akTk->setRelation('siswa', $siswaTk);
+        $akTk->setRelation('kelas', $kelasTk);
+        $t2qTk = new AnggotaT2q;
+        $t2qTk->setRawAttributes(['id' => 82, 'anggota_kelas_id' => 56, 'karyawan_nipy' => 'T2Q-11', 'tingkat' => 'Jilid 2']);
+        $t2qTk->setRelation('anggotaKelas', $akTk);
+
+        $scopeMock = $this->createMock(GuruT2qScopeService::class);
+        $scopeMock->method('getActiveScopeForUser')->willReturn([
+            'isEligible' => true,
+            'ineligibleReason' => null,
+            'nipy' => 'T2Q-11',
+            'karyawanProfile' => $karyawan,
+            'activeTahunAjaran' => $ta,
+            'anggotaT2qList' => new Collection([$t2qSd, $t2qTk]),
+            'supervisedKelasIds' => [9, 10],
+            'tingkatOptions' => ['Jilid 2', 'Jilid 4'],
+        ]);
+        $scopeMock->method('getFinalisasiSummaryForUser')->willReturn([
+            PeriodeTp::PERIODE_MID => [
+                'periode' => PeriodeTp::PERIODE_MID,
+                'periode_label' => 'Mid Semester',
+                'is_final' => false,
+                'status_label' => 'DRAFT (BELUM FINAL)',
+            ],
+        ]);
+
+        $savedRow = new RaporT2q;
+        $savedRow->setRawAttributes([
+            'id' => 501,
+            'akademik_master_tahun_ajaran_id' => 4,
+            'anggota_t2q_id' => 81,
+            'periode' => PeriodeTp::PERIODE_MID,
+            'catatan_t2q' => 'Istiqomah menyetor setiap hari.',
+            'updated_by_name' => 'Ustadz Farhan',
+        ]);
+
+        $resolverMock = $this->createMock(T2qRaporResolverService::class);
+        $resolverMock->method('normalizePeriode')->willReturn(PeriodeTp::PERIODE_MID);
+        $resolverMock->method('hasCatatanStorage')->willReturn(true);
+        $resolverMock->method('resolveForAnggotaT2qList')->willReturn([
+            81 => [
+                'saved' => $savedRow,
+                'is_locked' => false,
+                'mid_cutoff_date' => '2026-10-15',
+                'catatan_t2q' => 'Istiqomah menyetor setiap hari.',
+                'tahsin' => ['has_data' => true, 'materi' => 'Jilid 4', 'nilai' => 88, 'predikat' => 'BSH', 'keunggulan' => 'mad', 'peningkatan' => 'makhraj', 'deskripsi' => 'Baik.'],
+                'tahfizh' => ['has_data' => false, 'materi' => null, 'nilai' => null, 'predikat' => null, 'keunggulan' => null, 'peningkatan' => null, 'deskripsi' => null],
+            ],
+            82 => [
+                'saved' => null,
+                'is_locked' => false,
+                'mid_cutoff_date' => '2026-10-15',
+                'catatan_t2q' => null,
+                'tahsin' => ['has_data' => false, 'materi' => null, 'nilai' => null, 'predikat' => null, 'keunggulan' => null, 'peningkatan' => null, 'deskripsi' => null],
+                'tahfizh' => ['has_data' => false, 'materi' => null, 'nilai' => null, 'predikat' => null, 'keunggulan' => null, 'peningkatan' => null, 'deskripsi' => null],
+            ],
+        ]);
+
+        $capturedUpserts = [];
+        $resolverMock->method('buildUpsertRow')->willReturnCallback(
+            static function (
+                int $taId,
+                int $t2qId,
+                string $p,
+                array $tahsin,
+                array $tahfizh,
+                ?string $tK,
+                ?string $tP,
+                ?string $tD,
+                ?string $fK,
+                ?string $fP,
+                ?string $fD,
+                ?int $actorId,
+                ?RaporT2q $saved,
+                \DateTimeInterface $now,
+                ?string $catatanT2q = null
+            ): array {
+                return [
+                    'anggota_t2q_id' => $t2qId,
+                    'tahsin_deskripsi' => $tD,
+                    'catatan_t2q' => $catatanT2q,
+                ];
+            }
+        );
+        $resolverMock->expects($this->once())
+            ->method('upsertRows')
+            ->willReturnCallback(static function (array $rows) use (&$capturedUpserts): void {
+                $capturedUpserts = $rows;
+            });
+
+        $service = new GuruT2qRaporService($scopeMock, $resolverMock);
+        $workspace = $service->getCatatanWorkspaceData($user, PeriodeTp::PERIODE_MID);
+
+        $this->assertTrue($workspace['isEligible']);
+        $this->assertTrue($workspace['catatanStorageReady']);
+        $this->assertSame(2, $workspace['stats']['total_students']);
+        $this->assertSame(1, $workspace['stats']['filled_count']);
+        $this->assertSame(1, $workspace['stats']['empty_count']);
+
+        View::share('errors', new ViewErrorBag);
+        Model::preventLazyLoading(true);
+        try {
+            $html = view('guruT2q.catatanRapor.index', $workspace)->render();
+        } finally {
+            Model::preventLazyLoading(false);
+        }
+
+        $this->assertStringContainsString('Nadia Putri', $html);
+        $this->assertStringContainsString('Zayd Ibrahim', $html);
+        $this->assertStringContainsString('Istiqomah menyetor setiap hari.', $html);
+        $this->assertStringContainsString('Tampil di Rapor PDF', $html);
+
+        DB::shouldReceive('transaction')->once()->andReturnUsing(static fn ($cb) => $cb());
+
+        // Siswa 82 tetap kosong dan belum ada record -> tidak membuat baris kosong baru; siswa 81 terupdate.
+        $saveResult = $service->saveCatatanBatch($user, [
+            'periode' => PeriodeTp::PERIODE_MID,
+            'tingkat' => '',
+            'catatan_t2q' => [
+                81 => 'Ananda Nadia Putri makin mantap bacaannya.',
+                82 => null,
+            ],
+        ]);
+        $this->assertSame(1, $saveResult['saved_count']);
+        $this->assertCount(1, $capturedUpserts);
+        $this->assertSame(81, $capturedUpserts[0]['anggota_t2q_id']);
+        $this->assertSame('Baik.', $capturedUpserts[0]['tahsin_deskripsi']);
+        $this->assertSame('Ananda Nadia Putri makin mantap bacaannya.', $capturedUpserts[0]['catatan_t2q']);
+
+        // Siswa di luar bimbingan wajib ditolak 403
+        try {
+            $service->saveCatatanBatch($user, [
+                'periode' => PeriodeTp::PERIODE_MID,
+                'catatan_t2q' => [999 => 'Catatan ilegal'],
+            ]);
+            $this->fail('ID di luar lingkup bimbingan T2Q wajib ditolak 403.');
+        } catch (HttpException $e) {
+            $this->assertSame(403, $e->getStatusCode());
+        }
+
+        // Ketika kolom database belum termigrasi, saveCatatanBatch melempar ValidationException yang jelas
+        $unmigratedResolver = $this->createMock(T2qRaporResolverService::class);
+        $unmigratedResolver->method('hasCatatanStorage')->willReturn(false);
+        $unmigratedService = new GuruT2qRaporService($scopeMock, $unmigratedResolver);
+
+        $this->expectException(ValidationException::class);
+        $unmigratedService->saveCatatanBatch($user, [
+            'periode' => PeriodeTp::PERIODE_MID,
+            'catatan_t2q' => [81 => 'Tes'],
+        ]);
     }
 
     private function makeUserWithRole(string $roleName, string $noInduk): User

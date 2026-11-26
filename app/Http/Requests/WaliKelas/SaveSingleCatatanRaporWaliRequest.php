@@ -42,7 +42,7 @@ class SaveSingleCatatanRaporWaliRequest extends FormRequest
         return [
             'periode' => ['required', 'string', Rule::in([PeriodeTp::PERIODE_MID, PeriodeTp::PERIODE_SEMESTER])],
             'catatan' => ['nullable', 'string', 'max:2000'],
-            'komentar_rapor_id' => ['nullable', 'integer', 'exists:akademik_master_komentar_rapor,id'],
+            'komentar_rapor_id' => ['nullable', 'integer'],
         ];
     }
 

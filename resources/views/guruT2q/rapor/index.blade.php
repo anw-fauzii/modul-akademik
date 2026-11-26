@@ -1299,6 +1299,12 @@
                                 placeholder="Cari nama atau NIS...">
                         </div>
 
+                        <a href="{{ route('guru-t2q.catatan-rapor.index', array_filter(['periode' => $periode, 'tingkat' => $selectedTingkat])) }}"
+                            class="t2q-ghost-btn"
+                            title="Buka halaman khusus pengisian Catatan / Komentar Guru T2Q secara langsung">
+                            <i class="fa fa-comment-dots text-warning"></i> <span>Catatan Guru T2Q</span>
+                        </a>
+
                         @if ($rows->isNotEmpty())
                             <button type="button" id="t2qToggleAllBtn" class="t2q-ghost-btn" title="Buka atau tutup seluruh editor siswa">
                                 <i class="fa fa-expand-alt"></i> <span>Buka Semua</span>

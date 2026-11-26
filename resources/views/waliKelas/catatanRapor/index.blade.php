@@ -279,6 +279,13 @@
                 </div>
             @endif
 
+            @if (! ($isStorageReady ?? true))
+                <div class="alert alert-warning shadow-sm" style="border-radius: 10px;">
+                    <i class="fa fa-database mr-1"></i>
+                    <strong>Migrasi Database Belum Dijalankan:</strong> Tabel <code>akademik_rapor_catatan_wali</code> belum ada di database. Jalankan <code>php artisan migrate</code> agar catatan dapat disimpan.
+                </div>
+            @endif
+
             @if (isset($errors) && $errors->any())
                 <div class="alert alert-danger shadow-sm" style="border-radius: 10px;">
                     <i class="fa fa-exclamation-triangle mr-1"></i>
@@ -422,7 +429,7 @@
                                             <select id="bulkTemplateSelect" class="filter-control">
                                                 <option value="">-- Pilih Template Komentar Cepat --</option>
                                                 @foreach ($templates as $tpl)
-                                                    <option value="{{ $tpl->sqid }}" data-body="{{ $tpl->isi_komentar }}">
+                                                    <option value="{{ $tpl->sqid ?? '' }}" data-body="{{ $tpl->isi_komentar }}">
                                                         {{ $tpl->judul }} ({{ $tpl->kategori_label }})
                                                     </option>
                                                 @endforeach
@@ -517,6 +524,11 @@
                                                         <i class="fa fa-comment-alt mr-1"></i>
                                                         Catatan T2Q: <em>"{{ \Illuminate\Support\Str::limit($t2qSum['catatan_t2q'], 85) }}"</em>
                                                     </div>
+                                                @elseif ($t2qSum !== null)
+                                                    <div class="small text-muted mt-1" style="font-size: 0.72rem; line-height: 1.35;">
+                                                        <i class="fa fa-comment-slash mr-1 text-warning"></i>
+                                                        T2Q Tingkat {{ $t2qSum['tingkat'] ?: '-' }} &bull; Catatan Guru T2Q belum diisi
+                                                    </div>
                                                 @endif
                                             </div>
                                         </div>
@@ -530,9 +542,9 @@
                                                     style="max-width: 280px; font-size: 0.75rem; border-radius: 8px;">
                                                     <option value="">-- Gunakan Template Komentar --</option>
                                                     @foreach ($templates as $tpl)
-                                                        <option value="{{ $tpl->sqid }}"
+                                                        <option value="{{ $tpl->sqid ?? '' }}"
                                                             data-body="{{ $tpl->isi_komentar }}"
-                                                            @selected((string) $templateSelectedId === (string) $tpl->id || (string) $templateSelectedId === (string) $tpl->sqid)>
+                                                            @selected($tpl->id !== null && ((string) $templateSelectedId === (string) $tpl->id || (string) $templateSelectedId === (string) $tpl->sqid))>
                                                             {{ $tpl->judul }}
                                                         </option>
                                                     @endforeach
@@ -735,7 +747,7 @@
                     const opt = bulkSelect.options[bulkSelect.selectedIndex];
                     const body = opt ? opt.getAttribute('data-body') : '';
                     const tplSqid = bulkSelect.value;
-                    if (!body || !tplSqid) {
+                    if (!body) {
                         if (window.toastr) window.toastr.warning('Pilih template komentar terlebih dahulu.');
                         return;
                     }
@@ -748,7 +760,7 @@
                         const studentName = row.getAttribute('data-nama') || 'Ananda';
                         if (textarea && textarea.value.trim() === '') {
                             textarea.value = renderTemplateForStudent(body, studentName);
-                            if (rowSelect) rowSelect.value = tplSqid;
+                            if (rowSelect && tplSqid) rowSelect.value = tplSqid;
                             autoResize(textarea);
                             refreshRowState(row);
                             filled++;

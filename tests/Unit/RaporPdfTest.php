@@ -648,6 +648,7 @@ class RaporPdfTest extends TestCase
         $this->assertStringContainsString("E. TAHSIN DAN TAHFIDZ AL-QUR'AN", $html);
         $this->assertStringContainsString('F. KETIDAKHADIRAN', $html);
         $this->assertStringContainsString('G. CATATAN WALI KELAS', $html);
+        $this->assertStringContainsString('H. CATATAN GURU T2Q', $html);
 
         $noT2qPayload = $payload;
         $noT2qPayload['entries'][0]['t2q'] = null;
@@ -656,6 +657,7 @@ class RaporPdfTest extends TestCase
         $this->assertStringContainsString('D. EKSTRAKURIKULER', $noT2qHtml);
         $this->assertStringContainsString('E. KETIDAKHADIRAN', $noT2qHtml);
         $this->assertStringContainsString('F. CATATAN WALI KELAS', $noT2qHtml);
+        $this->assertStringNotContainsString('CATATAN GURU T2Q', $noT2qHtml);
 
         $pdfBinary = Pdf::loadView('pdf.rapor.nilai', $payload)->setPaper('a4', 'portrait')->output();
         $this->assertStringStartsWith('%PDF-', $pdfBinary);

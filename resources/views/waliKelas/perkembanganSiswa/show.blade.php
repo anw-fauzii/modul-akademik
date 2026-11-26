@@ -233,9 +233,9 @@
                                     class="form-control form-control-sm" style="max-width: 360px;">
                                     <option value="">-- Pilih Template Komentar Cepat (Opsional) --</option>
                                     @foreach ($komentarTemplatesList as $tpl)
-                                        <option value="{{ $tpl->sqid }}"
+                                        <option value="{{ $tpl->sqid ?? '' }}"
                                             data-body="{{ $tpl->renderForSiswa($siswa->nama_lengkap) }}"
-                                            @selected((string) old('komentar_rapor_id', $catatanWaliObj?->komentar_rapor_id) === (string) $tpl->id || (string) old('komentar_rapor_id', $catatanWaliObj?->komentar_rapor_id) === (string) $tpl->sqid)>
+                                            @selected($tpl->id !== null && ((string) old('komentar_rapor_id', $catatanWaliObj?->komentar_rapor_id) === (string) $tpl->id || (string) old('komentar_rapor_id', $catatanWaliObj?->komentar_rapor_id) === (string) $tpl->sqid))>
                                             {{ $tpl->judul }} ({{ $tpl->kategori_label }})
                                         </option>
                                     @endforeach

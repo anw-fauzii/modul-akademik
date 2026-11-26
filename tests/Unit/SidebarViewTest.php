@@ -190,6 +190,32 @@ class SidebarViewTest extends TestCase
         $this->assertMenuState($xpath, $catatanLink, true, false);
     }
 
+    public function test_guru_t2q_sidebar_renders_and_highlights_catatan_rapor_t2q_menu(): void
+    {
+        $role = new Role;
+        $role->setRawAttributes(['id' => 3, 'name' => 'guru t2q', 'guard_name' => 'web']);
+
+        $t2qUser = new User;
+        $t2qUser->setRawAttributes(['id' => 100, 'name' => 'Guru T2Q Test', 'email' => 't2q@primainsani.sch.id']);
+        $t2qUser->setRelation('roles', new Collection([$role]));
+        $t2qUser->setRelation('permissions', new Collection);
+
+        Auth::setUser($t2qUser);
+
+        try {
+            $xpath = $this->renderSidebarForUri('/guru-t2q/catatan-rapor');
+        } finally {
+            Auth::logout();
+        }
+
+        $catatanLink = $this->querySingleElement(
+            $xpath,
+            sprintf('//nav//a[@href="%s"]', route('guru-t2q.catatan-rapor.index'))
+        );
+
+        $this->assertMenuState($xpath, $catatanLink, true, false);
+    }
+
     /**
      * Render the sidebar under a simulated GET request with resolved routing.
      */
